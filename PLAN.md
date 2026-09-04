@@ -222,11 +222,11 @@ Remaining verification requires running the app: multiple displays and hot-plugg
 
 ## Current product choices
 
-- Coexist with the system menu bar; do not reserve work area.
+- Place top bars at the physical display edge, excluding the notch from item layout; do not reserve work area.
 - File-first configuration with a native draft editor; macOS 14 minimum.
 - Execute only commands/plugins explicitly configured by the user, without arbitrary in-process bundles.
 - Share one layout and provider set across selected displays.
-- Prepare direct distribution; App Store sandbox support and a screen-edge replacement mode remain future product choices.
+- Prepare direct distribution; App Store sandbox support remains a future product choice.
 
 ## References
 

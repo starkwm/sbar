@@ -2,12 +2,13 @@ import SwiftUI
 
 struct BarView: View {
     let configuration: BarConfiguration
+    var notch: CGRect?
     var hitRegionsChanged: (([CGRect]) -> Void)?
 
     var body: some View {
-        BarRegionLayout(hasCenter: configuration.items.center.contains(where: \.enabled)) {
+        BarRegionLayout(hasCenter: configuration.items.center.contains(where: \.enabled), notch: notch.map { $0.offsetBy(dx: -(configuration.theme?.horizontalPadding ?? 10), dy: 0) }) {
             region(configuration.items.left, alignment: .leading)
-            region(configuration.items.center, alignment: .center)
+            region(configuration.items.center, alignment: notch == nil ? .center : .leading)
             region(configuration.items.right, alignment: .trailing)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

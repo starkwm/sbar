@@ -129,7 +129,7 @@ final class BarCoordinator: NSObject {
         for screen in screens {
             guard let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { continue }
             let identifier = number.uint32Value
-            let frame = BarPlacement.frame(in: screen.visibleFrame, settings: configuration.bar)
+            let frame = BarPlacement.frame(screenFrame: screen.frame, visibleFrame: screen.visibleFrame, settings: configuration.bar)
             let panel = remaining.removeValue(forKey: identifier) ?? BarPanel(contentRect: frame)
             panel.setFrame(frame, display: true)
             switch configuration.bar.windowLevel ?? .statusBar {
@@ -138,7 +138,10 @@ final class BarCoordinator: NSObject {
             case .screenSaver: panel.level = .screenSaver
             }
             panel.passesEmptyRegions = configuration.bar.mousePassThrough ?? false
-            panel.contentView = NSHostingView(rootView: BarView(configuration: configuration, hitRegionsChanged: { [weak panel] regions in panel?.hitRegions = regions; panel?.updateMousePolicy() }).environment(providers).environment(actions))
+            let notch = BarPlacement.notch(screenFrame: screen.frame, leftArea: screen.auxiliaryTopLeftArea, rightArea: screen.auxiliaryTopRightArea, panelFrame: frame)
+            let hostingView = NSHostingView(rootView: BarView(configuration: configuration, notch: notch, hitRegionsChanged: { [weak panel] regions in panel?.hitRegions = regions; panel?.updateMousePolicy() }).environment(providers).environment(actions))
+            hostingView.safeAreaRegions = []
+            panel.contentView = hostingView
             panel.orderFrontRegardless()
             panel.updateMousePolicy()
             updated[identifier] = panel

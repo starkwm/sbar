@@ -36,7 +36,7 @@ A minimal configuration is:
 }
 ```
 
-Bar settings default to `position: top`, `height: 32`, and `displays: all`. Positions are `top` or `bottom`; display choices are `main` (primary display), `all`, or `selected` with a `displayIDs` array. The Theme tab lists connected display IDs. `windowLevel` accepts `floating`, `statusBar` (default), or `screenSaver`. Optional `mousePassThrough:true` lets empty regions pass mouse events to windows beneath the bar. Both positions use the screen's visible area alongside the system menu bar and Dock. Omitted item sections are empty. Item IDs must be nonblank and unique across all sections; cross-section uniqueness is checked by the app rather than the JSON Schema.
+Bar settings default to `position: top`, `height: 32`, and `displays: all`. Positions are `top` or `bottom`; display choices are `main` (primary display), `all`, or `selected` with a `displayIDs` array. The Theme tab lists connected display IDs. `windowLevel` accepts `floating`, `statusBar` (default), or `screenSaver`. Optional `mousePassThrough:true` lets empty regions pass mouse events to windows beneath the bar. Top placement uses the physical screen edge, sharing the system menu-bar area; bottom placement respects the Dock's visible work area. On notched displays, items avoid the cutout and the center section sits immediately to its right. Omitted item sections are empty. Item IDs must be nonblank and unique across all sections; cross-section uniqueness is checked by the app rather than the JSON Schema.
 
 See [PLAN.md](PLAN.md) for implementation status and upcoming work.
 
@@ -99,7 +99,7 @@ A `command` item requires `command: {"script":"date", "timeout":5}`. Add `refres
 
 `group` items render `children` inline. `popup` items show `children` when clicked; any item can also have a `popup` text string. Groups nest up to eight levels. Disabling a group disables its child providers.
 
-Each region measures its items, allows flexible text to compress, and moves low-priority items into an overflow popover when space runs out. Larger `priority` values remain visible longer; equal priorities hide from the end. The center reserves one third of the bar when populated. Bar content stays clipped within its own region.
+Each region measures its items, allows flexible text to compress, and moves low-priority items into an overflow popover when space runs out. Larger `priority` values remain visible longer; equal priorities hide from the end. On displays without a notch, the center reserves one third of the bar when populated. Beside a notch, the center and right sections share the usable right-hand area. Bar content stays clipped within its own region.
 
 ## Runtime control
 

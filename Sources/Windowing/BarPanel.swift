@@ -22,6 +22,10 @@ final class BarPanel: NSPanel {
         acceptsMouseMovedEvents = true
         level = .statusBar
     }
+    override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
+        frameRect
+    }
+
     func updateMousePolicy() {
         let local = convertPoint(fromScreen: NSEvent.mouseLocation)
         let point = CGPoint(x: local.x, y: frame.height - local.y)
