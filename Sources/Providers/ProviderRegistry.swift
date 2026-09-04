@@ -8,13 +8,23 @@ import Observation
 @MainActor @Observable
 final class ProviderRegistry {
     private(set) var values: [ItemType: String] = [:] {
-        didSet { for (key, value) in values where oldValue[key] != value { onValueChange?(key.rawValue, value) } }
+        didSet {
+            for (key, value) in values where oldValue[key] != value { onValueChange?(key.rawValue, value) }
+            for item in refreshItems where item.type != .clock && item.type != .date && (item.refresh?.mode == .event || snapshots[item.id] == nil) { capture(item) }
+        }
     }
     private(set) var itemValues: [String: String] = [:] {
         didSet { for (key, value) in itemValues where oldValue[key] != value { onValueChange?(key, value) } }
     }
     @ObservationIgnored var onValueChange: ((String, String) -> Void)?
-    private(set) var date = Date()
+    private(set) var date = Date() {
+        didSet { for item in refreshItems where item.refresh?.mode == .event && (item.type == .clock || item.type == .date) { capture(item) } }
+    }
+    private(set) var snapshots: [String: String] = [:]
+    private(set) var dates: [String: Date] = [:]
+    @ObservationIgnored private var refreshItems: [ItemConfiguration] = []
+    @ObservationIgnored private var refreshTask: Task<Void, Never>?
+    @ObservationIgnored private var lastRefresh: [String: Date] = [:]
 
     @ObservationIgnored private var observers: [(NotificationCenter, NSObjectProtocol)] = []
     @ObservationIgnored private var task: Task<Void, Never>?
@@ -32,9 +42,10 @@ final class ProviderRegistry {
     @ObservationIgnored private let metrics = SystemMetrics()
 
     func configure(_ configuration: BarConfiguration) {
+        configureRefresh(configuration.items.active)
         configurePlugins(configuration.items.active.filter { $0.type == .plugin })
         configureCommands(configuration.items.active.filter { $0.enabled && $0.type == .command })
-        let requested = Set(configuration.items.active.filter(\.enabled).map(\.type))
+        let requested = Set(configuration.items.active.map(\.type)).subtracting([.command, .plugin, .text, .spacer, .divider, .group, .popup])
         guard requested != types else { return }
         stopNative()
         types = requested
@@ -110,11 +121,20 @@ final class ProviderRegistry {
     }
 
     func trigger(_ event: String, value: JSONValue? = nil) {
+        for item in refreshItems where item.id == event || item.refresh?.event == event { capture(item) }
         for input in pluginInputs.values { input.send(PluginInput(event: event, value: value)) }
-        for item in commandItems where item.command?.event == event { startCommand(item) }
+        for item in commandItems where item.command?.event == event || item.refresh?.event == event || item.id == event { startCommand(item) }
     }
 
     func stop() {
+        refreshTask?.cancel()
+        refreshTask = nil
+        refreshItems = []
+        values = [:]
+        itemValues = [:]
+        snapshots = [:]
+        dates = [:]
+        lastRefresh = [:]
         pluginGeneration = UUID()
         pluginTasks.values.forEach { $0.cancel() }
         pluginTasks.removeAll()
@@ -126,8 +146,47 @@ final class ProviderRegistry {
         stopNative()
     }
 
+    private func configureRefresh(_ items: [ItemConfiguration]) {
+        let requested = items.filter { $0.refresh != nil && $0.type != .command && $0.type != .plugin }
+        let same = requested.count == refreshItems.count && requested.allSatisfy { item in
+            refreshItems.contains { $0.id == item.id && $0.type == item.type && $0.refresh == item.refresh }
+        }
+        guard !same else { refreshItems = requested; return }
+        refreshTask?.cancel()
+        refreshItems = requested
+        snapshots = [:]
+        dates = [:]
+        lastRefresh = [:]
+        for item in requested { capture(item) }
+        guard requested.contains(where: { $0.refresh?.mode == .interval }) else { return }
+        refreshTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                for item in self.refreshItems {
+                    let previous = self.lastRefresh[item.id]
+                    if item.refresh?.mode == .interval && (previous == nil || Date().timeIntervalSince(previous ?? .distantPast) >= (item.refresh?.seconds ?? 1)) {
+                        self.capture(item)
+                    }
+                }
+                do { try await Task.sleep(for: .seconds(1)) } catch { return }
+            }
+        }
+    }
+
+    private func capture(_ item: ItemConfiguration) {
+        if let value = values[item.type] {
+            snapshots[item.id] = value
+            lastRefresh[item.id] = Date()
+        }
+        if item.type == .clock || item.type == .date {
+            dates[item.id] = Date()
+            lastRefresh[item.id] = Date()
+        }
+    }
+
     private func configurePlugins(_ items: [ItemConfiguration]) {
-        guard items != pluginItems else { return }
+        let same = items.count == pluginItems.count && items.allSatisfy { item in pluginItems.contains { $0.id == item.id && $0.plugin == item.plugin } }
+        guard !same else { pluginItems = items; return }
         pluginGeneration = UUID()
         let generation = pluginGeneration
         pluginTasks.values.forEach { $0.cancel() }
@@ -163,12 +222,14 @@ final class ProviderRegistry {
     }
 
     private func configureCommands(_ items: [ItemConfiguration]) {
-        guard items != commandItems else { return }
-        commandTasks.values.forEach { $0.cancel() }
-        commandTasks.removeAll()
+        let previous = Dictionary(uniqueKeysWithValues: commandItems.map { ($0.id, $0) })
+        let ids = Set(items.map(\.id))
+        for id in commandTasks.keys.filter({ !ids.contains($0) }) { commandTasks.removeValue(forKey: id)?.cancel() }
         commandItems = items
         itemValues = itemValues.filter { key, _ in (items + pluginItems).contains { $0.id == key } }
-        for item in items { startCommand(item) }
+        for item in items where previous[item.id] == nil || previous[item.id]?.command != item.command || previous[item.id]?.refresh != item.refresh {
+            startCommand(item)
+        }
     }
 
     private func startCommand(_ item: ItemConfiguration) {
@@ -184,7 +245,8 @@ final class ProviderRegistry {
                     guard !Task.isCancelled else { return }
                     self?.itemValues[item.id] = error.localizedDescription
                 }
-                guard let interval = command.interval else { return }
+                let duration = item.refresh == nil ? command.interval : (item.refresh?.mode == .interval ? item.refresh?.seconds : nil)
+                guard let interval = duration else { return }
                 do { try await Task.sleep(for: .seconds(interval)) } catch { return }
             } while !Task.isCancelled
         }
@@ -252,8 +314,8 @@ final class ProviderRegistry {
         AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &address, .main, changed)
         audioListeners.append((AudioObjectID(kAudioObjectSystemObject), address, changed))
         guard device != 0 else { values[.volume] = "No output"; return }
-        for selector in [kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyMute] {
-            var property = AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioDevicePropertyScopeOutput, mElement: kAudioObjectPropertyElementMain)
+        for (selector, element) in [(kAudioDevicePropertyVolumeScalar, UInt32(0)), (kAudioDevicePropertyVolumeScalar, UInt32(1)), (kAudioDevicePropertyVolumeScalar, UInt32(2)), (kAudioDevicePropertyMute, UInt32(0))] {
+            var property = AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioDevicePropertyScopeOutput, mElement: element)
             let listener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
                 Task { @MainActor [weak self] in self?.updateVolume(device) }
             }
@@ -269,9 +331,19 @@ final class ProviderRegistry {
         var muted: UInt32 = 0
         var size = UInt32(MemoryLayout<Float32>.size)
         var address = AudioObjectPropertyAddress(mSelector: kAudioDevicePropertyVolumeScalar, mScope: kAudioDevicePropertyScopeOutput, mElement: kAudioObjectPropertyElementMain)
-        let result = AudioObjectGetPropertyData(device, &address, 0, nil, &size, &volume)
+        var result = AudioObjectGetPropertyData(device, &address, 0, nil, &size, &volume)
+        if result != noErr {
+            var channels: [Float32] = []
+            for element: UInt32 in [1, 2] {
+                address.mElement = element
+                var channel: Float32 = 0
+                if AudioObjectGetPropertyData(device, &address, 0, nil, &size, &channel) == noErr { channels.append(channel) }
+            }
+            if !channels.isEmpty { volume = channels.reduce(0, +) / Float32(channels.count); result = noErr }
+        }
+        address.mElement = kAudioObjectPropertyElementMain
         address.mSelector = kAudioDevicePropertyMute
         AudioObjectGetPropertyData(device, &address, 0, nil, &size, &muted)
-        values[.volume] = muted != 0 ? "Muted" : result == noErr ? "Volume \(Int(volume * 100))%" : "Fixed volume"
+        values[.volume] = muted != 0 ? "Muted" : result == noErr ? "Volume \(Int((volume.isFinite ? min(1, max(0, volume)) : 0) * 100))%" : "Fixed volume"
     }
 }

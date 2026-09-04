@@ -109,7 +109,7 @@ struct ConfigurationStoreTests {
     }
 
     private func write(height: Double, to url: URL, atomic: Bool = true) throws {
-        let configuration = BarConfiguration(schemaVersion: 1, bar: .init(height: height), items: .init())
+        let configuration = BarConfiguration(schemaVersion: BarConfiguration.currentSchemaVersion, bar: .init(height: height), items: .init())
         try JSONEncoder().encode(configuration).write(to: url, options: atomic ? .atomic : [])
     }
 

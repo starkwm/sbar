@@ -3,7 +3,8 @@ import SwiftUI
 struct OverflowSelection {
     static func visible(items: [ItemConfiguration], widths: [String: CGFloat], available: CGFloat, spacing: CGFloat) -> Set<String> {
         var selected = items
-        func width() -> CGFloat { selected.reduce(0) { $0 + (widths[$1.id] ?? 40) } + CGFloat(max(0, selected.count - 1)) * spacing }
+        let flexible: Set<ItemType> = [.text, .frontApplication, .media, .command, .plugin]
+        func width() -> CGFloat { selected.reduce(0) { $0 + (widths[$1.id] ?? 40) * (flexible.contains($1.type) ? 0.8 : 1) } + CGFloat(max(0, selected.count - 1)) * spacing }
         if width() <= available { return Set(selected.map(\.id)) }
         for item in items.enumerated().sorted(by: { $0.element.priority == $1.element.priority ? $0.offset > $1.offset : $0.element.priority < $1.element.priority }) {
             selected.removeAll { $0.id == item.element.id }
@@ -33,6 +34,7 @@ struct BarRegionView: View {
                     Button { showingOverflow.toggle() } label: { Image(systemName: "ellipsis") }
                         .buttonStyle(.plain)
                         .frame(width: 28)
+                        .modifier(BarHitRegion())
                         .accessibilityLabel("More bar items")
                         .popover(isPresented: $showingOverflow) {
                             VStack(alignment: .leading, spacing: 8) {
@@ -48,7 +50,7 @@ struct BarRegionView: View {
         .background {
             HStack(spacing: 0) {
                 ForEach(items.filter(\.enabled)) { item in
-                    InteractiveItemView(item: item, theme: theme?.itemStyle)
+                    InteractiveItemView(item: item, theme: theme?.itemStyle, tracksHitRegion: false)
                         .fixedSize()
                         .background(GeometryReader { geometry in
                             Color.clear.preference(key: ItemWidths.self, value: [item.id: geometry.size.width])

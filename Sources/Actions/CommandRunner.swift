@@ -34,9 +34,9 @@ struct CommandRunner {
         var descriptors: [Int32] = [0, 0]
         guard pipe(&descriptors) == 0 else { throw CommandFailure.launch(errno) }
         defer { close(descriptors[0]); close(descriptors[1]) }
-        fcntl(descriptors[0], F_SETFL, O_NONBLOCK)
-        fcntl(descriptors[0], F_SETFD, FD_CLOEXEC)
-        fcntl(descriptors[1], F_SETFD, FD_CLOEXEC)
+        _ = fcntl(descriptors[0], F_SETFL, O_NONBLOCK)
+        _ = fcntl(descriptors[0], F_SETFD, FD_CLOEXEC)
+        _ = fcntl(descriptors[1], F_SETFD, FD_CLOEXEC)
         var actions: posix_spawn_file_actions_t?
         posix_spawn_file_actions_init(&actions)
         defer { posix_spawn_file_actions_destroy(&actions) }

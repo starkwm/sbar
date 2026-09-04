@@ -14,6 +14,9 @@ final class BarCoordinator: NSObject {
     private let store: ConfigurationStore
     private var panels: [CGDirectDisplayID: BarPanel] = [:]
     private var isStarted = false
+    private var sleeping = false
+    private var localMouseMonitor: Any?
+    private var globalMouseMonitor: Any?
 
     init(store: ConfigurationStore, providers: ProviderRegistry, actions: ActionRunner, events: EventBus) {
         self.providers = providers
@@ -32,6 +35,17 @@ final class BarCoordinator: NSObject {
             name: NSApplication.didChangeScreenParametersNotification,
             object: nil
         )
+        let workspace = NSWorkspace.shared.notificationCenter
+        workspace.addObserver(self, selector: #selector(willSleep), name: NSWorkspace.willSleepNotification, object: nil)
+        workspace.addObserver(self, selector: #selector(didWake), name: NSWorkspace.didWakeNotification, object: nil)
+        workspace.addObserver(self, selector: #selector(screenParametersDidChange), name: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
+        localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged]) { [weak self] event in
+            self?.panels.values.forEach { $0.updateMousePolicy() }
+            return event
+        }
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged]) { [weak self] _ in
+            MainActor.assumeIsolated { self?.panels.values.forEach { $0.updateMousePolicy() } }
+        }
         store.startObserving()
         store.configurationDidChange = { [weak self] in
             self?.updatePanels()
@@ -58,6 +72,11 @@ final class BarCoordinator: NSObject {
 
     func stop() {
         NotificationCenter.default.removeObserver(self)
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
+        if let localMouseMonitor { NSEvent.removeMonitor(localMouseMonitor) }
+        if let globalMouseMonitor { NSEvent.removeMonitor(globalMouseMonitor) }
+        localMouseMonitor = nil
+        globalMouseMonitor = nil
         server?.stop()
         server = nil
         events.onEvent = nil
@@ -79,12 +98,32 @@ final class BarCoordinator: NSObject {
         updatePanels()
     }
 
+    @objc private func willSleep() {
+        sleeping = true
+        providers.stop()
+        actions.stop()
+    }
+
+    @objc private func didWake() {
+        sleeping = false
+        updatePanels()
+    }
+
     private func updatePanels() {
-        guard isStarted else { return }
+        guard isStarted, !sleeping else { return }
         let configuration = store.configuration
         providers.configure(configuration)
         // The first screen is the primary display; NSScreen.main follows the key window.
-        let screens = configuration.bar.displays == .all ? NSScreen.screens : Array(NSScreen.screens.prefix(1))
+        let screens: [NSScreen]
+        switch configuration.bar.displays {
+        case .all: screens = NSScreen.screens
+        case .main: screens = Array(NSScreen.screens.prefix(1))
+        case .selected:
+            screens = NSScreen.screens.filter { screen in
+                guard let id = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { return false }
+                return configuration.bar.displayIDs?.contains(id.uint32Value) == true
+            }
+        }
         var remaining = panels
         var updated: [CGDirectDisplayID: BarPanel] = [:]
         for screen in screens {
@@ -93,8 +132,15 @@ final class BarCoordinator: NSObject {
             let frame = BarPlacement.frame(in: screen.visibleFrame, settings: configuration.bar)
             let panel = remaining.removeValue(forKey: identifier) ?? BarPanel(contentRect: frame)
             panel.setFrame(frame, display: true)
-            panel.contentView = NSHostingView(rootView: BarView(configuration: configuration).environment(providers).environment(actions))
+            switch configuration.bar.windowLevel ?? .statusBar {
+            case .floating: panel.level = .floating
+            case .statusBar: panel.level = .statusBar
+            case .screenSaver: panel.level = .screenSaver
+            }
+            panel.passesEmptyRegions = configuration.bar.mousePassThrough ?? false
+            panel.contentView = NSHostingView(rootView: BarView(configuration: configuration, hitRegionsChanged: { [weak panel] regions in panel?.hitRegions = regions; panel?.updateMousePolicy() }).environment(providers).environment(actions))
             panel.orderFrontRegardless()
+            panel.updateMousePolicy()
             updated[identifier] = panel
         }
         remaining.values.forEach { $0.close() }

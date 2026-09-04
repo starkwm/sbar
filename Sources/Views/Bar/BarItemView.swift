@@ -7,7 +7,7 @@ struct BarItemView: View {
     var body: some View {
         if let symbol = configuration.symbol, configuration.type != .divider, configuration.type != .spacer {
             HStack(spacing: 4) {
-                Image(systemName: symbol)
+                Image(systemName: symbol).accessibilityHidden(true)
                 content
             }
         } else {
@@ -18,15 +18,15 @@ struct BarItemView: View {
     @ViewBuilder private var content: some View {
         switch configuration.type {
         case .clock:
-            Text(providers.date, format: clockFormat).monospacedDigit()
+            Text(ClockText.string(providers.dates[configuration.id] ?? providers.date, format: configuration.format)).monospacedDigit()
         case .date:
-            Text(providers.date, format: .dateTime.weekday().month().day())
+            Text(providers.dates[configuration.id] ?? providers.date, format: .dateTime.weekday().month().day())
         case .divider:
-            Rectangle().frame(width: 1, height: 16).opacity(0.3)
+            Rectangle().frame(width: 1, height: 16).opacity(0.3).accessibilityHidden(true)
         case .frontApplication:
-            Text(configuration.label ?? providers.values[.frontApplication] ?? "").lineLimit(1)
+            Text(configuration.label ?? providers.snapshots[configuration.id] ?? providers.values[.frontApplication] ?? "").lineLimit(1)
         case .spacer:
-            Spacer(minLength: 8)
+            Spacer(minLength: 8).accessibilityHidden(true)
         case .text:
             Text(configuration.label ?? "")
         case .command, .plugin:
@@ -34,17 +34,10 @@ struct BarItemView: View {
         case .group, .popup:
             Text(configuration.label ?? configuration.id)
         default:
-            Text(providers.values[configuration.type] ?? "—")
+            Text(providers.snapshots[configuration.id] ?? providers.values[configuration.type] ?? "—")
         }
     }
 
     @Environment(ProviderRegistry.self) private var providers
 
-    private var clockFormat: Date.FormatStyle {
-        switch configuration.format {
-        case "HH:mm:ss": .dateTime.hour(.twoDigits(amPM: .omitted)).minute().second()
-        case "HH:mm": .dateTime.hour(.twoDigits(amPM: .omitted)).minute()
-        default: .dateTime.hour().minute()
-        }
-    }
 }

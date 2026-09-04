@@ -42,13 +42,14 @@ final class ControlServer: @unchecked Sendable {
                 }
                 let fd = socket(AF_UNIX, SOCK_STREAM, 0)
                 guard fd >= 0 else { throw SocketFailure.message("Cannot create control socket.") }
-                let status = try LocalSocket.address(path) { bind(fd, $0, $1) }
+                let status: Int32
+                do { status = try LocalSocket.address(path) { bind(fd, $0, $1) } } catch { close(fd); throw error }
                 guard status == 0, chmod(path, 0o600) == 0, listen(fd, 16) == 0 else {
                     close(fd)
                     throw SocketFailure.message("Cannot bind control socket.")
                 }
-                fcntl(fd, F_SETFL, O_NONBLOCK)
-                fcntl(fd, F_SETFD, FD_CLOEXEC)
+                _ = fcntl(fd, F_SETFL, O_NONBLOCK)
+                _ = fcntl(fd, F_SETFD, FD_CLOEXEC)
                 let source = DispatchSource.makeReadSource(fileDescriptor: fd, queue: queue)
                 source.setEventHandler { [weak self] in self?.acceptClients(fd) }
                 source.setCancelHandler { close(fd) }
@@ -83,8 +84,8 @@ final class ControlServer: @unchecked Sendable {
             var uid: uid_t = 0
             var gid: gid_t = 0
             guard connections.count < 32, getpeereid(client, &uid, &gid) == 0, uid == getuid() else { close(client); continue }
-            fcntl(client, F_SETFL, O_NONBLOCK)
-            fcntl(client, F_SETFD, FD_CLOEXEC)
+            _ = fcntl(client, F_SETFL, O_NONBLOCK)
+            _ = fcntl(client, F_SETFD, FD_CLOEXEC)
             var one: Int32 = 1
             setsockopt(client, SOL_SOCKET, SO_NOSIGPIPE, &one, socklen_t(MemoryLayout<Int32>.size))
             let source = DispatchSource.makeReadSource(fileDescriptor: client, queue: queue)

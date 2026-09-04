@@ -1,7 +1,9 @@
 import Foundation
 
 struct BarConfiguration: Codable, Equatable, Sendable {
-    static let currentSchemaVersion = 1
+    private enum CodingKeys: String, CodingKey { case schemaVersion, bar, items, theme }
+
+    static let currentSchemaVersion = 2
     static let `default` = BarConfiguration(
         schemaVersion: currentSchemaVersion,
         bar: .init(),
@@ -16,6 +18,39 @@ struct BarConfiguration: Codable, Equatable, Sendable {
     var items: ItemSections
     var theme: BarTheme? = nil
 
+    init(schemaVersion: Int = Self.currentSchemaVersion, bar: BarSettings, items: ItemSections, theme: BarTheme? = nil) {
+        self.schemaVersion = schemaVersion
+        self.bar = bar
+        self.items = items
+        self.theme = theme
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let version = try container.decode(Int.self, forKey: .schemaVersion)
+        schemaVersion = version == 1 ? Self.currentSchemaVersion : version
+        bar = try container.decode(BarSettings.self, forKey: .bar)
+        items = try container.decode(ItemSections.self, forKey: .items)
+        theme = try container.decodeIfPresent(BarTheme.self, forKey: .theme)
+        if version == 1 {
+            func migrate(_ entries: [ItemConfiguration]) -> [ItemConfiguration] {
+                entries.map { original in
+                    var item = original
+                    if item.refresh == nil, let command = item.command {
+                        item.refresh = RefreshPolicy(mode: command.interval == nil ? .manual : .interval, seconds: command.interval, event: command.event)
+                        item.command?.interval = nil
+                        item.command?.event = nil
+                    }
+                    if let children = item.children { item.children = migrate(children) }
+                    return item
+                }
+            }
+            items.left = migrate(items.left)
+            items.center = migrate(items.center)
+            items.right = migrate(items.right)
+        }
+    }
+
     func validate() throws {
         guard schemaVersion == Self.currentSchemaVersion else {
             throw ConfigurationError.unsupportedSchemaVersion(schemaVersion)
@@ -23,12 +58,19 @@ struct BarConfiguration: Codable, Equatable, Sendable {
         guard (20...96).contains(bar.height) else {
             throw ConfigurationError.invalidBarHeight(bar.height)
         }
+        if bar.displays == .selected && (bar.displayIDs ?? []).isEmpty {
+            throw ConfigurationError.invalidStyle(path: "bar.displayIDs", reason: "Select at least one display ID.")
+        }
         try theme?.validate()
         var identifiers = Set<String>()
         func validateItems(_ entries: [ItemConfiguration], path: String, depth: Int = 0) throws {
             guard depth <= 8 else { throw ConfigurationError.invalidStyle(path: path, reason: "Groups may nest at most eight levels.") }
             for (index, item) in entries.enumerated() {
                 let location = "\(path)[\(index)]"
+                if item.refresh?.mode == .interval && item.refresh?.seconds == nil {
+                    throw ConfigurationError.invalidStyle(path: "\(location).refresh.seconds", reason: "An interval needs a duration.")
+                }
+                try ItemStyle.validateNumber(item.refresh?.seconds, range: 1...86400, path: "\(location).refresh.seconds")
                 if item.type == .plugin && item.plugin == nil {
                     throw ConfigurationError.invalidStyle(path: "\(location).plugin", reason: "Plugin settings are required.")
                 }
@@ -57,16 +99,22 @@ struct BarConfiguration: Codable, Equatable, Sendable {
 }
 
 struct BarSettings: Codable, Equatable, Sendable {
-    private enum CodingKeys: String, CodingKey { case position, height, displays }
+    private enum CodingKeys: String, CodingKey { case position, height, displays, displayIDs, windowLevel, mousePassThrough }
 
     var position: BarPosition = .top
     var height: Double = 32
     var displays: DisplaySelection = .all
+    var displayIDs: [UInt32]?
+    var windowLevel: BarWindowLevel?
+    var mousePassThrough: Bool?
 
-    init(position: BarPosition = .top, height: Double = 32, displays: DisplaySelection = .all) {
+    init(position: BarPosition = .top, height: Double = 32, displays: DisplaySelection = .all, displayIDs: [UInt32]? = nil, windowLevel: BarWindowLevel? = nil, mousePassThrough: Bool? = nil) {
         self.position = position
         self.height = height
         self.displays = displays
+        self.displayIDs = displayIDs
+        self.windowLevel = windowLevel
+        self.mousePassThrough = mousePassThrough
     }
 
     init(from decoder: any Decoder) throws {
@@ -74,6 +122,9 @@ struct BarSettings: Codable, Equatable, Sendable {
         position = try container.decodeIfPresent(BarPosition.self, forKey: .position) ?? .top
         height = try container.decodeIfPresent(Double.self, forKey: .height) ?? 32
         displays = try container.decodeIfPresent(DisplaySelection.self, forKey: .displays) ?? .all
+        displayIDs = try container.decodeIfPresent([UInt32].self, forKey: .displayIDs)
+        windowLevel = try container.decodeIfPresent(BarWindowLevel.self, forKey: .windowLevel)
+        mousePassThrough = try container.decodeIfPresent(Bool.self, forKey: .mousePassThrough)
     }
 }
 
@@ -104,7 +155,7 @@ struct ItemSections: Codable, Equatable, Sendable {
 
 struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
     private enum CodingKeys: String, CodingKey {
-        case enabled, format, id, label, priority, style, symbol, type, primaryAction, secondaryAction, popup, command, children, plugin
+        case enabled, format, id, label, priority, style, symbol, type, primaryAction, secondaryAction, popup, command, children, plugin, refresh
     }
 
     var id: String
@@ -121,6 +172,7 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
     var command: CommandConfiguration?
     var children: [ItemConfiguration]?
     var plugin: PluginConfiguration?
+    var refresh: RefreshPolicy?
 
     var active: [ItemConfiguration] { enabled ? [self] + (children ?? []).flatMap(\.active) : [] }
 
@@ -140,7 +192,8 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
         popup: String? = nil,
         command: CommandConfiguration? = nil,
         children: [ItemConfiguration]? = nil,
-        plugin: PluginConfiguration? = nil
+        plugin: PluginConfiguration? = nil,
+        refresh: RefreshPolicy? = nil
     ) {
         self.id = id
         self.type = type
@@ -156,6 +209,7 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
         self.command = command
         self.children = children
         self.plugin = plugin
+        self.refresh = refresh
     }
 
     init(from decoder: any Decoder) throws {
@@ -174,11 +228,13 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
         command = try container.decodeIfPresent(CommandConfiguration.self, forKey: .command)
         children = try container.decodeIfPresent([ItemConfiguration].self, forKey: .children)
         plugin = try container.decodeIfPresent(PluginConfiguration.self, forKey: .plugin)
+        refresh = try container.decodeIfPresent(RefreshPolicy.self, forKey: .refresh)
     }
 }
 
 enum BarPosition: String, Codable, Sendable { case top, bottom }
-enum DisplaySelection: String, Codable, Sendable { case main, all }
+enum DisplaySelection: String, Codable, Sendable { case main, all, selected }
+enum BarWindowLevel: String, Codable, CaseIterable, Sendable { case floating, statusBar, screenSaver }
 enum ItemType: String, CaseIterable, Codable, Sendable { case clock, date, divider, frontApplication, spacer, text, battery, volume, network, wifi, cpu, memory, disk, throughput, media, command, group, popup, plugin, aerospace, yabai }
 
 enum ConfigurationError: Error, Equatable, LocalizedError {

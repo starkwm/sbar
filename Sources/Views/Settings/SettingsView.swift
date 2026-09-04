@@ -98,7 +98,25 @@ struct SettingsView: View {
     private var themeForm: some View {
         Form {
             Picker("Position", selection: $editor.draft.bar.position) { Text("Top").tag(BarPosition.top); Text("Bottom").tag(BarPosition.bottom) }
-            Picker("Displays", selection: $editor.draft.bar.displays) { Text("Main").tag(DisplaySelection.main); Text("All").tag(DisplaySelection.all) }
+            Picker("Displays", selection: $editor.draft.bar.displays) { Text("Main").tag(DisplaySelection.main); Text("All").tag(DisplaySelection.all); Text("Selected").tag(DisplaySelection.selected) }
+            if editor.draft.bar.displays == .selected {
+                ForEach(NSScreen.screens, id: \.self) { screen in
+                    if let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber {
+                        Toggle("\(screen.localizedName) (\(number.uint32Value))", isOn: Binding(get: {
+                            editor.draft.bar.displayIDs?.contains(number.uint32Value) == true
+                        }, set: { selected in
+                            var ids = editor.draft.bar.displayIDs ?? []
+                            ids.removeAll { $0 == number.uint32Value }
+                            if selected { ids.append(number.uint32Value) }
+                            editor.draft.bar.displayIDs = ids
+                        }))
+                    }
+                }
+            }
+            Picker("Window level", selection: Binding(get: { editor.draft.bar.windowLevel ?? .statusBar }, set: { editor.draft.bar.windowLevel = $0 })) {
+                ForEach(BarWindowLevel.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }
+            Toggle("Pass mouse through empty regions", isOn: Binding(get: { editor.draft.bar.mousePassThrough ?? false }, set: { editor.draft.bar.mousePassThrough = $0 }))
             TextField("Bar height", value: $editor.draft.bar.height, format: .number)
             Section("Bar theme") {
                 TextField("Background", text: Binding(get: { editor.draft.theme?.background ?? "" }, set: { var theme = editor.draft.theme ?? BarTheme(); theme.background = $0.isEmpty ? nil : $0; editor.draft.theme = theme }))

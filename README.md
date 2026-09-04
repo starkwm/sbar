@@ -15,15 +15,15 @@ The build script creates `dist/StarkBar.app`. Omit `--build` to build and launch
 
 StarkBar reads `~/.config/starkbar/config.json` and reloads it when the file changes. Missing files use built-in defaults; invalid edits retain the last valid configuration and show the error in Settings.
 
-In Settings, **Save Configuration** writes the currently loaded configuration, creating the directory if needed. Before replacing an existing file, it saves the exact previous contents to `config.json.bak`. There is one rotating backup, including when the previous file contains invalid JSON. If the backup cannot be written, the configuration is not replaced. External editor changes are reloaded but do not create backups.
+In Settings, **Save** writes the editor draft, creating the directory if needed. Before replacing an existing file, it saves the exact previous contents to `config.json.bak`. There is one rotating backup, including when the previous file contains invalid JSON. If the backup cannot be written, the configuration is not replaced. External editor changes are reloaded but do not create backups.
 
-Saving also writes `config.schema.json` beside the configuration and adds a `$schema` reference for compatible editors. **Reveal Configuration** shows the file in Finder. Saving writes the app's supported fields; unrecognized fields are only preserved in the backup.
+Saving also writes `config.schema.json` beside the configuration and adds a `$schema` reference for compatible editors. **Reveal** shows the file in Finder. Saving writes the app's supported fields; unrecognized fields are only preserved in the backup.
 
 A minimal configuration is:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "bar": {},
   "items": {
     "right": [
@@ -33,9 +33,15 @@ A minimal configuration is:
 }
 ```
 
-Bar settings default to `position: top`, `height: 32`, and `displays: all`. Positions are `top` or `bottom`; display choices are `main` (primary display) or `all`. Both positions use the screen's visible area alongside the system menu bar and Dock. Omitted item sections are empty. Item IDs must be nonblank and unique across all sections; cross-section uniqueness is checked by the app rather than the JSON Schema.
+Bar settings default to `position: top`, `height: 32`, and `displays: all`. Positions are `top` or `bottom`; display choices are `main` (primary display), `all`, or `selected` with a `displayIDs` array. The Theme tab lists connected display IDs. `windowLevel` accepts `floating`, `statusBar` (default), or `screenSaver`. Optional `mousePassThrough:true` lets empty regions pass mouse events to windows beneath the bar. Both positions use the screen's visible area alongside the system menu bar and Dock. Omitted item sections are empty. Item IDs must be nonblank and unique across all sections; cross-section uniqueness is checked by the app rather than the JSON Schema.
 
 See [PLAN.md](PLAN.md) for implementation status and upcoming work.
+
+Version-1 files migrate to version 2 in memory: legacy command intervals/events become item refresh policies, including inside groups. Loading never rewrites the source file; Save writes version 2 after backing up the original. Future schema versions are rejected.
+
+Start with an alternate file using `StarkBar --config /path/config.json` (or `open dist/StarkBar.app --args --config /path/config.json`). Its control socket lives beside the chosen file.
+
+`refresh` accepts `mode: event`, `interval`, or `manual`, with `seconds` required for intervals and an optional named `event`. Native event mode follows provider changes; interval/manual modes snapshot shared provider values. Triggering the item ID or its event captures a fresh snapshot. Underlying metric sampling remains shared at two-second resolution. Plugins retain their own streaming cadence and receive all runtime triggers.
 
 ## Themes and item styling
 
@@ -43,7 +49,7 @@ The optional top-level `theme` sets bar appearance and default item styling. Eac
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "bar": {},
   "theme": {
     "background": "#18202EEE",
@@ -86,11 +92,11 @@ Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeigh
 
 Items accept `primaryAction` and `secondaryAction` objects with `kind` (`command`, `url`, or `application`) and `value`. Primary actions run on click; secondary actions appear in the context menu. URL actions allow HTTP, HTTPS, and mailto. Application values are bundle IDs or paths; `${NAME}` and `~` expand in URL/application paths. Shell actions use `/bin/sh -c` and inherit the environment.
 
-A `command` item requires `command: {"script":"date", "interval":10, "timeout":5}`. Omit `interval` to run once; an optional `event` names a runtime trigger. Commands have a 64 KB combined output limit, a default five-second timeout, and terminate their process group on timeout, cancellation, or completion.
+A `command` item requires `command: {"script":"date", "timeout":5}`. Add `refresh: {"mode":"interval", "seconds":10, "event":"refresh"}` to rerun periodically or on that trigger. Without a refresh interval, it runs once at startup and when triggered by its ID. Commands have a 64 KB combined output limit, a default five-second timeout, and terminate their process group on timeout, cancellation, or completion.
 
 `group` items render `children` inline. `popup` items show `children` when clicked; any item can also have a `popup` text string. Groups nest up to eight levels. Disabling a group disables its child providers.
 
-Each region measures its items and moves low-priority items into an overflow popover when space runs out. Larger `priority` values remain visible longer; equal priorities hide from the end. The center reserves one third of the bar when populated. Bar content stays clipped within its own region.
+Each region measures its items, allows flexible text to compress, and moves low-priority items into an overflow popover when space runs out. Larger `priority` values remain visible longer; equal priorities hide from the end. The center reserves one third of the bar when populated. Bar content stays clipped within its own region.
 
 ## Runtime control
 
@@ -120,3 +126,17 @@ A `plugin` item uses `plugin: {"executable":"/absolute/path/to/provider", "argum
 Each output line is limited to 64 KB and displayed text to 4,096 characters. Bursts coalesce to the latest value in each read. The input mailbox holds up to 32 events and drops new events if full. Invalid output stops that process; automatic restarts back off from one to 30 seconds. Set `restart:false` for one-shot providers. Removing/disabling the item or shutting down terminates the process group.
 
 `aerospace` and `yabai` items show the focused workspace, using [AeroSpace's focused-workspace query](https://nikitabobko.github.io/AeroSpace/commands#list-workspaces) and [yabai's space query](https://github.com/asmvik/yabai/wiki/Commands#querying-information). Executables are located in PATH or the standard Homebrew prefixes. Queries run every two seconds with a two-second timeout; missing or unavailable integrations show a status message. No adapter changes window-manager configuration.
+
+## Release packaging
+
+```sh
+# Local ad-hoc signed archive; does not launch or notarize the app.
+NOTARY_PROFILE= SIGNING_IDENTITY=- bash script/release.sh
+
+# Developer ID signing; uses an existing signing identity.
+SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" bash script/release.sh
+```
+
+Set `STARKBAR_VERSION` and `STARKBAR_BUILD` to choose release metadata. The archive is written to `dist/StarkBar-<version>.zip`. To notarize, also set `NOTARY_PROFILE` to an existing notarytool keychain profile; the script submits the archive, staples the accepted ticket, and recreates the archive. No credentials are stored in the repository. Ad-hoc signatures establish local bundle integrity, not Gatekeeper distribution trust.
+
+The app pauses providers and commands during sleep and restarts them after wake. Panels follow screen and Space changes. See [manual validation](docs/manual-validation.md) for the remaining live checks; automated tests do not establish hardware or desktop behavior.

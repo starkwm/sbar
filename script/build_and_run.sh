@@ -5,23 +5,31 @@ MODE="${1:-run}"
 APP_NAME="StarkBar"
 BUNDLE_ID="com.starkwm.StarkBar"
 MIN_SYSTEM_VERSION="14.0"
+BUILD_CONFIGURATION="${BUILD_CONFIGURATION:-debug}"
+STARKBAR_VERSION="${STARKBAR_VERSION:-0.1.0}"
+STARKBAR_BUILD="${STARKBAR_BUILD:-1}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_BUNDLE="$ROOT_DIR/dist/$APP_NAME.app"
 APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_BINARY="$APP_CONTENTS/MacOS/$APP_NAME"
 
+cd "$ROOT_DIR"
+case "$MODE" in
+  --build|build|run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|verify) ;;
+  *) echo "Unknown mode: $MODE" >&2; exit 2 ;;
+esac
 if [[ "$MODE" != "--build" && "$MODE" != "build" ]]; then
   pkill -x "$APP_NAME" >/dev/null 2>&1 || true
 fi
-swift build
-BUILD_DIRECTORY="$(swift build --show-bin-path)"
+swift build -c "$BUILD_CONFIGURATION"
+BUILD_DIRECTORY="$(swift build -c "$BUILD_CONFIGURATION" --show-bin-path)"
 BUILD_BINARY="$BUILD_DIRECTORY/$APP_NAME"
 rm -rf "$APP_BUNDLE"
-mkdir -p "$APP_CONTENTS/MacOS"
+mkdir -p "$APP_CONTENTS/MacOS" "$APP_CONTENTS/Resources"
 cp "$BUILD_BINARY" "$APP_BINARY"
 cp "$BUILD_DIRECTORY/barctl" "$APP_CONTENTS/MacOS/barctl"
-# SwiftPM's generated Bundle.module accessor resolves this relative to the app root.
-cp -R "$BUILD_DIRECTORY/StarkBar_StarkBar.bundle" "$APP_BUNDLE/"
+# ConfigurationSchema resolves packaged resources from the standard app Resources directory.
+cp -R "$BUILD_DIRECTORY/StarkBar_StarkBar.bundle" "$APP_CONTENTS/Resources/"
 chmod +x "$APP_BINARY"
 cat >"$APP_CONTENTS/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -30,6 +38,8 @@ cat >"$APP_CONTENTS/Info.plist" <<PLIST
 <key>CFBundleExecutable</key><string>$APP_NAME</string>
 <key>CFBundleIdentifier</key><string>$BUNDLE_ID</string>
 <key>CFBundleName</key><string>$APP_NAME</string>
+<key>CFBundleShortVersionString</key><string>$STARKBAR_VERSION</string>
+<key>CFBundleVersion</key><string>$STARKBAR_BUILD</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>LSMinimumSystemVersion</key><string>$MIN_SYSTEM_VERSION</string>
 <key>LSUIElement</key><true/>

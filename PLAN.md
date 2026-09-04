@@ -205,30 +205,28 @@ Each phase ends with unit tests and manual coverage across multiple monitors, Sp
 
 ## Implementation status
 
-Foundation implementation is complete, with build and geometry tests. Live window behavior remains unverified; the app was not launched for this phase.
+All eight phases have implementation coverage. Automated tests and local ad-hoc release packaging are verified; the app has not been launched for this implementation pass.
 
-- SwiftPM executable targeting macOS 14, bundled by `script/build_and_run.sh` with `LSUIElement`.
-- Menu bar extra, separate Settings scene, and explicit panel shutdown.
-- Non-activating, transparent panels excluded from window cycling, retained by display ID and updated on screen changes.
-- Main means the primary display; all means every connected display. Top and bottom placement use the visible screen area to coexist with the menu bar and Dock without reserving work area.
-- Three regions keep the center geometrically centered. Center content uses at most one third of the width; equal side budgets share the remainder. Content compresses within each region and clips at its boundary.
-- Priority-based hiding and an overflow popup are implemented. Selected-display targeting, configurable window level, and optional empty-region mouse pass-through are also pending enhancements beyond the phase-one main/all-display scope.
+| Phase | Delivered |
+| --- | --- |
+| Foundation | Native panels per primary/all/selected displays; centered regions; menu extra and Settings; empty-region mouse pass-through; configurable level. |
+| Configuration | Versioned JSON, v1-to-v2 migration, precise validation, defaults, atomic saves/backups, schema, filesystem reload, themes/overrides, and `--config`. |
+| Native items | Shared clock/date, application, battery, volume, connection status, CPU/memory, disk, throughput, and Music/Spotify playback notifications. |
+| Interaction | Primary/context-menu actions, hover, bounded shell output, groups, child/text popups, compression, and priority overflow. |
+| Runtime control | Typed events, same-user Unix socket, `barctl` query/reload/set/trigger/subscribe, transient validated edits. |
+| Editor | Draft-based native layout/theme/item controls, top-level drag/drop, preview, diagnostics, conflict notices, import/export, and nested JSON editing. |
+| Extensibility | Isolated NDJSON processes with cancellation/restart limits, plus AeroSpace/yabai focused-workspace queries. |
+| Hardening | Screen/Space and sleep/wake lifecycle, bounded process/socket resources, accessibility labels, tests, standard resource packaging, signing/optional notarization script. |
 
-Configuration loading now supports defaults for omitted bar settings and item sections, precise decoding/validation paths, and filesystem-based live reload. Invalid edits preserve the last valid configuration. Missing files use built-in defaults. Observation handles direct edits, atomic replacement, deletion/recreation, and initially missing directories; unchanged configurations do not rebuild the panels.
+Remaining verification requires running the app: multiple displays and hot-plugging, Spaces/fullscreen, Stage Manager, sleep/wake, hardware provider accuracy, VoiceOver, popup/input behavior, and performance. Developer ID signing/notarization has not been performed; only an ad-hoc signed local archive has been validated. See `docs/manual-validation.md`.
 
-Configuration saving validates before writing, atomically replaces the file, and keeps its previous bytes in `config.json.bak`. Settings offers save and reveal actions. A bundled JSON Schema is copied beside saved configurations and linked through `$schema`; the app bundle includes the schema resource. `script/build_and_run.sh --build` packages without launching or stopping the app.
+## Current product choices
 
-Themes and per-item styling are implemented: built-in defaults, global `theme.itemStyle`, then individual item `style` overrides. Colors, font size/weight, padding, backgrounds, corner radii, and bar spacing are validated, rendered, saved, and described by the JSON Schema. Existing configurations retain default styling. Settings now provides a draft-based native editor.
-
-Shared native providers and live front-application updates are implemented, along with clock/date, battery, output volume, connection status, CPU/memory, free disk space, throughput, and Music/Spotify playback notifications. Hardware behavior remains unverified without launching the app. Interaction and bounded shell output are implemented, including hover feedback, primary/context-menu actions, groups, text/child popups, and priority-based overflow. Runtime control is implemented with a typed event bus, same-user Unix socket, barctl query/reload/set/trigger/subscribe, and validated transient mutations. The native Settings editor is implemented with top-level drag-and-drop, item/action/style inspectors, theme controls, snapshot preview, validation, import/export, conflict notices, and runtime diagnostics. Process plugins and AeroSpace/yabai workspace adapters are implemented. Next is configuration completion and hardening. Configuration migration and a `--config` override also remain pending.
-
-## Unresolved questions
-
-- Add a screen-edge placement mode in addition to coexistence beneath the system menu bar?
-- File-first configuration, GUI-first, or equal priority?
-- Should shell commands and external plugins be allowed by default?
-- Should displays share one layout or support display-specific layouts?
-- Is App Store distribution required? Sandboxing would materially constrain commands and system integrations.
+- Coexist with the system menu bar; do not reserve work area.
+- File-first configuration with a native draft editor; macOS 14 minimum.
+- Execute only commands/plugins explicitly configured by the user, without arbitrary in-process bundles.
+- Share one layout and provider set across selected displays.
+- Prepare direct distribution; App Store sandbox support and a screen-edge replacement mode remain future product choices.
 
 ## References
 

@@ -5,8 +5,12 @@ import Observation
 final class ActionRunner {
     static func expand(_ value: String, environment: [String: String] = ProcessInfo.processInfo.environment) -> String {
         var result = value
-        for (key, replacement) in environment {
-            result = result.replacingOccurrences(of: "${\(key)}", with: replacement)
+        if let pattern = try? NSRegularExpression(pattern: #"\$\{([A-Za-z_][A-Za-z_0-9]*)\}"#) {
+            for match in pattern.matches(in: value, range: NSRange(value.startIndex..., in: value)).reversed() {
+                guard let keyRange = Range(match.range(at: 1), in: value), let replacement = environment[String(value[keyRange])],
+                      let range = Range(match.range, in: result) else { continue }
+                result.replaceSubrange(range, with: replacement)
+            }
         }
         return (result as NSString).expandingTildeInPath
     }

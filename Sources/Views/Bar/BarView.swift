@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BarView: View {
     let configuration: BarConfiguration
+    var hitRegionsChanged: (([CGRect]) -> Void)?
 
     var body: some View {
         BarRegionLayout(hasCenter: configuration.items.center.contains(where: \.enabled)) {
@@ -11,6 +12,8 @@ struct BarView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, configuration.theme?.horizontalPadding ?? 10)
+        .coordinateSpace(name: "bar")
+        .onPreferenceChange(BarHitRegions.self) { hitRegionsChanged?($0) }
         .background {
             if let color = Color(hex: configuration.theme?.background) {
                 color

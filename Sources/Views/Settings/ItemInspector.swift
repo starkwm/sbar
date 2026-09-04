@@ -14,6 +14,18 @@ struct ItemInspector: View {
             TextField("SF Symbol", text: string(\.symbol))
             TextField("Clock format", text: string(\.format))
             TextField("Overflow priority", value: $item.priority, format: .number)
+            Section("Refresh") {
+                Picker("Policy", selection: Binding(get: { item.refresh?.mode }, set: { mode in item.refresh = mode.map { RefreshPolicy(mode: $0, seconds: $0 == .interval ? 5 : nil) } })) {
+                    Text("Provider default").tag(nil as RefreshPolicy.Mode?)
+                    ForEach(RefreshPolicy.Mode.allCases, id: \.self) { Text($0.rawValue).tag(Optional($0)) }
+                }
+                if item.refresh?.mode == .interval {
+                    TextField("Seconds", value: Binding(get: { item.refresh?.seconds }, set: { item.refresh?.seconds = $0 }), format: .number)
+                }
+                if item.refresh != nil {
+                    TextField("Trigger event", text: Binding(get: { item.refresh?.event ?? "" }, set: { item.refresh?.event = $0.isEmpty ? nil : $0 }))
+                }
+            }
             Section("Style overrides") {
                 StyleEditor(style: Binding(get: { item.style ?? ItemStyle() }, set: { item.style = $0 }))
                 Button("Use theme defaults") { item.style = nil }
