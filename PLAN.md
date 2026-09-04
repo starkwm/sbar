@@ -203,10 +203,22 @@ Initially target macOS 14. Use Swift 6 concurrency, Observation, `Codable`, `OSL
 
 Each phase ends with unit tests and manual coverage across multiple monitors, Spaces, fullscreen, Stage Manager, display hot-plugging, and sleep/wake.
 
+## Implementation status
+
+Foundation implementation is complete, with build and geometry tests. Live window behavior remains unverified; the app was not launched for this phase.
+
+- SwiftPM executable targeting macOS 14, bundled by `script/build_and_run.sh` with `LSUIElement`.
+- Menu bar extra, separate Settings scene, and explicit panel shutdown.
+- Non-activating, transparent panels excluded from window cycling, retained by display ID and updated on screen changes.
+- Main means the primary display; all means every connected display. Top and bottom placement use the visible screen area to coexist with the menu bar and Dock without reserving work area.
+- Three regions keep the center geometrically centered. Center content uses at most one third of the width; equal side budgets share the remainder. Content compresses within each region and clips at its boundary.
+- Priority-based hiding and an overflow popup remain pending for the interaction phase. Selected-display targeting, configurable window level, and optional empty-region mouse pass-through are also pending enhancements beyond the phase-one main/all-display scope.
+
+Next is configuration: live reload, precise validation diagnostics, atomic saving and backups, a JSON Schema, themes, and per-item styling. The current Settings view only displays status and reloads configuration; it is not yet an editor.
+
 ## Unresolved questions
 
-- Replace the system menu bar, coexist beneath it, or support both?
-- Minimum supported macOS version?
+- Add a screen-edge placement mode in addition to coexistence beneath the system menu bar?
 - File-first configuration, GUI-first, or equal priority?
 - Should shell commands and external plugins be allowed by default?
 - Should displays share one layout or support display-specific layouts?

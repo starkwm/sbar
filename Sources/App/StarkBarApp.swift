@@ -30,4 +30,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func reload() { coordinator?.reload() }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        coordinator?.stop()
+    }
 }

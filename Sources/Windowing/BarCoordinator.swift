@@ -4,7 +4,8 @@ import SwiftUI
 @MainActor
 final class BarCoordinator: NSObject {
     private let store: ConfigurationStore
-    private var panels: [BarPanel] = []
+    private var panels: [CGDirectDisplayID: BarPanel] = [:]
+    private var isStarted = false
 
     init(store: ConfigurationStore) {
         self.store = store
@@ -12,61 +13,51 @@ final class BarCoordinator: NSObject {
     }
 
     func start() {
-        store.load()
-        rebuildPanels()
+        guard !isStarted else { return }
+        isStarted = true
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(screenParametersDidChange),
             name: NSApplication.didChangeScreenParametersNotification,
             object: nil
         )
+        reload()
+    }
+
+    func stop() {
+        NotificationCenter.default.removeObserver(self)
+        panels.values.forEach { $0.close() }
+        panels.removeAll()
+        isStarted = false
     }
 
     func reload() {
         store.load()
-        rebuildPanels()
+        updatePanels()
     }
 
     @objc private func screenParametersDidChange() {
-        rebuildPanels()
+        updatePanels()
     }
 
-    private func rebuildPanels() {
-        panels.forEach { $0.close() }
+    private func updatePanels() {
+        guard isStarted else { return }
         let configuration = store.configuration
-        panels = selectedScreens(for: configuration.bar.displays).map { screen in
-            let panel = BarPanel(contentRect: frame(for: screen, settings: configuration.bar))
+        // The first screen is the primary display; NSScreen.main follows the key window.
+        let screens = configuration.bar.displays == .all ? NSScreen.screens : Array(NSScreen.screens.prefix(1))
+        var remaining = panels
+        var updated: [CGDirectDisplayID: BarPanel] = [:]
+        for screen in screens {
+            guard let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else { continue }
+            let identifier = number.uint32Value
+            let frame = BarPlacement.frame(in: screen.visibleFrame, settings: configuration.bar)
+            let panel = remaining.removeValue(forKey: identifier) ?? BarPanel(contentRect: frame)
+            panel.setFrame(frame, display: true)
             panel.contentView = NSHostingView(rootView: BarView(configuration: configuration))
             panel.orderFrontRegardless()
-            return panel
+            updated[identifier] = panel
         }
-    }
-
-    private func selectedScreens(for selection: DisplaySelection) -> [NSScreen] {
-        switch selection {
-        case .all: NSScreen.screens
-        case .main: NSScreen.main.map { [$0] } ?? []
-        }
-    }
-
-    private func frame(for screen: NSScreen, settings: BarSettings) -> NSRect {
-        switch settings.position {
-        case .top:
-            let screenFrame = screen.frame
-            return NSRect(
-                x: screenFrame.minX,
-                y: screenFrame.maxY - settings.height,
-                width: screenFrame.width,
-                height: settings.height
-            )
-        case .bottom:
-            let visibleFrame = screen.visibleFrame
-            return NSRect(
-                x: visibleFrame.minX,
-                y: visibleFrame.minY,
-                width: visibleFrame.width,
-                height: settings.height
-            )
-        }
+        remaining.values.forEach { $0.close() }
+        panels = updated
     }
 }
