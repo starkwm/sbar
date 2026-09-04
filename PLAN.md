@@ -168,7 +168,7 @@ This enables dynamic mutation and event integration without making shell scripts
 ```text
 Package.swift
 Sources/
-  sbar/
+  Sbar/
     App/
     Models/
     Views/Bar/
@@ -180,7 +180,7 @@ Sources/
     Plugins/
     IPC/
     Resources/
-  sbarctl/
+  SbarCtl/
   ControlProtocol/
 Tests/
 ```

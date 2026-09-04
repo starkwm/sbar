@@ -10,10 +10,11 @@ let package = Package(
   ],
   targets: [
     .target(name: "ControlProtocol"),
-    .executableTarget(name: "sbarctl", dependencies: ["ControlProtocol"]),
+    .executableTarget(name: "sbarctl", dependencies: ["ControlProtocol"], path: "Sources/SbarCtl"),
     .executableTarget(
       name: "sbar",
       dependencies: ["ControlProtocol"],
+      path: "Sources/Sbar",
       resources: [.copy("Resources/config.schema.json")]
     ),
     .testTarget(name: "sbarTests", dependencies: ["sbar"], path: "Tests"),
