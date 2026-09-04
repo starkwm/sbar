@@ -1,254 +1,325 @@
 import Foundation
 
 struct BarConfiguration: Codable, Equatable, Sendable {
-    private enum CodingKeys: String, CodingKey { case schemaVersion, bar, items, theme }
+  private enum CodingKeys: String, CodingKey { case schemaVersion, bar, items, theme }
 
-    static let currentSchemaVersion = 2
-    static let `default` = BarConfiguration(
-        schemaVersion: currentSchemaVersion,
-        bar: .init(),
-        items: .init(
-            left: [.init(id: "app", type: .frontApplication)],
-            right: [.init(id: "divider", type: .divider), .init(id: "clock", type: .clock, format: "HH:mm")]
-        )
+  static let currentSchemaVersion = 2
+  static let `default` = BarConfiguration(
+    schemaVersion: currentSchemaVersion,
+    bar: .init(),
+    items: .init(
+      left: [.init(id: "app", type: .frontApplication)],
+      right: [
+        .init(id: "divider", type: .divider), .init(id: "clock", type: .clock, format: "HH:mm"),
+      ]
     )
+  )
 
-    var schemaVersion: Int
-    var bar: BarSettings
-    var items: ItemSections
-    var theme: BarTheme? = nil
+  var schemaVersion: Int
+  var bar: BarSettings
+  var items: ItemSections
+  var theme: BarTheme? = nil
 
-    init(schemaVersion: Int = Self.currentSchemaVersion, bar: BarSettings, items: ItemSections, theme: BarTheme? = nil) {
-        self.schemaVersion = schemaVersion
-        self.bar = bar
-        self.items = items
-        self.theme = theme
+  init(
+    schemaVersion: Int = Self.currentSchemaVersion,
+    bar: BarSettings,
+    items: ItemSections,
+    theme: BarTheme? = nil
+  ) {
+    self.schemaVersion = schemaVersion
+    self.bar = bar
+    self.items = items
+    self.theme = theme
+  }
+
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let version = try container.decode(Int.self, forKey: .schemaVersion)
+    schemaVersion = version == 1 ? Self.currentSchemaVersion : version
+    bar = try container.decode(BarSettings.self, forKey: .bar)
+    items = try container.decode(ItemSections.self, forKey: .items)
+    theme = try container.decodeIfPresent(BarTheme.self, forKey: .theme)
+    if version == 1 {
+      func migrate(_ entries: [ItemConfiguration]) -> [ItemConfiguration] {
+        entries.map { original in
+          var item = original
+          if item.refresh == nil, let command = item.command {
+            item.refresh = RefreshPolicy(
+              mode: command.interval == nil ? .manual : .interval,
+              seconds: command.interval,
+              event: command.event
+            )
+            item.command?.interval = nil
+            item.command?.event = nil
+          }
+          if let children = item.children { item.children = migrate(children) }
+          return item
+        }
+      }
+      items.left = migrate(items.left)
+      items.center = migrate(items.center)
+      items.right = migrate(items.right)
     }
+  }
 
-    init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let version = try container.decode(Int.self, forKey: .schemaVersion)
-        schemaVersion = version == 1 ? Self.currentSchemaVersion : version
-        bar = try container.decode(BarSettings.self, forKey: .bar)
-        items = try container.decode(ItemSections.self, forKey: .items)
-        theme = try container.decodeIfPresent(BarTheme.self, forKey: .theme)
-        if version == 1 {
-            func migrate(_ entries: [ItemConfiguration]) -> [ItemConfiguration] {
-                entries.map { original in
-                    var item = original
-                    if item.refresh == nil, let command = item.command {
-                        item.refresh = RefreshPolicy(mode: command.interval == nil ? .manual : .interval, seconds: command.interval, event: command.event)
-                        item.command?.interval = nil
-                        item.command?.event = nil
-                    }
-                    if let children = item.children { item.children = migrate(children) }
-                    return item
-                }
-            }
-            items.left = migrate(items.left)
-            items.center = migrate(items.center)
-            items.right = migrate(items.right)
-        }
+  func validate() throws {
+    guard schemaVersion == Self.currentSchemaVersion else {
+      throw ConfigurationError.unsupportedSchemaVersion(schemaVersion)
     }
-
-    func validate() throws {
-        guard schemaVersion == Self.currentSchemaVersion else {
-            throw ConfigurationError.unsupportedSchemaVersion(schemaVersion)
-        }
-        guard (20...96).contains(bar.height) else {
-            throw ConfigurationError.invalidBarHeight(bar.height)
-        }
-        if bar.displays == .selected && (bar.displayIDs ?? []).isEmpty {
-            throw ConfigurationError.invalidStyle(path: "bar.displayIDs", reason: "Select at least one display ID.")
-        }
-        try theme?.validate()
-        var identifiers = Set<String>()
-        func validateItems(_ entries: [ItemConfiguration], path: String, depth: Int = 0) throws {
-            guard depth <= 8 else { throw ConfigurationError.invalidStyle(path: path, reason: "Groups may nest at most eight levels.") }
-            for (index, item) in entries.enumerated() {
-                let location = "\(path)[\(index)]"
-                if item.refresh?.mode == .interval && item.refresh?.seconds == nil {
-                    throw ConfigurationError.invalidStyle(path: "\(location).refresh.seconds", reason: "An interval needs a duration.")
-                }
-                try ItemStyle.validateNumber(item.refresh?.seconds, range: 1...86400, path: "\(location).refresh.seconds")
-                if item.type == .plugin && item.plugin == nil {
-                    throw ConfigurationError.invalidStyle(path: "\(location).plugin", reason: "Plugin settings are required.")
-                }
-                if let plugin = item.plugin, plugin.executable.isEmpty {
-                    throw ConfigurationError.invalidStyle(path: "\(location).plugin.executable", reason: "Executable must not be empty.")
-                }
-                if item.type == .command && item.command == nil {
-                    throw ConfigurationError.invalidStyle(path: "\(location).command", reason: "Command settings are required.")
-                }
-                try ItemStyle.validateNumber(item.command?.interval, range: 1...86400, path: "\(location).command.interval")
-                try ItemStyle.validateNumber(item.command?.timeout, range: 0.1...60, path: "\(location).command.timeout")
-                try item.style?.validate(path: "\(location).style")
-                guard !item.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    throw ConfigurationError.invalidItemIdentifier(path: "\(location).id", reason: "Must not be empty.")
-                }
-                guard identifiers.insert(item.id).inserted else {
-                    throw ConfigurationError.invalidItemIdentifier(path: "\(location).id", reason: "Duplicate ID '\(item.id)'.")
-                }
-                if let children = item.children { try validateItems(children, path: "\(location).children", depth: depth + 1) }
-            }
-        }
-        try validateItems(items.left, path: "items.left")
-        try validateItems(items.center, path: "items.center")
-        try validateItems(items.right, path: "items.right")
+    guard (20...96).contains(bar.height) else {
+      throw ConfigurationError.invalidBarHeight(bar.height)
     }
+    if bar.displays == .selected && (bar.displayIDs ?? []).isEmpty {
+      throw ConfigurationError.invalidStyle(
+        path: "bar.displayIDs",
+        reason: "Select at least one display ID."
+      )
+    }
+    try theme?.validate()
+    var identifiers = Set<String>()
+    func validateItems(_ entries: [ItemConfiguration], path: String, depth: Int = 0) throws {
+      guard depth <= 8 else {
+        throw ConfigurationError.invalidStyle(
+          path: path,
+          reason: "Groups may nest at most eight levels."
+        )
+      }
+      for (index, item) in entries.enumerated() {
+        let location = "\(path)[\(index)]"
+        if item.refresh?.mode == .interval && item.refresh?.seconds == nil {
+          throw ConfigurationError.invalidStyle(
+            path: "\(location).refresh.seconds",
+            reason: "An interval needs a duration."
+          )
+        }
+        try ItemStyle.validateNumber(
+          item.refresh?.seconds,
+          range: 1...86400,
+          path: "\(location).refresh.seconds"
+        )
+        if item.type == .plugin && item.plugin == nil {
+          throw ConfigurationError.invalidStyle(
+            path: "\(location).plugin",
+            reason: "Plugin settings are required."
+          )
+        }
+        if let plugin = item.plugin, plugin.executable.isEmpty {
+          throw ConfigurationError.invalidStyle(
+            path: "\(location).plugin.executable",
+            reason: "Executable must not be empty."
+          )
+        }
+        if item.type == .command && item.command == nil {
+          throw ConfigurationError.invalidStyle(
+            path: "\(location).command",
+            reason: "Command settings are required."
+          )
+        }
+        try ItemStyle.validateNumber(
+          item.command?.interval,
+          range: 1...86400,
+          path: "\(location).command.interval"
+        )
+        try ItemStyle.validateNumber(
+          item.command?.timeout,
+          range: 0.1...60,
+          path: "\(location).command.timeout"
+        )
+        try item.style?.validate(path: "\(location).style")
+        guard !item.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+          throw ConfigurationError.invalidItemIdentifier(
+            path: "\(location).id",
+            reason: "Must not be empty."
+          )
+        }
+        guard identifiers.insert(item.id).inserted else {
+          throw ConfigurationError.invalidItemIdentifier(
+            path: "\(location).id",
+            reason: "Duplicate ID '\(item.id)'."
+          )
+        }
+        if let children = item.children {
+          try validateItems(children, path: "\(location).children", depth: depth + 1)
+        }
+      }
+    }
+    try validateItems(items.left, path: "items.left")
+    try validateItems(items.center, path: "items.center")
+    try validateItems(items.right, path: "items.right")
+  }
 }
 
 struct BarSettings: Codable, Equatable, Sendable {
-    private enum CodingKeys: String, CodingKey { case position, height, displays, displayIDs, windowLevel, mousePassThrough }
+  private enum CodingKeys: String, CodingKey {
+    case position, height, displays, displayIDs, windowLevel, mousePassThrough
+  }
 
-    var position: BarPosition = .top
-    var height: Double = 32
-    var displays: DisplaySelection = .all
-    var displayIDs: [UInt32]?
-    var windowLevel: BarWindowLevel?
-    var mousePassThrough: Bool?
+  var position: BarPosition = .top
+  var height: Double = 32
+  var displays: DisplaySelection = .all
+  var displayIDs: [UInt32]?
+  var windowLevel: BarWindowLevel?
+  var mousePassThrough: Bool?
 
-    init(position: BarPosition = .top, height: Double = 32, displays: DisplaySelection = .all, displayIDs: [UInt32]? = nil, windowLevel: BarWindowLevel? = nil, mousePassThrough: Bool? = nil) {
-        self.position = position
-        self.height = height
-        self.displays = displays
-        self.displayIDs = displayIDs
-        self.windowLevel = windowLevel
-        self.mousePassThrough = mousePassThrough
-    }
+  init(
+    position: BarPosition = .top,
+    height: Double = 32,
+    displays: DisplaySelection = .all,
+    displayIDs: [UInt32]? = nil,
+    windowLevel: BarWindowLevel? = nil,
+    mousePassThrough: Bool? = nil
+  ) {
+    self.position = position
+    self.height = height
+    self.displays = displays
+    self.displayIDs = displayIDs
+    self.windowLevel = windowLevel
+    self.mousePassThrough = mousePassThrough
+  }
 
-    init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        position = try container.decodeIfPresent(BarPosition.self, forKey: .position) ?? .top
-        height = try container.decodeIfPresent(Double.self, forKey: .height) ?? 32
-        displays = try container.decodeIfPresent(DisplaySelection.self, forKey: .displays) ?? .all
-        displayIDs = try container.decodeIfPresent([UInt32].self, forKey: .displayIDs)
-        windowLevel = try container.decodeIfPresent(BarWindowLevel.self, forKey: .windowLevel)
-        mousePassThrough = try container.decodeIfPresent(Bool.self, forKey: .mousePassThrough)
-    }
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    position = try container.decodeIfPresent(BarPosition.self, forKey: .position) ?? .top
+    height = try container.decodeIfPresent(Double.self, forKey: .height) ?? 32
+    displays = try container.decodeIfPresent(DisplaySelection.self, forKey: .displays) ?? .all
+    displayIDs = try container.decodeIfPresent([UInt32].self, forKey: .displayIDs)
+    windowLevel = try container.decodeIfPresent(BarWindowLevel.self, forKey: .windowLevel)
+    mousePassThrough = try container.decodeIfPresent(Bool.self, forKey: .mousePassThrough)
+  }
 }
 
 struct ItemSections: Codable, Equatable, Sendable {
-    private enum CodingKeys: String, CodingKey { case left, center, right }
+  private enum CodingKeys: String, CodingKey { case left, center, right }
 
-    var left: [ItemConfiguration] = []
-    var center: [ItemConfiguration] = []
-    var right: [ItemConfiguration] = []
+  var left: [ItemConfiguration] = []
+  var center: [ItemConfiguration] = []
+  var right: [ItemConfiguration] = []
 
-    var active: [ItemConfiguration] { (left + center + right).flatMap(\.active) }
+  var active: [ItemConfiguration] { (left + center + right).flatMap(\.active) }
 
-    var all: [ItemConfiguration] { (left + center + right).flatMap(\.flattened) }
+  var all: [ItemConfiguration] { (left + center + right).flatMap(\.flattened) }
 
-    init(left: [ItemConfiguration] = [], center: [ItemConfiguration] = [], right: [ItemConfiguration] = []) {
-        self.left = left
-        self.center = center
-        self.right = right
-    }
+  init(
+    left: [ItemConfiguration] = [],
+    center: [ItemConfiguration] = [],
+    right: [ItemConfiguration] = []
+  ) {
+    self.left = left
+    self.center = center
+    self.right = right
+  }
 
-    init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        left = try container.decodeIfPresent([ItemConfiguration].self, forKey: .left) ?? []
-        center = try container.decodeIfPresent([ItemConfiguration].self, forKey: .center) ?? []
-        right = try container.decodeIfPresent([ItemConfiguration].self, forKey: .right) ?? []
-    }
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    left = try container.decodeIfPresent([ItemConfiguration].self, forKey: .left) ?? []
+    center = try container.decodeIfPresent([ItemConfiguration].self, forKey: .center) ?? []
+    right = try container.decodeIfPresent([ItemConfiguration].self, forKey: .right) ?? []
+  }
 }
 
 struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
-    private enum CodingKeys: String, CodingKey {
-        case enabled, format, id, label, priority, style, symbol, type, primaryAction, secondaryAction, popup, command, children, plugin, refresh
-    }
+  private enum CodingKeys: String, CodingKey {
+    case enabled, format, id, label, priority, style, symbol, type, primaryAction, secondaryAction,
+      popup, command, children, plugin, refresh
+  }
 
-    var id: String
-    var type: ItemType
-    var enabled: Bool = true
-    var label: String?
-    var symbol: String?
-    var format: String?
-    var priority: Int = 0
-    var style: ItemStyle?
-    var primaryAction: ItemAction?
-    var secondaryAction: ItemAction?
-    var popup: String?
-    var command: CommandConfiguration?
-    var children: [ItemConfiguration]?
-    var plugin: PluginConfiguration?
-    var refresh: RefreshPolicy?
+  var id: String
+  var type: ItemType
+  var enabled: Bool = true
+  var label: String?
+  var symbol: String?
+  var format: String?
+  var priority: Int = 0
+  var style: ItemStyle?
+  var primaryAction: ItemAction?
+  var secondaryAction: ItemAction?
+  var popup: String?
+  var command: CommandConfiguration?
+  var children: [ItemConfiguration]?
+  var plugin: PluginConfiguration?
+  var refresh: RefreshPolicy?
 
-    var active: [ItemConfiguration] { enabled ? [self] + (children ?? []).flatMap(\.active) : [] }
+  var active: [ItemConfiguration] { enabled ? [self] + (children ?? []).flatMap(\.active) : [] }
 
-    var flattened: [ItemConfiguration] { [self] + (children ?? []).flatMap(\.flattened) }
+  var flattened: [ItemConfiguration] { [self] + (children ?? []).flatMap(\.flattened) }
 
-    init(
-        id: String,
-        type: ItemType,
-        enabled: Bool = true,
-        label: String? = nil,
-        symbol: String? = nil,
-        format: String? = nil,
-        priority: Int = 0,
-        style: ItemStyle? = nil,
-        primaryAction: ItemAction? = nil,
-        secondaryAction: ItemAction? = nil,
-        popup: String? = nil,
-        command: CommandConfiguration? = nil,
-        children: [ItemConfiguration]? = nil,
-        plugin: PluginConfiguration? = nil,
-        refresh: RefreshPolicy? = nil
-    ) {
-        self.id = id
-        self.type = type
-        self.enabled = enabled
-        self.label = label
-        self.symbol = symbol
-        self.format = format
-        self.priority = priority
-        self.style = style
-        self.primaryAction = primaryAction
-        self.secondaryAction = secondaryAction
-        self.popup = popup
-        self.command = command
-        self.children = children
-        self.plugin = plugin
-        self.refresh = refresh
-    }
+  init(
+    id: String,
+    type: ItemType,
+    enabled: Bool = true,
+    label: String? = nil,
+    symbol: String? = nil,
+    format: String? = nil,
+    priority: Int = 0,
+    style: ItemStyle? = nil,
+    primaryAction: ItemAction? = nil,
+    secondaryAction: ItemAction? = nil,
+    popup: String? = nil,
+    command: CommandConfiguration? = nil,
+    children: [ItemConfiguration]? = nil,
+    plugin: PluginConfiguration? = nil,
+    refresh: RefreshPolicy? = nil
+  ) {
+    self.id = id
+    self.type = type
+    self.enabled = enabled
+    self.label = label
+    self.symbol = symbol
+    self.format = format
+    self.priority = priority
+    self.style = style
+    self.primaryAction = primaryAction
+    self.secondaryAction = secondaryAction
+    self.popup = popup
+    self.command = command
+    self.children = children
+    self.plugin = plugin
+    self.refresh = refresh
+  }
 
-    init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(String.self, forKey: .id)
-        type = try container.decode(ItemType.self, forKey: .type)
-        enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
-        label = try container.decodeIfPresent(String.self, forKey: .label)
-        symbol = try container.decodeIfPresent(String.self, forKey: .symbol)
-        format = try container.decodeIfPresent(String.self, forKey: .format)
-        priority = try container.decodeIfPresent(Int.self, forKey: .priority) ?? 0
-        style = try container.decodeIfPresent(ItemStyle.self, forKey: .style)
-        primaryAction = try container.decodeIfPresent(ItemAction.self, forKey: .primaryAction)
-        secondaryAction = try container.decodeIfPresent(ItemAction.self, forKey: .secondaryAction)
-        popup = try container.decodeIfPresent(String.self, forKey: .popup)
-        command = try container.decodeIfPresent(CommandConfiguration.self, forKey: .command)
-        children = try container.decodeIfPresent([ItemConfiguration].self, forKey: .children)
-        plugin = try container.decodeIfPresent(PluginConfiguration.self, forKey: .plugin)
-        refresh = try container.decodeIfPresent(RefreshPolicy.self, forKey: .refresh)
-    }
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    id = try container.decode(String.self, forKey: .id)
+    type = try container.decode(ItemType.self, forKey: .type)
+    enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
+    label = try container.decodeIfPresent(String.self, forKey: .label)
+    symbol = try container.decodeIfPresent(String.self, forKey: .symbol)
+    format = try container.decodeIfPresent(String.self, forKey: .format)
+    priority = try container.decodeIfPresent(Int.self, forKey: .priority) ?? 0
+    style = try container.decodeIfPresent(ItemStyle.self, forKey: .style)
+    primaryAction = try container.decodeIfPresent(ItemAction.self, forKey: .primaryAction)
+    secondaryAction = try container.decodeIfPresent(ItemAction.self, forKey: .secondaryAction)
+    popup = try container.decodeIfPresent(String.self, forKey: .popup)
+    command = try container.decodeIfPresent(CommandConfiguration.self, forKey: .command)
+    children = try container.decodeIfPresent([ItemConfiguration].self, forKey: .children)
+    plugin = try container.decodeIfPresent(PluginConfiguration.self, forKey: .plugin)
+    refresh = try container.decodeIfPresent(RefreshPolicy.self, forKey: .refresh)
+  }
 }
 
 enum BarPosition: String, Codable, Sendable { case top, bottom }
 enum DisplaySelection: String, Codable, Sendable { case main, all, selected }
-enum BarWindowLevel: String, Codable, CaseIterable, Sendable { case floating, statusBar, screenSaver }
-enum ItemType: String, CaseIterable, Codable, Sendable { case clock, date, divider, frontApplication, spacer, text, battery, volume, network, wifi, cpu, memory, disk, throughput, media, command, group, popup, plugin, aerospace, yabai }
+enum BarWindowLevel: String, Codable, CaseIterable, Sendable {
+  case floating, statusBar, screenSaver
+}
+enum ItemType: String, CaseIterable, Codable, Sendable {
+  case clock, date, divider, frontApplication, spacer, text, battery, volume, network, wifi, cpu,
+    memory, disk, throughput, media, command, group, popup, plugin, aerospace, yabai
+}
 
 enum ConfigurationError: Error, Equatable, LocalizedError {
-    case invalidStyle(path: String, reason: String)
-    case invalidItemIdentifier(path: String, reason: String)
-    case invalidBarHeight(Double)
-    case unsupportedSchemaVersion(Int)
+  case invalidStyle(path: String, reason: String)
+  case invalidItemIdentifier(path: String, reason: String)
+  case invalidBarHeight(Double)
+  case unsupportedSchemaVersion(Int)
 
-    var errorDescription: String? {
-        switch self {
-        case let .invalidStyle(path, reason): "\(path): \(reason)"
-        case let .invalidItemIdentifier(path, reason): "\(path): \(reason)"
-        case let .invalidBarHeight(height): "bar.height: \(height) is outside the supported range of 20...96."
-        case let .unsupportedSchemaVersion(version): "schemaVersion: \(version) is not supported."
-        }
+  var errorDescription: String? {
+    switch self {
+    case .invalidStyle(let path, let reason): "\(path): \(reason)"
+    case .invalidItemIdentifier(let path, let reason): "\(path): \(reason)"
+    case .invalidBarHeight(let height):
+      "bar.height: \(height) is outside the supported range of 20...96."
+    case .unsupportedSchemaVersion(let version): "schemaVersion: \(version) is not supported."
     }
+  }
 }
