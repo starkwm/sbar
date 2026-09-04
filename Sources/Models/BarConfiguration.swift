@@ -126,7 +126,7 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
 
 enum BarPosition: String, Codable, Sendable { case top, bottom }
 enum DisplaySelection: String, Codable, Sendable { case main, all }
-enum ItemType: String, Codable, Sendable { case clock, divider, frontApplication, spacer, text }
+enum ItemType: String, CaseIterable, Codable, Sendable { case clock, divider, frontApplication, spacer, text }
 
 enum ConfigurationError: Error, Equatable, LocalizedError {
     case invalidItemIdentifier(path: String, reason: String)

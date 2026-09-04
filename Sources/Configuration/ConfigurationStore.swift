@@ -3,6 +3,18 @@ import Observation
 
 @MainActor @Observable
 final class ConfigurationStore {
+    private struct Document: Encodable {
+        private enum CodingKeys: String, CodingKey { case schema = "$schema" }
+
+        let configuration: BarConfiguration
+
+        func encode(to encoder: any Encoder) throws {
+            try configuration.encode(to: encoder)
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode("config.schema.json", forKey: .schema)
+        }
+    }
+
     private static func describe(_ error: any Error) -> String {
         let path: [any CodingKey]
         let message: String
@@ -30,6 +42,8 @@ final class ConfigurationStore {
     }
 
     let configurationURL: URL
+    var backupURL: URL { configurationURL.appendingPathExtension("bak") }
+
     private(set) var configuration = BarConfiguration.default
     private(set) var errorMessage: String?
 
@@ -67,6 +81,34 @@ final class ConfigurationStore {
             configurationDidChange?()
         } catch {
             errorMessage = Self.describe(error)
+        }
+    }
+
+    /// Preserves the previous file before replacing it, including invalid externally edited JSON.
+    func save(_ candidate: BarConfiguration) throws {
+        do {
+            try candidate.validate()
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+            let data = try encoder.encode(Document(configuration: candidate))
+            let directory = configurationURL.deletingLastPathComponent()
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try ConfigurationSchema.data().write(to: directory.appending(path: "config.schema.json"), options: .atomic)
+            let previous: Data?
+            do {
+                previous = try Data(contentsOf: configurationURL)
+            } catch CocoaError.fileReadNoSuchFile {
+                previous = nil
+            }
+            if let previous { try previous.write(to: backupURL, options: .atomic) }
+            try data.write(to: configurationURL, options: .atomic)
+            errorMessage = nil
+            guard candidate != configuration else { return }
+            configuration = candidate
+            configurationDidChange?()
+        } catch {
+            errorMessage = Self.describe(error)
+            throw error
         }
     }
 }

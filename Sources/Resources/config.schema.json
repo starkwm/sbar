@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StarkBar configuration",
+  "description": "Schema version 1. Item IDs must also be unique across all sections; the app validates this constraint.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "bar",
+    "items"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "bar": {
+      "type": "object",
+      "properties": {
+        "position": {
+          "enum": [
+            "top",
+            "bottom",
+            null
+          ],
+          "default": "top"
+        },
+        "height": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 20,
+          "maximum": 96,
+          "default": 32
+        },
+        "displays": {
+          "enum": [
+            "main",
+            "all",
+            null
+          ],
+          "default": "all"
+        }
+      }
+    },
+    "items": {
+      "type": "object",
+      "properties": {
+        "left": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/item"
+          },
+          "default": []
+        },
+        "center": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/item"
+          },
+          "default": []
+        },
+        "right": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/item"
+          },
+          "default": []
+        }
+      }
+    }
+  },
+  "$defs": {
+    "item": {
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "type": {
+          "enum": [
+            "clock",
+            "divider",
+            "frontApplication",
+            "spacer",
+            "text"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "symbol": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "format": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Clock formats HH:mm and HH:mm:ss are recognized; other values use the default time style."
+        },
+        "priority": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": 0,
+          "description": "Reserved for future overflow handling."
+        }
+      }
+    }
+  }
+}

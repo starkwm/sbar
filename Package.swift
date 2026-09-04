@@ -6,7 +6,7 @@ let package = Package(
     platforms: [.macOS(.v14)],
     products: [.executable(name: "StarkBar", targets: ["StarkBar"])],
     targets: [
-        .executableTarget(name: "StarkBar", path: "Sources"),
+        .executableTarget(name: "StarkBar", path: "Sources", resources: [.copy("Resources/config.schema.json")]),
         .testTarget(name: "StarkBarTests", dependencies: ["StarkBar"], path: "Tests"),
     ]
 )

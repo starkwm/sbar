@@ -216,7 +216,9 @@ Foundation implementation is complete, with build and geometry tests. Live windo
 
 Configuration loading now supports defaults for omitted bar settings and item sections, precise decoding/validation paths, and filesystem-based live reload. Invalid edits preserve the last valid configuration. Missing files use built-in defaults. Observation handles direct edits, atomic replacement, deletion/recreation, and initially missing directories; unchanged configurations do not rebuild the panels.
 
-Next is atomic saving and backups, a JSON Schema, themes, and per-item styling. The current Settings view only displays status and reloads configuration; it is not yet an editor.
+Configuration saving validates before writing, atomically replaces the file, and keeps its previous bytes in `config.json.bak`. Settings offers save and reveal actions. A bundled JSON Schema is copied beside saved configurations and linked through `$schema`; the app bundle includes the schema resource. `script/build_and_run.sh --build` packages without launching or stopping the app.
+
+Next is themes and per-item styling. The current Settings view displays status and offers reload/save/reveal actions; it is not yet an editor. Configuration migration and a `--config` override also remain pending.
 
 ## Unresolved questions
 

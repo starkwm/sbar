@@ -10,12 +10,17 @@ APP_BUNDLE="$ROOT_DIR/dist/$APP_NAME.app"
 APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_BINARY="$APP_CONTENTS/MacOS/$APP_NAME"
 
-pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+if [[ "$MODE" != "--build" && "$MODE" != "build" ]]; then
+  pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+fi
 swift build
-BUILD_BINARY="$(swift build --show-bin-path)/$APP_NAME"
+BUILD_DIRECTORY="$(swift build --show-bin-path)"
+BUILD_BINARY="$BUILD_DIRECTORY/$APP_NAME"
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_CONTENTS/MacOS"
 cp "$BUILD_BINARY" "$APP_BINARY"
+# SwiftPM's generated Bundle.module accessor resolves this relative to the app root.
+cp -R "$BUILD_DIRECTORY/StarkBar_StarkBar.bundle" "$APP_BUNDLE/"
 chmod +x "$APP_BINARY"
 cat >"$APP_CONTENTS/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -33,10 +38,11 @@ PLIST
 
 open_app() { /usr/bin/open -n "$APP_BUNDLE"; }
 case "$MODE" in
+  --build|build) ;;
   run) open_app ;;
   --debug|debug) lldb -- "$APP_BINARY" ;;
   --logs|logs) open_app; /usr/bin/log stream --info --style compact --predicate "process == \"$APP_NAME\"" ;;
   --telemetry|telemetry) open_app; /usr/bin/log stream --info --style compact --predicate "subsystem == \"$BUNDLE_ID\"" ;;
   --verify|verify) open_app; sleep 1; pgrep -x "$APP_NAME" >/dev/null ;;
-  *) echo "usage: $0 [run|--debug|--logs|--telemetry|--verify]" >&2; exit 2 ;;
+  *) echo "usage: $0 [--build|run|--debug|--logs|--telemetry|--verify]" >&2; exit 2 ;;
 esac

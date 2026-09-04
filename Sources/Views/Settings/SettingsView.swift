@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct SettingsView: View {
@@ -13,9 +14,16 @@ struct SettingsView: View {
                 LabeledContent("Status", value: "Loaded")
             }
             Button("Reload Configuration", action: reload)
+            Button("Save Configuration") {
+                // The store reports any failure through errorMessage above.
+                try? store.save(store.configuration)
+            }
+            Button("Reveal Configuration") {
+                NSWorkspace.shared.activateFileViewerSelecting([store.configurationURL])
+            }
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 220)
+        .frame(width: 520, height: 300)
         .navigationTitle("StarkBar Settings")
     }
 }
