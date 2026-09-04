@@ -3,7 +3,7 @@ import Darwin
 import Foundation
 import Testing
 
-@testable import StarkBar
+@testable import sbar
 
 struct ControlTests {
   @Test("Control socket handles a fragmented request and excludes a second server")

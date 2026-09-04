@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-@testable import StarkBar
+@testable import sbar
 
 @MainActor
 @Suite("Configuration loading and observation")

@@ -2,7 +2,7 @@ import Foundation
 import Testing
 import os
 
-@testable import StarkBar
+@testable import sbar
 
 struct PluginTests {
   @Test("Plugins receive events and reconstruct fragmented JSON output")

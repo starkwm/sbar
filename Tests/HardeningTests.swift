@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-@testable import StarkBar
+@testable import sbar
 
 struct HardeningTests {
   @Test("Config overrides resolve once and reject incomplete options")

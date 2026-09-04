@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "StarkBar configuration",
+  "title": "sbar configuration",
   "description": "Schema version 2. The app migrates version 1 on load. Item IDs must be unique across all sections and groups.",
   "type": "object",
   "required": [

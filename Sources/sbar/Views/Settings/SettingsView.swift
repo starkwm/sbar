@@ -87,7 +87,7 @@ struct SettingsView: View {
     .frame(minWidth: 840, minHeight: 620)
     .onAppear { editor.load(store.configuration) }
     .onChange(of: store.configuration) { _, value in if !editor.dirty { editor.load(value) } }
-    .navigationTitle("StarkBar Settings")
+    .navigationTitle("sbar Settings")
   }
 
   @State private var editor = ConfigurationEditor()

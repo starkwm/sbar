@@ -1,6 +1,6 @@
 import Testing
 
-@testable import StarkBar
+@testable import sbar
 
 struct InteractionTests {
   @Test("Commands capture output and exit status")

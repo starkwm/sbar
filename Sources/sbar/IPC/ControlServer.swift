@@ -35,7 +35,7 @@ final class ControlServer: @unchecked Sendable {
           close(lock)
           lock = -1
         }
-        throw SocketFailure.message("Another StarkBar instance owns the control socket.")
+        throw SocketFailure.message("Another sbar instance owns the control socket.")
       }
       do {
         var info = stat()

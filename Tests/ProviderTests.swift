@@ -1,6 +1,6 @@
 import Testing
 
-@testable import StarkBar
+@testable import sbar
 
 struct ProviderTests {
   @Test("CPU usage uses sample deltas, not lifetime totals")

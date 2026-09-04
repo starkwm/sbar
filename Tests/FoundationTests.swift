@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-@testable import StarkBar
+@testable import sbar
 
 @Suite("Foundation geometry")
 struct FoundationTests {

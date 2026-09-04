@@ -96,7 +96,7 @@ final class BarCoordinator: NSObject {
       self.server = server
     } catch {
       controlError = error.localizedDescription
-      Logger(subsystem: "com.starkwm.StarkBar", category: "control").error(
+      Logger(subsystem: "com.starkwm.sbar", category: "control").error(
         "Control server failed: \(error.localizedDescription, privacy: .public)"
       )
     }

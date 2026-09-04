@@ -154,11 +154,11 @@ Do not load arbitrary Swift bundles initially. They introduce signing, ABI, secu
 Provide a small command-line interface:
 
 ```text
-barctl query
-barctl reload
-barctl trigger <event> [json]
-barctl set <item-id> <property> <value>
-barctl subscribe
+sbarctl query
+sbarctl reload
+sbarctl trigger <event> [json]
+sbarctl set <item-id> <property> <value>
+sbarctl subscribe
 ```
 
 This enables dynamic mutation and event integration without making shell scripts the rendering engine.
@@ -166,26 +166,23 @@ This enables dynamic mutation and event integration without making shell scripts
 ## Suggested project structure
 
 ```text
-Bar.xcodeproj
+Package.swift
 Sources/
-  App/
-  Models/
-  Views/Bar/
-  Views/Settings/
-  Windowing/
-  Configuration/
-  Providers/
-    System/
-    Integrations/
-  Actions/
-  Plugins/
-  IPC/
-  Support/
+  sbar/
+    App/
+    Models/
+    Views/Bar/
+    Views/Settings/
+    Windowing/
+    Configuration/
+    Providers/
+    Actions/
+    Plugins/
+    IPC/
+    Resources/
+  sbarctl/
+  ControlProtocol/
 Tests/
-  ConfigurationTests/
-  LayoutTests/
-  ProviderTests/
-  IPCTests/
 ```
 
 Initially target macOS 14. Use Swift 6 concurrency, Observation, `Codable`, `OSLog`, and Swift Testing. Add older-version compatibility only when it becomes a concrete requirement.
@@ -196,7 +193,7 @@ Initially target macOS 14. Use Swift 6 concurrency, Observation, `Codable`, `OSL
 2. **Configuration:** Versioned decoding, validation, live reload, themes, and per-item styling.
 3. **Native items:** Clock, battery, volume, network, CPU/memory, and front application.
 4. **Interaction:** Click actions, hover states, popups, and shell commands.
-5. **Runtime control:** Event bus, `barctl`, and dynamic item updates.
+5. **Runtime control:** Event bus, `sbarctl`, and dynamic item updates.
 6. **Editor:** Native Settings window, drag-and-drop layout, preview, and diagnostics.
 7. **Extensibility:** External provider protocol plus AeroSpace and yabai adapters.
 8. **Hardening:** Screen changes, Spaces/fullscreen, sleep/wake, performance, accessibility, signing, and distribution.
@@ -213,7 +210,7 @@ All eight phases have implementation coverage, with signing and distribution def
 | Configuration | Versioned JSON, v1-to-v2 migration, precise validation, defaults, atomic saves/backups, schema, filesystem reload, themes/overrides, and `--config`. |
 | Native items | Shared clock/date, application, battery, volume, connection status, CPU/memory, disk, throughput, and Music/Spotify playback notifications. |
 | Interaction | Primary/context-menu actions, hover, bounded shell output, groups, child/text popups, compression, and priority overflow. |
-| Runtime control | Typed events, same-user Unix socket, `barctl` query/reload/set/trigger/subscribe, transient validated edits. |
+| Runtime control | Typed events, same-user Unix socket, `sbarctl` query/reload/set/trigger/subscribe, transient validated edits. |
 | Editor | Draft-based native layout/theme/item controls, top-level drag/drop, preview, diagnostics, conflict notices, import/export, and nested JSON editing. |
 | Extensibility | Isolated NDJSON processes with cancellation/restart limits, plus AeroSpace/yabai focused-workspace queries. |
 | Hardening | Screen/Space and sleep/wake lifecycle, bounded process/socket resources, accessibility labels, tests, SwiftPM resources, and Makefile executable builds. |
@@ -226,7 +223,7 @@ Remaining verification requires running the app: multiple displays and hot-plugg
 - File-first configuration with a native draft editor; macOS 14 minimum.
 - Execute only commands/plugins explicitly configured by the user, without arbitrary in-process bundles.
 - Share one layout and provider set across selected displays.
-- Build `StarkBar` and `barctl` directly with `make`; no `.app` packaging. Distribution and App Store sandbox support remain future product choices.
+- Build `sbar` and `sbarctl` directly with `make`; no `.app` packaging. Distribution and App Store sandbox support remain future product choices.
 
 ## References
 

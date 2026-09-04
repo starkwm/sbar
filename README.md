@@ -1,4 +1,4 @@
-# StarkBar
+# sbar
 
 A native macOS bar built with SwiftUI and a small AppKit window layer. Requires macOS 14 or later.
 
@@ -10,13 +10,13 @@ make test
 make release
 ```
 
-Debug executables are `.build/debug/StarkBar` and `.build/debug/barctl`; release executables are in `.build/release`. Run `StarkBar` directly to start the bar. Keep the SwiftPM resource bundle alongside the executable when copying build outputs.
+Debug executables are `.build/debug/sbar` and `.build/debug/sbarctl`; release executables are in `.build/release`. Run `sbar` directly to start the bar. Keep the SwiftPM resource bundle alongside the executable when copying build outputs.
 
 The Makefile follows the `skbd` and `swm` workflow: `make` builds debug executables, `make release` builds optimized executables, `make format` formats Swift sources, `make lint` checks formatting, and `make clean` removes SwiftPM build products.
 
 ## Configuration
 
-StarkBar reads `~/.config/starkbar/config.json` and reloads it when the file changes. Missing files use built-in defaults; invalid edits retain the last valid configuration and show the error in Settings.
+sbar reads `~/.config/starkbar/config.json` and reloads it when the file changes. Missing files use built-in defaults; invalid edits retain the last valid configuration and show the error in Settings.
 
 In Settings, **Save** writes the editor draft, creating the directory if needed. Before replacing an existing file, it saves the exact previous contents to `config.json.bak`. There is one rotating backup, including when the previous file contains invalid JSON. If the backup cannot be written, the configuration is not replaced. External editor changes are reloaded but do not create backups.
 
@@ -42,7 +42,7 @@ See [PLAN.md](PLAN.md) for implementation status and upcoming work.
 
 Version-1 files migrate to version 2 in memory: legacy command intervals/events become item refresh policies, including inside groups. Loading never rewrites the source file; Save writes version 2 after backing up the original. Future schema versions are rejected.
 
-Start with an alternate file using `StarkBar --config /path/config.json`. Its control socket lives beside the chosen file.
+Start with an alternate file using `sbar --config /path/config.json`. Its control socket lives beside the chosen file.
 
 `refresh` accepts `mode: event`, `interval`, or `manual`, with `seconds` required for intervals and an optional named `event`. Native event mode follows provider changes; interval/manual modes snapshot shared provider values. Triggering the item ID or its event captures a fresh snapshot. Underlying metric sampling remains shared at two-second resolution. Plugins retain their own streaming cadence and receive all runtime triggers.
 
@@ -103,15 +103,15 @@ Each region measures its items, allows flexible text to compress, and moves low-
 
 ## Runtime control
 
-The `barctl` executable connects to `~/.config/starkbar/control.sock`; use `--socket <path>` for another configuration directory.
+The `sbarctl` executable connects to `~/.config/starkbar/control.sock`; use `--socket <path>` for another configuration directory.
 
 ```sh
-barctl query
-barctl reload
-barctl set clock enabled false
-barctl set clock style '{"tint":"#88C0D0"}'
-barctl trigger refresh '{"source":"manual"}'
-barctl subscribe
+sbarctl query
+sbarctl reload
+sbarctl set clock enabled false
+sbarctl set clock style '{"tint":"#88C0D0"}'
+sbarctl trigger refresh '{"source":"manual"}'
+sbarctl subscribe
 ```
 
 `set` changes in-memory configuration only. Supported properties are `label`, `symbol`, `enabled`, `priority`, `format`, `style`, and `popup`; Settings Save persists the current state. Reload discards transient changes. `subscribe` streams JSON lines for configuration changes, provider values, and triggers. Trigger payloads are retained in events; matching command items rerun. Clients must belong to the same user. Slow subscribers are disconnected, and a lock prevents multiple instances from owning the same socket.

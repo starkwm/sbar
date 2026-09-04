@@ -14,7 +14,7 @@ func main() throws {
   }
   guard let command = arguments.first, command != "--help" else {
     print(
-      "barctl [--socket path] query|reload|subscribe|trigger <event> [json]|set <item-id> <property> <value>"
+      "sbarctl [--socket path] query|reload|subscribe|trigger <event> [json]|set <item-id> <property> <value>"
     )
     return
   }

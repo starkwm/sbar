@@ -2,21 +2,20 @@
 import PackageDescription
 
 let package = Package(
-  name: "StarkBar",
+  name: "sbar",
   platforms: [.macOS(.v14)],
   products: [
-    .executable(name: "StarkBar", targets: ["StarkBar"]),
-    .executable(name: "barctl", targets: ["barctl"]),
+    .executable(name: "sbar", targets: ["sbar"]),
+    .executable(name: "sbarctl", targets: ["sbarctl"]),
   ],
   targets: [
-    .target(name: "ControlProtocol", path: "Shared/ControlProtocol"),
-    .executableTarget(name: "barctl", dependencies: ["ControlProtocol"], path: "CLI"),
+    .target(name: "ControlProtocol"),
+    .executableTarget(name: "sbarctl", dependencies: ["ControlProtocol"]),
     .executableTarget(
-      name: "StarkBar",
+      name: "sbar",
       dependencies: ["ControlProtocol"],
-      path: "Sources",
       resources: [.copy("Resources/config.schema.json")]
     ),
-    .testTarget(name: "StarkBarTests", dependencies: ["StarkBar"], path: "Tests"),
+    .testTarget(name: "sbarTests", dependencies: ["sbar"], path: "Tests"),
   ]
 )

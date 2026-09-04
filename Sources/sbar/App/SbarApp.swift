@@ -2,15 +2,15 @@ import AppKit
 import SwiftUI
 
 @main
-struct StarkBarApp: App {
+struct SbarApp: App {
   @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
 
   var body: some Scene {
-    MenuBarExtra("StarkBar", systemImage: "rectangle.topthird.inset.filled") {
+    MenuBarExtra("sbar", systemImage: "rectangle.topthird.inset.filled") {
       Button("Reload Configuration") { appDelegate.reload() }
       SettingsLink()
       Divider()
-      Button("Quit StarkBar") { NSApp.terminate(nil) }.keyboardShortcut("q")
+      Button("Quit sbar") { NSApp.terminate(nil) }.keyboardShortcut("q")
     }
     Settings {
       SettingsView(store: appDelegate.store) { appDelegate.reload() }

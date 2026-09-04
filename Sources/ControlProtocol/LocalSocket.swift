@@ -37,7 +37,7 @@ public enum LocalSocket {
       let status = try address(path) { Darwin.connect(fd, $0, $1) }
       guard status == 0 else {
         throw SocketFailure.message(
-          "Cannot connect to StarkBar: \(String(cString: strerror(errno)))"
+          "Cannot connect to sbar: \(String(cString: strerror(errno)))"
         )
       }
       var one: Int32 = 1

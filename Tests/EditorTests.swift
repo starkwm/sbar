@@ -1,6 +1,6 @@
 import Testing
 
-@testable import StarkBar
+@testable import sbar
 
 @MainActor
 struct EditorTests {
