@@ -5,14 +5,14 @@ A native macOS bar built with SwiftUI and a small AppKit window layer. Requires 
 ## Build
 
 ```sh
-make build
+make
 make test
-bash script/build_and_run.sh --build
+make release
 ```
 
-The build script creates `dist/StarkBar.app`. Omit `--build` to build and launch it.
+Debug executables are `.build/debug/StarkBar` and `.build/debug/barctl`; release executables are in `.build/release`. Run `StarkBar` directly to start the bar. Keep the SwiftPM resource bundle alongside the executable when copying build outputs.
 
-The Makefile follows the `skbd` and `swm` workflow: `make` builds debug executables, `make release` builds optimized executables, `make format` formats Swift sources, `make lint` checks formatting, and `make clean` removes SwiftPM build products. App bundling and signed archives use the scripts described here.
+The Makefile follows the `skbd` and `swm` workflow: `make` builds debug executables, `make release` builds optimized executables, `make format` formats Swift sources, `make lint` checks formatting, and `make clean` removes SwiftPM build products.
 
 ## Configuration
 
@@ -42,7 +42,7 @@ See [PLAN.md](PLAN.md) for implementation status and upcoming work.
 
 Version-1 files migrate to version 2 in memory: legacy command intervals/events become item refresh policies, including inside groups. Loading never rewrites the source file; Save writes version 2 after backing up the original. Future schema versions are rejected.
 
-Start with an alternate file using `StarkBar --config /path/config.json` (or `open dist/StarkBar.app --args --config /path/config.json`). Its control socket lives beside the chosen file.
+Start with an alternate file using `StarkBar --config /path/config.json`. Its control socket lives beside the chosen file.
 
 `refresh` accepts `mode: event`, `interval`, or `manual`, with `seconds` required for intervals and an optional named `event`. Native event mode follows provider changes; interval/manual modes snapshot shared provider values. Triggering the item ID or its event captures a fresh snapshot. Underlying metric sampling remains shared at two-second resolution. Plugins retain their own streaming cadence and receive all runtime triggers.
 
@@ -103,7 +103,7 @@ Each region measures its items, allows flexible text to compress, and moves low-
 
 ## Runtime control
 
-The bundle includes `Contents/MacOS/barctl` (also built by SwiftPM). It connects to `~/.config/starkbar/control.sock`; use `--socket <path>` for another configuration directory.
+The `barctl` executable connects to `~/.config/starkbar/control.sock`; use `--socket <path>` for another configuration directory.
 
 ```sh
 barctl query
@@ -129,17 +129,5 @@ A `plugin` item uses `plugin: {"executable":"/absolute/path/to/provider", "argum
 Each output line is limited to 64 KB and displayed text to 4,096 characters. Bursts coalesce to the latest value in each read. The input mailbox holds up to 32 events and drops new events if full. Invalid output stops that process; automatic restarts back off from one to 30 seconds. Set `restart:false` for one-shot providers. Removing/disabling the item or shutting down terminates the process group.
 
 `aerospace` and `yabai` items show the focused workspace, using [AeroSpace's focused-workspace query](https://nikitabobko.github.io/AeroSpace/commands#list-workspaces) and [yabai's space query](https://github.com/asmvik/yabai/wiki/Commands#querying-information). Executables are located in PATH or the standard Homebrew prefixes. Queries run every two seconds with a two-second timeout; missing or unavailable integrations show a status message. No adapter changes window-manager configuration.
-
-## Release packaging
-
-```sh
-# Local ad-hoc signed archive; does not launch or notarize the app.
-NOTARY_PROFILE= SIGNING_IDENTITY=- bash script/release.sh
-
-# Developer ID signing; uses an existing signing identity.
-SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" bash script/release.sh
-```
-
-Set `STARKBAR_VERSION` and `STARKBAR_BUILD` to choose release metadata. The archive is written to `dist/StarkBar-<version>.zip`. To notarize, also set `NOTARY_PROFILE` to an existing notarytool keychain profile; the script submits the archive, staples the accepted ticket, and recreates the archive. No credentials are stored in the repository. Ad-hoc signatures establish local bundle integrity, not Gatekeeper distribution trust.
 
 The app pauses providers and commands during sleep and restarts them after wake. Panels follow screen and Space changes. See [manual validation](docs/manual-validation.md) for the remaining live checks; automated tests do not establish hardware or desktop behavior.

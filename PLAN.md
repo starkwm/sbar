@@ -205,7 +205,7 @@ Each phase ends with unit tests and manual coverage across multiple monitors, Sp
 
 ## Implementation status
 
-All eight phases have implementation coverage. Automated tests and local ad-hoc release packaging are verified; the app has not been launched for this implementation pass.
+All eight phases have implementation coverage, with signing and distribution deferred. Automated tests and executable builds are verified; the app has not been launched for this implementation pass.
 
 | Phase | Delivered |
 | --- | --- |
@@ -216,9 +216,9 @@ All eight phases have implementation coverage. Automated tests and local ad-hoc 
 | Runtime control | Typed events, same-user Unix socket, `barctl` query/reload/set/trigger/subscribe, transient validated edits. |
 | Editor | Draft-based native layout/theme/item controls, top-level drag/drop, preview, diagnostics, conflict notices, import/export, and nested JSON editing. |
 | Extensibility | Isolated NDJSON processes with cancellation/restart limits, plus AeroSpace/yabai focused-workspace queries. |
-| Hardening | Screen/Space and sleep/wake lifecycle, bounded process/socket resources, accessibility labels, tests, standard resource packaging, signing/optional notarization script. |
+| Hardening | Screen/Space and sleep/wake lifecycle, bounded process/socket resources, accessibility labels, tests, SwiftPM resources, and Makefile executable builds. |
 
-Remaining verification requires running the app: multiple displays and hot-plugging, Spaces/fullscreen, Stage Manager, sleep/wake, hardware provider accuracy, VoiceOver, popup/input behavior, and performance. Developer ID signing/notarization has not been performed; only an ad-hoc signed local archive has been validated. See `docs/manual-validation.md`.
+Remaining verification requires running the app: multiple displays and hot-plugging, Spaces/fullscreen, Stage Manager, sleep/wake, hardware provider accuracy, VoiceOver, popup/input behavior, and performance. Signing and distribution are outside the current executable-only build workflow. See `docs/manual-validation.md`.
 
 ## Current product choices
 
@@ -226,7 +226,7 @@ Remaining verification requires running the app: multiple displays and hot-plugg
 - File-first configuration with a native draft editor; macOS 14 minimum.
 - Execute only commands/plugins explicitly configured by the user, without arbitrary in-process bundles.
 - Share one layout and provider set across selected displays.
-- Prepare direct distribution; App Store sandbox support remains a future product choice.
+- Build `StarkBar` and `barctl` directly with `make`; no `.app` packaging. Distribution and App Store sandbox support remain future product choices.
 
 ## References
 
