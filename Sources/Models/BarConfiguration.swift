@@ -22,25 +22,63 @@ struct BarConfiguration: Codable, Equatable, Sendable {
         guard (20...96).contains(bar.height) else {
             throw ConfigurationError.invalidBarHeight(bar.height)
         }
-        let identifiers = items.all.map(\.id)
-        guard Set(identifiers).count == identifiers.count else {
-            throw ConfigurationError.duplicateItemIdentifier
+        var identifiers = Set<String>()
+        for (section, entries) in [("left", items.left), ("center", items.center), ("right", items.right)] {
+            for (index, item) in entries.enumerated() {
+                let path = "items.\(section)[\(index)].id"
+                guard !item.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    throw ConfigurationError.invalidItemIdentifier(path: path, reason: "Must not be empty.")
+                }
+                guard identifiers.insert(item.id).inserted else {
+                    throw ConfigurationError.invalidItemIdentifier(path: path, reason: "Duplicate ID '\(item.id)'.")
+                }
+            }
         }
     }
 }
 
 struct BarSettings: Codable, Equatable, Sendable {
+    private enum CodingKeys: String, CodingKey { case position, height, displays }
+
     var position: BarPosition = .top
     var height: Double = 32
     var displays: DisplaySelection = .all
+
+    init(position: BarPosition = .top, height: Double = 32, displays: DisplaySelection = .all) {
+        self.position = position
+        self.height = height
+        self.displays = displays
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        position = try container.decodeIfPresent(BarPosition.self, forKey: .position) ?? .top
+        height = try container.decodeIfPresent(Double.self, forKey: .height) ?? 32
+        displays = try container.decodeIfPresent(DisplaySelection.self, forKey: .displays) ?? .all
+    }
 }
 
 struct ItemSections: Codable, Equatable, Sendable {
+    private enum CodingKeys: String, CodingKey { case left, center, right }
+
     var left: [ItemConfiguration] = []
     var center: [ItemConfiguration] = []
     var right: [ItemConfiguration] = []
 
     var all: [ItemConfiguration] { left + center + right }
+
+    init(left: [ItemConfiguration] = [], center: [ItemConfiguration] = [], right: [ItemConfiguration] = []) {
+        self.left = left
+        self.center = center
+        self.right = right
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        left = try container.decodeIfPresent([ItemConfiguration].self, forKey: .left) ?? []
+        center = try container.decodeIfPresent([ItemConfiguration].self, forKey: .center) ?? []
+        right = try container.decodeIfPresent([ItemConfiguration].self, forKey: .right) ?? []
+    }
 }
 
 struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
@@ -91,15 +129,15 @@ enum DisplaySelection: String, Codable, Sendable { case main, all }
 enum ItemType: String, Codable, Sendable { case clock, divider, frontApplication, spacer, text }
 
 enum ConfigurationError: Error, Equatable, LocalizedError {
-    case duplicateItemIdentifier
+    case invalidItemIdentifier(path: String, reason: String)
     case invalidBarHeight(Double)
     case unsupportedSchemaVersion(Int)
 
     var errorDescription: String? {
         switch self {
-        case .duplicateItemIdentifier: "Item IDs must be unique."
-        case let .invalidBarHeight(height): "Bar height \(height) is outside the supported range of 20...96."
-        case let .unsupportedSchemaVersion(version): "Configuration schema version \(version) is not supported."
+        case let .invalidItemIdentifier(path, reason): "\(path): \(reason)"
+        case let .invalidBarHeight(height): "bar.height: \(height) is outside the supported range of 20...96."
+        case let .unsupportedSchemaVersion(version): "schemaVersion: \(version) is not supported."
         }
     }
 }

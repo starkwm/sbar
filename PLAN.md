@@ -214,7 +214,9 @@ Foundation implementation is complete, with build and geometry tests. Live windo
 - Three regions keep the center geometrically centered. Center content uses at most one third of the width; equal side budgets share the remainder. Content compresses within each region and clips at its boundary.
 - Priority-based hiding and an overflow popup remain pending for the interaction phase. Selected-display targeting, configurable window level, and optional empty-region mouse pass-through are also pending enhancements beyond the phase-one main/all-display scope.
 
-Next is configuration: live reload, precise validation diagnostics, atomic saving and backups, a JSON Schema, themes, and per-item styling. The current Settings view only displays status and reloads configuration; it is not yet an editor.
+Configuration loading now supports defaults for omitted bar settings and item sections, precise decoding/validation paths, and filesystem-based live reload. Invalid edits preserve the last valid configuration. Missing files use built-in defaults. Observation handles direct edits, atomic replacement, deletion/recreation, and initially missing directories; unchanged configurations do not rebuild the panels.
+
+Next is atomic saving and backups, a JSON Schema, themes, and per-item styling. The current Settings view only displays status and reloads configuration; it is not yet an editor.
 
 ## Unresolved questions
 

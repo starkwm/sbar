@@ -19,7 +19,7 @@ struct ConfigurationTests {
     func duplicateItemIDsFailValidation() {
         let item = ItemConfiguration(id: "same", type: .text)
         let configuration = BarConfiguration(schemaVersion: 1, bar: .init(), items: .init(left: [item], right: [item]))
-        #expect(throws: ConfigurationError.duplicateItemIdentifier) { try configuration.validate() }
+        #expect(throws: ConfigurationError.invalidItemIdentifier(path: "items.right[0].id", reason: "Duplicate ID 'same'.")) { try configuration.validate() }
     }
 
     @Test("Unsupported heights fail validation")
@@ -27,4 +27,20 @@ struct ConfigurationTests {
         let configuration = BarConfiguration(schemaVersion: 1, bar: .init(height: 10), items: .init())
         #expect(throws: ConfigurationError.invalidBarHeight(10)) { try configuration.validate() }
     }
+
+    @Test("Omitted bar settings and sections use defaults")
+    func defaultsDecode() throws {
+        let configuration = try JSONDecoder().decode(BarConfiguration.self, from: Data(#"{"schemaVersion":1,"bar":{},"items":{}}"#.utf8))
+        #expect(configuration.bar == BarSettings())
+        #expect(configuration.items.all.isEmpty)
+    }
+
+    @Test("Whitespace IDs report their location")
+    func emptyIdentifier() {
+        let configuration = BarConfiguration(schemaVersion: 1, bar: .init(), items: .init(center: [.init(id: " ", type: .text)]))
+        #expect(throws: ConfigurationError.invalidItemIdentifier(path: "items.center[0].id", reason: "Must not be empty.")) {
+            try configuration.validate()
+        }
+    }
+
 }

@@ -21,11 +21,15 @@ final class BarCoordinator: NSObject {
             name: NSApplication.didChangeScreenParametersNotification,
             object: nil
         )
-        reload()
+        store.startObserving()
+        store.configurationDidChange = { [weak self] in self?.updatePanels() }
+        updatePanels()
     }
 
     func stop() {
         NotificationCenter.default.removeObserver(self)
+        store.stopObserving()
+        store.configurationDidChange = nil
         panels.values.forEach { $0.close() }
         panels.removeAll()
         isStarted = false
@@ -33,7 +37,6 @@ final class BarCoordinator: NSObject {
 
     func reload() {
         store.load()
-        updatePanels()
     }
 
     @objc private func screenParametersDidChange() {
