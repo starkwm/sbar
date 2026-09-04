@@ -6,7 +6,7 @@ struct BarConfiguration: Codable, Equatable, Sendable {
         schemaVersion: currentSchemaVersion,
         bar: .init(),
         items: .init(
-            left: [.init(id: "app", type: .frontApplication, label: "StarkBar")],
+            left: [.init(id: "app", type: .frontApplication)],
             right: [.init(id: "divider", type: .divider), .init(id: "clock", type: .clock, format: "HH:mm")]
         )
     )
@@ -133,7 +133,7 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
 
 enum BarPosition: String, Codable, Sendable { case top, bottom }
 enum DisplaySelection: String, Codable, Sendable { case main, all }
-enum ItemType: String, CaseIterable, Codable, Sendable { case clock, divider, frontApplication, spacer, text }
+enum ItemType: String, CaseIterable, Codable, Sendable { case clock, date, divider, frontApplication, spacer, text, battery, volume, network, wifi, cpu, memory, disk, throughput, media }
 
 enum ConfigurationError: Error, Equatable, LocalizedError {
     case invalidStyle(path: String, reason: String)

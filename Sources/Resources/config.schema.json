@@ -131,10 +131,20 @@
         "type": {
           "enum": [
             "clock",
+            "date",
             "divider",
             "frontApplication",
             "spacer",
-            "text"
+            "text",
+            "battery",
+            "volume",
+            "network",
+            "wifi",
+            "cpu",
+            "memory",
+            "disk",
+            "throughput",
+            "media"
           ]
         },
         "enabled": {

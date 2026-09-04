@@ -3,6 +3,8 @@ import SwiftUI
 
 @MainActor
 final class BarCoordinator: NSObject {
+    let providers = ProviderRegistry()
+
     private let store: ConfigurationStore
     private var panels: [CGDirectDisplayID: BarPanel] = [:]
     private var isStarted = false
@@ -28,6 +30,7 @@ final class BarCoordinator: NSObject {
 
     func stop() {
         NotificationCenter.default.removeObserver(self)
+        providers.stop()
         store.stopObserving()
         store.configurationDidChange = nil
         panels.values.forEach { $0.close() }
@@ -46,6 +49,7 @@ final class BarCoordinator: NSObject {
     private func updatePanels() {
         guard isStarted else { return }
         let configuration = store.configuration
+        providers.configure(configuration)
         // The first screen is the primary display; NSScreen.main follows the key window.
         let screens = configuration.bar.displays == .all ? NSScreen.screens : Array(NSScreen.screens.prefix(1))
         var remaining = panels
@@ -56,7 +60,7 @@ final class BarCoordinator: NSObject {
             let frame = BarPlacement.frame(in: screen.visibleFrame, settings: configuration.bar)
             let panel = remaining.removeValue(forKey: identifier) ?? BarPanel(contentRect: frame)
             panel.setFrame(frame, display: true)
-            panel.contentView = NSHostingView(rootView: BarView(configuration: configuration))
+            panel.contentView = NSHostingView(rootView: BarView(configuration: configuration).environment(providers))
             panel.orderFrontRegardless()
             updated[identifier] = panel
         }

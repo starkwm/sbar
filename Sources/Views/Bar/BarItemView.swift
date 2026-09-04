@@ -18,19 +18,23 @@ struct BarItemView: View {
     @ViewBuilder private var content: some View {
         switch configuration.type {
         case .clock:
-            TimelineView(.periodic(from: .now, by: 1)) { context in
-                Text(context.date, format: clockFormat).monospacedDigit()
-            }
+            Text(providers.date, format: clockFormat).monospacedDigit()
+        case .date:
+            Text(providers.date, format: .dateTime.weekday().month().day())
         case .divider:
             Rectangle().frame(width: 1, height: 16).opacity(0.3)
         case .frontApplication:
-            Text(configuration.label ?? NSWorkspace.shared.frontmostApplication?.localizedName ?? "").lineLimit(1)
+            Text(configuration.label ?? providers.values[.frontApplication] ?? "").lineLimit(1)
         case .spacer:
             Spacer(minLength: 8)
         case .text:
             Text(configuration.label ?? "")
+        default:
+            Text(providers.values[configuration.type] ?? "—")
         }
     }
+
+    @Environment(ProviderRegistry.self) private var providers
 
     private var clockFormat: Date.FormatStyle {
         switch configuration.format {

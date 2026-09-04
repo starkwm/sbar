@@ -220,7 +220,7 @@ Configuration saving validates before writing, atomically replaces the file, and
 
 Themes and per-item styling are implemented: built-in defaults, global `theme.itemStyle`, then individual item `style` overrides. Colors, font size/weight, padding, backgrounds, corner radii, and bar spacing are validated, rendered, saved, and described by the JSON Schema. Existing configurations retain default styling. The current Settings view displays status and offers reload/save/reveal actions; it is not yet an editor.
 
-Next is shared native providers and live front-application updates, followed by the remaining native items. Configuration migration and a `--config` override also remain pending.
+Shared native providers and live front-application updates are implemented, along with clock/date, battery, output volume, connection status, CPU/memory, free disk space, throughput, and Music/Spotify playback notifications. Hardware behavior remains unverified without launching the app. Next is interaction and shell output. Configuration migration and a `--config` override also remain pending.
 
 ## Unresolved questions
 
