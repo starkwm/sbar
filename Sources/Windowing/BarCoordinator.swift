@@ -5,9 +5,9 @@ import SwiftUI
 
 @MainActor
 final class BarCoordinator: NSObject {
-    let providers = ProviderRegistry()
-    let actions = ActionRunner()
-    let events = EventBus()
+    let providers: ProviderRegistry
+    let actions: ActionRunner
+    let events: EventBus
     private(set) var controlError: String?
     private var server: ControlServer?
 
@@ -15,7 +15,10 @@ final class BarCoordinator: NSObject {
     private var panels: [CGDirectDisplayID: BarPanel] = [:]
     private var isStarted = false
 
-    init(store: ConfigurationStore) {
+    init(store: ConfigurationStore, providers: ProviderRegistry, actions: ActionRunner, events: EventBus) {
+        self.providers = providers
+        self.actions = actions
+        self.events = events
         self.store = store
         super.init()
     }

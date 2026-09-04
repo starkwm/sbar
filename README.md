@@ -106,3 +106,9 @@ barctl subscribe
 ```
 
 `set` changes in-memory configuration only. Supported properties are `label`, `symbol`, `enabled`, `priority`, `format`, `style`, and `popup`; Settings Save persists the current state. Reload discards transient changes. `subscribe` streams JSON lines for configuration changes, provider values, and triggers. Trigger payloads are retained in events; matching command items rerun. Clients must belong to the same user. Slow subscribers are disconnected, and a lock prevents multiple instances from owning the same socket.
+
+## Settings editor
+
+Settings keeps a draft separate from the running configuration. Drag top-level items onto another row to insert before it, or onto a section's Add item button to append. Context menus offer cross-section moves and deletion. Select an item for style/action controls; advanced item JSON edits nested children and less common options. The Theme tab edits shared defaults. Preview uses current provider snapshots and cannot execute click actions.
+
+Save validates and persists the draft. Reload discards it. Import validates a JSON file into the draft; Export writes the draft to a chosen file. If live configuration changes while a draft is dirty, Settings shows a conflict notice. Invalid drafts remain editable while the preview retains the baseline configuration. Diagnostics lists recent runtime events and action failures.

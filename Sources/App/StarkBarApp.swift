@@ -14,6 +14,9 @@ struct StarkBarApp: App {
         }
         Settings {
             SettingsView(store: appDelegate.store) { appDelegate.reload() }
+                .environment(appDelegate.providers)
+                .environment(appDelegate.actions)
+                .environment(appDelegate.events)
         }
     }
 }
@@ -21,11 +24,14 @@ struct StarkBarApp: App {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let store = ConfigurationStore()
+    let providers = ProviderRegistry()
+    let actions = ActionRunner()
+    let events = EventBus()
     private var coordinator: BarCoordinator?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        coordinator = BarCoordinator(store: store)
+        coordinator = BarCoordinator(store: store, providers: providers, actions: actions, events: events)
         coordinator?.start()
     }
 
