@@ -14,6 +14,7 @@ struct BarConfiguration: Codable, Equatable, Sendable {
     var schemaVersion: Int
     var bar: BarSettings
     var items: ItemSections
+    var theme: BarTheme? = nil
 
     func validate() throws {
         guard schemaVersion == Self.currentSchemaVersion else {
@@ -22,9 +23,11 @@ struct BarConfiguration: Codable, Equatable, Sendable {
         guard (20...96).contains(bar.height) else {
             throw ConfigurationError.invalidBarHeight(bar.height)
         }
+        try theme?.validate()
         var identifiers = Set<String>()
         for (section, entries) in [("left", items.left), ("center", items.center), ("right", items.right)] {
             for (index, item) in entries.enumerated() {
+                try item.style?.validate(path: "items.\(section)[\(index)].style")
                 let path = "items.\(section)[\(index)].id"
                 guard !item.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                     throw ConfigurationError.invalidItemIdentifier(path: path, reason: "Must not be empty.")
@@ -83,7 +86,7 @@ struct ItemSections: Codable, Equatable, Sendable {
 
 struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
     private enum CodingKeys: String, CodingKey {
-        case enabled, format, id, label, priority, symbol, type
+        case enabled, format, id, label, priority, style, symbol, type
     }
 
     var id: String
@@ -93,6 +96,7 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
     var symbol: String?
     var format: String?
     var priority: Int = 0
+    var style: ItemStyle?
 
     init(
         id: String,
@@ -101,7 +105,8 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
         label: String? = nil,
         symbol: String? = nil,
         format: String? = nil,
-        priority: Int = 0
+        priority: Int = 0,
+        style: ItemStyle? = nil
     ) {
         self.id = id
         self.type = type
@@ -110,6 +115,7 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
         self.symbol = symbol
         self.format = format
         self.priority = priority
+        self.style = style
     }
 
     init(from decoder: any Decoder) throws {
@@ -121,6 +127,7 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
         symbol = try container.decodeIfPresent(String.self, forKey: .symbol)
         format = try container.decodeIfPresent(String.self, forKey: .format)
         priority = try container.decodeIfPresent(Int.self, forKey: .priority) ?? 0
+        style = try container.decodeIfPresent(ItemStyle.self, forKey: .style)
     }
 }
 
@@ -129,12 +136,14 @@ enum DisplaySelection: String, Codable, Sendable { case main, all }
 enum ItemType: String, CaseIterable, Codable, Sendable { case clock, divider, frontApplication, spacer, text }
 
 enum ConfigurationError: Error, Equatable, LocalizedError {
+    case invalidStyle(path: String, reason: String)
     case invalidItemIdentifier(path: String, reason: String)
     case invalidBarHeight(Double)
     case unsupportedSchemaVersion(Int)
 
     var errorDescription: String? {
         switch self {
+        case let .invalidStyle(path, reason): "\(path): \(reason)"
         case let .invalidItemIdentifier(path, reason): "\(path): \(reason)"
         case let .invalidBarHeight(height): "bar.height: \(height) is outside the supported range of 20...96."
         case let .unsupportedSchemaVersion(version): "schemaVersion: \(version) is not supported."

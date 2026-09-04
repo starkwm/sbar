@@ -218,7 +218,9 @@ Configuration loading now supports defaults for omitted bar settings and item se
 
 Configuration saving validates before writing, atomically replaces the file, and keeps its previous bytes in `config.json.bak`. Settings offers save and reveal actions. A bundled JSON Schema is copied beside saved configurations and linked through `$schema`; the app bundle includes the schema resource. `script/build_and_run.sh --build` packages without launching or stopping the app.
 
-Next is themes and per-item styling. The current Settings view displays status and offers reload/save/reveal actions; it is not yet an editor. Configuration migration and a `--config` override also remain pending.
+Themes and per-item styling are implemented: built-in defaults, global `theme.itemStyle`, then individual item `style` overrides. Colors, font size/weight, padding, backgrounds, corner radii, and bar spacing are validated, rendered, saved, and described by the JSON Schema. Existing configurations retain default styling. The current Settings view displays status and offers reload/save/reveal actions; it is not yet an editor.
+
+Next is shared native providers and live front-application updates, followed by the remaining native items. Configuration migration and a `--config` override also remain pending.
 
 ## Unresolved questions
 

@@ -36,3 +36,42 @@ A minimal configuration is:
 Bar settings default to `position: top`, `height: 32`, and `displays: all`. Positions are `top` or `bottom`; display choices are `main` (primary display) or `all`. Both positions use the screen's visible area alongside the system menu bar and Dock. Omitted item sections are empty. Item IDs must be nonblank and unique across all sections; cross-section uniqueness is checked by the app rather than the JSON Schema.
 
 See [PLAN.md](PLAN.md) for implementation status and upcoming work.
+
+## Themes and item styling
+
+The optional top-level `theme` sets bar appearance and default item styling. Each item's `style` overrides individual theme fields. Omitted or null fields inherit; explicit zero padding and transparent colors override inherited values.
+
+```json
+{
+  "schemaVersion": 1,
+  "bar": {},
+  "theme": {
+    "background": "#18202EEE",
+    "horizontalPadding": 12,
+    "itemSpacing": 8,
+    "itemStyle": {
+      "tint": "#E5E9F0",
+      "fontSize": 13,
+      "fontWeight": "medium",
+      "horizontalPadding": 6,
+      "verticalPadding": 2,
+      "cornerRadius": 4
+    }
+  },
+  "items": {
+    "right": [
+      {
+        "id": "clock",
+        "type": "clock",
+        "symbol": "clock",
+        "format": "HH:mm",
+        "style": { "tint": "#88C0D0", "background": "#FFFFFF18" }
+      }
+    ]
+  }
+}
+```
+
+Colors use `#RRGGBB` or `#RRGGBBAA` (alpha last). An omitted bar background uses the system material. An omitted item tint uses the system primary color; item backgrounds default to transparent. Use `#00000000` to clear an inherited background.
+
+Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeight` (`regular`, `medium`, `semibold`, `bold`), `horizontalPadding` (0–96), `verticalPadding` (0–48), and `cornerRadius` (0–48). Defaults are 13-point regular text with no item padding or corner radius. The theme's bar `horizontalPadding` and `itemSpacing` default to 10 points and accept 0–96. Oversized content stays clipped to its bar region; styling does not increase bar height. `symbol` applies to text, clock, and front-application items.

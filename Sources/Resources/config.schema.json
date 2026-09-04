@@ -80,6 +80,40 @@
           "default": []
         }
       }
+    },
+    "theme": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "background": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+        },
+        "horizontalPadding": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 96
+        },
+        "itemSpacing": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 96
+        },
+        "itemStyle": {
+          "$ref": "#/$defs/itemStyle"
+        }
+      }
     }
   },
   "$defs": {
@@ -136,6 +170,72 @@
           ],
           "default": 0,
           "description": "Reserved for future overflow handling."
+        },
+        "style": {
+          "$ref": "#/$defs/itemStyle"
+        }
+      }
+    },
+    "itemStyle": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "tint": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+        },
+        "background": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+        },
+        "fontSize": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "fontWeight": {
+          "enum": [
+            "regular",
+            "medium",
+            "semibold",
+            "bold",
+            null
+          ]
+        },
+        "horizontalPadding": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 96
+        },
+        "verticalPadding": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 48
+        },
+        "cornerRadius": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 48
         }
       }
     }

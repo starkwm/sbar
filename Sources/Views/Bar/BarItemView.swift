@@ -5,23 +5,30 @@ struct BarItemView: View {
     let configuration: ItemConfiguration
 
     var body: some View {
+        if let symbol = configuration.symbol, configuration.type != .divider, configuration.type != .spacer {
+            HStack(spacing: 4) {
+                Image(systemName: symbol)
+                content
+            }
+        } else {
+            content
+        }
+    }
+
+    @ViewBuilder private var content: some View {
         switch configuration.type {
         case .clock:
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 Text(context.date, format: clockFormat).monospacedDigit()
             }
         case .divider:
-            Divider().frame(height: 16)
+            Rectangle().frame(width: 1, height: 16).opacity(0.3)
         case .frontApplication:
             Text(configuration.label ?? NSWorkspace.shared.frontmostApplication?.localizedName ?? "").lineLimit(1)
         case .spacer:
             Spacer(minLength: 8)
         case .text:
-            if let symbol = configuration.symbol {
-                Label(configuration.label ?? "", systemImage: symbol)
-            } else {
-                Text(configuration.label ?? "")
-            }
+            Text(configuration.label ?? "")
         }
     }
 
