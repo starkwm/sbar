@@ -1,0 +1,20 @@
+build:
+	@swift build
+
+release:
+	@swift build --configuration release --disable-sandbox
+
+format:
+	@swift format format -r -i Sources Tests CLI Shared Package.swift
+
+lint:
+	@swift format lint -r Sources Tests CLI Shared Package.swift
+
+test:
+	@swift test --parallel --disable-xctest
+
+clean:
+	@swift package clean
+
+.DEFAULT_GOAL := build
+.PHONY: build release format lint test clean

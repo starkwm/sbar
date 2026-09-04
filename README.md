@@ -5,11 +5,14 @@ A native macOS bar built with SwiftUI and a small AppKit window layer. Requires 
 ## Build
 
 ```sh
-swift test
+make build
+make test
 bash script/build_and_run.sh --build
 ```
 
 The build script creates `dist/StarkBar.app`. Omit `--build` to build and launch it.
+
+The Makefile follows the `skbd` and `swm` workflow: `make` builds debug executables, `make release` builds optimized executables, `make format` formats Swift sources, `make lint` checks formatting, and `make clean` removes SwiftPM build products. App bundling and signed archives use the scripts described here.
 
 ## Configuration
 
