@@ -1,4 +1,5 @@
 import AppKit
+import ControlProtocol
 import CoreAudio
 import IOKit.ps
 import Network
@@ -21,11 +22,17 @@ final class ProviderRegistry {
     @ObservationIgnored private var powerSource: CFRunLoopSource?
     @ObservationIgnored private var audioListeners: [(AudioObjectID, AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
     @ObservationIgnored private var commandTasks: [String: Task<Void, Never>] = [:]
+    @ObservationIgnored private var pluginItems: [ItemConfiguration] = []
+    @ObservationIgnored private var pluginTasks: [String: Task<Void, Never>] = [:]
+    @ObservationIgnored private var pluginInputs: [String: PluginMailbox] = [:]
+    @ObservationIgnored private var pluginGeneration = UUID()
+    @ObservationIgnored private var adapterTask: Task<Void, Never>?
     @ObservationIgnored private var commandItems: [ItemConfiguration] = []
     @ObservationIgnored private var types: Set<ItemType> = []
     @ObservationIgnored private let metrics = SystemMetrics()
 
     func configure(_ configuration: BarConfiguration) {
+        configurePlugins(configuration.items.active.filter { $0.type == .plugin })
         configureCommands(configuration.items.active.filter { $0.enabled && $0.type == .command })
         let requested = Set(configuration.items.active.filter(\.enabled).map(\.type))
         guard requested != types else { return }
@@ -70,6 +77,19 @@ final class ProviderRegistry {
                 }
             }
         }
+        let adapters = types.intersection([.aerospace, .yabai])
+        if !adapters.isEmpty {
+            adapterTask = Task { [weak self] in
+                while !Task.isCancelled {
+                    for adapter in adapters {
+                        let value = (try? await WorkspaceAdapter.query(adapter)) ?? "Workspace unavailable"
+                        guard !Task.isCancelled else { return }
+                        self?.values[adapter] = value
+                    }
+                    do { try await Task.sleep(for: .seconds(2)) } catch { return }
+                }
+            }
+        }
         let sampled = types.intersection([.cpu, .memory, .disk, .throughput])
         let needsClock = !types.isDisjoint(with: [.clock, .date])
         if !sampled.isEmpty || needsClock {
@@ -89,15 +109,57 @@ final class ProviderRegistry {
         }
     }
 
-    func trigger(_ event: String) {
+    func trigger(_ event: String, value: JSONValue? = nil) {
+        for input in pluginInputs.values { input.send(PluginInput(event: event, value: value)) }
         for item in commandItems where item.command?.event == event { startCommand(item) }
     }
 
     func stop() {
+        pluginGeneration = UUID()
+        pluginTasks.values.forEach { $0.cancel() }
+        pluginTasks.removeAll()
+        pluginInputs.removeAll()
+        pluginItems = []
         commandTasks.values.forEach { $0.cancel() }
         commandTasks.removeAll()
         commandItems = []
         stopNative()
+    }
+
+    private func configurePlugins(_ items: [ItemConfiguration]) {
+        guard items != pluginItems else { return }
+        pluginGeneration = UUID()
+        let generation = pluginGeneration
+        pluginTasks.values.forEach { $0.cancel() }
+        pluginTasks.removeAll()
+        pluginInputs.removeAll()
+        pluginItems = items
+        for item in items {
+            guard var configuration = item.plugin else { continue }
+            configuration.executable = ActionRunner.expand(configuration.executable)
+            let input = PluginMailbox()
+            pluginInputs[item.id] = input
+            pluginTasks[item.id] = Task { [weak self, configuration] in
+                var delay = 1.0
+                repeat {
+                    input.send(PluginInput(event: "start", value: nil))
+                    do {
+                        try await PluginProcess.run(configuration: configuration, mailbox: input) { [weak self] text in
+                            Task { @MainActor [weak self] in
+                                guard self?.pluginGeneration == generation else { return }
+                                self?.itemValues[item.id] = text
+                            }
+                        }
+                    } catch {
+                        guard !Task.isCancelled, self?.pluginGeneration == generation else { return }
+                        self?.itemValues[item.id] = error.localizedDescription
+                    }
+                    guard configuration.restart ?? true else { return }
+                    do { try await Task.sleep(for: .seconds(delay)) } catch { return }
+                    delay = min(30, delay * 2)
+                } while !Task.isCancelled
+            }
+        }
     }
 
     private func configureCommands(_ items: [ItemConfiguration]) {
@@ -105,7 +167,7 @@ final class ProviderRegistry {
         commandTasks.values.forEach { $0.cancel() }
         commandTasks.removeAll()
         commandItems = items
-        itemValues = itemValues.filter { key, _ in items.contains { $0.id == key } }
+        itemValues = itemValues.filter { key, _ in (items + pluginItems).contains { $0.id == key } }
         for item in items { startCommand(item) }
     }
 
@@ -129,6 +191,8 @@ final class ProviderRegistry {
     }
 
     private func stopNative() {
+        adapterTask?.cancel()
+        adapterTask = nil
         task?.cancel()
         task = nil
         observers.forEach { $0.0.removeObserver($0.1) }

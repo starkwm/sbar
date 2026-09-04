@@ -29,6 +29,12 @@ struct BarConfiguration: Codable, Equatable, Sendable {
             guard depth <= 8 else { throw ConfigurationError.invalidStyle(path: path, reason: "Groups may nest at most eight levels.") }
             for (index, item) in entries.enumerated() {
                 let location = "\(path)[\(index)]"
+                if item.type == .plugin && item.plugin == nil {
+                    throw ConfigurationError.invalidStyle(path: "\(location).plugin", reason: "Plugin settings are required.")
+                }
+                if let plugin = item.plugin, plugin.executable.isEmpty {
+                    throw ConfigurationError.invalidStyle(path: "\(location).plugin.executable", reason: "Executable must not be empty.")
+                }
                 if item.type == .command && item.command == nil {
                     throw ConfigurationError.invalidStyle(path: "\(location).command", reason: "Command settings are required.")
                 }
@@ -98,7 +104,7 @@ struct ItemSections: Codable, Equatable, Sendable {
 
 struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
     private enum CodingKeys: String, CodingKey {
-        case enabled, format, id, label, priority, style, symbol, type, primaryAction, secondaryAction, popup, command, children
+        case enabled, format, id, label, priority, style, symbol, type, primaryAction, secondaryAction, popup, command, children, plugin
     }
 
     var id: String
@@ -114,6 +120,7 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
     var popup: String?
     var command: CommandConfiguration?
     var children: [ItemConfiguration]?
+    var plugin: PluginConfiguration?
 
     var active: [ItemConfiguration] { enabled ? [self] + (children ?? []).flatMap(\.active) : [] }
 
@@ -132,7 +139,8 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
         secondaryAction: ItemAction? = nil,
         popup: String? = nil,
         command: CommandConfiguration? = nil,
-        children: [ItemConfiguration]? = nil
+        children: [ItemConfiguration]? = nil,
+        plugin: PluginConfiguration? = nil
     ) {
         self.id = id
         self.type = type
@@ -147,6 +155,7 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
         self.popup = popup
         self.command = command
         self.children = children
+        self.plugin = plugin
     }
 
     init(from decoder: any Decoder) throws {
@@ -164,12 +173,13 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
         popup = try container.decodeIfPresent(String.self, forKey: .popup)
         command = try container.decodeIfPresent(CommandConfiguration.self, forKey: .command)
         children = try container.decodeIfPresent([ItemConfiguration].self, forKey: .children)
+        plugin = try container.decodeIfPresent(PluginConfiguration.self, forKey: .plugin)
     }
 }
 
 enum BarPosition: String, Codable, Sendable { case top, bottom }
 enum DisplaySelection: String, Codable, Sendable { case main, all }
-enum ItemType: String, CaseIterable, Codable, Sendable { case clock, date, divider, frontApplication, spacer, text, battery, volume, network, wifi, cpu, memory, disk, throughput, media, command, group, popup }
+enum ItemType: String, CaseIterable, Codable, Sendable { case clock, date, divider, frontApplication, spacer, text, battery, volume, network, wifi, cpu, memory, disk, throughput, media, command, group, popup, plugin, aerospace, yabai }
 
 enum ConfigurationError: Error, Equatable, LocalizedError {
     case invalidStyle(path: String, reason: String)

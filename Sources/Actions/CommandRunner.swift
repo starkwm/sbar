@@ -7,11 +7,12 @@ struct CommandResult: Sendable {
 }
 
 enum CommandFailure: Error, LocalizedError {
-    case launch(Int32), timeout, outputLimit, cancelled
+    case launch(Int32), exitStatus(Int32), timeout, outputLimit, cancelled
 
     var errorDescription: String? {
         switch self {
         case let .launch(code): "Could not launch command (\(code))."
+        case let .exitStatus(code): "Process exited with status \(code)."
         case .timeout: "Command timed out."
         case .outputLimit: "Command exceeded 64 KB of output."
         case .cancelled: "Command cancelled."

@@ -25,7 +25,7 @@ final class ControlRouter {
             case "subscribe": return ControlResponse(value: .string("subscribed"))
             case "trigger":
                 guard request.arguments.count == 1 else { throw SocketFailure.message("Expected event name.") }
-                providers.trigger(request.arguments[0])
+                providers.trigger(request.arguments[0], value: request.value)
                 events.emit(RuntimeEvent(kind: .trigger, name: request.arguments[0], value: request.value))
                 return ControlResponse()
             case "set":

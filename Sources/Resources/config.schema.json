@@ -147,7 +147,10 @@
             "media",
             "command",
             "group",
-            "popup"
+            "popup",
+            "plugin",
+            "aerospace",
+            "yabai"
           ]
         },
         "enabled": {
@@ -241,6 +244,37 @@
                 "string",
                 "null"
               ]
+            }
+          }
+        },
+        "plugin": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "executable"
+          ],
+          "properties": {
+            "executable": {
+              "type": "string",
+              "minLength": 1
+            },
+            "arguments": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "restart": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": true
             }
           }
         }

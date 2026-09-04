@@ -112,3 +112,11 @@ barctl subscribe
 Settings keeps a draft separate from the running configuration. Drag top-level items onto another row to insert before it, or onto a section's Add item button to append. Context menus offer cross-section moves and deletion. Select an item for style/action controls; advanced item JSON edits nested children and less common options. The Theme tab edits shared defaults. Preview uses current provider snapshots and cannot execute click actions.
 
 Save validates and persists the draft. Reload discards it. Import validates a JSON file into the draft; Export writes the draft to a chosen file. If live configuration changes while a draft is dirty, Settings shows a conflict notice. Invalid drafts remain editable while the preview retains the baseline configuration. Diagnostics lists recent runtime events and action failures.
+
+## Process plugins and workspaces
+
+A `plugin` item uses `plugin: {"executable":"/absolute/path/to/provider", "arguments":[], "restart":true}`. `${NAME}` and `~` expand in the executable path. The provider receives newline-delimited JSON on stdin: `{"version":1,"event":"start"}` initially, then runtime trigger events with an optional `value`. It emits `{"text":"display text"}` lines on stdout. stderr is discarded. Flush stdout after each update.
+
+Each output line is limited to 64 KB and displayed text to 4,096 characters. Bursts coalesce to the latest value in each read. The input mailbox holds up to 32 events and drops new events if full. Invalid output stops that process; automatic restarts back off from one to 30 seconds. Set `restart:false` for one-shot providers. Removing/disabling the item or shutting down terminates the process group.
+
+`aerospace` and `yabai` items show the focused workspace, using [AeroSpace's focused-workspace query](https://nikitabobko.github.io/AeroSpace/commands#list-workspaces) and [yabai's space query](https://github.com/asmvik/yabai/wiki/Commands#querying-information). Executables are located in PATH or the standard Homebrew prefixes. Queries run every two seconds with a two-second timeout; missing or unavailable integrations show a status message. No adapter changes window-manager configuration.
