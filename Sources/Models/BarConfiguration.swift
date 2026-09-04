@@ -25,18 +25,28 @@ struct BarConfiguration: Codable, Equatable, Sendable {
         }
         try theme?.validate()
         var identifiers = Set<String>()
-        for (section, entries) in [("left", items.left), ("center", items.center), ("right", items.right)] {
+        func validateItems(_ entries: [ItemConfiguration], path: String, depth: Int = 0) throws {
+            guard depth <= 8 else { throw ConfigurationError.invalidStyle(path: path, reason: "Groups may nest at most eight levels.") }
             for (index, item) in entries.enumerated() {
-                try item.style?.validate(path: "items.\(section)[\(index)].style")
-                let path = "items.\(section)[\(index)].id"
+                let location = "\(path)[\(index)]"
+                if item.type == .command && item.command == nil {
+                    throw ConfigurationError.invalidStyle(path: "\(location).command", reason: "Command settings are required.")
+                }
+                try ItemStyle.validateNumber(item.command?.interval, range: 1...86400, path: "\(location).command.interval")
+                try ItemStyle.validateNumber(item.command?.timeout, range: 0.1...60, path: "\(location).command.timeout")
+                try item.style?.validate(path: "\(location).style")
                 guard !item.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    throw ConfigurationError.invalidItemIdentifier(path: path, reason: "Must not be empty.")
+                    throw ConfigurationError.invalidItemIdentifier(path: "\(location).id", reason: "Must not be empty.")
                 }
                 guard identifiers.insert(item.id).inserted else {
-                    throw ConfigurationError.invalidItemIdentifier(path: path, reason: "Duplicate ID '\(item.id)'.")
+                    throw ConfigurationError.invalidItemIdentifier(path: "\(location).id", reason: "Duplicate ID '\(item.id)'.")
                 }
+                if let children = item.children { try validateItems(children, path: "\(location).children", depth: depth + 1) }
             }
         }
+        try validateItems(items.left, path: "items.left")
+        try validateItems(items.center, path: "items.center")
+        try validateItems(items.right, path: "items.right")
     }
 }
 
@@ -68,7 +78,9 @@ struct ItemSections: Codable, Equatable, Sendable {
     var center: [ItemConfiguration] = []
     var right: [ItemConfiguration] = []
 
-    var all: [ItemConfiguration] { left + center + right }
+    var active: [ItemConfiguration] { (left + center + right).flatMap(\.active) }
+
+    var all: [ItemConfiguration] { (left + center + right).flatMap(\.flattened) }
 
     init(left: [ItemConfiguration] = [], center: [ItemConfiguration] = [], right: [ItemConfiguration] = []) {
         self.left = left
@@ -86,7 +98,7 @@ struct ItemSections: Codable, Equatable, Sendable {
 
 struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
     private enum CodingKeys: String, CodingKey {
-        case enabled, format, id, label, priority, style, symbol, type
+        case enabled, format, id, label, priority, style, symbol, type, primaryAction, secondaryAction, popup, command, children
     }
 
     var id: String
@@ -97,6 +109,15 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
     var format: String?
     var priority: Int = 0
     var style: ItemStyle?
+    var primaryAction: ItemAction?
+    var secondaryAction: ItemAction?
+    var popup: String?
+    var command: CommandConfiguration?
+    var children: [ItemConfiguration]?
+
+    var active: [ItemConfiguration] { enabled ? [self] + (children ?? []).flatMap(\.active) : [] }
+
+    var flattened: [ItemConfiguration] { [self] + (children ?? []).flatMap(\.flattened) }
 
     init(
         id: String,
@@ -106,7 +127,12 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
         symbol: String? = nil,
         format: String? = nil,
         priority: Int = 0,
-        style: ItemStyle? = nil
+        style: ItemStyle? = nil,
+        primaryAction: ItemAction? = nil,
+        secondaryAction: ItemAction? = nil,
+        popup: String? = nil,
+        command: CommandConfiguration? = nil,
+        children: [ItemConfiguration]? = nil
     ) {
         self.id = id
         self.type = type
@@ -116,6 +142,11 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
         self.format = format
         self.priority = priority
         self.style = style
+        self.primaryAction = primaryAction
+        self.secondaryAction = secondaryAction
+        self.popup = popup
+        self.command = command
+        self.children = children
     }
 
     init(from decoder: any Decoder) throws {
@@ -128,12 +159,17 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
         format = try container.decodeIfPresent(String.self, forKey: .format)
         priority = try container.decodeIfPresent(Int.self, forKey: .priority) ?? 0
         style = try container.decodeIfPresent(ItemStyle.self, forKey: .style)
+        primaryAction = try container.decodeIfPresent(ItemAction.self, forKey: .primaryAction)
+        secondaryAction = try container.decodeIfPresent(ItemAction.self, forKey: .secondaryAction)
+        popup = try container.decodeIfPresent(String.self, forKey: .popup)
+        command = try container.decodeIfPresent(CommandConfiguration.self, forKey: .command)
+        children = try container.decodeIfPresent([ItemConfiguration].self, forKey: .children)
     }
 }
 
 enum BarPosition: String, Codable, Sendable { case top, bottom }
 enum DisplaySelection: String, Codable, Sendable { case main, all }
-enum ItemType: String, CaseIterable, Codable, Sendable { case clock, date, divider, frontApplication, spacer, text, battery, volume, network, wifi, cpu, memory, disk, throughput, media }
+enum ItemType: String, CaseIterable, Codable, Sendable { case clock, date, divider, frontApplication, spacer, text, battery, volume, network, wifi, cpu, memory, disk, throughput, media, command, group, popup }
 
 enum ConfigurationError: Error, Equatable, LocalizedError {
     case invalidStyle(path: String, reason: String)

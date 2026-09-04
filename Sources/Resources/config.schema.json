@@ -144,7 +144,10 @@
             "memory",
             "disk",
             "throughput",
-            "media"
+            "media",
+            "command",
+            "group",
+            "popup"
           ]
         },
         "enabled": {
@@ -179,10 +182,67 @@
             "null"
           ],
           "default": 0,
-          "description": "Reserved for future overflow handling."
+          "description": "Higher-priority items remain visible longer during overflow."
         },
         "style": {
           "$ref": "#/$defs/itemStyle"
+        },
+        "primaryAction": {
+          "$ref": "#/$defs/action"
+        },
+        "secondaryAction": {
+          "$ref": "#/$defs/action"
+        },
+        "popup": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "children": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/item"
+          }
+        },
+        "command": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "script"
+          ],
+          "properties": {
+            "script": {
+              "type": "string"
+            },
+            "interval": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 86400
+            },
+            "timeout": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0.1,
+              "maximum": 60
+            },
+            "event": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
         }
       }
     },
@@ -246,6 +306,28 @@
           ],
           "minimum": 0,
           "maximum": 48
+        }
+      }
+    },
+    "action": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "command",
+            "url",
+            "application"
+          ]
+        },
+        "value": {
+          "type": "string"
         }
       }
     }

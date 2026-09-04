@@ -7,6 +7,7 @@ import Observation
 @MainActor @Observable
 final class ProviderRegistry {
     private(set) var values: [ItemType: String] = [:]
+    private(set) var itemValues: [String: String] = [:]
     private(set) var date = Date()
 
     @ObservationIgnored private var observers: [(NotificationCenter, NSObjectProtocol)] = []
@@ -14,13 +15,16 @@ final class ProviderRegistry {
     @ObservationIgnored private var monitor: NWPathMonitor?
     @ObservationIgnored private var powerSource: CFRunLoopSource?
     @ObservationIgnored private var audioListeners: [(AudioObjectID, AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
+    @ObservationIgnored private var commandTasks: [String: Task<Void, Never>] = [:]
+    @ObservationIgnored private var commandItems: [ItemConfiguration] = []
     @ObservationIgnored private var types: Set<ItemType> = []
     @ObservationIgnored private let metrics = SystemMetrics()
 
     func configure(_ configuration: BarConfiguration) {
-        let requested = Set(configuration.items.all.filter(\.enabled).map(\.type))
+        configureCommands(configuration.items.active.filter { $0.enabled && $0.type == .command })
+        let requested = Set(configuration.items.active.filter(\.enabled).map(\.type))
         guard requested != types else { return }
-        stop()
+        stopNative()
         types = requested
         if types.contains(.frontApplication) {
             updateApplication()
@@ -80,7 +84,46 @@ final class ProviderRegistry {
         }
     }
 
+    func trigger(_ event: String) {
+        for item in commandItems where item.command?.event == event { startCommand(item) }
+    }
+
     func stop() {
+        commandTasks.values.forEach { $0.cancel() }
+        commandTasks.removeAll()
+        commandItems = []
+        stopNative()
+    }
+
+    private func configureCommands(_ items: [ItemConfiguration]) {
+        guard items != commandItems else { return }
+        commandTasks.values.forEach { $0.cancel() }
+        commandTasks.removeAll()
+        commandItems = items
+        itemValues = itemValues.filter { key, _ in items.contains { $0.id == key } }
+        for item in items { startCommand(item) }
+    }
+
+    private func startCommand(_ item: ItemConfiguration) {
+        guard let command = item.command else { return }
+        commandTasks[item.id]?.cancel()
+        commandTasks[item.id] = Task { [weak self] in
+            repeat {
+                do {
+                    let result = try await CommandRunner.run(executable: "/bin/sh", arguments: ["-c", command.script], timeout: command.timeout ?? 5)
+                    guard !Task.isCancelled else { return }
+                    self?.itemValues[item.id] = result.status == 0 ? result.output : "Exit \(result.status): \(result.output)"
+                } catch {
+                    guard !Task.isCancelled else { return }
+                    self?.itemValues[item.id] = error.localizedDescription
+                }
+                guard let interval = command.interval else { return }
+                do { try await Task.sleep(for: .seconds(interval)) } catch { return }
+            } while !Task.isCancelled
+        }
+    }
+
+    private func stopNative() {
         task?.cancel()
         task = nil
         observers.forEach { $0.0.removeObserver($0.1) }

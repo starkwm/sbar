@@ -29,6 +29,10 @@ struct BarItemView: View {
             Spacer(minLength: 8)
         case .text:
             Text(configuration.label ?? "")
+        case .command:
+            Text(providers.itemValues[configuration.id] ?? "…")
+        case .group, .popup:
+            Text(configuration.label ?? configuration.id)
         default:
             Text(providers.values[configuration.type] ?? "—")
         }

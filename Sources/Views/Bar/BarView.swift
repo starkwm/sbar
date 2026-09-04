@@ -4,7 +4,7 @@ struct BarView: View {
     let configuration: BarConfiguration
 
     var body: some View {
-        BarRegionLayout {
+        BarRegionLayout(hasCenter: configuration.items.center.contains(where: \.enabled)) {
             region(configuration.items.left, alignment: .leading)
             region(configuration.items.center, alignment: .center)
             region(configuration.items.right, alignment: .trailing)
@@ -21,14 +21,6 @@ struct BarView: View {
     }
 
     private func region(_ items: [ItemConfiguration], alignment: Alignment) -> some View {
-        HStack(spacing: configuration.theme?.itemSpacing ?? 10) {
-            ForEach(items.filter(\.enabled)) { item in
-                BarItemView(configuration: item)
-                    .modifier(ItemStyleModifier(style: (item.style ?? ItemStyle()).resolved(over: configuration.theme?.itemStyle)))
-            }
-        }
-        .frame(minWidth: 0, maxWidth: .infinity, alignment: alignment)
-        .frame(maxHeight: .infinity)
-        .clipped()
+        BarRegionView(items: items, theme: configuration.theme, alignment: alignment)
     }
 }

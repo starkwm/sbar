@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor
 final class BarCoordinator: NSObject {
     let providers = ProviderRegistry()
+    let actions = ActionRunner()
 
     private let store: ConfigurationStore
     private var panels: [CGDirectDisplayID: BarPanel] = [:]
@@ -30,6 +31,7 @@ final class BarCoordinator: NSObject {
 
     func stop() {
         NotificationCenter.default.removeObserver(self)
+        actions.stop()
         providers.stop()
         store.stopObserving()
         store.configurationDidChange = nil
@@ -60,7 +62,7 @@ final class BarCoordinator: NSObject {
             let frame = BarPlacement.frame(in: screen.visibleFrame, settings: configuration.bar)
             let panel = remaining.removeValue(forKey: identifier) ?? BarPanel(contentRect: frame)
             panel.setFrame(frame, display: true)
-            panel.contentView = NSHostingView(rootView: BarView(configuration: configuration).environment(providers))
+            panel.contentView = NSHostingView(rootView: BarView(configuration: configuration).environment(providers).environment(actions))
             panel.orderFrontRegardless()
             updated[identifier] = panel
         }

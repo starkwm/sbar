@@ -10,13 +10,15 @@ struct BarRegionLayout: Layout {
         return [side, center, side]
     }
 
+    var hasCenter = true
+
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         CGSize(width: proposal.width ?? 0, height: proposal.height ?? 32)
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         guard subviews.count == 3 else { return }
-        let widths = Self.widths(available: bounds.width, centerIdeal: subviews[1].sizeThatFits(.unspecified).width)
+        let widths = Self.widths(available: bounds.width, centerIdeal: hasCenter ? bounds.width / 3 : 0)
         let origins = [bounds.minX, bounds.midX - widths[1] / 2, bounds.maxX - widths[2]]
         for index in 0..<3 {
             subviews[index].place(

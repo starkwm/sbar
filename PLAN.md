@@ -212,7 +212,7 @@ Foundation implementation is complete, with build and geometry tests. Live windo
 - Non-activating, transparent panels excluded from window cycling, retained by display ID and updated on screen changes.
 - Main means the primary display; all means every connected display. Top and bottom placement use the visible screen area to coexist with the menu bar and Dock without reserving work area.
 - Three regions keep the center geometrically centered. Center content uses at most one third of the width; equal side budgets share the remainder. Content compresses within each region and clips at its boundary.
-- Priority-based hiding and an overflow popup remain pending for the interaction phase. Selected-display targeting, configurable window level, and optional empty-region mouse pass-through are also pending enhancements beyond the phase-one main/all-display scope.
+- Priority-based hiding and an overflow popup are implemented. Selected-display targeting, configurable window level, and optional empty-region mouse pass-through are also pending enhancements beyond the phase-one main/all-display scope.
 
 Configuration loading now supports defaults for omitted bar settings and item sections, precise decoding/validation paths, and filesystem-based live reload. Invalid edits preserve the last valid configuration. Missing files use built-in defaults. Observation handles direct edits, atomic replacement, deletion/recreation, and initially missing directories; unchanged configurations do not rebuild the panels.
 
@@ -220,7 +220,7 @@ Configuration saving validates before writing, atomically replaces the file, and
 
 Themes and per-item styling are implemented: built-in defaults, global `theme.itemStyle`, then individual item `style` overrides. Colors, font size/weight, padding, backgrounds, corner radii, and bar spacing are validated, rendered, saved, and described by the JSON Schema. Existing configurations retain default styling. The current Settings view displays status and offers reload/save/reveal actions; it is not yet an editor.
 
-Shared native providers and live front-application updates are implemented, along with clock/date, battery, output volume, connection status, CPU/memory, free disk space, throughput, and Music/Spotify playback notifications. Hardware behavior remains unverified without launching the app. Next is interaction and shell output. Configuration migration and a `--config` override also remain pending.
+Shared native providers and live front-application updates are implemented, along with clock/date, battery, output volume, connection status, CPU/memory, free disk space, throughput, and Music/Spotify playback notifications. Hardware behavior remains unverified without launching the app. Interaction and bounded shell output are implemented, including hover feedback, primary/context-menu actions, groups, text/child popups, and priority-based overflow. Next is runtime control. Configuration migration and a `--config` override also remain pending.
 
 ## Unresolved questions
 
