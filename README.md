@@ -22,6 +22,8 @@ In Settings, **Save** writes the editor draft, creating the directory if needed.
 
 Saving also writes `config.schema.json` beside the configuration and adds a `$schema` reference for compatible editors. **Reveal** shows the file in Finder. Saving writes the app's supported fields; unrecognized fields are only preserved in the backup.
 
+For a larger example with native metrics, popups, actions, commands, and a streaming plugin, see the [demo configuration](examples/demo/README.md).
+
 A minimal configuration is:
 
 ```json
