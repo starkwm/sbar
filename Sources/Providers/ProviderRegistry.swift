@@ -6,8 +6,13 @@ import Observation
 
 @MainActor @Observable
 final class ProviderRegistry {
-    private(set) var values: [ItemType: String] = [:]
-    private(set) var itemValues: [String: String] = [:]
+    private(set) var values: [ItemType: String] = [:] {
+        didSet { for (key, value) in values where oldValue[key] != value { onValueChange?(key.rawValue, value) } }
+    }
+    private(set) var itemValues: [String: String] = [:] {
+        didSet { for (key, value) in itemValues where oldValue[key] != value { onValueChange?(key, value) } }
+    }
+    @ObservationIgnored var onValueChange: ((String, String) -> Void)?
     private(set) var date = Date()
 
     @ObservationIgnored private var observers: [(NotificationCenter, NSObjectProtocol)] = []

@@ -4,9 +4,11 @@ import PackageDescription
 let package = Package(
     name: "StarkBar",
     platforms: [.macOS(.v14)],
-    products: [.executable(name: "StarkBar", targets: ["StarkBar"])],
+    products: [.executable(name: "StarkBar", targets: ["StarkBar"]), .executable(name: "barctl", targets: ["barctl"])],
     targets: [
-        .executableTarget(name: "StarkBar", path: "Sources", resources: [.copy("Resources/config.schema.json")]),
+        .target(name: "ControlProtocol", path: "Shared/ControlProtocol"),
+        .executableTarget(name: "barctl", dependencies: ["ControlProtocol"], path: "CLI"),
+        .executableTarget(name: "StarkBar", dependencies: ["ControlProtocol"], path: "Sources", resources: [.copy("Resources/config.schema.json")]),
         .testTarget(name: "StarkBarTests", dependencies: ["StarkBar"], path: "Tests"),
     ]
 )

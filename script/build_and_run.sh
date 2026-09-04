@@ -19,6 +19,7 @@ BUILD_BINARY="$BUILD_DIRECTORY/$APP_NAME"
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_CONTENTS/MacOS"
 cp "$BUILD_BINARY" "$APP_BINARY"
+cp "$BUILD_DIRECTORY/barctl" "$APP_CONTENTS/MacOS/barctl"
 # SwiftPM's generated Bundle.module accessor resolves this relative to the app root.
 cp -R "$BUILD_DIRECTORY/StarkBar_StarkBar.bundle" "$APP_BUNDLE/"
 chmod +x "$APP_BINARY"

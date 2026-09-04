@@ -91,3 +91,18 @@ A `command` item requires `command: {"script":"date", "interval":10, "timeout":5
 `group` items render `children` inline. `popup` items show `children` when clicked; any item can also have a `popup` text string. Groups nest up to eight levels. Disabling a group disables its child providers.
 
 Each region measures its items and moves low-priority items into an overflow popover when space runs out. Larger `priority` values remain visible longer; equal priorities hide from the end. The center reserves one third of the bar when populated. Bar content stays clipped within its own region.
+
+## Runtime control
+
+The bundle includes `Contents/MacOS/barctl` (also built by SwiftPM). It connects to `~/.config/starkbar/control.sock`; use `--socket <path>` for another configuration directory.
+
+```sh
+barctl query
+barctl reload
+barctl set clock enabled false
+barctl set clock style '{"tint":"#88C0D0"}'
+barctl trigger refresh '{"source":"manual"}'
+barctl subscribe
+```
+
+`set` changes in-memory configuration only. Supported properties are `label`, `symbol`, `enabled`, `priority`, `format`, `style`, and `popup`; Settings Save persists the current state. Reload discards transient changes. `subscribe` streams JSON lines for configuration changes, provider values, and triggers. Trigger payloads are retained in events; matching command items rerun. Clients must belong to the same user. Slow subscribers are disconnected, and a lock prevents multiple instances from owning the same socket.

@@ -66,6 +66,14 @@ final class ConfigurationStore {
         watcher = nil
     }
 
+    func apply(_ candidate: BarConfiguration) throws {
+        try candidate.validate()
+        guard candidate != configuration else { return }
+        configuration = candidate
+        errorMessage = nil
+        configurationDidChange?()
+    }
+
     func load() {
         do {
             let decoded: BarConfiguration

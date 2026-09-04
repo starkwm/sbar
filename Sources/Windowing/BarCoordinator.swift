@@ -1,10 +1,15 @@
 import AppKit
+import ControlProtocol
+import OSLog
 import SwiftUI
 
 @MainActor
 final class BarCoordinator: NSObject {
     let providers = ProviderRegistry()
     let actions = ActionRunner()
+    let events = EventBus()
+    private(set) var controlError: String?
+    private var server: ControlServer?
 
     private let store: ConfigurationStore
     private var panels: [CGDirectDisplayID: BarPanel] = [:]
@@ -25,13 +30,36 @@ final class BarCoordinator: NSObject {
             object: nil
         )
         store.startObserving()
-        store.configurationDidChange = { [weak self] in self?.updatePanels() }
+        store.configurationDidChange = { [weak self] in
+            self?.updatePanels()
+            self?.events.emit(RuntimeEvent(kind: .configuration, name: "configuration", value: nil))
+        }
+        providers.onValueChange = { [weak self] name, value in
+            self?.events.emit(RuntimeEvent(kind: .provider, name: name, value: .string(value)))
+        }
+        let router = ControlRouter(store: store, providers: providers, events: events)
+        let server = ControlServer(path: store.configurationURL.deletingLastPathComponent().appending(path: "control.sock").path) { request in
+            await router.handle(request)
+        }
+        events.onEvent = { [weak server] event in
+            if let data = try? JSONEncoder().encode(event), let value = try? JSONDecoder().decode(JSONValue.self, from: data) {
+                server?.publish(ControlResponse(value: value))
+            }
+        }
+        do { try server.start(); self.server = server } catch {
+            controlError = error.localizedDescription
+            Logger(subsystem: "com.starkwm.StarkBar", category: "control").error("Control server failed: \(error.localizedDescription, privacy: .public)")
+        }
         updatePanels()
     }
 
     func stop() {
         NotificationCenter.default.removeObserver(self)
+        server?.stop()
+        server = nil
+        events.onEvent = nil
         actions.stop()
+        providers.onValueChange = nil
         providers.stop()
         store.stopObserving()
         store.configurationDidChange = nil
