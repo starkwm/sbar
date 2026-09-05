@@ -6,7 +6,7 @@ import Testing
 
 @Suite("Control")
 struct ControlTests {
-  @Test("ControlServer.start(): handles fragmented requests and excludes a second server")
+  @Test("ControlServer.start: handles fragmented requests and excludes a second server")
   func startHandlesFragmentedRequestsAndExcludesSecondServer() throws {
     let path = "/tmp/starkbar-\(UUID().uuidString).sock"
     defer { try? FileManager.default.removeItem(atPath: path + ".lock") }
@@ -44,7 +44,7 @@ struct ControlTests {
 
   @MainActor
 
-  @Test("ControlRouter.handle(_:): retains file errors in diagnostics after runtime edits")
+  @Test("ControlRouter.handle: retains file errors in diagnostics after runtime edits")
   func handleRetainsFileErrorsAfterRuntimeEdits() throws {
     let url = FileManager.default.temporaryDirectory.appending(
       path: "sbar-\(UUID().uuidString).json"
@@ -97,7 +97,7 @@ struct ControlTests {
 
   @MainActor
 
-  @Test("ControlRouter.handle(_:): validates transient edits and retains trigger payloads")
+  @Test("ControlRouter.handle: validates transient edits and retains trigger payloads")
   func handleValidatesTransientEditsAndRetainsTriggerPayloads() {
     let store = ConfigurationStore(
       configurationURL: URL(fileURLWithPath: "/tmp/not-created-\(UUID().uuidString).json")

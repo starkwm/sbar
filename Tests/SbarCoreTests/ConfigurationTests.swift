@@ -5,7 +5,7 @@ import Testing
 
 @Suite("BarConfiguration")
 struct ConfigurationTests {
-  @Test("init(from:): decodes the example configuration")
+  @Test("init: decodes the example configuration")
   func initDecodesExampleConfiguration() throws {
     let data = Data(
       #"""
@@ -20,7 +20,7 @@ struct ConfigurationTests {
     #expect(configuration.bar.displays == .all)
   }
 
-  @Test("init(from:): defaults omitted bar settings and item sections")
+  @Test("init: defaults omitted bar settings and item sections")
   func initDefaultsOmittedSettingsAndSections() throws {
     let configuration = try JSONDecoder().decode(
       BarConfiguration.self,
@@ -31,7 +31,7 @@ struct ConfigurationTests {
     #expect(configuration.items.all.isEmpty)
   }
 
-  @Test("init(from:): migrates version-one commands recursively")
+  @Test("init: migrates version-one commands recursively")
   func initMigratesVersionOneCommandsRecursively() throws {
     let json =
       #"{"schemaVersion":1,"bar":{},"items":{"left":[{"id":"group","type":"group","children":[{"id":"c","type":"command","command":{"script":"date","interval":12,"event":"refresh"}}]}]}}"#
@@ -47,7 +47,7 @@ struct ConfigurationTests {
     #expect(item.command?.event == nil)
   }
 
-  @Test("validate(): rejects duplicate item IDs")
+  @Test("validate: rejects duplicate item IDs")
   func validateRejectsDuplicateItemIDs() {
     let item = ItemConfiguration(id: "same", type: .text)
     let configuration = BarConfiguration(
@@ -64,7 +64,7 @@ struct ConfigurationTests {
     ) { try configuration.validate() }
   }
 
-  @Test("validate(): rejects unsupported bar heights")
+  @Test("validate: rejects unsupported bar heights")
   func validateRejectsUnsupportedHeights() {
     let configuration = BarConfiguration(
       schemaVersion: BarConfiguration.currentSchemaVersion,
@@ -75,7 +75,7 @@ struct ConfigurationTests {
     #expect(throws: ConfigurationError.invalidBarHeight(10)) { try configuration.validate() }
   }
 
-  @Test("validate(): reports the location of whitespace-only item IDs")
+  @Test("validate: reports the location of whitespace-only item IDs")
   func validateReportsWhitespaceOnlyItemIDs() {
     let configuration = BarConfiguration(
       schemaVersion: BarConfiguration.currentSchemaVersion,
@@ -93,7 +93,7 @@ struct ConfigurationTests {
     }
   }
 
-  @Test("validate(): requires selected display IDs and interval refresh durations")
+  @Test("validate: requires selected display IDs and interval refresh durations")
   func validateRequiresDisplayIDsAndRefreshDurations() {
     var config = BarConfiguration.default
     config.bar.displays = .selected

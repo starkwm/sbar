@@ -20,7 +20,7 @@ struct ProviderTests {
 
   @MainActor
 
-  @Test("ProviderRuntime.trigger(_:value:): updates a manual clock snapshot only when triggered")
+  @Test("ProviderRuntime.trigger: updates a manual clock snapshot only when triggered")
   func triggerUpdatesManualClockSnapshot() async throws {
     let providers = ProviderRuntime()
     var config = BarConfiguration.default
@@ -38,7 +38,7 @@ struct ProviderTests {
     #expect(try #require(providers.itemDates["clock"]) > #require(initial))
   }
 
-  @MainActor @Test("ProviderRuntime.configure(_:): does not rerun commands after cosmetic edits")
+  @MainActor @Test("ProviderRuntime.configure: does not rerun commands after cosmetic edits")
   func configureDoesNotRerunCommandsAfterCosmeticEdits() async throws {
     let url = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
     let providers = ProviderRuntime()

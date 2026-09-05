@@ -5,7 +5,7 @@ import Testing
 
 @Suite("ClockFormatter")
 struct ClockFormatterTests {
-  @MainActor @Test("string(_:format:timeZone:): preserves explicit 24-hour formats")
+  @MainActor @Test("string: preserves explicit 24-hour formats")
   func stringPreservesExplicit24HourFormats() {
     let date = Date(timeIntervalSince1970: 13 * 3600 + 5 * 60 + 9)
 

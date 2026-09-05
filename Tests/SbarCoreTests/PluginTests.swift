@@ -54,7 +54,7 @@ struct PluginTests {
     await #expect(throws: (any Error).self) { try await task.value }
   }
 
-  @Test("WorkspaceAdapter.yabaiLabel(_:): falls back to the space index when the label is empty")
+  @Test("WorkspaceAdapter.yabaiLabel: falls back to the space index when the label is empty")
   func yabaiLabelFallsBackToSpaceIndexForEmptyLabel() throws {
     #expect(try WorkspaceAdapter.yabaiLabel(Data(#"{"index":2,"label":"work"}"#.utf8)) == "work")
     #expect(try WorkspaceAdapter.yabaiLabel(Data(#"{"index":2,"label":""}"#.utf8)) == "2")

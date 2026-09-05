@@ -6,7 +6,7 @@ import Testing
 
 @Suite("SbarCommand")
 struct SbarCommandTests {
-  @Test("parseAsRoot(_:): parses startup options and rejects invalid arguments")
+  @Test("parseAsRoot: parses startup options and rejects invalid arguments")
   func parseAsRootParsesStartupOptions() throws {
     #expect(try SbarCommand.parseAsRoot([]) is StartCommand)
 
@@ -23,7 +23,7 @@ struct SbarCommandTests {
     }
   }
 
-  @Test("parseAsRoot(_:): parses client commands and validates their options")
+  @Test("parseAsRoot: parses client commands and validates their options")
   func parseAsRootParsesClientCommands() throws {
     #expect(try SbarCommand.parseAsRoot(["stop"]) is StopCommand)
     #expect(try SbarCommand.parseAsRoot(["validate"]) is ValidateCommand)

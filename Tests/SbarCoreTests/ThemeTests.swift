@@ -5,7 +5,7 @@ import Testing
 
 @Suite("Theme")
 struct ThemeTests {
-  @Test("ItemStyle.resolved(over:): applies item overrides and inherits omitted fields")
+  @Test("ItemStyle.resolved: applies item overrides and inherits omitted fields")
   func resolvedAppliesOverridesAndInheritsOmittedFields() {
     let theme = ItemStyle(
       tint: "#112233",
@@ -29,7 +29,7 @@ struct ThemeTests {
     #expect(result.cornerRadius == 6)
   }
 
-  @Test("ItemStyle.resolved(over:): uses built-in defaults without styling")
+  @Test("ItemStyle.resolved: uses built-in defaults without styling")
   func resolvedUsesBuiltInDefaultsWithoutStyling() throws {
     let config = try JSONDecoder().decode(
       BarConfiguration.self,
@@ -48,7 +48,7 @@ struct ThemeTests {
   }
 
   @Test(
-    "BarConfiguration.init(from:): preserves partial theme and item styling through round trips"
+    "BarConfiguration.init: preserves partial theme and item styling through round trips"
   )
   func initPreservesPartialStylingThroughRoundTrips() throws {
     let json =
@@ -65,7 +65,7 @@ struct ThemeTests {
     )
   }
 
-  @Test("RGBA.init(hex:): accepts RGB and RGBA with an alpha suffix")
+  @Test("RGBA.init: accepts RGB and RGBA with an alpha suffix")
   func initAcceptsRGBAndRGBA() throws {
     let rgb = try #require(RGBA(hex: "#FF0080"))
 
@@ -81,7 +81,7 @@ struct ThemeTests {
   }
 
   @Test(
-    "BarConfiguration.validate(): rejects malformed theme colors",
+    "BarConfiguration.validate: rejects malformed theme colors",
     arguments: ["red", "#fff", "#gg0000", "#1234567", "123456", "#１２３４５６"]
   )
   func validateRejectsMalformedThemeColors(value: String) {
@@ -100,7 +100,7 @@ struct ThemeTests {
     }
   }
 
-  @Test("BarConfiguration.validate(): reports the exact location of invalid item styles")
+  @Test("BarConfiguration.validate: reports the exact location of invalid item styles")
   func validateReportsInvalidItemStyleLocation() {
     var config = BarConfiguration.default
     config.items.right[1].style = ItemStyle(fontSize: 0)
@@ -116,7 +116,7 @@ struct ThemeTests {
   }
 
   @Test(
-    "BarConfiguration.validate(): rejects nonfinite and negative theme spacing",
+    "BarConfiguration.validate: rejects nonfinite and negative theme spacing",
     arguments: [-1.0, Double.infinity, Double.nan]
   )
   func validateRejectsNonfiniteAndNegativeSpacing(value: Double) {

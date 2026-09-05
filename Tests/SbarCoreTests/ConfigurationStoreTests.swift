@@ -6,7 +6,7 @@ import Testing
 @MainActor
 @Suite("ConfigurationStore")
 struct ConfigurationStoreTests {
-  @Test("load(): retains valid configuration and reports the coding path after an invalid reload")
+  @Test("load: retains valid configuration and reports the coding path after an invalid reload")
   func loadRetainsConfigurationAfterInvalidReload() throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
@@ -32,7 +32,7 @@ struct ConfigurationStoreTests {
     #expect(store.errorMessage == nil)
   }
 
-  @Test("load(): uses defaults when the configuration file is missing")
+  @Test("load: uses defaults when the configuration file is missing")
   func loadUsesDefaultsWhenFileIsMissing() throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
@@ -44,7 +44,7 @@ struct ConfigurationStoreTests {
     #expect(store.errorMessage == nil)
   }
 
-  @Test("ConfigurationValidation.validate(url:): reports errors without writing the file")
+  @Test("ConfigurationValidation.validate: reports errors without writing the file")
   func validateReportsErrorsWithoutWritingFile() throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
@@ -92,7 +92,7 @@ struct ConfigurationStoreTests {
     #expect(updates == 1)
   }
 
-  @Test("startObserving(): handles replacement, edits, deletion, and recreation")
+  @Test("startObserving: handles replacement, edits, deletion, and recreation")
   func startObservingHandlesFileChanges() async throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
@@ -116,7 +116,7 @@ struct ConfigurationStoreTests {
     try await wait { store.configuration.bar.height == 60 }
   }
 
-  @Test("startObserving(): finds files created inside initially missing directories")
+  @Test("startObserving: finds files created inside initially missing directories")
   func startObservingFindsFilesInNewDirectories() async throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
@@ -131,7 +131,7 @@ struct ConfigurationStoreTests {
     try await wait { store.configuration.bar.height == 56 }
   }
 
-  @Test("stopObserving(): cancels pending reloads and allows observation to restart")
+  @Test("stopObserving: cancels pending reloads and allows observation to restart")
   func stopObservingCancelsReloadsAndAllowsRestart() async throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
