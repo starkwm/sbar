@@ -4,19 +4,19 @@ import PackageDescription
 let package = Package(
   name: "sbar",
   platforms: [.macOS(.v14)],
-  products: [
-    .executable(name: "sbar", targets: ["sbar"]),
-    .executable(name: "sbarctl", targets: ["sbarctl"]),
+  products: [.executable(name: "sbar", targets: ["Sbar"])],
+  dependencies: [
+    .package(url: "https://github.com/apple/swift-argument-parser", from: "1.7.1")
   ],
   targets: [
-    .target(name: "ControlProtocol"),
-    .executableTarget(name: "sbarctl", dependencies: ["ControlProtocol"], path: "Sources/SbarCtl"),
     .executableTarget(
-      name: "sbar",
-      dependencies: ["ControlProtocol"],
-      path: "Sources/Sbar",
-      resources: [.copy("Resources/config.schema.json")]
+      name: "Sbar",
+      dependencies: [
+        "SbarCore", .product(name: "ArgumentParser", package: "swift-argument-parser"),
+      ]
     ),
-    .testTarget(name: "sbarTests", dependencies: ["sbar"], path: "Tests"),
+    .target(name: "SbarCore", resources: [.copy("Resources/config.schema.json")]),
+    .testTarget(name: "SbarTests", dependencies: ["Sbar"]),
+    .testTarget(name: "SbarCoreTests", dependencies: ["SbarCore"]),
   ]
 )

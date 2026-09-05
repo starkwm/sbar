@@ -1,5 +1,5 @@
 {
-  "$schema": "../../Sources/Sbar/Resources/config.schema.json",
+  "$schema": "../../Sources/SbarCore/Resources/config.schema.json",
   "schemaVersion": 2,
   "bar": {
     "position": "bottom",

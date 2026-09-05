@@ -10,7 +10,9 @@ make test
 make release
 ```
 
-Debug executables are `.build/debug/sbar` and `.build/debug/sbarctl`; release executables are in `.build/release`. Run `sbar` directly to start the bar. Keep the SwiftPM resource bundle alongside the executable when copying build outputs.
+The executable is `.build/debug/sbar` (or `.build/release/sbar` for release builds). Run `sbar` or `sbar start` to start the bar. Use `sbar --help` for commands. Keep the SwiftPM resource bundle alongside the executable when copying build outputs.
+
+`Sources/Sbar` contains the command-line entry point and commands. `Sources/SbarCore` contains the app, bar runtime, providers, configuration, and IPC. Client commands run without starting the SwiftUI app.
 
 The Makefile follows the `skbd` and `swm` workflow: `make` builds debug executables, `make release` builds optimized executables, `make format` formats Swift sources, `make lint` checks formatting, and `make clean` removes SwiftPM build products.
 
@@ -105,15 +107,15 @@ Each region measures its items, allows flexible text to compress, and moves low-
 
 ## Runtime control
 
-The `sbarctl` executable connects to `~/.config/starkbar/control.sock`; use `--socket <path>` for another configuration directory.
+Client commands (`query`, `reload`, `set`, `trigger`, and `subscribe`) connect to `~/.config/starkbar/control.sock`; use `sbar query --socket <path>` for another configuration directory. These commands replace the former `sbarctl` executable.
 
 ```sh
-sbarctl query
-sbarctl reload
-sbarctl set clock enabled false
-sbarctl set clock style '{"tint":"#88C0D0"}'
-sbarctl trigger refresh '{"source":"manual"}'
-sbarctl subscribe
+sbar query
+sbar reload
+sbar set clock enabled false
+sbar set clock style '{"tint":"#88C0D0"}'
+sbar trigger refresh '{"source":"manual"}'
+sbar subscribe
 ```
 
 `set` changes in-memory configuration only. Supported properties are `label`, `symbol`, `enabled`, `priority`, `format`, `style`, and `popup`; Settings Save persists the current state. Reload discards transient changes. `subscribe` streams JSON lines for configuration changes, provider values, and triggers. Trigger payloads are retained in events; matching command items rerun. Clients must belong to the same user. Slow subscribers are disconnected, and a lock prevents multiple instances from owning the same socket.

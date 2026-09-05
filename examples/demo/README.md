@@ -21,11 +21,11 @@ Quit any running sbar instance first. This uses a separate configuration and con
 Try runtime updates in another terminal, also from the repository root:
 
 ```sh
-.build/debug/sbarctl --socket "$PWD/examples/demo/control.sock" query
-.build/debug/sbarctl --socket "$PWD/examples/demo/control.sock" trigger demo-refresh '{"source":"demo"}'
-.build/debug/sbarctl --socket "$PWD/examples/demo/control.sock" set clock style '{"tint":"#A3BE8C","background":"#A3BE8C22"}'
-.build/debug/sbarctl --socket "$PWD/examples/demo/control.sock" set media enabled false
-.build/debug/sbarctl --socket "$PWD/examples/demo/control.sock" reload
+.build/debug/sbar query --socket "$PWD/examples/demo/control.sock"
+.build/debug/sbar trigger --socket "$PWD/examples/demo/control.sock" demo-refresh '{"source":"demo"}'
+.build/debug/sbar set --socket "$PWD/examples/demo/control.sock" clock style '{"tint":"#A3BE8C","background":"#A3BE8C22"}'
+.build/debug/sbar set --socket "$PWD/examples/demo/control.sock" media enabled false
+.build/debug/sbar reload --socket "$PWD/examples/demo/control.sock"
 ```
 
 The trigger reruns hostname and uptime, updates the clock snapshot, and increments the plugin counter. Runtime edits last until reload unless saved in Settings. `subscribe` streams runtime events until interrupted.
