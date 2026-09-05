@@ -57,7 +57,7 @@ Run `sbar validate` (or `sbar validate --config /path/to/config.json`) to check 
 
 The config file is the only persistent configuration source. sbar never saves, rewrites, or backs it up. For editor completion, copy [config.schema.json](Sources/SbarCore/Resources/config.schema.json) beside your configuration and add `"$schema": "config.schema.json"` to the root object.
 
-For a larger example with native metrics, popups, actions, commands, and a streaming plugin, see the [demo configuration](examples/demo/README.md).
+For a larger example with native metrics, popups, actions, commands, and a streaming plugin, see the [demo configuration](examples/demo/README.md). For a minimal top bar with inset edges and rounded corners, see the [floating demo](examples/floating/README.md).
 
 Create `~/.config/starkbar/config.json` with a configuration such as:
 

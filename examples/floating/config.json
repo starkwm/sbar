@@ -1,0 +1,29 @@
+{
+  "$schema": "../../Sources/SbarCore/Resources/config.schema.json",
+  "schemaVersion": 1,
+  "bar": {
+    "position": "top",
+    "height": 32,
+    "displays": "main",
+    "margin": { "top": 6, "left": 6, "right": 6 },
+    "mousePassThrough": true
+  },
+  "theme": {
+    "horizontalPadding": 12,
+    "verticalPadding": 2,
+    "cornerRadius": 12,
+    "itemSpacing": 12
+  },
+  "items": {
+    "left": [
+      { "id": "front-app", "type": "frontApplication", "priority": 100 },
+      { "id": "spaces", "type": "spaces", "symbol": "rectangle.3.group" }
+    ],
+    "center": [],
+    "right": [
+      { "id": "battery", "type": "battery" },
+      { "id": "wifi", "type": "wifi" },
+      { "id": "clock", "type": "clock", "format": "HH:mm", "priority": 100 }
+    ]
+  }
+}
