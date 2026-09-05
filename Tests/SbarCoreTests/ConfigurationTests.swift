@@ -71,4 +71,26 @@ struct ConfigurationTests {
     }
   }
 
+  @Test("Version one commands migrate recursively without rewriting files")
+  func migration() throws {
+    let json =
+      #"{"schemaVersion":1,"bar":{},"items":{"left":[{"id":"group","type":"group","children":[{"id":"c","type":"command","command":{"script":"date","interval":12,"event":"refresh"}}]}]}}"#
+    let configuration = try JSONDecoder().decode(BarConfiguration.self, from: Data(json.utf8))
+    try configuration.validate()
+    let item = try #require(configuration.items.left.first?.children?.first)
+    #expect(configuration.schemaVersion == 2)
+    #expect(item.refresh == RefreshPolicy(mode: .interval, seconds: 12, event: "refresh"))
+    #expect(item.command?.interval == nil)
+    #expect(item.command?.event == nil)
+  }
+
+  @Test("Selected displays need IDs and interval refresh needs seconds")
+  func validation() {
+    var config = BarConfiguration.default
+    config.bar.displays = .selected
+    #expect(throws: (any Error).self) { try config.validate() }
+    config.bar.displayIDs = [1]
+    config.items.right[1].refresh = RefreshPolicy(mode: .interval)
+    #expect(throws: (any Error).self) { try config.validate() }
+  }
 }

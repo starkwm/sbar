@@ -1,21 +1,5 @@
 import Foundation
 
-struct PluginConfiguration: Codable, Equatable, Sendable {
-  var executable: String
-  var arguments: [String]?
-  var restart: Bool?
-}
-
-struct PluginOutput: Codable, Equatable, Sendable {
-  let text: String
-}
-
-struct PluginInput: Codable, Sendable {
-  var version = 1
-  let event: String
-  let value: JSONValue?
-}
-
 /// A bounded cross-thread mailbox; the worker is the only reader.
 final class PluginMailbox: @unchecked Sendable {
   private let lock = NSLock()

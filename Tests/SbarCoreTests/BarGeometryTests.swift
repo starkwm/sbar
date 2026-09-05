@@ -3,8 +3,8 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Foundation geometry")
-struct FoundationTests {
+@Suite("Bar geometry")
+struct BarGeometryTests {
   @Test("Top uses the physical edge while bottom respects the Dock")
   func placement() {
     let screen = CGRect(x: -1440, y: 0, width: 1440, height: 900)
