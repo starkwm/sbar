@@ -84,7 +84,8 @@ Only `schemaVersion: 1` is supported.
 | Property | Values | Default |
 | --- | --- | --- |
 | `position` | `top` or `bottom` | `top` |
-| `height` | 20–96 points | `32` |
+| `height` | 20–96 points, including content padding | `32` |
+| `margin` | Object with `top`, `bottom`, `left`, `right` offsets (0–4096 points each) | All `0` |
 | `displays` | `main`, `all`, or `selected` | `all` |
 | `displayIDs` | Display IDs, required when `displays` is `selected` | None |
 | `windowLevel` | `floating`, `statusBar`, or `screenSaver` | `statusBar` |
@@ -93,6 +94,28 @@ Only `schemaVersion: 1` is supported.
 `main` selects the primary display. Use `sbar query --displays` to find connected display IDs and names.
 
 Top placement uses the physical screen edge, sharing the system menu-bar area. Bottom placement respects the Dock's visible work area. On notched displays, items avoid the cutout and the center section sits immediately to its right.
+
+For a floating bar, inset the panel and round its background:
+
+```json
+{
+  "schemaVersion": 1,
+  "bar": {
+    "height": 40,
+    "margin": { "top": 44, "left": 12, "right": 12 }
+  },
+  "theme": {
+    "horizontalPadding": 16,
+    "verticalPadding": 4,
+    "cornerRadius": 12
+  },
+  "items": { "right": [{ "id": "clock", "type": "clock", "format": "HH:mm" }] }
+}
+```
+
+Margins inset the placement area: top bars anchor to its top edge, bottom bars to its bottom edge. Left and right margins control width independently. Excessive margins clamp to leave at least one point of available area; height shrinks to fit. A top margin is measured from the physical screen edge, so choose enough clearance for your display's notch/menu bar. Notch avoidance stops once the panel is below the cutout. These settings reload automatically when the configuration file changes.
+
+The theme's `verticalPadding` and `cornerRadius` accept 0–48 points and default to zero. Padding sits inside `bar.height`; the rounded shape clips both material/custom backgrounds and content.
 
 ### Items
 

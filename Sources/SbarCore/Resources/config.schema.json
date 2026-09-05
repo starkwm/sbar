@@ -70,6 +70,32 @@
             "null"
           ],
           "default": false
+        },
+        "margin": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "top": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 4096
+            },
+            "bottom": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 4096
+            },
+            "left": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 4096
+            },
+            "right": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 4096
+            }
+          }
         }
       }
     },
@@ -139,6 +165,16 @@
         },
         "itemStyle": {
           "$ref": "#/$defs/itemStyle"
+        },
+        "verticalPadding": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 48
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 48
         }
       }
     }

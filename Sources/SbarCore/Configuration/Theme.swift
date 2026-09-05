@@ -3,12 +3,16 @@ import Foundation
 struct Theme: Codable, Equatable, Sendable {
   var background: String?
   var horizontalPadding: Double?
+  var verticalPadding: Double?
+  var cornerRadius: Double?
   var itemSpacing: Double?
   var itemStyle: ItemStyle?
 
   func validate() throws {
     try ItemStyle.validateColor(background, path: "theme.background")
     try ItemStyle.validateNumber(horizontalPadding, range: 0...96, path: "theme.horizontalPadding")
+    try ItemStyle.validateNumber(verticalPadding, range: 0...48, path: "theme.verticalPadding")
+    try ItemStyle.validateNumber(cornerRadius, range: 0...48, path: "theme.cornerRadius")
     try ItemStyle.validateNumber(itemSpacing, range: 0...96, path: "theme.itemSpacing")
     try itemStyle?.validate(path: "theme.itemStyle")
   }

@@ -16,6 +16,10 @@ struct BarView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .padding(.horizontal, configuration.theme?.horizontalPadding ?? 10)
+    .padding(
+      .vertical,
+      min(configuration.theme?.verticalPadding ?? 0, configuration.bar.height / 2)
+    )
     .coordinateSpace(name: "bar")
     .onPreferenceChange(HitRegionsKey.self) { hitRegionsChanged?($0) }
     .background {
@@ -25,6 +29,7 @@ struct BarView: View {
         Rectangle().fill(.ultraThinMaterial)
       }
     }
+    .clipShape(RoundedRectangle(cornerRadius: configuration.theme?.cornerRadius ?? 0))
   }
 
   private func region(_ items: [Item], alignment: Alignment) -> some View {

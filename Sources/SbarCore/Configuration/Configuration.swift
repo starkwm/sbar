@@ -48,6 +48,12 @@ struct Configuration: Codable, Equatable, Sendable {
       )
     }
 
+    for (edge, value) in [
+      ("top", bar.margin?.top), ("bottom", bar.margin?.bottom),
+      ("left", bar.margin?.left), ("right", bar.margin?.right),
+    ] {
+      try ItemStyle.validateNumber(value, range: 0...4096, path: "bar.margin.\(edge)")
+    }
     try theme?.validate()
 
     var identifiers = Set<String>()
@@ -130,11 +136,12 @@ struct Configuration: Codable, Equatable, Sendable {
 
 struct BarSettings: Codable, Equatable, Sendable {
   private enum CodingKeys: String, CodingKey {
-    case position, height, displays, displayIDs, windowLevel, mousePassThrough
+    case position, height, margin, displays, displayIDs, windowLevel, mousePassThrough
   }
 
   var position: BarPosition = .top
   var height: Double = 32
+  var margin: BarMargin?
 
   var displays: DisplaySelection = .all
   var displayIDs: [UInt32]?
@@ -145,6 +152,7 @@ struct BarSettings: Codable, Equatable, Sendable {
   init(
     position: BarPosition = .top,
     height: Double = 32,
+    margin: BarMargin? = nil,
     displays: DisplaySelection = .all,
     displayIDs: [UInt32]? = nil,
     windowLevel: BarWindowLevel? = nil,
@@ -152,6 +160,7 @@ struct BarSettings: Codable, Equatable, Sendable {
   ) {
     self.position = position
     self.height = height
+    self.margin = margin
 
     self.displays = displays
     self.displayIDs = displayIDs
@@ -165,6 +174,7 @@ struct BarSettings: Codable, Equatable, Sendable {
 
     position = try container.decodeIfPresent(BarPosition.self, forKey: .position) ?? .top
     height = try container.decodeIfPresent(Double.self, forKey: .height) ?? 32
+    margin = try container.decodeIfPresent(BarMargin.self, forKey: .margin)
 
     displays = try container.decodeIfPresent(DisplaySelection.self, forKey: .displays) ?? .all
     displayIDs = try container.decodeIfPresent([UInt32].self, forKey: .displayIDs)
@@ -172,6 +182,13 @@ struct BarSettings: Codable, Equatable, Sendable {
     windowLevel = try container.decodeIfPresent(BarWindowLevel.self, forKey: .windowLevel)
     mousePassThrough = try container.decodeIfPresent(Bool.self, forKey: .mousePassThrough)
   }
+}
+
+struct BarMargin: Codable, Equatable, Sendable {
+  var top: Double?
+  var bottom: Double?
+  var left: Double?
+  var right: Double?
 }
 
 struct ItemSections: Codable, Equatable, Sendable {

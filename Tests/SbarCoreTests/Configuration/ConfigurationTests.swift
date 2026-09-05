@@ -31,6 +31,43 @@ struct ConfigurationTests {
     #expect(configuration.items.all.isEmpty)
   }
 
+  @Test("init: round trips floating bar settings with omitted margin edges")
+  func initRoundTripsFloatingSettings() throws {
+    let json =
+      #"{"schemaVersion":1,"bar":{"margin":{"top":44,"left":12}},"theme":{"verticalPadding":4,"cornerRadius":12},"items":{}}"#
+    let configuration = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
+    try configuration.validate()
+    #expect(configuration.bar.margin == BarMargin(top: 44, left: 12))
+    #expect(configuration.theme?.verticalPadding == 4)
+    #expect(configuration.theme?.cornerRadius == 12)
+    #expect(
+      try JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(configuration))
+        == configuration
+    )
+  }
+
+  @Test(
+    "validate: rejects invalid floating bar dimensions",
+    arguments: [-1.0, 4097.0, Double.infinity, Double.nan]
+  )
+  func validateRejectsInvalidMargins(value: Double) {
+    for margin in [
+      BarMargin(top: value), BarMargin(bottom: value), BarMargin(left: value),
+      BarMargin(right: value),
+    ] {
+      let configuration = Configuration(bar: .init(margin: margin), items: .init())
+      #expect(throws: (any Error).self) { try configuration.validate() }
+    }
+  }
+
+  @Test("validate: rejects invalid bar padding and radius", arguments: [-1.0, 49.0])
+  func validateRejectsInvalidThemeDimensions(value: Double) {
+    for theme in [Theme(verticalPadding: value), Theme(cornerRadius: value)] {
+      let configuration = Configuration(bar: .init(), items: .init(), theme: theme)
+      #expect(throws: (any Error).self) { try configuration.validate() }
+    }
+  }
+
   @Test("init: decodes version-one refresh policies in groups")
   func initDecodesVersionOneRefreshPoliciesInGroups() throws {
     let json =

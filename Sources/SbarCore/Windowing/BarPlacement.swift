@@ -3,12 +3,16 @@ import Foundation
 struct BarPlacement {
   static func frame(screenFrame: CGRect, visibleFrame: CGRect, settings: BarSettings) -> CGRect {
     let bounds = settings.position == .top ? screenFrame : visibleFrame
-    let height = min(settings.height, bounds.height)
+    let left = min(settings.margin?.left ?? 0, max(0, bounds.width - 1))
+    let right = min(settings.margin?.right ?? 0, max(0, bounds.width - left - 1))
+    let top = min(settings.margin?.top ?? 0, max(0, bounds.height - 1))
+    let bottom = min(settings.margin?.bottom ?? 0, max(0, bounds.height - top - 1))
+    let height = min(settings.height, bounds.height - top - bottom)
 
     return CGRect(
-      x: bounds.minX,
-      y: settings.position == .top ? bounds.maxY - height : bounds.minY,
-      width: bounds.width,
+      x: bounds.minX + left,
+      y: settings.position == .top ? bounds.maxY - top - height : bounds.minY + bottom,
+      width: bounds.width - left - right,
       height: height
     )
   }
