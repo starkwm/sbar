@@ -7,20 +7,23 @@ struct PluginRunner {
     mailbox: PluginMailbox,
     output: @escaping @Sendable (String) -> Void
   ) async throws {
+    let events = try ProcessEvents()
     let task = Task.detached {
-      try execute(configuration: configuration, mailbox: mailbox, output: output)
+      try execute(configuration: configuration, mailbox: mailbox, events: events, output: output)
     }
 
     try await withTaskCancellationHandler {
       try await task.value
     } onCancel: {
       task.cancel()
+      events.wake()
     }
   }
 
   private static func execute(
     configuration: PluginConfiguration,
     mailbox: PluginMailbox,
+    events: ProcessEvents,
     output: @escaping @Sendable (String) -> Void
   ) throws {
     var input: [Int32] = [0, 0]
@@ -72,29 +75,41 @@ struct PluginRunner {
       if !exited { while waitpid(pid, &status, 0) < 0 && errno == EINTR {} }
     }
 
+    try events.watch(process: pid)
+    mailbox.setWakeHandler { events.wake() }
+    defer { mailbox.setWakeHandler(nil) }
+
     var pendingOutput = Data()
     var pendingInput = Data()
     var buffer = [UInt8](repeating: 0, count: 4096)
+    var outputClosed = false
+    var inputClosed = false
+    let decoder = JSONDecoder()
 
     while !Task.isCancelled {
+      var wroteInput = false
       if pendingInput.isEmpty { pendingInput = mailbox.take() ?? Data() }
-      if !pendingInput.isEmpty {
+      if !pendingInput.isEmpty && !inputClosed {
         let count = pendingInput.withUnsafeBytes { write(input[1], $0.baseAddress, $0.count) }
         if count > 0 {
           pendingInput.removeFirst(count)
+          wroteInput = true
         } else if count < 0 && errno != EAGAIN && errno != EINTR {
           pendingInput.removeAll()
+          inputClosed = true
         }
       }
 
-      let count = read(stdout[0], &buffer, buffer.count)
+      let count = outputClosed ? 0 : read(stdout[0], &buffer, buffer.count)
+      if count == 0 { outputClosed = true }
+      if count < 0 && errno != EAGAIN && errno != EINTR { throw ProcessError.launch(errno) }
       if count > 0 {
         pendingOutput.append(contentsOf: buffer.prefix(count))
         guard pendingOutput.count <= 65_536 else { throw ProcessError.outputLimit }
 
         var latest: String?
         while let newline = pendingOutput.firstIndex(of: 10) {
-          let message = try JSONDecoder().decode(
+          let message = try decoder.decode(
             PluginOutput.self,
             from: pendingOutput.prefix(upTo: newline)
           )
@@ -120,7 +135,12 @@ struct PluginRunner {
 
       if result < 0 && !exited && errno != EINTR { throw ProcessError.launch(errno) }
 
-      usleep(10_000)
+      if count > 0 || wroteInput { continue }
+      if Task.isCancelled { break }
+      try events.wait(
+        read: outputClosed ? nil : stdout[0],
+        write: !pendingInput.isEmpty && !inputClosed ? input[1] : nil
+      )
     }
 
     throw ProcessError.cancelled

@@ -26,18 +26,25 @@ struct ProcessRunner {
   static func run(executable: String, arguments: [String], timeout: Double = 5) async throws
     -> ProcessResult
   {
+    let events = try ProcessEvents()
     let worker = Task.detached {
-      try execute(executable: executable, arguments: arguments, timeout: timeout)
+      try execute(executable: executable, arguments: arguments, timeout: timeout, events: events)
     }
 
     return try await withTaskCancellationHandler {
       try await worker.value
     } onCancel: {
       worker.cancel()
+      events.wake()
     }
   }
 
-  private static func execute(executable: String, arguments: [String], timeout: Double) throws
+  private static func execute(
+    executable: String,
+    arguments: [String],
+    timeout: Double,
+    events: ProcessEvents
+  ) throws
     -> ProcessResult
   {
     var descriptors: [Int32] = [0, 0]
@@ -92,11 +99,16 @@ struct ProcessRunner {
       if !finished { while waitpid(pid, &status, 0) < 0 && errno == EINTR {} }
     }
 
+    try events.watch(process: pid)
+    var outputClosed = false
+
     while true {
       if Task.isCancelled { throw ProcessError.cancelled }
       if ContinuousClock.now >= deadline { throw ProcessError.timeout }
 
-      let count = read(descriptors[0], &buffer, buffer.count)
+      let count = outputClosed ? 0 : read(descriptors[0], &buffer, buffer.count)
+      if count == 0 { outputClosed = true }
+      if count < 0 && errno != EAGAIN && errno != EINTR { throw ProcessError.launch(errno) }
       if count > 0 {
         output.append(contentsOf: buffer.prefix(count))
         if output.count > 65_536 { throw ProcessError.outputLimit }
@@ -120,7 +132,11 @@ struct ProcessRunner {
         )
       }
 
-      usleep(10_000)
+      if Task.isCancelled { throw ProcessError.cancelled }
+      try events.wait(
+        read: outputClosed ? nil : descriptors[0],
+        timeout: ContinuousClock.now.duration(to: deadline)
+      )
     }
   }
 }

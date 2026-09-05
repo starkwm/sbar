@@ -4,6 +4,7 @@ import Foundation
 final class PluginMailbox: @unchecked Sendable {
   private let lock = NSLock()
   private var messages: [Data] = []
+  private var wakeHandler: (@Sendable () -> Void)?
 
   func send(_ input: PluginInput) {
     guard var data = try? JSONEncoder().encode(input), data.count <= 65_536 else { return }
@@ -11,8 +12,17 @@ final class PluginMailbox: @unchecked Sendable {
     data.append(10)
 
     lock.lock()
-    defer { lock.unlock() }
     if messages.count < 32 { messages.append(data) }
+    let wake = wakeHandler
+    lock.unlock()
+    wake?()
+  }
+
+  func setWakeHandler(_ handler: (@Sendable () -> Void)?) {
+    lock.lock()
+    wakeHandler = handler
+    lock.unlock()
+    handler?()
   }
 
   func take() -> Data? {
