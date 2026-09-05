@@ -242,7 +242,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var enabled: Bool = true
 
   var label: String?
-  var symbol: String?
+  var symbol: ItemSymbol?
   var format: String?
   var priority: Int = 0
   var style: ItemStyle?
@@ -267,7 +267,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     type: ItemType,
     enabled: Bool = true,
     label: String? = nil,
-    symbol: String? = nil,
+    symbol: ItemSymbol? = nil,
     format: String? = nil,
     priority: Int = 0,
     style: ItemStyle? = nil,
@@ -311,7 +311,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
 
     label = try container.decodeIfPresent(String.self, forKey: .label)
-    symbol = try container.decodeIfPresent(String.self, forKey: .symbol)
+    symbol = try container.decodeIfPresent(ItemSymbol.self, forKey: .symbol)
     format = try container.decodeIfPresent(String.self, forKey: .format)
     priority = try container.decodeIfPresent(Int.self, forKey: .priority) ?? 0
     style = try container.decodeIfPresent(ItemStyle.self, forKey: .style)

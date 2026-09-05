@@ -18,7 +18,13 @@ enum WidgetState: Equatable, Sendable {
         return WidgetPresentation(text: text, symbol: item.symbol, accessibilityLabel: text)
       }
       let level = min(100, max(0, percentage ?? 100))
-      let batterySymbol = "battery.\(Int((Double(level) / 25).rounded()) * 25)percent"
+      let index = Int((Double(level) / 25).rounded())
+      let batterySymbol: ItemSymbol
+      if let symbols = settings.levelSymbols, symbols.count == 5 {
+        batterySymbol = symbols[index]
+      } else {
+        batterySymbol = .system("battery.\(index * 25)percent")
+      }
       let symbol =
         charging
         ? (settings.chargingSymbol ?? "battery.100percent.bolt")
@@ -64,7 +70,7 @@ enum WidgetState: Equatable, Sendable {
 
 struct WidgetPresentation: Equatable {
   var text: String
-  var symbol: String?
+  var symbol: ItemSymbol?
   var tint: String?
   var hidden = false
   var accessibilityLabel: String

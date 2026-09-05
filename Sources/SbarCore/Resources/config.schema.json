@@ -231,10 +231,7 @@
           ]
         },
         "symbol": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "$ref": "#/$defs/symbol"
         },
         "format": {
           "type": [
@@ -472,16 +469,10 @@
           ]
         },
         "chargingSymbol": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "$ref": "#/$defs/symbol"
         },
         "pluggedInSymbol": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "$ref": "#/$defs/symbol"
         },
         "lowTint": {
           "type": [
@@ -512,6 +503,26 @@
           "minimum": 0,
           "maximum": 100,
           "default": 20
+        },
+        "levelSymbols": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/symbol"
+              },
+              {
+                "not": {
+                  "type": "null"
+                }
+              }
+            ]
+          }
         }
       },
       "additionalProperties": false
@@ -553,16 +564,10 @@
           ]
         },
         "connectedSymbol": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "$ref": "#/$defs/symbol"
         },
         "disconnectedSymbol": {
-          "type": [
-            "string",
-            "null"
-          ]
+          "$ref": "#/$defs/symbol"
         },
         "connectedTint": {
           "type": [
@@ -580,6 +585,42 @@
         }
       },
       "additionalProperties": false
+    },
+    "symbol": {
+      "oneOf": [
+        {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "glyph",
+            "font"
+          ],
+          "properties": {
+            "glyph": {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            "font": {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            "size": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 8,
+              "maximum": 72
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     }
   }
 }

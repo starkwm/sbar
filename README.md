@@ -145,7 +145,7 @@ The theme's `verticalPadding` and `cornerRadius` accept 0–48 points and defaul
 | `divider` | Vertical separator |
 | `spacer` | Flexible empty space |
 
-Optional properties include `enabled` (default `true`), `label`, `symbol` (an SF Symbol name), `priority` (default `0`), `style`, `refresh`, `primaryAction`, `secondaryAction`, and `popup` text. Symbols appear beside item content except for groups, dividers, and spacers. Type-specific settings are described below.
+Optional properties include `enabled` (default `true`), `label`, `symbol` (an SF Symbol name or font glyph object), `priority` (default `0`), `style`, `refresh`, `primaryAction`, `secondaryAction`, and `popup` text. Symbols appear beside item content except for groups, dividers, and spacers. Type-specific settings are described below.
 
 ### Refresh policies
 
@@ -195,6 +195,50 @@ Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeigh
 `frontApplication`, `battery`, `volume`, `network`, and `wifi` use native change notifications. `cpu`, `memory`, `disk`, and `throughput` sample once every two seconds, shared across displays. `clock` and `date` share one clock. Memory reports active, wired, and compressed pages; disk reports free space on the home volume. Throughput totals non-loopback interfaces, so tunnels may contribute additional traffic. Fixed-volume outputs display that status rather than a fabricated percentage.
 
 `media` listens for Music and Spotify playback notifications. It waits for the next notification after startup and does not query or control other players. Wi-Fi reports connection state, not the location-protected SSID.
+
+### Font glyph symbols
+
+Every `symbol`, including battery and Wi-Fi state symbols, accepts either an SF Symbol name
+or a glyph object. Install the font on your Mac first and use its font name:
+
+```json
+{
+  "id": "wifi",
+  "type": "wifi",
+  "wifi": {
+    "showLabel": false,
+    "connectedSymbol": { "glyph": "\uf1eb", "font": "Symbols Nerd Font Mono" },
+    "disconnectedSymbol": "wifi.slash"
+  }
+}
+```
+
+`glyph` is literal text (JSON Unicode escapes work too), `font` selects the installed font,
+and optional `size` accepts 8–72 points. Without `size`, glyphs use the resolved item/theme
+font size. Only the symbol uses the custom font; item text retains its normal font. Missing
+fonts or glyphs use macOS font fallback, which may display a missing-character box.
+SF Symbol strings continue to work, and can be mixed with glyph objects.
+
+Battery `levelSymbols` accepts exactly five symbols, ordered 0%, 25%, 50%, 75%, 100%:
+
+```json
+{
+  "id": "battery",
+  "type": "battery",
+  "battery": {
+    "levelSymbols": [
+      { "glyph": "\uf244", "font": "Symbols Nerd Font Mono" },
+      { "glyph": "\uf243", "font": "Symbols Nerd Font Mono" },
+      { "glyph": "\uf242", "font": "Symbols Nerd Font Mono" },
+      { "glyph": "\uf241", "font": "Symbols Nerd Font Mono" },
+      { "glyph": "\uf240", "font": "Symbols Nerd Font Mono" }
+    ],
+    "chargingSymbol": { "glyph": "\uf0e7", "font": "Symbols Nerd Font Mono" }
+  }
+}
+```
+
+The existing transient `set` command also accepts a glyph object for the item-level `symbol`.
 
 ### Battery and Wi-Fi appearance
 

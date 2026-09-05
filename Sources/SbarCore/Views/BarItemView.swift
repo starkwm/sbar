@@ -3,11 +3,14 @@ import SwiftUI
 
 struct BarItemView: View {
   let configuration: Item
+  var symbolFontSize: Double = 13
 
   var body: some View {
     if let presentation = providers.presentation(for: configuration) {
       HStack(spacing: 4) {
-        if let symbol = presentation.symbol { Image(systemName: symbol) }
+        if let symbol = presentation.symbol {
+          ItemSymbolView(symbol: symbol, fontSize: symbolFontSize)
+        }
         if !presentation.text.isEmpty { Text(presentation.text).monospacedDigit() }
       }
       .accessibilityElement(children: .ignore)
@@ -16,7 +19,7 @@ struct BarItemView: View {
       configuration.type != .spacer
     {
       HStack(spacing: 4) {
-        Image(systemName: symbol).accessibilityHidden(true)
+        ItemSymbolView(symbol: symbol, fontSize: symbolFontSize).accessibilityHidden(true)
         content
       }
     } else {

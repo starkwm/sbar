@@ -36,11 +36,11 @@ struct InteractiveItemView: View {
           if let action = item.primaryAction { actions.run(action) }
           if item.popup != nil || item.type == .popup { showingPopup.toggle() }
         } label: {
-          BarItemView(configuration: item)
+          BarItemView(configuration: item, symbolFontSize: resolvedStyle.fontSize ?? 13)
         }
         .buttonStyle(.plain)
       } else {
-        BarItemView(configuration: item)
+        BarItemView(configuration: item, symbolFontSize: resolvedStyle.fontSize ?? 13)
       }
     }
     .modifier(ItemStyleModifier(style: resolvedStyle))

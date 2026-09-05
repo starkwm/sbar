@@ -1,14 +1,21 @@
 struct BatteryConfiguration: Codable, Equatable, Sendable {
   var showPercentage: Bool?
   var showSymbol: Bool?
-  var chargingSymbol: String?
-  var pluggedInSymbol: String?
+  var levelSymbols: [ItemSymbol]?
+  var chargingSymbol: ItemSymbol?
+  var pluggedInSymbol: ItemSymbol?
   var lowThreshold: Int?
   var lowTint: String?
   var chargingTint: String?
   var pluggedInTint: String?
 
   func validate(path: String) throws {
+    if let levelSymbols, levelSymbols.count != 5 {
+      throw ConfigurationError.invalidValue(
+        path: "\(path).levelSymbols",
+        reason: "Provide five symbols for 0, 25, 50, 75, and 100 percent."
+      )
+    }
     if let lowThreshold, !(0...100).contains(lowThreshold) {
       throw ConfigurationError.invalidValue(
         path: "\(path).lowThreshold",
@@ -26,8 +33,8 @@ struct WifiConfiguration: Codable, Equatable, Sendable {
   var showSymbol: Bool?
   var connectedLabel: String?
   var disconnectedLabel: String?
-  var connectedSymbol: String?
-  var disconnectedSymbol: String?
+  var connectedSymbol: ItemSymbol?
+  var disconnectedSymbol: ItemSymbol?
   var connectedTint: String?
   var disconnectedTint: String?
   var hideWhenDisconnected: Bool?
