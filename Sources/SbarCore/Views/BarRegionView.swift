@@ -67,7 +67,10 @@ struct BarRegionView: View {
               ForEach(enabled.filter { !visible.contains($0.id) }) { item in
                 InteractiveItemView(item: item, defaultStyle: theme?.itemStyle)
               }
-            }.padding().frame(maxWidth: 480)
+            }
+            .padding()
+            .frame(maxWidth: 480)
+            .focusEffectDisabled()
           }
         }
       }

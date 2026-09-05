@@ -59,6 +59,7 @@ struct InteractiveItemView: View {
       }
       .padding()
       .frame(minWidth: 120, maxWidth: 480)
+      .focusEffectDisabled()
     }
     .help(item.label ?? item.id)
   }
