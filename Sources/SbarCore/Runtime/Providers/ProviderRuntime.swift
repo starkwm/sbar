@@ -1,7 +1,4 @@
-import AppKit
-import CoreAudio
-import IOKit.ps
-import Network
+import Foundation
 import Observation
 
 @MainActor @Observable
@@ -43,12 +40,12 @@ final class ProviderRuntime {
   @ObservationIgnored private var refreshTask: Task<Void, Never>?
   @ObservationIgnored private var lastRefresh: [String: Date] = [:]
 
-  @ObservationIgnored private var observers: [(NotificationCenter, NSObjectProtocol)] = []
+  @ObservationIgnored private let application = FrontApplicationProvider()
+  @ObservationIgnored private let battery = BatteryProvider()
+  @ObservationIgnored private let volume = VolumeProvider()
+  @ObservationIgnored private let network = NetworkProvider()
+  @ObservationIgnored private let media = MediaProvider()
   @ObservationIgnored private var samplingTask: Task<Void, Never>?
-  @ObservationIgnored private var networkMonitor: NWPathMonitor?
-  @ObservationIgnored private var powerSource: CFRunLoopSource?
-  @ObservationIgnored private var audioListeners:
-    [(AudioObjectID, AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
 
   @ObservationIgnored private var commandTasks: [String: Task<Void, Never>] = [:]
 
@@ -76,59 +73,26 @@ final class ProviderRuntime {
     activeTypes = requested
 
     if activeTypes.contains(.frontApplication) {
-      updateApplication()
-      observe(
-        NSWorkspace.shared.notificationCenter,
-        name: NSWorkspace.didActivateApplicationNotification
-      ) { [weak self] _ in self?.updateApplication() }
+      application.start { [weak self] in self?.sharedValues[.frontApplication] = $0 }
     }
 
     if activeTypes.contains(.battery) {
-      updateBattery()
-      powerSource = IOPSNotificationCreateRunLoopSource(
-        { context in
-          guard let context else { return }
-
-          let registry = Unmanaged<ProviderRuntime>.fromOpaque(context).takeUnretainedValue()
-          MainActor.assumeIsolated { registry.updateBattery() }
-        },
-        Unmanaged.passUnretained(self).toOpaque()
-      ).takeRetainedValue()
-      CFRunLoopAddSource(CFRunLoopGetMain(), powerSource, .commonModes)
+      battery.start { [weak self] in self?.sharedValues[.battery] = $0 }
     }
 
-    if activeTypes.contains(.volume) { installAudioListeners() }
+    if activeTypes.contains(.volume) {
+      volume.start { [weak self] in self?.sharedValues[.volume] = $0 }
+    }
 
     if activeTypes.contains(.network) || activeTypes.contains(.wifi) {
-      let networkMonitor = NWPathMonitor()
-      networkMonitor.pathUpdateHandler = { [weak self] path in
-        let connected = path.status == .satisfied
-        let wifi = path.usesInterfaceType(.wifi)
-        let network = connected ? (wifi ? "Wi-Fi" : "Connected") : "Offline"
-
-        Task { @MainActor [weak self] in
-          self?.sharedValues[.network] = network
-          self?.sharedValues[.wifi] = wifi && connected ? "Wi-Fi connected" : "Wi-Fi disconnected"
-        }
+      network.start { [weak self] network, wifi in
+        self?.sharedValues[.network] = network
+        self?.sharedValues[.wifi] = wifi
       }
-      networkMonitor.start(queue: DispatchQueue(label: "starkbar.network"))
-      self.networkMonitor = networkMonitor
     }
 
     if activeTypes.contains(.media) {
-      sharedValues[.media] = "Waiting for playback"
-      for name in ["com.apple.Music.playerInfo", "com.spotify.client.PlaybackStateChanged"] {
-        observe(DistributedNotificationCenter.default(), name: Notification.Name(name)) {
-          [weak self] info in
-          let state = info["Player State"] ?? ""
-          let title = info["Name"] ?? ""
-          let artist = info["Artist"] ?? ""
-
-          self?.sharedValues[.media] =
-            state == "Playing"
-            ? [title, artist].filter { !$0.isEmpty }.joined(separator: " — ") : "Paused"
-        }
-      }
+      media.start { [weak self] in self?.sharedValues[.media] = $0 }
     }
 
     let adapters = activeTypes.intersection([.aerospace, .yabai])
@@ -371,160 +335,12 @@ final class ProviderRuntime {
     samplingTask?.cancel()
     samplingTask = nil
 
-    for (center, observer) in observers { center.removeObserver(observer) }
-    observers.removeAll()
-
-    networkMonitor?.cancel()
-    networkMonitor = nil
-
-    if let powerSource { CFRunLoopRemoveSource(CFRunLoopGetMain(), powerSource, .commonModes) }
-    powerSource = nil
-
-    for (object, var address, listener) in audioListeners {
-      AudioObjectRemovePropertyListenerBlock(object, &address, .main, listener)
-    }
-    audioListeners.removeAll()
+    application.stop()
+    battery.stop()
+    volume.stop()
+    network.stop()
+    media.stop()
 
     activeTypes = []
-  }
-
-  private func observe(
-    _ center: NotificationCenter,
-    name: Notification.Name,
-    handler: @escaping @MainActor ([String: String]) -> Void
-  ) {
-    let token = center.addObserver(forName: name, object: nil, queue: .main) { notification in
-      let info =
-        notification.userInfo?.reduce(into: [String: String]()) { result, entry in
-          if let key = entry.key as? String, let value = entry.value as? String {
-            result[key] = value
-          }
-        } ?? [:]
-
-      MainActor.assumeIsolated { handler(info) }
-    }
-    observers.append((center, token))
-  }
-
-  private func updateApplication() {
-    sharedValues[.frontApplication] = NSWorkspace.shared.frontmostApplication?.localizedName ?? ""
-  }
-
-  private func updateBattery() {
-    guard let blob = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
-      let sources = IOPSCopyPowerSourcesList(blob)?.takeRetainedValue() as? [CFTypeRef]
-    else { return }
-
-    for source in sources {
-      guard
-        let info = IOPSGetPowerSourceDescription(blob, source)?.takeUnretainedValue()
-          as? [String: Any],
-        let capacity = info[kIOPSCurrentCapacityKey] as? Int,
-        let maximum = info[kIOPSMaxCapacityKey] as? Int, maximum > 0
-      else { continue }
-
-      let charging = info[kIOPSPowerSourceStateKey] as? String == kIOPSACPowerValue
-      sharedValues[.battery] = "\(charging ? "⚡ " : "")\(capacity * 100 / maximum)%"
-      return
-    }
-
-    sharedValues[.battery] = "AC power"
-  }
-
-  private func installAudioListeners() {
-    guard activeTypes.contains(.volume) else { return }
-
-    for (object, var address, listener) in audioListeners {
-      AudioObjectRemovePropertyListenerBlock(object, &address, .main, listener)
-    }
-    audioListeners.removeAll()
-
-    var device = AudioDeviceID(0)
-    var size = UInt32(MemoryLayout<AudioDeviceID>.size)
-    var address = AudioObjectPropertyAddress(
-      mSelector: kAudioHardwarePropertyDefaultOutputDevice,
-      mScope: kAudioObjectPropertyScopeGlobal,
-      mElement: kAudioObjectPropertyElementMain
-    )
-    AudioObjectGetPropertyData(
-      AudioObjectID(kAudioObjectSystemObject),
-      &address,
-      0,
-      nil,
-      &size,
-      &device
-    )
-
-    let changed: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
-      Task { @MainActor [weak self] in self?.installAudioListeners() }
-    }
-    AudioObjectAddPropertyListenerBlock(
-      AudioObjectID(kAudioObjectSystemObject),
-      &address,
-      .main,
-      changed
-    )
-    audioListeners.append((AudioObjectID(kAudioObjectSystemObject), address, changed))
-
-    guard device != 0 else {
-      sharedValues[.volume] = "No output"
-      return
-    }
-
-    for (selector, element) in [
-      (kAudioDevicePropertyVolumeScalar, UInt32(0)), (kAudioDevicePropertyVolumeScalar, UInt32(1)),
-      (kAudioDevicePropertyVolumeScalar, UInt32(2)), (kAudioDevicePropertyMute, UInt32(0)),
-    ] {
-      var property = AudioObjectPropertyAddress(
-        mSelector: selector,
-        mScope: kAudioDevicePropertyScopeOutput,
-        mElement: element
-      )
-      let listener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
-        Task { @MainActor [weak self] in self?.updateVolume(device) }
-      }
-      if AudioObjectAddPropertyListenerBlock(device, &property, .main, listener) == noErr {
-        audioListeners.append((device, property, listener))
-      }
-    }
-
-    updateVolume(device)
-  }
-
-  private func updateVolume(_ device: AudioDeviceID) {
-    var volume: Float32 = 0
-    var muted: UInt32 = 0
-    var size = UInt32(MemoryLayout<Float32>.size)
-    var address = AudioObjectPropertyAddress(
-      mSelector: kAudioDevicePropertyVolumeScalar,
-      mScope: kAudioDevicePropertyScopeOutput,
-      mElement: kAudioObjectPropertyElementMain
-    )
-    var result = AudioObjectGetPropertyData(device, &address, 0, nil, &size, &volume)
-    if result != noErr {
-      var channels: [Float32] = []
-      for element: UInt32 in [1, 2] {
-        address.mElement = element
-        var channel: Float32 = 0
-        if AudioObjectGetPropertyData(device, &address, 0, nil, &size, &channel) == noErr {
-          channels.append(channel)
-        }
-      }
-
-      if !channels.isEmpty {
-        volume = channels.reduce(0, +) / Float32(channels.count)
-        result = noErr
-      }
-    }
-
-    address.mElement = kAudioObjectPropertyElementMain
-    address.mSelector = kAudioDevicePropertyMute
-    AudioObjectGetPropertyData(device, &address, 0, nil, &size, &muted)
-
-    sharedValues[.volume] =
-      muted != 0
-      ? "Muted"
-      : result == noErr
-        ? "Volume \(Int((volume.isFinite ? min(1, max(0, volume)) : 0) * 100))%" : "Fixed volume"
   }
 }
