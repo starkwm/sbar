@@ -60,7 +60,7 @@ struct BarRegionView: View {
           }
           .buttonStyle(.plain)
           .frame(width: 28)
-          .modifier(BarHitRegionModifier())
+          .modifier(HitRegionModifier())
           .accessibilityLabel("More bar items")
           .popover(isPresented: $showingOverflow) {
             VStack(alignment: .leading, spacing: 8) {

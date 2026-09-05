@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct BarHitRegionsKey: PreferenceKey {
+struct HitRegionsKey: PreferenceKey {
   static let defaultValue: [CGRect] = []
 
   static func reduce(value: inout [CGRect], nextValue: () -> [CGRect]) {
@@ -8,14 +8,14 @@ struct BarHitRegionsKey: PreferenceKey {
   }
 }
 
-struct BarHitRegionModifier: ViewModifier {
+struct HitRegionModifier: ViewModifier {
   var enabled = true
 
   func body(content: Content) -> some View {
     content.background(
       GeometryReader { geometry in
         Color.clear.preference(
-          key: BarHitRegionsKey.self,
+          key: HitRegionsKey.self,
           value: enabled ? [geometry.frame(in: .named("bar"))] : []
         )
       }

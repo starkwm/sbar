@@ -17,7 +17,7 @@ struct ValidateCommand: ParsableCommand {
 
   mutating func run() throws {
     let url = URL(fileURLWithPath: (config as NSString).expandingTildeInPath)
-    try ConfigurationValidation.validate(url: url)
+    try ConfigurationValidator.validate(url: url)
 
     print("Configuration is valid.")
   }

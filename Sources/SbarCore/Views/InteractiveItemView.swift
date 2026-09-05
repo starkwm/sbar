@@ -32,7 +32,7 @@ struct InteractiveItemView: View {
       }
     }
     .modifier(ItemStyleModifier(style: (item.style ?? ItemStyle()).resolved(over: defaultStyle)))
-    .modifier(BarHitRegionModifier(enabled: tracksHitRegion))
+    .modifier(HitRegionModifier(enabled: tracksHitRegion))
     .contentShape(Rectangle())
     .onHover { hovering = $0 }
     .background(hovering && interactive ? Color.primary.opacity(0.08) : .clear)

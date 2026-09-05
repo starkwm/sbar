@@ -1,6 +1,6 @@
 import Foundation
 
-struct WorkspaceAdapter {
+struct WorkspaceProvider {
   static func executable(_ name: String) -> String? {
     let paths =
       (ProcessInfo.processInfo.environment["PATH"] ?? "").split(separator: ":").map(String.init) + [

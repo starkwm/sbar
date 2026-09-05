@@ -104,7 +104,7 @@ final class ProviderRuntime {
       adapterTask = Task { [weak self] in
         while !Task.isCancelled {
           for adapter in adapters {
-            let value = (try? await WorkspaceAdapter.query(adapter)) ?? "Workspace unavailable"
+            let value = (try? await WorkspaceProvider.query(adapter)) ?? "Workspace unavailable"
             guard !Task.isCancelled else { return }
 
             self?.updateSharedValues([adapter: value])

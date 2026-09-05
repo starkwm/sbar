@@ -1,6 +1,6 @@
 import Foundation
 
-public enum ConfigurationValidation {
+public enum ConfigurationValidator {
   public static func validate(url: URL) throws {
     do {
       let configuration = try JSONDecoder().decode(
