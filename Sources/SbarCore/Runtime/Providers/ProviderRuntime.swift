@@ -36,7 +36,7 @@ final class ProviderRuntime {
   private(set) var itemSnapshots: [String: String] = [:]
   private(set) var itemDates: [String: Date] = [:]
 
-  @ObservationIgnored private var refreshItems: [ItemConfiguration] = []
+  @ObservationIgnored private var refreshItems: [Item] = []
   @ObservationIgnored private var refreshTask: Task<Void, Never>?
   @ObservationIgnored private var lastRefresh: [String: Date] = [:]
 
@@ -50,17 +50,17 @@ final class ProviderRuntime {
 
   @ObservationIgnored private var commandTasks: [String: Task<Void, Never>] = [:]
 
-  @ObservationIgnored private var pluginItems: [ItemConfiguration] = []
+  @ObservationIgnored private var pluginItems: [Item] = []
   @ObservationIgnored private var pluginTasks: [String: Task<Void, Never>] = [:]
   @ObservationIgnored private var pluginInputs: [String: PluginMailbox] = [:]
   @ObservationIgnored private var pluginGeneration = UUID()
 
   @ObservationIgnored private var adapterTask: Task<Void, Never>?
-  @ObservationIgnored private var commandItems: [ItemConfiguration] = []
+  @ObservationIgnored private var commandItems: [Item] = []
   @ObservationIgnored private var activeTypes: Set<ItemType> = []
   @ObservationIgnored private let metrics = SystemMetricsSampler()
 
-  func configure(_ configuration: BarConfiguration) {
+  func configure(_ configuration: Configuration) {
     configureRefresh(configuration.items.active)
     configurePlugins(configuration.items.active.filter { $0.type == .plugin })
     configureCommands(configuration.items.active.filter { $0.enabled && $0.type == .command })
@@ -186,7 +186,7 @@ final class ProviderRuntime {
     stopNative()
   }
 
-  private func configureRefresh(_ items: [ItemConfiguration]) {
+  private func configureRefresh(_ items: [Item]) {
     let requested = items.filter { $0.refresh != nil && $0.type != .command && $0.type != .plugin }
     let same =
       requested.count == refreshItems.count
@@ -228,7 +228,7 @@ final class ProviderRuntime {
     }
   }
 
-  private func capture(_ item: ItemConfiguration) {
+  private func capture(_ item: Item) {
     if let value = sharedValues[item.type] {
       if itemSnapshots[item.id] != value { itemSnapshots[item.id] = value }
       lastRefresh[item.id] = Date()
@@ -240,7 +240,7 @@ final class ProviderRuntime {
     }
   }
 
-  private func configurePlugins(_ items: [ItemConfiguration]) {
+  private func configurePlugins(_ items: [Item]) {
     let same =
       items.count == pluginItems.count
       && items.allSatisfy { item in
@@ -295,7 +295,7 @@ final class ProviderRuntime {
     }
   }
 
-  private func configureCommands(_ items: [ItemConfiguration]) {
+  private func configureCommands(_ items: [Item]) {
     let previous = Dictionary(uniqueKeysWithValues: commandItems.map { ($0.id, $0) })
     let ids = Set(items.map(\.id))
 
@@ -314,7 +314,7 @@ final class ProviderRuntime {
     }
   }
 
-  private func startCommand(_ item: ItemConfiguration) {
+  private func startCommand(_ item: Item) {
     guard let command = item.command else { return }
 
     commandTasks[item.id]?.cancel()

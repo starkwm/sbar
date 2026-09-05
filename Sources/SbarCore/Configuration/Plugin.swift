@@ -1,6 +1,6 @@
 import Foundation
 
-struct PluginConfiguration: Codable, Equatable, Sendable {
+struct Plugin: Codable, Equatable, Sendable {
   var executable: String
   var arguments: [String]?
   var restart: Bool?

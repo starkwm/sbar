@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct BarView: View {
-  let configuration: BarConfiguration
+  let configuration: Configuration
   var notch: CGRect?
   var hitRegionsChanged: (([CGRect]) -> Void)?
 
@@ -27,7 +27,7 @@ struct BarView: View {
     }
   }
 
-  private func region(_ items: [ItemConfiguration], alignment: Alignment) -> some View {
+  private func region(_ items: [Item], alignment: Alignment) -> some View {
     BarRegionView(items: items, theme: configuration.theme, alignment: alignment)
   }
 }

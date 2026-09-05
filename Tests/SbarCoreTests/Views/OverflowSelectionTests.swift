@@ -6,7 +6,7 @@ import Testing
 struct OverflowSelectionTests {
   @Test("OverflowSelection.visibleItemIDs: preserves priority under constrained width")
   func visibleItemIDsPreservesPriorityUnderConstrainedWidth() {
-    let items: [ItemConfiguration] = [
+    let items: [Item] = [
       .init(id: "a", type: .text), .init(id: "b", type: .text, priority: 10),
       .init(id: "c", type: .text),
     ]

@@ -102,7 +102,7 @@ final class ControlRouter {
 
         var candidate = store.configuration
 
-        func update(_ items: inout [ItemConfiguration]) throws -> Bool {
+        func update(_ items: inout [Item]) throws -> Bool {
           for index in items.indices {
             if items[index].id == id {
               let encoded = try JSONEncoder().encode(items[index])
@@ -112,7 +112,7 @@ final class ControlRouter {
 
               object[property] = value
               items[index] = try JSONDecoder().decode(
-                ItemConfiguration.self,
+                Item.self,
                 from: JSONEncoder().encode(JSONValue.object(object))
               )
 

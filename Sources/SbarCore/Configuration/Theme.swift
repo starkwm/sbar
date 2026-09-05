@@ -1,6 +1,6 @@
 import Foundation
 
-struct BarTheme: Codable, Equatable, Sendable {
+struct Theme: Codable, Equatable, Sendable {
   var background: String?
   var horizontalPadding: Double?
   var itemSpacing: Double?

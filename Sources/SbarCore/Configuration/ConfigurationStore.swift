@@ -35,7 +35,7 @@ final class ConfigurationStore {
 
   let configurationURL: URL
 
-  private(set) var configuration = BarConfiguration.default
+  private(set) var configuration = Configuration.default
   private(set) var errorMessage: String?
 
   @ObservationIgnored var configurationDidChange: (() -> Void)?
@@ -63,7 +63,7 @@ final class ConfigurationStore {
     watcher = nil
   }
 
-  func apply(_ candidate: BarConfiguration) throws {
+  func apply(_ candidate: Configuration) throws {
     try candidate.validate()
     guard candidate != configuration else { return }
 
@@ -73,10 +73,10 @@ final class ConfigurationStore {
 
   func load() {
     do {
-      let decoded: BarConfiguration
+      let decoded: Configuration
       do {
         decoded = try JSONDecoder().decode(
-          BarConfiguration.self,
+          Configuration.self,
           from: Data(contentsOf: configurationURL)
         )
       } catch CocoaError.fileReadNoSuchFile {

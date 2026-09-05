@@ -13,7 +13,7 @@ struct ConfigurationSchemaTests {
     let properties = try #require(schema["properties"] as? [String: Any])
     let version = try #require(properties["schemaVersion"] as? [String: Any])
 
-    #expect(version["const"] as? Int == BarConfiguration.currentSchemaVersion)
+    #expect(version["const"] as? Int == Configuration.currentSchemaVersion)
 
     let definitions = try #require(schema["$defs"] as? [String: Any])
     let item = try #require(definitions["item"] as? [String: Any])

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct InteractiveItemView: View {
-  let item: ItemConfiguration
+  let item: Item
   let defaultStyle: ItemStyle?
   var tracksHitRegion = true
 

@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 struct BarItemView: View {
-  let configuration: ItemConfiguration
+  let configuration: Item
 
   var body: some View {
     if let symbol = configuration.symbol, configuration.type != .divider,

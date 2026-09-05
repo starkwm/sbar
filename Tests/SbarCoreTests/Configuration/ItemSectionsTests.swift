@@ -6,7 +6,7 @@ import Testing
 struct ItemSectionsTests {
   @Test("ItemSections.active: excludes children of disabled groups")
   func activeExcludesChildrenOfDisabledGroups() {
-    let group = ItemConfiguration(
+    let group = Item(
       id: "g",
       type: .group,
       enabled: false,

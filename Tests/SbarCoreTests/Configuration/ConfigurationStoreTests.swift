@@ -163,8 +163,8 @@ struct ConfigurationStoreTests {
   }
 
   private func write(height: Double, to url: URL, atomic: Bool = true) throws {
-    let configuration = BarConfiguration(
-      schemaVersion: BarConfiguration.currentSchemaVersion,
+    let configuration = Configuration(
+      schemaVersion: Configuration.currentSchemaVersion,
       bar: .init(height: height),
       items: .init()
     )

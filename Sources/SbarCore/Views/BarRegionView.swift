@@ -2,7 +2,7 @@ import SwiftUI
 
 struct OverflowSelection {
   static func visibleItemIDs(
-    items: [ItemConfiguration],
+    items: [Item],
     widths: [String: CGFloat],
     available: CGFloat,
     spacing: CGFloat
@@ -30,8 +30,8 @@ struct OverflowSelection {
 }
 
 struct BarRegionView: View {
-  let items: [ItemConfiguration]
-  let theme: BarTheme?
+  let items: [Item]
+  let theme: Theme?
   let alignment: Alignment
 
   var body: some View {

@@ -1,10 +1,10 @@
 import Foundation
 
-struct BarConfiguration: Codable, Equatable, Sendable {
+struct Configuration: Codable, Equatable, Sendable {
   private enum CodingKeys: String, CodingKey { case schemaVersion, bar, items, theme }
 
   static let currentSchemaVersion = 1
-  static let `default` = BarConfiguration(
+  static let `default` = Configuration(
     schemaVersion: currentSchemaVersion,
     bar: .init(),
     items: .init(
@@ -18,13 +18,13 @@ struct BarConfiguration: Codable, Equatable, Sendable {
   var schemaVersion: Int
   var bar: BarSettings
   var items: ItemSections
-  var theme: BarTheme? = nil
+  var theme: Theme? = nil
 
   init(
     schemaVersion: Int = Self.currentSchemaVersion,
     bar: BarSettings,
     items: ItemSections,
-    theme: BarTheme? = nil
+    theme: Theme? = nil
   ) {
     self.schemaVersion = schemaVersion
     self.bar = bar
@@ -52,7 +52,7 @@ struct BarConfiguration: Codable, Equatable, Sendable {
 
     var identifiers = Set<String>()
 
-    func validateItems(_ entries: [ItemConfiguration], path: String, depth: Int = 0) throws {
+    func validateItems(_ entries: [Item], path: String, depth: Int = 0) throws {
       guard depth <= 8 else {
         throw ConfigurationError.invalidValue(
           path: path,
@@ -177,18 +177,18 @@ struct BarSettings: Codable, Equatable, Sendable {
 struct ItemSections: Codable, Equatable, Sendable {
   private enum CodingKeys: String, CodingKey { case left, center, right }
 
-  var left: [ItemConfiguration] = []
-  var center: [ItemConfiguration] = []
-  var right: [ItemConfiguration] = []
+  var left: [Item] = []
+  var center: [Item] = []
+  var right: [Item] = []
 
-  var active: [ItemConfiguration] { (left + center + right).flatMap(\.active) }
+  var active: [Item] { (left + center + right).flatMap(\.active) }
 
-  var all: [ItemConfiguration] { (left + center + right).flatMap(\.flattened) }
+  var all: [Item] { (left + center + right).flatMap(\.flattened) }
 
   init(
-    left: [ItemConfiguration] = [],
-    center: [ItemConfiguration] = [],
-    right: [ItemConfiguration] = []
+    left: [Item] = [],
+    center: [Item] = [],
+    right: [Item] = []
   ) {
     self.left = left
     self.center = center
@@ -198,13 +198,13 @@ struct ItemSections: Codable, Equatable, Sendable {
   init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
 
-    left = try container.decodeIfPresent([ItemConfiguration].self, forKey: .left) ?? []
-    center = try container.decodeIfPresent([ItemConfiguration].self, forKey: .center) ?? []
-    right = try container.decodeIfPresent([ItemConfiguration].self, forKey: .right) ?? []
+    left = try container.decodeIfPresent([Item].self, forKey: .left) ?? []
+    center = try container.decodeIfPresent([Item].self, forKey: .center) ?? []
+    right = try container.decodeIfPresent([Item].self, forKey: .right) ?? []
   }
 }
 
-struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
+struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case enabled, format, id, label, priority, style, symbol, type, primaryAction, secondaryAction,
       popup, command, children, plugin, refresh
@@ -224,14 +224,14 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
   var secondaryAction: ItemAction?
   var popup: String?
 
-  var command: ShellCommandConfiguration?
-  var children: [ItemConfiguration]?
-  var plugin: PluginConfiguration?
+  var command: ShellCommand?
+  var children: [Item]?
+  var plugin: Plugin?
   var refresh: RefreshPolicy?
 
-  var active: [ItemConfiguration] { enabled ? [self] + (children ?? []).flatMap(\.active) : [] }
+  var active: [Item] { enabled ? [self] + (children ?? []).flatMap(\.active) : [] }
 
-  var flattened: [ItemConfiguration] { [self] + (children ?? []).flatMap(\.flattened) }
+  var flattened: [Item] { [self] + (children ?? []).flatMap(\.flattened) }
 
   init(
     id: String,
@@ -245,9 +245,9 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
     primaryAction: ItemAction? = nil,
     secondaryAction: ItemAction? = nil,
     popup: String? = nil,
-    command: ShellCommandConfiguration? = nil,
-    children: [ItemConfiguration]? = nil,
-    plugin: PluginConfiguration? = nil,
+    command: ShellCommand? = nil,
+    children: [Item]? = nil,
+    plugin: Plugin? = nil,
     refresh: RefreshPolicy? = nil
   ) {
     self.id = id
@@ -287,9 +287,9 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
     secondaryAction = try container.decodeIfPresent(ItemAction.self, forKey: .secondaryAction)
     popup = try container.decodeIfPresent(String.self, forKey: .popup)
 
-    command = try container.decodeIfPresent(ShellCommandConfiguration.self, forKey: .command)
-    children = try container.decodeIfPresent([ItemConfiguration].self, forKey: .children)
-    plugin = try container.decodeIfPresent(PluginConfiguration.self, forKey: .plugin)
+    command = try container.decodeIfPresent(ShellCommand.self, forKey: .command)
+    children = try container.decodeIfPresent([Item].self, forKey: .children)
+    plugin = try container.decodeIfPresent(Plugin.self, forKey: .plugin)
     refresh = try container.decodeIfPresent(RefreshPolicy.self, forKey: .refresh)
   }
 }

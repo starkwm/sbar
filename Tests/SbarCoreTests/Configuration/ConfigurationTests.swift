@@ -3,7 +3,7 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("BarConfiguration")
+@Suite("Configuration")
 struct ConfigurationTests {
   @Test("init: decodes the example configuration")
   func initDecodesExampleConfiguration() throws {
@@ -13,7 +13,7 @@ struct ConfigurationTests {
       """#.utf8
     )
 
-    let configuration = try JSONDecoder().decode(BarConfiguration.self, from: data)
+    let configuration = try JSONDecoder().decode(Configuration.self, from: data)
     try configuration.validate()
 
     #expect(configuration.items.left.first?.id == "app")
@@ -23,7 +23,7 @@ struct ConfigurationTests {
   @Test("init: defaults omitted bar settings and item sections")
   func initDefaultsOmittedSettingsAndSections() throws {
     let configuration = try JSONDecoder().decode(
-      BarConfiguration.self,
+      Configuration.self,
       from: Data(#"{"schemaVersion":1,"bar":{},"items":{}}"#.utf8)
     )
 
@@ -36,7 +36,7 @@ struct ConfigurationTests {
     let json =
       #"{"schemaVersion":1,"bar":{},"items":{"left":[{"id":"group","type":"group","children":[{"id":"c","type":"command","command":{"script":"date"},"refresh":{"mode":"interval","seconds":12,"event":"refresh"}}]}]}}"#
 
-    let configuration = try JSONDecoder().decode(BarConfiguration.self, from: Data(json.utf8))
+    let configuration = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
     try configuration.validate()
 
     let item = try #require(configuration.items.left.first?.children?.first)
@@ -49,7 +49,7 @@ struct ConfigurationTests {
   @Test("validate: rejects unsupported schema versions", arguments: [0, 2, 3])
   func validateRejectsUnsupportedSchemaVersions(version: Int) throws {
     let json = "{\"schemaVersion\":\(version),\"bar\":{},\"items\":{}}"
-    let configuration = try JSONDecoder().decode(BarConfiguration.self, from: Data(json.utf8))
+    let configuration = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
 
     #expect(throws: ConfigurationError.unsupportedSchemaVersion(version)) {
       try configuration.validate()
@@ -58,9 +58,9 @@ struct ConfigurationTests {
 
   @Test("validate: rejects duplicate item IDs")
   func validateRejectsDuplicateItemIDs() {
-    let item = ItemConfiguration(id: "same", type: .text)
-    let configuration = BarConfiguration(
-      schemaVersion: BarConfiguration.currentSchemaVersion,
+    let item = Item(id: "same", type: .text)
+    let configuration = Configuration(
+      schemaVersion: Configuration.currentSchemaVersion,
       bar: .init(),
       items: .init(left: [item], right: [item])
     )
@@ -75,8 +75,8 @@ struct ConfigurationTests {
 
   @Test("validate: rejects unsupported bar heights")
   func validateRejectsUnsupportedHeights() {
-    let configuration = BarConfiguration(
-      schemaVersion: BarConfiguration.currentSchemaVersion,
+    let configuration = Configuration(
+      schemaVersion: Configuration.currentSchemaVersion,
       bar: .init(height: 10),
       items: .init()
     )
@@ -86,8 +86,8 @@ struct ConfigurationTests {
 
   @Test("validate: reports the location of whitespace-only item IDs")
   func validateReportsWhitespaceOnlyItemIDs() {
-    let configuration = BarConfiguration(
-      schemaVersion: BarConfiguration.currentSchemaVersion,
+    let configuration = Configuration(
+      schemaVersion: Configuration.currentSchemaVersion,
       bar: .init(),
       items: .init(center: [.init(id: " ", type: .text)])
     )
@@ -104,7 +104,7 @@ struct ConfigurationTests {
 
   @Test("validate: requires selected display IDs and interval refresh durations")
   func validateRequiresDisplayIDsAndRefreshDurations() {
-    var config = BarConfiguration.default
+    var config = Configuration.default
     config.bar.displays = .selected
 
     #expect(throws: (any Error).self) { try config.validate() }

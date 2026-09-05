@@ -4,7 +4,7 @@ public enum ConfigurationValidation {
   public static func validate(url: URL) throws {
     do {
       let configuration = try JSONDecoder().decode(
-        BarConfiguration.self,
+        Configuration.self,
         from: Data(contentsOf: url)
       )
       try configuration.validate()

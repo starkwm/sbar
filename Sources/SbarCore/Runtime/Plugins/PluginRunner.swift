@@ -3,7 +3,7 @@ import Foundation
 
 struct PluginRunner {
   static func run(
-    configuration: PluginConfiguration,
+    configuration: Plugin,
     mailbox: PluginMailbox,
     output: @escaping @Sendable (String) -> Void
   ) async throws {
@@ -21,7 +21,7 @@ struct PluginRunner {
   }
 
   private static func execute(
-    configuration: PluginConfiguration,
+    configuration: Plugin,
     mailbox: PluginMailbox,
     events: ProcessEvents,
     output: @escaping @Sendable (String) -> Void

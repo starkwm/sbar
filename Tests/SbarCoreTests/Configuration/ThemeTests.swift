@@ -32,7 +32,7 @@ struct ThemeTests {
   @Test("ItemStyle.resolved: uses built-in defaults without styling")
   func resolvedUsesBuiltInDefaultsWithoutStyling() throws {
     let config = try JSONDecoder().decode(
-      BarConfiguration.self,
+      Configuration.self,
       from: Data(#"{"schemaVersion":1,"bar":{},"items":{}}"#.utf8)
     )
 
@@ -48,20 +48,20 @@ struct ThemeTests {
   }
 
   @Test(
-    "BarConfiguration.init: preserves partial theme and item styling through round trips"
+    "Configuration.init: preserves partial theme and item styling through round trips"
   )
   func initPreservesPartialStylingThroughRoundTrips() throws {
     let json =
       ##"{"schemaVersion":1,"bar":{},"theme":{"itemSpacing":5,"itemStyle":{"tint":"#aabbcc","fontWeight":"semibold"}},"items":{"right":[{"id":"clock","type":"clock","style":{"fontSize":16,"background":"#11223380"}}]}}"##
 
-    let config = try JSONDecoder().decode(BarConfiguration.self, from: Data(json.utf8))
+    let config = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
     try config.validate()
 
     #expect(config.theme?.horizontalPadding == nil)
     #expect(config.items.right[0].style?.fontSize == 16)
 
     #expect(
-      try JSONDecoder().decode(BarConfiguration.self, from: JSONEncoder().encode(config)) == config
+      try JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(config)) == config
     )
   }
 
@@ -81,14 +81,14 @@ struct ThemeTests {
   }
 
   @Test(
-    "BarConfiguration.validate: rejects malformed theme colors",
+    "Configuration.validate: rejects malformed theme colors",
     arguments: ["red", "#fff", "#gg0000", "#1234567", "123456", "#１２３４５６"]
   )
   func validateRejectsMalformedThemeColors(value: String) {
     #expect(RGBA(hex: value) == nil)
 
-    var config = BarConfiguration.default
-    config.theme = BarTheme(background: value)
+    var config = Configuration.default
+    config.theme = Theme(background: value)
 
     #expect(
       throws: ConfigurationError.invalidValue(
@@ -100,9 +100,9 @@ struct ThemeTests {
     }
   }
 
-  @Test("BarConfiguration.validate: reports the exact location of invalid item styles")
+  @Test("Configuration.validate: reports the exact location of invalid item styles")
   func validateReportsInvalidItemStyleLocation() {
-    var config = BarConfiguration.default
+    var config = Configuration.default
     config.items.right[1].style = ItemStyle(fontSize: 0)
 
     #expect(
@@ -116,12 +116,12 @@ struct ThemeTests {
   }
 
   @Test(
-    "BarConfiguration.validate: rejects nonfinite and negative theme spacing",
+    "Configuration.validate: rejects nonfinite and negative theme spacing",
     arguments: [-1.0, Double.infinity, Double.nan]
   )
   func validateRejectsNonfiniteAndNegativeSpacing(value: Double) {
-    var config = BarConfiguration.default
-    config.theme = BarTheme(itemSpacing: value)
+    var config = Configuration.default
+    config.theme = Theme(itemSpacing: value)
 
     #expect(throws: (any Error).self) { try config.validate() }
   }

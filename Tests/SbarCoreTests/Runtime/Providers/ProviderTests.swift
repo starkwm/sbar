@@ -23,7 +23,7 @@ struct ProviderTests {
   @Test("ProviderRuntime.trigger: updates a manual clock snapshot only when triggered")
   func triggerUpdatesManualClockSnapshot() async throws {
     let providers = ProviderRuntime()
-    var config = BarConfiguration.default
+    var config = Configuration.default
     config.items.left = []
     config.items.right = [.init(id: "clock", type: .clock, refresh: .init(mode: .manual))]
 
@@ -47,8 +47,8 @@ struct ProviderTests {
       try? FileManager.default.removeItem(at: url)
     }
 
-    let command = ShellCommandConfiguration(script: "printf x >> '\(url.path)'; printf ready")
-    var config = BarConfiguration(
+    let command = ShellCommand(script: "printf x >> '\(url.path)'; printf ready")
+    var config = Configuration(
       bar: .init(),
       items: .init(left: [.init(id: "cmd", type: .command, command: command)])
     )
