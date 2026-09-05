@@ -6,14 +6,14 @@ import Observation
 
 @MainActor @Observable
 final class ProviderRuntime {
-  private(set) var values: [ItemType: String] = [:] {
+  private(set) var sharedValues: [ItemType: String] = [:] {
     didSet {
-      for (key, value) in values where oldValue[key] != value {
+      for (key, value) in sharedValues where oldValue[key] != value {
         onValueChange?(key.rawValue, value)
       }
       for item in refreshItems
       where item.type != .clock && item.type != .date
-        && (item.refresh?.mode == .event || snapshots[item.id] == nil)
+        && (item.refresh?.mode == .event || itemSnapshots[item.id] == nil)
       { capture(item) }
     }
   }
@@ -23,7 +23,7 @@ final class ProviderRuntime {
     }
   }
   @ObservationIgnored var onValueChange: ((String, String) -> Void)?
-  private(set) var date = Date() {
+  private(set) var currentDate = Date() {
     didSet {
       for item in refreshItems
       where item.refresh?.mode == .event && (item.type == .clock || item.type == .date) {
@@ -31,15 +31,15 @@ final class ProviderRuntime {
       }
     }
   }
-  private(set) var snapshots: [String: String] = [:]
-  private(set) var dates: [String: Date] = [:]
+  private(set) var itemSnapshots: [String: String] = [:]
+  private(set) var itemDates: [String: Date] = [:]
   @ObservationIgnored private var refreshItems: [ItemConfiguration] = []
   @ObservationIgnored private var refreshTask: Task<Void, Never>?
   @ObservationIgnored private var lastRefresh: [String: Date] = [:]
 
   @ObservationIgnored private var observers: [(NotificationCenter, NSObjectProtocol)] = []
-  @ObservationIgnored private var task: Task<Void, Never>?
-  @ObservationIgnored private var monitor: NWPathMonitor?
+  @ObservationIgnored private var samplingTask: Task<Void, Never>?
+  @ObservationIgnored private var networkMonitor: NWPathMonitor?
   @ObservationIgnored private var powerSource: CFRunLoopSource?
   @ObservationIgnored private var audioListeners:
     [(AudioObjectID, AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
@@ -50,7 +50,7 @@ final class ProviderRuntime {
   @ObservationIgnored private var pluginGeneration = UUID()
   @ObservationIgnored private var adapterTask: Task<Void, Never>?
   @ObservationIgnored private var commandItems: [ItemConfiguration] = []
-  @ObservationIgnored private var types: Set<ItemType> = []
+  @ObservationIgnored private var activeTypes: Set<ItemType> = []
   @ObservationIgnored private let metrics = SystemMetricsSampler()
 
   func configure(_ configuration: BarConfiguration) {
@@ -60,17 +60,17 @@ final class ProviderRuntime {
     let requested = Set(configuration.items.active.map(\.type)).subtracting([
       .command, .plugin, .text, .spacer, .divider, .group, .popup,
     ])
-    guard requested != types else { return }
+    guard requested != activeTypes else { return }
     stopNative()
-    types = requested
-    if types.contains(.frontApplication) {
+    activeTypes = requested
+    if activeTypes.contains(.frontApplication) {
       updateApplication()
       observe(
         NSWorkspace.shared.notificationCenter,
         name: NSWorkspace.didActivateApplicationNotification
       ) { [weak self] _ in self?.updateApplication() }
     }
-    if types.contains(.battery) {
+    if activeTypes.contains(.battery) {
       updateBattery()
       powerSource = IOPSNotificationCreateRunLoopSource(
         { context in
@@ -82,59 +82,59 @@ final class ProviderRuntime {
       ).takeRetainedValue()
       CFRunLoopAddSource(CFRunLoopGetMain(), powerSource, .commonModes)
     }
-    if types.contains(.volume) { installAudioListeners() }
-    if types.contains(.network) || types.contains(.wifi) {
-      let monitor = NWPathMonitor()
-      monitor.pathUpdateHandler = { [weak self] path in
+    if activeTypes.contains(.volume) { installAudioListeners() }
+    if activeTypes.contains(.network) || activeTypes.contains(.wifi) {
+      let networkMonitor = NWPathMonitor()
+      networkMonitor.pathUpdateHandler = { [weak self] path in
         let connected = path.status == .satisfied
         let wifi = path.usesInterfaceType(.wifi)
         let network = connected ? (wifi ? "Wi-Fi" : "Connected") : "Offline"
         Task { @MainActor [weak self] in
-          self?.values[.network] = network
-          self?.values[.wifi] = wifi && connected ? "Wi-Fi connected" : "Wi-Fi disconnected"
+          self?.sharedValues[.network] = network
+          self?.sharedValues[.wifi] = wifi && connected ? "Wi-Fi connected" : "Wi-Fi disconnected"
         }
       }
-      monitor.start(queue: DispatchQueue(label: "starkbar.network"))
-      self.monitor = monitor
+      networkMonitor.start(queue: DispatchQueue(label: "starkbar.network"))
+      self.networkMonitor = networkMonitor
     }
-    if types.contains(.media) {
-      values[.media] = "Waiting for playback"
+    if activeTypes.contains(.media) {
+      sharedValues[.media] = "Waiting for playback"
       for name in ["com.apple.Music.playerInfo", "com.spotify.client.PlaybackStateChanged"] {
         observe(DistributedNotificationCenter.default(), name: Notification.Name(name)) {
           [weak self] info in
           let state = info["Player State"] ?? ""
           let title = info["Name"] ?? ""
           let artist = info["Artist"] ?? ""
-          self?.values[.media] =
+          self?.sharedValues[.media] =
             state == "Playing"
             ? [title, artist].filter { !$0.isEmpty }.joined(separator: " — ") : "Paused"
         }
       }
     }
-    let adapters = types.intersection([.aerospace, .yabai])
+    let adapters = activeTypes.intersection([.aerospace, .yabai])
     if !adapters.isEmpty {
       adapterTask = Task { [weak self] in
         while !Task.isCancelled {
           for adapter in adapters {
             let value = (try? await WorkspaceAdapter.query(adapter)) ?? "Workspace unavailable"
             guard !Task.isCancelled else { return }
-            self?.values[adapter] = value
+            self?.sharedValues[adapter] = value
           }
           do { try await Task.sleep(for: .seconds(2)) } catch { return }
         }
       }
     }
-    let sampled = types.intersection([.cpu, .memory, .disk, .throughput])
-    let needsClock = !types.isDisjoint(with: [.clock, .date])
+    let sampled = activeTypes.intersection([.cpu, .memory, .disk, .throughput])
+    let needsClock = !activeTypes.isDisjoint(with: [.clock, .date])
     if !sampled.isEmpty || needsClock {
-      task = Task { [weak self, metrics] in
+      samplingTask = Task { [weak self, metrics] in
         var tick = 0
         while !Task.isCancelled {
-          if needsClock { self?.date = Date() }
+          if needsClock { self?.currentDate = Date() }
           if tick % 2 == 0, !sampled.isEmpty {
             let snapshot = await metrics.sample(sampled)
             guard !Task.isCancelled else { return }
-            self?.values.merge(snapshot) { _, new in new }
+            self?.sharedValues.merge(snapshot) { _, new in new }
           }
           tick += 1
           do { try await Task.sleep(for: .seconds(1)) } catch { return }
@@ -158,10 +158,10 @@ final class ProviderRuntime {
     refreshTask?.cancel()
     refreshTask = nil
     refreshItems = []
-    values = [:]
+    sharedValues = [:]
     itemValues = [:]
-    snapshots = [:]
-    dates = [:]
+    itemSnapshots = [:]
+    itemDates = [:]
     lastRefresh = [:]
     pluginGeneration = UUID()
     for task in pluginTasks.values { task.cancel() }
@@ -189,8 +189,8 @@ final class ProviderRuntime {
     }
     refreshTask?.cancel()
     refreshItems = requested
-    snapshots = [:]
-    dates = [:]
+    itemSnapshots = [:]
+    itemDates = [:]
     lastRefresh = [:]
     for item in requested { capture(item) }
     guard requested.contains(where: { $0.refresh?.mode == .interval }) else { return }
@@ -212,12 +212,12 @@ final class ProviderRuntime {
   }
 
   private func capture(_ item: ItemConfiguration) {
-    if let value = values[item.type] {
-      snapshots[item.id] = value
+    if let value = sharedValues[item.type] {
+      itemSnapshots[item.id] = value
       lastRefresh[item.id] = Date()
     }
     if item.type == .clock || item.type == .date {
-      dates[item.id] = Date()
+      itemDates[item.id] = Date()
       lastRefresh[item.id] = Date()
     }
   }
@@ -296,7 +296,7 @@ final class ProviderRuntime {
           )
           guard !Task.isCancelled else { return }
           self?.itemValues[item.id] =
-            result.status == 0 ? result.output : "Exit \(result.status): \(result.output)"
+            result.exitCode == 0 ? result.output : "Exit \(result.exitCode): \(result.output)"
         } catch {
           guard !Task.isCancelled else { return }
           self?.itemValues[item.id] = error.localizedDescription
@@ -313,19 +313,19 @@ final class ProviderRuntime {
   private func stopNative() {
     adapterTask?.cancel()
     adapterTask = nil
-    task?.cancel()
-    task = nil
+    samplingTask?.cancel()
+    samplingTask = nil
     for (center, observer) in observers { center.removeObserver(observer) }
     observers.removeAll()
-    monitor?.cancel()
-    monitor = nil
+    networkMonitor?.cancel()
+    networkMonitor = nil
     if let powerSource { CFRunLoopRemoveSource(CFRunLoopGetMain(), powerSource, .commonModes) }
     powerSource = nil
     for (object, var address, listener) in audioListeners {
       AudioObjectRemovePropertyListenerBlock(object, &address, .main, listener)
     }
     audioListeners.removeAll()
-    types = []
+    activeTypes = []
   }
 
   private func observe(
@@ -346,7 +346,7 @@ final class ProviderRuntime {
   }
 
   private func updateApplication() {
-    values[.frontApplication] = NSWorkspace.shared.frontmostApplication?.localizedName ?? ""
+    sharedValues[.frontApplication] = NSWorkspace.shared.frontmostApplication?.localizedName ?? ""
   }
 
   private func updateBattery() {
@@ -361,14 +361,14 @@ final class ProviderRuntime {
         let maximum = info[kIOPSMaxCapacityKey] as? Int, maximum > 0
       else { continue }
       let charging = info[kIOPSPowerSourceStateKey] as? String == kIOPSACPowerValue
-      values[.battery] = "\(charging ? "⚡ " : "")\(capacity * 100 / maximum)%"
+      sharedValues[.battery] = "\(charging ? "⚡ " : "")\(capacity * 100 / maximum)%"
       return
     }
-    values[.battery] = "AC power"
+    sharedValues[.battery] = "AC power"
   }
 
   private func installAudioListeners() {
-    guard types.contains(.volume) else { return }
+    guard activeTypes.contains(.volume) else { return }
     for (object, var address, listener) in audioListeners {
       AudioObjectRemovePropertyListenerBlock(object, &address, .main, listener)
     }
@@ -399,7 +399,7 @@ final class ProviderRuntime {
     )
     audioListeners.append((AudioObjectID(kAudioObjectSystemObject), address, changed))
     guard device != 0 else {
-      values[.volume] = "No output"
+      sharedValues[.volume] = "No output"
       return
     }
     for (selector, element) in [
@@ -448,7 +448,7 @@ final class ProviderRuntime {
     address.mElement = kAudioObjectPropertyElementMain
     address.mSelector = kAudioDevicePropertyMute
     AudioObjectGetPropertyData(device, &address, 0, nil, &size, &muted)
-    values[.volume] =
+    sharedValues[.volume] =
       muted != 0
       ? "Muted"
       : result == noErr

@@ -59,7 +59,7 @@ final class ActionRunner {
             arguments: ["-c", action.value]
           )
           self?.errorMessage =
-            result.status == 0 ? nil : "Command exited \(result.status): \(result.output)"
+            result.exitCode == 0 ? nil : "Command exited \(result.exitCode): \(result.output)"
         } catch { self?.errorMessage = error.localizedDescription }
       }
     }

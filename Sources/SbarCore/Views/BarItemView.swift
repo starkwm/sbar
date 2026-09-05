@@ -22,20 +22,20 @@ struct BarItemView: View {
     case .clock:
       Text(
         ClockFormatter.string(
-          providers.dates[configuration.id] ?? providers.date,
+          providers.itemDates[configuration.id] ?? providers.currentDate,
           format: configuration.format
         )
       ).monospacedDigit()
     case .date:
       Text(
-        providers.dates[configuration.id] ?? providers.date,
+        providers.itemDates[configuration.id] ?? providers.currentDate,
         format: .dateTime.weekday().month().day()
       )
     case .divider:
       Rectangle().frame(width: 1, height: 16).opacity(0.3).accessibilityHidden(true)
     case .frontApplication:
       Text(
-        configuration.label ?? providers.snapshots[configuration.id] ?? providers.values[
+        configuration.label ?? providers.itemSnapshots[configuration.id] ?? providers.sharedValues[
           .frontApplication
         ] ?? ""
       ).lineLimit(1)
@@ -48,7 +48,10 @@ struct BarItemView: View {
     case .group, .popup:
       Text(configuration.label ?? configuration.id)
     default:
-      Text(providers.snapshots[configuration.id] ?? providers.values[configuration.type] ?? "—")
+      Text(
+        providers.itemSnapshots[configuration.id] ?? providers.sharedValues[configuration.type]
+          ?? "—"
+      )
     }
   }
 

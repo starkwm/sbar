@@ -3,7 +3,7 @@ import Foundation
 
 struct ProcessResult: Sendable {
   let output: String
-  let status: Int32
+  let exitCode: Int32
 }
 
 enum ProcessError: Error, LocalizedError {
@@ -103,7 +103,7 @@ struct ProcessRunner {
           output: String(decoding: output, as: UTF8.self).trimmingCharacters(
             in: .whitespacesAndNewlines
           ),
-          status: exitStatus
+          exitCode: exitStatus
         )
       }
       usleep(10_000)

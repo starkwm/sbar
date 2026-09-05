@@ -2,7 +2,7 @@ import AppKit
 
 final class BarPanel: NSPanel {
   var hitRegions: [CGRect] = []
-  var passesEmptyRegions = false
+  var passesThroughEmptyRegions = false
 
   override var canBecomeKey: Bool { false }
   override var canBecomeMain: Bool { false }
@@ -31,9 +31,9 @@ final class BarPanel: NSPanel {
     frameRect
   }
 
-  func updateMousePolicy() {
+  func updateMousePassthrough() {
     let local = convertPoint(fromScreen: NSEvent.mouseLocation)
     let point = CGPoint(x: local.x, y: frame.height - local.y)
-    ignoresMouseEvents = passesEmptyRegions && !hitRegions.contains { $0.contains(point) }
+    ignoresMouseEvents = passesThroughEmptyRegions && !hitRegions.contains { $0.contains(point) }
   }
 }

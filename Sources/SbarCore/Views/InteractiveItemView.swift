@@ -2,7 +2,7 @@ import SwiftUI
 
 struct InteractiveItemView: View {
   let item: ItemConfiguration
-  let theme: ItemStyle?
+  let defaultStyle: ItemStyle?
   var tracksHitRegion = true
 
   var body: some View {
@@ -11,7 +11,11 @@ struct InteractiveItemView: View {
         HStack(spacing: 4) {
           ForEach((item.children ?? []).filter(\.enabled)) { child in
             AnyView(
-              InteractiveItemView(item: child, theme: theme, tracksHitRegion: tracksHitRegion)
+              InteractiveItemView(
+                item: child,
+                defaultStyle: defaultStyle,
+                tracksHitRegion: tracksHitRegion
+              )
             )
           }
         }
@@ -27,7 +31,7 @@ struct InteractiveItemView: View {
         BarItemView(configuration: item)
       }
     }
-    .modifier(ItemStyleModifier(style: (item.style ?? ItemStyle()).resolved(over: theme)))
+    .modifier(ItemStyleModifier(style: (item.style ?? ItemStyle()).resolved(over: defaultStyle)))
     .modifier(BarHitRegionModifier(enabled: tracksHitRegion))
     .contentShape(Rectangle())
     .onHover { hovering = $0 }
@@ -41,7 +45,13 @@ struct InteractiveItemView: View {
       VStack(alignment: .leading, spacing: 8) {
         if let popup = item.popup { Text(popup).textSelection(.enabled) }
         ForEach((item.children ?? []).filter(\.enabled)) { child in
-          AnyView(InteractiveItemView(item: child, theme: theme, tracksHitRegion: tracksHitRegion))
+          AnyView(
+            InteractiveItemView(
+              item: child,
+              defaultStyle: defaultStyle,
+              tracksHitRegion: tracksHitRegion
+            )
+          )
         }
         if let error = actions.errorMessage { Text(error).foregroundStyle(.red) }
       }

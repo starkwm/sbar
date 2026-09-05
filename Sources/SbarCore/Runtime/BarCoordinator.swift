@@ -62,7 +62,7 @@ final class BarCoordinator: NSObject {
       .mouseMoved, .leftMouseDragged, .rightMouseDragged,
     ]) { [weak self] event in
       if let self {
-        for panel in self.panels.values { panel.updateMousePolicy() }
+        for panel in self.panels.values { panel.updateMousePassthrough() }
       }
       return event
     }
@@ -71,7 +71,7 @@ final class BarCoordinator: NSObject {
     ]) { [weak self] _ in
       MainActor.assumeIsolated {
         if let self {
-          for panel in self.panels.values { panel.updateMousePolicy() }
+          for panel in self.panels.values { panel.updateMousePassthrough() }
         }
       }
     }
@@ -179,7 +179,7 @@ final class BarCoordinator: NSObject {
       case .statusBar: panel.level = .statusBar
       case .screenSaver: panel.level = .screenSaver
       }
-      panel.passesEmptyRegions = configuration.bar.mousePassThrough ?? false
+      panel.passesThroughEmptyRegions = configuration.bar.mousePassThrough ?? false
       let notch = BarPlacement.notch(
         screenFrame: screen.frame,
         leftArea: screen.auxiliaryTopLeftArea,
@@ -192,14 +192,14 @@ final class BarCoordinator: NSObject {
           notch: notch,
           hitRegionsChanged: { [weak panel] regions in
             panel?.hitRegions = regions
-            panel?.updateMousePolicy()
+            panel?.updateMousePassthrough()
           }
         ).environment(providers).environment(actions)
       )
       hostingView.safeAreaRegions = []
       panel.contentView = hostingView
       panel.orderFrontRegardless()
-      panel.updateMousePolicy()
+      panel.updateMousePassthrough()
       updated[identifier] = panel
     }
     for panel in remaining.values { panel.close() }

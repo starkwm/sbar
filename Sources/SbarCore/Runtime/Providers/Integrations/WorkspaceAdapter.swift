@@ -25,7 +25,7 @@ struct WorkspaceAdapter {
       type == .aerospace
       ? ["list-workspaces", "--focused"] : ["-m", "query", "--spaces", "--space"]
     let result = try await ProcessRunner.run(executable: path, arguments: arguments, timeout: 2)
-    guard result.status == 0 else { return "\(name) unavailable" }
+    guard result.exitCode == 0 else { return "\(name) unavailable" }
     return type == .aerospace ? result.output : try yabaiLabel(Data(result.output.utf8))
   }
 }

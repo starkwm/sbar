@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct OverflowSelection {
-  static func visible(
+  static func visibleItemIDs(
     items: [ItemConfiguration],
     widths: [String: CGFloat],
     available: CGFloat,
@@ -34,7 +34,7 @@ struct BarRegionView: View {
     GeometryReader { geometry in
       let enabled = items.filter(\.enabled)
       let spacing = theme?.itemSpacing ?? 10
-      let visible = OverflowSelection.visible(
+      let visible = OverflowSelection.visibleItemIDs(
         items: enabled,
         widths: widths,
         available: geometry.size.width,
@@ -42,7 +42,7 @@ struct BarRegionView: View {
       )
       HStack(spacing: spacing) {
         ForEach(enabled.filter { visible.contains($0.id) }) { item in
-          InteractiveItemView(item: item, theme: theme?.itemStyle)
+          InteractiveItemView(item: item, defaultStyle: theme?.itemStyle)
             .lineLimit(1)
             .minimumScaleFactor(0.8)
         }
@@ -59,7 +59,7 @@ struct BarRegionView: View {
           .popover(isPresented: $showingOverflow) {
             VStack(alignment: .leading, spacing: 8) {
               ForEach(enabled.filter { !visible.contains($0.id) }) { item in
-                InteractiveItemView(item: item, theme: theme?.itemStyle)
+                InteractiveItemView(item: item, defaultStyle: theme?.itemStyle)
               }
             }.padding().frame(maxWidth: 480)
           }
@@ -70,7 +70,7 @@ struct BarRegionView: View {
     .background {
       HStack(spacing: 0) {
         ForEach(items.filter(\.enabled)) { item in
-          InteractiveItemView(item: item, theme: theme?.itemStyle, tracksHitRegion: false)
+          InteractiveItemView(item: item, defaultStyle: theme?.itemStyle, tracksHitRegion: false)
             .fixedSize()
             .background(
               GeometryReader { geometry in

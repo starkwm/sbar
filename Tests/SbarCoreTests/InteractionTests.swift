@@ -10,7 +10,7 @@ struct InteractionTests {
       arguments: ["-c", "printf hello; exit 7"]
     )
     #expect(result.output == "hello")
-    #expect(result.status == 7)
+    #expect(result.exitCode == 7)
   }
 
   @Test("Timeout and output limits stop commands")
@@ -34,7 +34,7 @@ struct InteractionTests {
       .init(id: "c", type: .text),
     ]
     #expect(
-      OverflowSelection.visible(
+      OverflowSelection.visibleItemIDs(
         items: items,
         widths: ["a": 40, "b": 40, "c": 40],
         available: 80,

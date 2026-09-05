@@ -35,11 +35,11 @@ struct HardeningTests {
     config.items.right = [.init(id: "clock", type: .clock, refresh: .init(mode: .manual))]
     providers.configure(config)
     defer { providers.stop() }
-    let initial = providers.dates["clock"]
+    let initial = providers.itemDates["clock"]
     try await Task.sleep(for: .milliseconds(30))
-    #expect(providers.dates["clock"] == initial)
+    #expect(providers.itemDates["clock"] == initial)
     providers.trigger("clock")
-    #expect(try #require(providers.dates["clock"]) > #require(initial))
+    #expect(try #require(providers.itemDates["clock"]) > #require(initial))
   }
 
   @MainActor @Test("Cosmetic command edits do not rerun the process")
