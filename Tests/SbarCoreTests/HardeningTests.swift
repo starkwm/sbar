@@ -29,7 +29,7 @@ struct HardeningTests {
 
   @MainActor @Test("Manual clock snapshots remain stable until explicitly triggered")
   func manualClock() async throws {
-    let providers = ProviderRegistry()
+    let providers = ProviderRuntime()
     var config = BarConfiguration.default
     config.items.left = []
     config.items.right = [.init(id: "clock", type: .clock, refresh: .init(mode: .manual))]
@@ -45,12 +45,12 @@ struct HardeningTests {
   @MainActor @Test("Cosmetic command edits do not rerun the process")
   func cosmeticChanges() async throws {
     let url = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
-    let providers = ProviderRegistry()
+    let providers = ProviderRuntime()
     defer {
       providers.stop()
       try? FileManager.default.removeItem(at: url)
     }
-    let command = CommandConfiguration(script: "printf x >> '\(url.path)'; printf ready")
+    let command = ShellCommandConfiguration(script: "printf x >> '\(url.path)'; printf ready")
     var config = BarConfiguration(
       bar: .init(),
       items: .init(left: [.init(id: "cmd", type: .command, command: command)])
@@ -71,7 +71,7 @@ struct HardeningTests {
   func formatting() {
     let date = Date(timeIntervalSince1970: 13 * 3600 + 5 * 60 + 9)
     #expect(
-      ClockText.string(date, format: "HH:mm:ss", timeZone: TimeZone(secondsFromGMT: 0)!)
+      ClockFormatter.string(date, format: "HH:mm:ss", timeZone: TimeZone(secondsFromGMT: 0)!)
         == "13:05:09"
     )
     #expect(

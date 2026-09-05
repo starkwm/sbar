@@ -1,7 +1,7 @@
 import Foundation
 
 @MainActor
-struct ClockText {
+struct ClockFormatter {
   private static let formatters: [String: DateFormatter] = ["HH:mm", "HH:mm:ss"].reduce(into: [:]) {
     result,
     format in

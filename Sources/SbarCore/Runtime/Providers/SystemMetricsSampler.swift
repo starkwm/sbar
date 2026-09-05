@@ -1,7 +1,7 @@
 import Darwin
 import Foundation
 
-actor SystemMetrics {
+actor SystemMetricsSampler {
   static func cpuUsage(previous: [UInt32], current: [UInt32]) -> Double? {
     guard previous.count == 4, current.count == 4 else { return nil }
     let delta = zip(current, previous).map { Double($0 &- $1) }

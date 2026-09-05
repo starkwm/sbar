@@ -17,9 +17,9 @@ public enum ControlClient {
     var buffer = [UInt8](repeating: 0, count: 8192)
     while true {
       let count = recv(fd, &buffer, buffer.count, 0)
-      guard count > 0 else { throw SocketFailure.message("Connection closed or timed out.") }
+      guard count > 0 else { throw MessageError.message("Connection closed or timed out.") }
       pending.append(contentsOf: buffer.prefix(count))
-      guard pending.count <= 1_048_576 else { throw SocketFailure.message("Response too large.") }
+      guard pending.count <= 1_048_576 else { throw MessageError.message("Response too large.") }
       while let newline = pending.firstIndex(of: 10) {
         let line = pending.prefix(upTo: newline)
         let response = try JSONDecoder().decode(ControlResponse.self, from: line)

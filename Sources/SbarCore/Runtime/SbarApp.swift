@@ -18,7 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   init(configurationURL: URL) {
     coordinator = BarCoordinator(
       store: ConfigurationStore(configurationURL: configurationURL),
-      providers: ProviderRegistry(),
+      providers: ProviderRuntime(),
       actions: ActionRunner(),
       events: EventBus()
     )

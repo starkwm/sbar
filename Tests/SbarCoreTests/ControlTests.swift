@@ -49,7 +49,7 @@ struct ControlTests {
     events.emit(RuntimeEvent(kind: .trigger, name: "check", value: .number(1)))
     let router = ControlRouter(
       store: store,
-      providers: ProviderRegistry(),
+      providers: ProviderRuntime(),
       events: events,
       actions: actions
     )
@@ -84,7 +84,7 @@ struct ControlTests {
     let events = EventBus()
     let router = ControlRouter(
       store: store,
-      providers: ProviderRegistry(),
+      providers: ProviderRuntime(),
       events: events,
       actions: ActionRunner()
     )

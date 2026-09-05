@@ -1,7 +1,7 @@
 import Darwin
 import Foundation
 
-struct PluginProcess {
+struct PluginRunner {
   static func run(
     configuration: PluginConfiguration,
     mailbox: PluginMailbox,
@@ -24,9 +24,9 @@ struct PluginProcess {
   ) throws {
     var input: [Int32] = [0, 0]
     var stdout: [Int32] = [0, 0]
-    guard pipe(&input) == 0 else { throw CommandFailure.launch(errno) }
+    guard pipe(&input) == 0 else { throw ProcessError.launch(errno) }
     defer { for descriptor in input { close(descriptor) } }
-    guard pipe(&stdout) == 0 else { throw CommandFailure.launch(errno) }
+    guard pipe(&stdout) == 0 else { throw ProcessError.launch(errno) }
     defer { for descriptor in stdout { close(descriptor) } }
     for fd in input + stdout { _ = fcntl(fd, F_SETFD, FD_CLOEXEC) }
     _ = fcntl(stdout[0], F_SETFL, O_NONBLOCK)
@@ -52,7 +52,7 @@ struct PluginProcess {
     var envp = environment + [nil]
     var pid: pid_t = 0
     let result = posix_spawn(&pid, configuration.executable, &actions, &attributes, &argv, &envp)
-    guard result == 0 else { throw CommandFailure.launch(result) }
+    guard result == 0 else { throw ProcessError.launch(result) }
     close(input[0])
     input[0] = -1
     close(stdout[1])
@@ -79,7 +79,7 @@ struct PluginProcess {
       let count = read(stdout[0], &buffer, buffer.count)
       if count > 0 {
         pendingOutput.append(contentsOf: buffer.prefix(count))
-        guard pendingOutput.count <= 65_536 else { throw CommandFailure.outputLimit }
+        guard pendingOutput.count <= 65_536 else { throw ProcessError.outputLimit }
         var latest: String?
         while let newline = pendingOutput.firstIndex(of: 10) {
           let message = try JSONDecoder().decode(
@@ -94,17 +94,17 @@ struct PluginProcess {
       let result = waitpid(pid, &status, WNOHANG)
       if result == pid { exited = true }
       if exited && count <= 0 {
-        if !pendingOutput.isEmpty { throw CommandFailure.launch(EPROTO) }
+        if !pendingOutput.isEmpty { throw ProcessError.launch(EPROTO) }
         if status != 0 {
-          throw CommandFailure.exitStatus(
+          throw ProcessError.exitStatus(
             status & 0x7f == 0 ? (status >> 8) & 0xff : 128 + (status & 0x7f)
           )
         }
         return
       }
-      if result < 0 && !exited && errno != EINTR { throw CommandFailure.launch(errno) }
+      if result < 0 && !exited && errno != EINTR { throw ProcessError.launch(errno) }
       usleep(10_000)
     }
-    throw CommandFailure.cancelled
+    throw ProcessError.cancelled
   }
 }

@@ -70,7 +70,7 @@ struct BarConfiguration: Codable, Equatable, Sendable {
       throw ConfigurationError.invalidBarHeight(bar.height)
     }
     if bar.displays == .selected && (bar.displayIDs ?? []).isEmpty {
-      throw ConfigurationError.invalidStyle(
+      throw ConfigurationError.invalidValue(
         path: "bar.displayIDs",
         reason: "Select at least one display ID."
       )
@@ -79,7 +79,7 @@ struct BarConfiguration: Codable, Equatable, Sendable {
     var identifiers = Set<String>()
     func validateItems(_ entries: [ItemConfiguration], path: String, depth: Int = 0) throws {
       guard depth <= 8 else {
-        throw ConfigurationError.invalidStyle(
+        throw ConfigurationError.invalidValue(
           path: path,
           reason: "Groups may nest at most eight levels."
         )
@@ -87,7 +87,7 @@ struct BarConfiguration: Codable, Equatable, Sendable {
       for (index, item) in entries.enumerated() {
         let location = "\(path)[\(index)]"
         if item.refresh?.mode == .interval && item.refresh?.seconds == nil {
-          throw ConfigurationError.invalidStyle(
+          throw ConfigurationError.invalidValue(
             path: "\(location).refresh.seconds",
             reason: "An interval needs a duration."
           )
@@ -98,19 +98,19 @@ struct BarConfiguration: Codable, Equatable, Sendable {
           path: "\(location).refresh.seconds"
         )
         if item.type == .plugin && item.plugin == nil {
-          throw ConfigurationError.invalidStyle(
+          throw ConfigurationError.invalidValue(
             path: "\(location).plugin",
             reason: "Plugin settings are required."
           )
         }
         if let plugin = item.plugin, plugin.executable.isEmpty {
-          throw ConfigurationError.invalidStyle(
+          throw ConfigurationError.invalidValue(
             path: "\(location).plugin.executable",
             reason: "Executable must not be empty."
           )
         }
         if item.type == .command && item.command == nil {
-          throw ConfigurationError.invalidStyle(
+          throw ConfigurationError.invalidValue(
             path: "\(location).command",
             reason: "Command settings are required."
           )
@@ -234,7 +234,7 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
   var primaryAction: ItemAction?
   var secondaryAction: ItemAction?
   var popup: String?
-  var command: CommandConfiguration?
+  var command: ShellCommandConfiguration?
   var children: [ItemConfiguration]?
   var plugin: PluginConfiguration?
   var refresh: RefreshPolicy?
@@ -255,7 +255,7 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
     primaryAction: ItemAction? = nil,
     secondaryAction: ItemAction? = nil,
     popup: String? = nil,
-    command: CommandConfiguration? = nil,
+    command: ShellCommandConfiguration? = nil,
     children: [ItemConfiguration]? = nil,
     plugin: PluginConfiguration? = nil,
     refresh: RefreshPolicy? = nil
@@ -290,7 +290,7 @@ struct ItemConfiguration: Codable, Equatable, Identifiable, Sendable {
     primaryAction = try container.decodeIfPresent(ItemAction.self, forKey: .primaryAction)
     secondaryAction = try container.decodeIfPresent(ItemAction.self, forKey: .secondaryAction)
     popup = try container.decodeIfPresent(String.self, forKey: .popup)
-    command = try container.decodeIfPresent(CommandConfiguration.self, forKey: .command)
+    command = try container.decodeIfPresent(ShellCommandConfiguration.self, forKey: .command)
     children = try container.decodeIfPresent([ItemConfiguration].self, forKey: .children)
     plugin = try container.decodeIfPresent(PluginConfiguration.self, forKey: .plugin)
     refresh = try container.decodeIfPresent(RefreshPolicy.self, forKey: .refresh)
@@ -308,14 +308,14 @@ enum ItemType: String, CaseIterable, Codable, Sendable {
 }
 
 enum ConfigurationError: Error, Equatable, LocalizedError {
-  case invalidStyle(path: String, reason: String)
+  case invalidValue(path: String, reason: String)
   case invalidItemIdentifier(path: String, reason: String)
   case invalidBarHeight(Double)
   case unsupportedSchemaVersion(Int)
 
   var errorDescription: String? {
     switch self {
-    case .invalidStyle(let path, let reason): "\(path): \(reason)"
+    case .invalidValue(let path, let reason): "\(path): \(reason)"
     case .invalidItemIdentifier(let path, let reason): "\(path): \(reason)"
     case .invalidBarHeight(let height):
       "bar.height: \(height) is outside the supported range of 20...96."

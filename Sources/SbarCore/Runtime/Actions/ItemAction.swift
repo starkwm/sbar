@@ -7,7 +7,7 @@ struct ItemAction: Codable, Equatable, Sendable {
   var value: String
 }
 
-struct CommandConfiguration: Codable, Equatable, Sendable {
+struct ShellCommandConfiguration: Codable, Equatable, Sendable {
   var script: String
   var interval: Double?
   var timeout: Double?

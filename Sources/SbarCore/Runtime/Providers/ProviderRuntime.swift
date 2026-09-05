@@ -5,7 +5,7 @@ import Network
 import Observation
 
 @MainActor @Observable
-final class ProviderRegistry {
+final class ProviderRuntime {
   private(set) var values: [ItemType: String] = [:] {
     didSet {
       for (key, value) in values where oldValue[key] != value {
@@ -51,7 +51,7 @@ final class ProviderRegistry {
   @ObservationIgnored private var adapterTask: Task<Void, Never>?
   @ObservationIgnored private var commandItems: [ItemConfiguration] = []
   @ObservationIgnored private var types: Set<ItemType> = []
-  @ObservationIgnored private let metrics = SystemMetrics()
+  @ObservationIgnored private let metrics = SystemMetricsSampler()
 
   func configure(_ configuration: BarConfiguration) {
     configureRefresh(configuration.items.active)
@@ -75,7 +75,7 @@ final class ProviderRegistry {
       powerSource = IOPSNotificationCreateRunLoopSource(
         { context in
           guard let context else { return }
-          let registry = Unmanaged<ProviderRegistry>.fromOpaque(context).takeUnretainedValue()
+          let registry = Unmanaged<ProviderRuntime>.fromOpaque(context).takeUnretainedValue()
           MainActor.assumeIsolated { registry.updateBattery() }
         },
         Unmanaged.passUnretained(self).toOpaque()
@@ -248,7 +248,7 @@ final class ProviderRegistry {
         repeat {
           input.send(PluginInput(event: "start", value: nil))
           do {
-            try await PluginProcess.run(configuration: configuration, mailbox: input) {
+            try await PluginRunner.run(configuration: configuration, mailbox: input) {
               [weak self] text in
               Task { @MainActor [weak self] in
                 guard self?.pluginGeneration == generation else { return }
@@ -289,7 +289,7 @@ final class ProviderRegistry {
     commandTasks[item.id] = Task { [weak self] in
       repeat {
         do {
-          let result = try await CommandRunner.run(
+          let result = try await ProcessRunner.run(
             executable: "/bin/sh",
             arguments: ["-c", command.script],
             timeout: command.timeout ?? 5

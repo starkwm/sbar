@@ -9,7 +9,7 @@ public enum ConfigurationValidation {
       )
       try configuration.validate()
     } catch {
-      throw SocketFailure.message(ConfigurationStore.describe(error))
+      throw MessageError.message(ConfigurationStore.describe(error))
     }
   }
 }

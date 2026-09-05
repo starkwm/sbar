@@ -54,7 +54,7 @@ struct BarRegionView: View {
           }
           .buttonStyle(.plain)
           .frame(width: 28)
-          .modifier(BarHitRegion())
+          .modifier(BarHitRegionModifier())
           .accessibilityLabel("More bar items")
           .popover(isPresented: $showingOverflow) {
             VStack(alignment: .leading, spacing: 8) {
@@ -74,14 +74,17 @@ struct BarRegionView: View {
             .fixedSize()
             .background(
               GeometryReader { geometry in
-                Color.clear.preference(key: ItemWidths.self, value: [item.id: geometry.size.width])
+                Color.clear.preference(
+                  key: ItemWidthsKey.self,
+                  value: [item.id: geometry.size.width]
+                )
               }
             )
         }
       }
       .hidden().allowsHitTesting(false).accessibilityHidden(true)
     }
-    .onPreferenceChange(ItemWidths.self) { widths = $0 }
+    .onPreferenceChange(ItemWidthsKey.self) { widths = $0 }
     .clipped()
   }
 
@@ -89,7 +92,7 @@ struct BarRegionView: View {
   @State private var showingOverflow = false
 }
 
-private struct ItemWidths: PreferenceKey {
+private struct ItemWidthsKey: PreferenceKey {
   static let defaultValue: [String: CGFloat] = [:]
   static func reduce(value: inout [String: CGFloat], nextValue: () -> [String: CGFloat]) {
     value.merge(nextValue()) { _, new in new }

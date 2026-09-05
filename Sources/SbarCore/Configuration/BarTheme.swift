@@ -17,13 +17,13 @@ struct BarTheme: Codable, Equatable, Sendable {
 struct ItemStyle: Codable, Equatable, Sendable {
   static func validateColor(_ value: String?, path: String) throws {
     if let value, RGBA(hex: value) == nil {
-      throw ConfigurationError.invalidStyle(path: path, reason: "Use #RRGGBB or #RRGGBBAA.")
+      throw ConfigurationError.invalidValue(path: path, reason: "Use #RRGGBB or #RRGGBBAA.")
     }
   }
 
   static func validateNumber(_ value: Double?, range: ClosedRange<Double>, path: String) throws {
     if let value, !range.contains(value) {
-      throw ConfigurationError.invalidStyle(
+      throw ConfigurationError.invalidValue(
         path: path,
         reason: "Must be between \(range.lowerBound) and \(range.upperBound)."
       )

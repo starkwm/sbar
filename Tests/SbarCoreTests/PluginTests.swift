@@ -12,7 +12,7 @@ struct PluginTests {
     mailbox.send(PluginInput(event: "refresh", value: nil))
     let script =
       #"read event; case "$event" in *refresh*) printf '{"text":'; sleep 0.02; printf '"received"}\n';; esac"#
-    try await PluginProcess.run(
+    try await PluginRunner.run(
       configuration: .init(executable: "/bin/sh", arguments: ["-c", script], restart: false),
       mailbox: mailbox
     ) { value in
@@ -24,7 +24,7 @@ struct PluginTests {
   @Test("Malformed plugin output fails in isolation")
   func malformed() async {
     await #expect(throws: (any Error).self) {
-      try await PluginProcess.run(
+      try await PluginRunner.run(
         configuration: .init(
           executable: "/bin/sh",
           arguments: ["-c", "printf 'not-json\\n'"],
@@ -38,7 +38,7 @@ struct PluginTests {
   @Test("Plugin cancellation stops a quiet process")
   func cancel() async throws {
     let task = Task {
-      try await PluginProcess.run(
+      try await PluginRunner.run(
         configuration: .init(executable: "/bin/sh", arguments: ["-c", "sleep 10"], restart: false),
         mailbox: PluginMailbox()
       ) { _ in }

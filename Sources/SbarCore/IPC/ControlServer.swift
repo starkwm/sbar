@@ -40,20 +40,20 @@ final class ControlServer: @unchecked Sendable {
           close(lock)
           lock = -1
         }
-        throw SocketFailure.message("Another sbar instance owns the control socket.")
+        throw MessageError.message("Another sbar instance owns the control socket.")
       }
       do {
         var info = stat()
         if lstat(path, &info) == 0 {
           guard info.st_uid == getuid(), info.st_mode & S_IFMT == S_IFSOCK else {
-            throw SocketFailure.message(
+            throw MessageError.message(
               "Refusing to replace a non-socket or another user's socket."
             )
           }
           unlink(path)
         }
         let fd = socket(AF_UNIX, SOCK_STREAM, 0)
-        guard fd >= 0 else { throw SocketFailure.message("Cannot create control socket.") }
+        guard fd >= 0 else { throw MessageError.message("Cannot create control socket.") }
         let status: Int32
         do { status = try LocalSocket.address(path) { bind(fd, $0, $1) } } catch {
           close(fd)
@@ -61,7 +61,7 @@ final class ControlServer: @unchecked Sendable {
         }
         guard status == 0, chmod(path, 0o600) == 0, listen(fd, 16) == 0 else {
           close(fd)
-          throw SocketFailure.message("Cannot bind control socket.")
+          throw MessageError.message("Cannot bind control socket.")
         }
         _ = fcntl(fd, F_SETFL, O_NONBLOCK)
         _ = fcntl(fd, F_SETFD, FD_CLOEXEC)

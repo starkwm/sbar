@@ -21,7 +21,7 @@ struct BarItemView: View {
     switch configuration.type {
     case .clock:
       Text(
-        ClockText.string(
+        ClockFormatter.string(
           providers.dates[configuration.id] ?? providers.date,
           format: configuration.format
         )
@@ -52,6 +52,6 @@ struct BarItemView: View {
     }
   }
 
-  @Environment(ProviderRegistry.self) private var providers
+  @Environment(ProviderRuntime.self) private var providers
 
 }

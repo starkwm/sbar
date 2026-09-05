@@ -76,7 +76,7 @@ struct ThemeTests {
     var config = BarConfiguration.default
     config.theme = BarTheme(background: value)
     #expect(
-      throws: ConfigurationError.invalidStyle(
+      throws: ConfigurationError.invalidValue(
         path: "theme.background",
         reason: "Use #RRGGBB or #RRGGBBAA."
       )
@@ -90,7 +90,7 @@ struct ThemeTests {
     var config = BarConfiguration.default
     config.items.right[1].style = ItemStyle(fontSize: 0)
     #expect(
-      throws: ConfigurationError.invalidStyle(
+      throws: ConfigurationError.invalidValue(
         path: "items.right[1].style.fontSize",
         reason: "Must be between 8.0 and 72.0."
       )

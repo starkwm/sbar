@@ -40,7 +40,7 @@ Use three customization layers:
 - `BarPanel`: thin `NSPanel` subclass hosting SwiftUI
 - `BarView`: composes three independently aligned regions
 - `ConfigurationStore`: loads, validates, observes, and saves configuration
-- `ProviderRegistry`: owns and shares system-data providers
+- `ProviderRuntime`: owns and shares system-data providers
 - `ActionRunner`: handles clicks, commands, URLs, and app launches
 - `EventBus`: distributes typed provider and system events
 - `PopupCoordinator`: presents interactive item popups

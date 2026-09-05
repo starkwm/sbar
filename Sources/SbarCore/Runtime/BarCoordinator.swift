@@ -4,7 +4,7 @@ import SwiftUI
 
 @MainActor
 final class BarCoordinator: NSObject {
-  let providers: ProviderRegistry
+  let providers: ProviderRuntime
   let actions: ActionRunner
   let events: EventBus
   private(set) var controlError: String?
@@ -19,7 +19,7 @@ final class BarCoordinator: NSObject {
 
   init(
     store: ConfigurationStore,
-    providers: ProviderRegistry,
+    providers: ProviderRuntime,
     actions: ActionRunner,
     events: EventBus
   ) {

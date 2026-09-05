@@ -1,12 +1,12 @@
 import Darwin
 import Foundation
 
-struct CommandResult: Sendable {
+struct ProcessResult: Sendable {
   let output: String
   let status: Int32
 }
 
-enum CommandFailure: Error, LocalizedError {
+enum ProcessError: Error, LocalizedError {
   case launch(Int32)
   case exitStatus(Int32)
   case timeout, outputLimit, cancelled
@@ -22,9 +22,9 @@ enum CommandFailure: Error, LocalizedError {
   }
 }
 
-struct CommandRunner {
+struct ProcessRunner {
   static func run(executable: String, arguments: [String], timeout: Double = 5) async throws
-    -> CommandResult
+    -> ProcessResult
   {
     let worker = Task.detached {
       try execute(executable: executable, arguments: arguments, timeout: timeout)
@@ -37,10 +37,10 @@ struct CommandRunner {
   }
 
   private static func execute(executable: String, arguments: [String], timeout: Double) throws
-    -> CommandResult
+    -> ProcessResult
   {
     var descriptors: [Int32] = [0, 0]
-    guard pipe(&descriptors) == 0 else { throw CommandFailure.launch(errno) }
+    guard pipe(&descriptors) == 0 else { throw ProcessError.launch(errno) }
     defer {
       close(descriptors[0])
       close(descriptors[1])
@@ -69,7 +69,7 @@ struct CommandRunner {
     var envp = environment + [nil]
     var pid: pid_t = 0
     let result = posix_spawn(&pid, executable, &actions, &attributes, &argv, &envp)
-    guard result == 0 else { throw CommandFailure.launch(result) }
+    guard result == 0 else { throw ProcessError.launch(result) }
     // Close our writer immediately; the child owns the duplicated stdout/stderr descriptors.
     close(descriptors[1])
     descriptors[1] = -1
@@ -84,22 +84,22 @@ struct CommandRunner {
       if !finished { while waitpid(pid, &status, 0) < 0 && errno == EINTR {} }
     }
     while true {
-      if Task.isCancelled { throw CommandFailure.cancelled }
-      if ContinuousClock.now >= deadline { throw CommandFailure.timeout }
+      if Task.isCancelled { throw ProcessError.cancelled }
+      if ContinuousClock.now >= deadline { throw ProcessError.timeout }
       let count = read(descriptors[0], &buffer, buffer.count)
       if count > 0 {
         output.append(contentsOf: buffer.prefix(count))
-        if output.count > 65_536 { throw CommandFailure.outputLimit }
+        if output.count > 65_536 { throw ProcessError.outputLimit }
         continue
       }
       if !finished {
         let waited = waitpid(pid, &status, WNOHANG)
         finished = waited == pid
-        if waited < 0 && errno != EINTR { throw CommandFailure.launch(errno) }
+        if waited < 0 && errno != EINTR { throw ProcessError.launch(errno) }
       }
       if finished {
         let exitStatus = status & 0x7f == 0 ? (status >> 8) & 0xff : 128 + (status & 0x7f)
-        return CommandResult(
+        return ProcessResult(
           output: String(decoding: output, as: UTF8.self).trimmingCharacters(
             in: .whitespacesAndNewlines
           ),

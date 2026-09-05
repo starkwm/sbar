@@ -5,7 +5,7 @@ import Testing
 struct InteractionTests {
   @Test("Commands capture output and exit status")
   func command() async throws {
-    let result = try await CommandRunner.run(
+    let result = try await ProcessRunner.run(
       executable: "/bin/sh",
       arguments: ["-c", "printf hello; exit 7"]
     )
@@ -16,14 +16,14 @@ struct InteractionTests {
   @Test("Timeout and output limits stop commands")
   func limits() async {
     await #expect(throws: (any Error).self) {
-      try await CommandRunner.run(
+      try await ProcessRunner.run(
         executable: "/bin/sh",
         arguments: ["-c", "sleep 10"],
         timeout: 0.05
       )
     }
     await #expect(throws: (any Error).self) {
-      try await CommandRunner.run(executable: "/usr/bin/yes", arguments: [])
+      try await ProcessRunner.run(executable: "/usr/bin/yes", arguments: [])
     }
   }
 

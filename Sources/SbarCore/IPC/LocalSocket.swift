@@ -1,7 +1,7 @@
 import Darwin
 import Foundation
 
-public enum SocketFailure: Error, LocalizedError {
+public enum MessageError: Error, LocalizedError {
   case message(String)
   public var errorDescription: String? {
     if case .message(let message) = self { message } else { "Socket error" }
@@ -18,7 +18,7 @@ public enum LocalSocket {
     var address = sockaddr_un()
     let bytes = Array(path.utf8) + [0]
     guard bytes.count <= MemoryLayout.size(ofValue: address.sun_path) else {
-      throw SocketFailure.message("Socket path is too long.")
+      throw MessageError.message("Socket path is too long.")
     }
     address.sun_family = sa_family_t(AF_UNIX)
     address.sun_len = UInt8(MemoryLayout<sockaddr_un>.size)
@@ -32,11 +32,11 @@ public enum LocalSocket {
 
   public static func connect(path: String) throws -> Int32 {
     let fd = socket(AF_UNIX, SOCK_STREAM, 0)
-    guard fd >= 0 else { throw SocketFailure.message(String(cString: strerror(errno))) }
+    guard fd >= 0 else { throw MessageError.message(String(cString: strerror(errno))) }
     do {
       let status = try address(path) { Darwin.connect(fd, $0, $1) }
       guard status == 0 else {
-        throw SocketFailure.message(
+        throw MessageError.message(
           "Cannot connect to sbar: \(String(cString: strerror(errno)))"
         )
       }
@@ -61,7 +61,7 @@ public enum LocalSocket {
           0
         )
         if written < 0 && errno == EINTR { continue }
-        guard written > 0 else { throw SocketFailure.message("Socket write failed.") }
+        guard written > 0 else { throw MessageError.message("Socket write failed.") }
         offset += written
       }
     }

@@ -54,7 +54,7 @@ final class ActionRunner {
       tasks[id] = Task { [weak self] in
         defer { self?.tasks[id] = nil }
         do {
-          let result = try await CommandRunner.run(
+          let result = try await ProcessRunner.run(
             executable: "/bin/sh",
             arguments: ["-c", action.value]
           )

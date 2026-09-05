@@ -17,7 +17,7 @@ struct BarView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .padding(.horizontal, configuration.theme?.horizontalPadding ?? 10)
     .coordinateSpace(name: "bar")
-    .onPreferenceChange(BarHitRegions.self) { hitRegionsChanged?($0) }
+    .onPreferenceChange(BarHitRegionsKey.self) { hitRegionsChanged?($0) }
     .background {
       if let color = Color(hex: configuration.theme?.background) {
         color
