@@ -298,7 +298,7 @@ A `spaces` item shows the focused native macOS Space, without a window-manager i
 
 The number is a one-based position in WindowServer's current Space ordering across displays, including fullscreen Spaces. It can change when Spaces are reordered, added, or removed. All bars show the focused Space rather than a separate value for each display. The provider refreshes on Space switches, application activation, and display changes. It uses private SkyLight APIs and shows `Spaces unavailable` if those APIs or the current Space cannot be read.
 
-The app pauses providers and commands during sleep and restarts them after wake. Panels follow screen and Space changes. See [manual validation](docs/manual-validation.md) for the remaining live checks; automated tests do not establish hardware or desktop behavior.
+The app pauses providers and commands during sleep and restarts them after wake. Panels follow screen and Space changes.
 
 ## Development
 
