@@ -1,65 +1,36 @@
 import AppKit
-import SwiftUI
 
-public struct SbarApp: App {
-  static var configurationURL = FileManager.default.homeDirectoryForCurrentUser.appending(
-    path: ".config/starkbar/config.json"
-  )
-
+@MainActor
+public enum SbarApp {
   public static func run(configurationURL: URL) {
-    self.configurationURL = configurationURL
-    main()
+    let app = NSApplication.shared
+    let delegate = AppDelegate(configurationURL: configurationURL)
+    app.setActivationPolicy(.accessory)
+    app.delegate = delegate
+    withExtendedLifetime(delegate) { app.run() }
   }
-
-  public var body: some Scene {
-    MenuBarExtra("sbar", systemImage: "rectangle.topthird.inset.filled") {
-      Button("Reload Configuration") { appDelegate.reload() }
-      SettingsLink()
-      Divider()
-      Button("Quit sbar") { NSApp.terminate(nil) }.keyboardShortcut("q")
-    }
-    Settings {
-      SettingsView(store: appDelegate.store) { appDelegate.reload() }
-        .environment(appDelegate.providers)
-        .environment(appDelegate.actions)
-        .environment(appDelegate.events)
-    }
-  }
-
-  @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
-
-  public init() {}
-
 }
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-  let store: ConfigurationStore
-  let providers = ProviderRegistry()
-  let actions = ActionRunner()
-  let events = EventBus()
-  private var coordinator: BarCoordinator?
+  private let coordinator: BarCoordinator
 
-  override init() {
-    store = ConfigurationStore(configurationURL: SbarApp.configurationURL)
+  init(configurationURL: URL) {
+    coordinator = BarCoordinator(
+      store: ConfigurationStore(configurationURL: configurationURL),
+      providers: ProviderRegistry(),
+      actions: ActionRunner(),
+      events: EventBus()
+    )
     super.init()
   }
 
   func applicationDidFinishLaunching(_ notification: Notification) {
-    NSApp.setActivationPolicy(.accessory)
-    coordinator = BarCoordinator(
-      store: store,
-      providers: providers,
-      actions: actions,
-      events: events
-    )
-    coordinator?.start()
-    if coordinator?.controlError != nil { NSApp.terminate(nil) }
+    coordinator.start()
+    if coordinator.controlError != nil { NSApp.terminate(nil) }
   }
 
-  func reload() { coordinator?.reload() }
-
   func applicationWillTerminate(_ notification: Notification) {
-    coordinator?.stop()
+    coordinator.stop()
   }
 }

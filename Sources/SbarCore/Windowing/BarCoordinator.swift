@@ -77,12 +77,12 @@ final class BarCoordinator: NSObject {
     providers.onValueChange = { [weak self] name, value in
       self?.events.emit(RuntimeEvent(kind: .provider, name: name, value: .string(value)))
     }
-    let router = ControlRouter(store: store, providers: providers, events: events)
+    let router = ControlRouter(store: store, providers: providers, events: events, actions: actions)
     let server = ControlServer(
-      path: store.configurationURL.deletingLastPathComponent().appending(path: "control.sock").path
-    ) { request in
-      await router.handle(request)
-    }
+      path: store.configurationURL.deletingLastPathComponent().appending(path: "control.sock").path,
+      onStop: { Task { @MainActor in NSApp.terminate(nil) } },
+      handler: { request in await router.handle(request) }
+    )
     events.onEvent = { [weak server] event in
       if let data = try? JSONEncoder().encode(event),
         let value = try? JSONDecoder().decode(JSONValue.self, from: data)
@@ -120,10 +120,6 @@ final class BarCoordinator: NSObject {
     panels.values.forEach { $0.close() }
     panels.removeAll()
     isStarted = false
-  }
-
-  func reload() {
-    store.load()
   }
 
   @objc private func screenParametersDidChange() {

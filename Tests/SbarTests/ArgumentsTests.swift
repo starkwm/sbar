@@ -20,6 +20,22 @@ struct ArgumentsTests {
   }
 
   @Test func clients() throws {
+    #expect(try Arguments.parseAsRoot(["stop"]) is StopCommand)
+    #expect(try Arguments.parseAsRoot(["validate"]) is ValidateCommand)
+    let validation = try #require(
+      Arguments.parseAsRoot(["validate", "--config", "/tmp/check.json"]) as? ValidateCommand
+    )
+    #expect(validation.config == "/tmp/check.json")
+    #expect(throws: (any Error).self) {
+      try Arguments.parseAsRoot(["query", "--diagnostics", "--displays"])
+    }
+    #expect(throws: (any Error).self) { try Arguments.parseAsRoot(["validate", "--config="]) }
+    let diagnostics = try #require(
+      Arguments.parseAsRoot(["query", "--diagnostics"]) as? QueryCommand
+    )
+    #expect(diagnostics.diagnostics)
+    let displays = try #require(Arguments.parseAsRoot(["query", "--displays"]) as? QueryCommand)
+    #expect(displays.displays)
     #expect(try Arguments.parseAsRoot(["query"]) is QueryCommand)
     #expect(try Arguments.parseAsRoot(["reload"]) is ReloadCommand)
     #expect(try Arguments.parseAsRoot(["subscribe"]) is SubscribeCommand)

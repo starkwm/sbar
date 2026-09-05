@@ -12,17 +12,17 @@ make release
 
 The executable is `.build/debug/sbar` (or `.build/release/sbar` for release builds). Run `sbar` or `sbar start` to start the bar. Use `sbar --help` for commands. Keep the SwiftPM resource bundle alongside the executable when copying build outputs.
 
-`Sources/Sbar` contains the command-line entry point and commands. `Sources/SbarCore` contains the app, bar runtime, providers, configuration, and IPC. Client commands run without starting the SwiftUI app.
+`Sources/Sbar` contains the command-line entry point and commands. `Sources/SbarCore` contains the app, bar runtime, providers, configuration, and IPC. Client commands run without starting the bar. There is no Settings window or menu bar icon; control the app through the executable.
 
 The Makefile follows the `skbd` and `swm` workflow: `make` builds debug executables, `make release` builds optimized executables, `make format` formats Swift sources, `make lint` checks formatting, and `make clean` removes SwiftPM build products.
 
 ## Configuration
 
-sbar reads `~/.config/starkbar/config.json` and reloads it when the file changes. Missing files use built-in defaults; invalid edits retain the last valid configuration and show the error in Settings.
+Edit `~/.config/starkbar/config.json` in your preferred editor. sbar reloads it when the file changes. Missing files use built-in defaults; invalid edits retain the last valid configuration. Inspect errors with `sbar query --diagnostics`.
 
-In Settings, **Save** writes the editor draft, creating the directory if needed. Before replacing an existing file, it saves the exact previous contents to `config.json.bak`. There is one rotating backup, including when the previous file contains invalid JSON. If the backup cannot be written, the configuration is not replaced. External editor changes are reloaded but do not create backups.
+Run `sbar validate` (or `sbar validate --config /path/to/config.json`) to check a file without starting the bar. Invalid or missing files produce an error and a nonzero exit status. Validation never writes the file. Use `sbar start --config /path/to/config.json` to run with another configuration.
 
-Saving also writes `config.schema.json` beside the configuration and adds a `$schema` reference for compatible editors. **Reveal** shows the file in Finder. Saving writes the app's supported fields; unrecognized fields are only preserved in the backup.
+The config file is the only persistent configuration source. sbar never saves, rewrites, or backs it up. For editor completion, copy [config.schema.json](Sources/SbarCore/Resources/config.schema.json) beside your configuration and add `"$schema": "config.schema.json"` to the root object.
 
 For a larger example with native metrics, popups, actions, commands, and a streaming plugin, see the [demo configuration](examples/demo/README.md).
 
@@ -40,11 +40,11 @@ A minimal configuration is:
 }
 ```
 
-Bar settings default to `position: top`, `height: 32`, and `displays: all`. Positions are `top` or `bottom`; display choices are `main` (primary display), `all`, or `selected` with a `displayIDs` array. The Theme tab lists connected display IDs. `windowLevel` accepts `floating`, `statusBar` (default), or `screenSaver`. Optional `mousePassThrough:true` lets empty regions pass mouse events to windows beneath the bar. Top placement uses the physical screen edge, sharing the system menu-bar area; bottom placement respects the Dock's visible work area. On notched displays, items avoid the cutout and the center section sits immediately to its right. Omitted item sections are empty. Item IDs must be nonblank and unique across all sections; cross-section uniqueness is checked by the app rather than the JSON Schema.
+Bar settings default to `position: top`, `height: 32`, and `displays: all`. Positions are `top` or `bottom`; display choices are `main` (primary display), `all`, or `selected` with a `displayIDs` array. `sbar query --displays` lists connected display IDs, names, and the primary display. `windowLevel` accepts `floating`, `statusBar` (default), or `screenSaver`. Optional `mousePassThrough:true` lets empty regions pass mouse events to windows beneath the bar. Top placement uses the physical screen edge, sharing the system menu-bar area; bottom placement respects the Dock's visible work area. On notched displays, items avoid the cutout and the center section sits immediately to its right. Omitted item sections are empty. Item IDs must be nonblank and unique across all sections; cross-section uniqueness is checked by the app rather than the JSON Schema.
 
 See [PLAN.md](PLAN.md) for implementation status and upcoming work.
 
-Version-1 files migrate to version 2 in memory: legacy command intervals/events become item refresh policies, including inside groups. Loading never rewrites the source file; Save writes version 2 after backing up the original. Future schema versions are rejected.
+Version-1 files migrate to version 2 in memory: legacy command intervals/events become item refresh policies, including inside groups. Loading never rewrites the source file; update it manually to persist the version-2 format. Future schema versions are rejected.
 
 Start with an alternate file using `sbar --config /path/config.json`. Its control socket lives beside the chosen file.
 
@@ -107,24 +107,25 @@ Each region measures its items, allows flexible text to compress, and moves low-
 
 ## Runtime control
 
-Client commands (`query`, `reload`, `set`, `trigger`, and `subscribe`) connect to `~/.config/starkbar/control.sock`; use `sbar query --socket <path>` for another configuration directory. These commands replace the former `sbarctl` executable.
+Client commands (`query`, `reload`, `set`, `trigger`, `subscribe`, and `stop`) connect to `~/.config/starkbar/control.sock`; use `sbar query --socket <path>` for another configuration directory. These commands replace the former `sbarctl` executable.
 
 ```sh
 sbar query
+sbar query --diagnostics
+sbar query --displays
 sbar reload
 sbar set clock enabled false
 sbar set clock style '{"tint":"#88C0D0"}'
 sbar trigger refresh '{"source":"manual"}'
 sbar subscribe
+sbar stop
 ```
 
-`set` changes in-memory configuration only. Supported properties are `label`, `symbol`, `enabled`, `priority`, `format`, `style`, and `popup`; Settings Save persists the current state. Reload discards transient changes. `subscribe` streams JSON lines for configuration changes, provider values, and triggers. Trigger payloads are retained in events; matching command items rerun. Clients must belong to the same user. Slow subscribers are disconnected, and a lock prevents multiple instances from owning the same socket.
+`set` changes in-memory configuration only. Supported properties are `label`, `symbol`, `enabled`, `priority`, `format`, `style`, and `popup`. Edit the config file to make changes persistent. Reload or restart discards transient changes. `subscribe` streams JSON lines for configuration changes, provider values, and triggers. Trigger payloads are retained in events; matching command items rerun. Clients must belong to the same user. Slow subscribers are disconnected, and a lock prevents multiple instances from owning the same socket.
 
-## Settings editor
+`query` returns the running configuration. `query --diagnostics` returns the configuration path, current configuration error, last action error, and up to 100 recent runtime events. `query --displays` returns connected display IDs and names. The two selectors are mutually exclusive.
 
-Settings keeps a draft separate from the running configuration. Drag top-level items onto another row to insert before it, or onto a section's Add item button to append. Context menus offer cross-section moves and deletion. Select an item for style/action controls; advanced item JSON edits nested children and less common options. The Theme tab edits shared defaults. Preview uses current provider snapshots and cannot execute click actions.
-
-Save validates and persists the draft. Reload discards it. Import validates a JSON file into the draft; Export writes the draft to a chosen file. If live configuration changes while a draft is dirty, Settings shows a conflict notice. Invalid drafts remain editable while the preview retains the baseline configuration. Diagnostics lists recent runtime events and action failures.
+`stop` acknowledges the request, then shuts down the bar, stops providers and child processes, closes panels, and removes the control socket. Use `--socket` to target an instance started with a custom configuration directory.
 
 ## Process plugins and workspaces
 

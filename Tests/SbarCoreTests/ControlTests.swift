@@ -34,13 +34,60 @@ struct ControlTests {
     #expect(response.value == .string("query"))
   }
 
+  @MainActor @Test("Diagnostics retain file errors across runtime edits")
+  func diagnostics() throws {
+    let url = FileManager.default.temporaryDirectory.appending(
+      path: "sbar-\(UUID().uuidString).json"
+    )
+    defer { try? FileManager.default.removeItem(at: url) }
+    try Data("{".utf8).write(to: url)
+    let store = ConfigurationStore(configurationURL: url)
+    store.load()
+    let actions = ActionRunner()
+    actions.run(ItemAction(kind: .url, value: "invalid"))
+    let events = EventBus()
+    events.emit(RuntimeEvent(kind: .trigger, name: "check", value: .number(1)))
+    let router = ControlRouter(
+      store: store,
+      providers: ProviderRegistry(),
+      events: events,
+      actions: actions
+    )
+    #expect(
+      router.handle(
+        ControlRequest(command: "set", arguments: ["clock", "enabled"], value: .bool(false))
+      ).ok
+    )
+    let error = try #require(store.errorMessage)
+    let response = router.handle(ControlRequest(command: "query", arguments: ["diagnostics"]))
+    guard case .object(let values) = response.value else {
+      Issue.record("Missing diagnostics")
+      return
+    }
+    #expect(values["configurationError"] == .string(error))
+    #expect(values["actionError"] == .string("Invalid URL action."))
+    #expect(values["configurationPath"] == .string(url.path))
+    guard case .array(let recent) = values["events"] else {
+      Issue.record("Missing events")
+      return
+    }
+    #expect(recent.count == 1)
+    #expect(!router.handle(ControlRequest(command: "query", arguments: ["unknown"])).ok)
+    #expect(router.handle(ControlRequest(command: "stop")).ok)
+  }
+
   @MainActor @Test("Runtime set validates without persisting and trigger retains payload")
   func routing() {
     let store = ConfigurationStore(
       configurationURL: URL(fileURLWithPath: "/tmp/not-created-\(UUID().uuidString).json")
     )
     let events = EventBus()
-    let router = ControlRouter(store: store, providers: ProviderRegistry(), events: events)
+    let router = ControlRouter(
+      store: store,
+      providers: ProviderRegistry(),
+      events: events,
+      actions: ActionRunner()
+    )
     #expect(
       router.handle(
         ControlRequest(command: "set", arguments: ["clock", "enabled"], value: .bool(false))

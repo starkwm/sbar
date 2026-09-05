@@ -8,7 +8,7 @@ struct Arguments: ParsableCommand {
     abstract: "A configurable status bar for macOS.",
     subcommands: [
       StartCommand.self, QueryCommand.self, ReloadCommand.self, SubscribeCommand.self,
-      TriggerCommand.self, SetCommand.self,
+      TriggerCommand.self, SetCommand.self, StopCommand.self, ValidateCommand.self,
     ],
     defaultSubcommand: StartCommand.self
   )

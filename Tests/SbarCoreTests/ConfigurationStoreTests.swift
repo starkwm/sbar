@@ -26,6 +26,29 @@ struct ConfigurationStoreTests {
     #expect(store.errorMessage == nil)
   }
 
+  @Test("Standalone validation reports errors and never writes the file")
+  func validation() throws {
+    let directory = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let url = directory.appending(path: "config.json")
+    #expect(throws: (any Error).self) { try ConfigurationValidation.validate(url: url) }
+    try write(height: 48, to: url)
+    let original = try Data(contentsOf: url)
+    try ConfigurationValidation.validate(url: url)
+    #expect(try Data(contentsOf: url) == original)
+    try write(height: 1, to: url)
+    #expect(throws: (any Error).self) { try ConfigurationValidation.validate(url: url) }
+    try Data(
+      #"{"schemaVersion": 2, "bar": {}, "items": {"right": [{"id": "clock", "type": 42}]}}"#.utf8
+    ).write(to: url)
+    do {
+      try ConfigurationValidation.validate(url: url)
+      Issue.record("Invalid configuration passed validation")
+    } catch {
+      #expect(error.localizedDescription.hasPrefix("items.right[0].type:"))
+    }
+  }
+
   @Test("Missing configuration loads defaults without an error")
   func missingFile() throws {
     let directory = try temporaryDirectory()

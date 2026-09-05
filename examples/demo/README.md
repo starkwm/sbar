@@ -28,6 +28,6 @@ Try runtime updates in another terminal, also from the repository root:
 .build/debug/sbar reload --socket "$PWD/examples/demo/control.sock"
 ```
 
-The trigger reruns hostname and uptime, updates the clock snapshot, and increments the plugin counter. Runtime edits last until reload unless saved in Settings. `subscribe` streams runtime events until interrupted.
+The trigger reruns hostname and uptime, updates the clock snapshot, and increments the plugin counter. Runtime edits last until reload or restart; edit the config file to persist changes. `subscribe` streams runtime events until interrupted.
 
 AeroSpace and yabai items are included with `enabled: false`. Enable the one you use; they require the corresponding window manager. Change `bar.position` to `top` to try menu-bar-edge placement, or `bar.displays` to `main` to show only on the primary display. Configuration edits reload automatically.

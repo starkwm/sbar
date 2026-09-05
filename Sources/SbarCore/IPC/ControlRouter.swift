@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 @MainActor
@@ -5,17 +6,59 @@ final class ControlRouter {
   private let store: ConfigurationStore
   private let providers: ProviderRegistry
   private let events: EventBus
+  private let actions: ActionRunner
 
-  init(store: ConfigurationStore, providers: ProviderRegistry, events: EventBus) {
+  init(
+    store: ConfigurationStore,
+    providers: ProviderRegistry,
+    events: EventBus,
+    actions: ActionRunner
+  ) {
     self.store = store
     self.providers = providers
     self.events = events
+    self.actions = actions
   }
 
   func handle(_ request: ControlRequest) -> ControlResponse {
     do {
       switch request.command {
+      case "stop":
+        return ControlResponse()
       case "query":
+        if request.arguments == ["diagnostics"] {
+          return ControlResponse(
+            value: .object([
+              "configurationPath": .string(store.configurationURL.path),
+              "configurationError": store.errorMessage.map(JSONValue.string) ?? .null,
+              "actionError": actions.errorMessage.map(JSONValue.string) ?? .null,
+              "events": try JSONDecoder().decode(
+                JSONValue.self,
+                from: JSONEncoder().encode(events.recent)
+              ),
+            ])
+          )
+        }
+        if request.arguments == ["displays"] {
+          return ControlResponse(
+            value: .array(
+              NSScreen.screens.enumerated().compactMap { index, screen in
+                guard
+                  let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")]
+                    as? NSNumber
+                else { return nil }
+                return .object([
+                  "id": .number(number.doubleValue),
+                  "name": .string(screen.localizedName),
+                  "primary": .bool(index == 0),
+                ])
+              }
+            )
+          )
+        }
+        guard request.arguments.isEmpty else {
+          throw SocketFailure.message("Unknown query selector.")
+        }
         return ControlResponse(
           value: try JSONDecoder().decode(
             JSONValue.self,

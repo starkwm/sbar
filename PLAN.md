@@ -1,3 +1,5 @@
+> Historical implementation plan. The settings editor and menu extra described below have since been removed. Configuration is file-only; lifecycle, queries, diagnostics, and validation are controlled through `sbar`. See README.md for current behavior.
+
 # Native macOS Bar App Plan
 
 Build a fully customizable macOS bar app using SwiftUI for rendering and configuration, with a narrow AppKit layer for desktop-level window behavior. Take inspiration from Zebar's provider/configuration model and SketchyBar's dynamic items, events, and scripting without using web views as the primary renderer.

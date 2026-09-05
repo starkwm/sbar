@@ -11,6 +11,7 @@ final class ControlServer: @unchecked Sendable {
     var handling = false
   }
 
+  private let onStop: @Sendable () -> Void
   private let path: String
   private let handler: @Sendable (ControlRequest) async -> ControlResponse
   private let queue = DispatchQueue(label: "starkbar.control")
@@ -18,7 +19,12 @@ final class ControlServer: @unchecked Sendable {
   private var connections: [Int32: Connection] = [:]
   private var lock: Int32 = -1
 
-  init(path: String, handler: @escaping @Sendable (ControlRequest) async -> ControlResponse) {
+  init(
+    path: String,
+    onStop: @escaping @Sendable () -> Void = {},
+    handler: @escaping @Sendable (ControlRequest) async -> ControlResponse
+  ) {
+    self.onStop = onStop
     self.path = path
     self.handler = handler
   }
@@ -152,7 +158,9 @@ final class ControlServer: @unchecked Sendable {
       Task { [weak self, handler] in
         let response = await handler(request)
         self?.queue.async { [weak self] in
-          guard let self, self.connections[fd]?.id == id else { return }
+          guard let self else { return }
+          defer { if request.command == "stop" && response.ok { self.onStop() } }
+          guard self.connections[fd]?.id == id else { return }
           self.connections[fd]?.subscribed = request.command == "subscribe" && response.ok
           self.respond(response, to: fd, closeAfter: self.connections[fd]?.subscribed != true)
         }
