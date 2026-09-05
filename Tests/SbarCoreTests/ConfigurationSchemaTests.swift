@@ -3,9 +3,10 @@ import Testing
 
 @testable import SbarCore
 
+@Suite("ConfigurationSchema")
 struct ConfigurationSchemaTests {
-  @Test("Bundled schema matches the supported version and item types")
-  func schema() throws {
+  @Test("data(): matches the supported schema version and item types")
+  func dataMatchesSupportedVersionAndItemTypes() throws {
     let schema = try #require(
       JSONSerialization.jsonObject(with: ConfigurationSchema.data()) as? [String: Any]
     )

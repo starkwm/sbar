@@ -4,9 +4,10 @@ import Testing
 
 @testable import SbarCore
 
+@Suite("Control")
 struct ControlTests {
-  @Test("Control socket handles a fragmented request and excludes a second server")
-  func socket() throws {
+  @Test("ControlServer.start(): handles fragmented requests and excludes a second server")
+  func startHandlesFragmentedRequestsAndExcludesSecondServer() throws {
     let path = "/tmp/starkbar-\(UUID().uuidString).sock"
     defer { try? FileManager.default.removeItem(atPath: path + ".lock") }
 
@@ -41,8 +42,10 @@ struct ControlTests {
     #expect(response.value == .string("query"))
   }
 
-  @MainActor @Test("Diagnostics retain file errors across runtime edits")
-  func diagnostics() throws {
+  @MainActor
+
+  @Test("ControlRouter.handle(_:): retains file errors in diagnostics after runtime edits")
+  func handleRetainsFileErrorsAfterRuntimeEdits() throws {
     let url = FileManager.default.temporaryDirectory.appending(
       path: "sbar-\(UUID().uuidString).json"
     )
@@ -92,8 +95,10 @@ struct ControlTests {
     #expect(router.handle(ControlRequest(command: "stop")).ok)
   }
 
-  @MainActor @Test("Runtime set validates without persisting and trigger retains payload")
-  func routing() {
+  @MainActor
+
+  @Test("ControlRouter.handle(_:): validates transient edits and retains trigger payloads")
+  func handleValidatesTransientEditsAndRetainsTriggerPayloads() {
     let store = ConfigurationStore(
       configurationURL: URL(fileURLWithPath: "/tmp/not-created-\(UUID().uuidString).json")
     )

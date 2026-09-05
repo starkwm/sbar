@@ -2,9 +2,10 @@ import Testing
 
 @testable import SbarCore
 
+@Suite("Interaction")
 struct InteractionTests {
-  @Test("Commands capture output and exit status")
-  func command() async throws {
+  @Test("ProcessRunner.run: captures command output and exit status")
+  func runCapturesCommandOutputAndExitStatus() async throws {
     let result = try await ProcessRunner.run(
       executable: "/bin/sh",
       arguments: ["-c", "printf hello; exit 7"]
@@ -14,8 +15,8 @@ struct InteractionTests {
     #expect(result.exitCode == 7)
   }
 
-  @Test("Timeout and output limits stop commands")
-  func limits() async {
+  @Test("ProcessRunner.run: stops commands that exceed timeout or output limits")
+  func runStopsCommandsExceedingLimits() async {
     await #expect(throws: (any Error).self) {
       try await ProcessRunner.run(
         executable: "/bin/sh",
@@ -29,8 +30,8 @@ struct InteractionTests {
     }
   }
 
-  @Test("Overflow preserves priority and original display order")
-  func overflow() {
+  @Test("OverflowSelection.visibleItemIDs: preserves priority under constrained width")
+  func visibleItemIDsPreservesPriorityUnderConstrainedWidth() {
     let items: [ItemConfiguration] = [
       .init(id: "a", type: .text), .init(id: "b", type: .text, priority: 10),
       .init(id: "c", type: .text),
@@ -46,8 +47,8 @@ struct InteractionTests {
     )
   }
 
-  @Test("Disabled groups do not activate child providers")
-  func disabledGroup() {
+  @Test("ItemSections.active: excludes children of disabled groups")
+  func activeExcludesChildrenOfDisabledGroups() {
     let group = ItemConfiguration(
       id: "g",
       type: .group,

@@ -4,9 +4,10 @@ import os
 
 @testable import SbarCore
 
+@Suite("Plugins")
 struct PluginTests {
-  @Test("Plugins receive events and reconstruct fragmented JSON output")
-  func stream() async throws {
+  @Test("PluginRunner.run: receives events and reconstructs fragmented JSON output")
+  func runReceivesEventsAndReconstructsFragmentedOutput() async throws {
     let messages = OSAllocatedUnfairLock(initialState: [String]())
     let mailbox = PluginMailbox()
     mailbox.send(PluginInput(event: "refresh", value: nil))
@@ -24,8 +25,8 @@ struct PluginTests {
     #expect(messages.withLock { $0 } == ["received"])
   }
 
-  @Test("Malformed plugin output fails in isolation")
-  func malformed() async {
+  @Test("PluginRunner.run: rejects malformed plugin output")
+  func runRejectsMalformedOutput() async {
     await #expect(throws: (any Error).self) {
       try await PluginRunner.run(
         configuration: .init(
@@ -38,8 +39,8 @@ struct PluginTests {
     }
   }
 
-  @Test("Plugin cancellation stops a quiet process")
-  func cancel() async throws {
+  @Test("PluginRunner.run: stops a quiet process when cancelled")
+  func runStopsQuietProcessWhenCancelled() async throws {
     let task = Task {
       try await PluginRunner.run(
         configuration: .init(executable: "/bin/sh", arguments: ["-c", "sleep 10"], restart: false),
@@ -53,8 +54,8 @@ struct PluginTests {
     await #expect(throws: (any Error).self) { try await task.value }
   }
 
-  @Test("Yabai uses labels and falls back to the space index")
-  func workspace() throws {
+  @Test("WorkspaceAdapter.yabaiLabel(_:): falls back to the space index when the label is empty")
+  func yabaiLabelFallsBackToSpaceIndexForEmptyLabel() throws {
     #expect(try WorkspaceAdapter.yabaiLabel(Data(#"{"index":2,"label":"work"}"#.utf8)) == "work")
     #expect(try WorkspaceAdapter.yabaiLabel(Data(#"{"index":2,"label":""}"#.utf8)) == "2")
   }

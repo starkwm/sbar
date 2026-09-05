@@ -3,9 +3,10 @@ import Testing
 
 @testable import SbarCore
 
+@Suite("ClockFormatter")
 struct ClockFormatterTests {
-  @MainActor @Test("Explicit clock formats stay 24-hour")
-  func explicitFormat() {
+  @MainActor @Test("string(_:format:timeZone:): preserves explicit 24-hour formats")
+  func stringPreservesExplicit24HourFormats() {
     let date = Date(timeIntervalSince1970: 13 * 3600 + 5 * 60 + 9)
 
     #expect(

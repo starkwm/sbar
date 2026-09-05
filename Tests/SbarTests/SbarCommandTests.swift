@@ -4,8 +4,10 @@ import Testing
 
 @testable import Sbar
 
+@Suite("SbarCommand")
 struct SbarCommandTests {
-  @Test func startup() throws {
+  @Test("parseAsRoot(_:): parses startup options and rejects invalid arguments")
+  func parseAsRootParsesStartupOptions() throws {
     #expect(try SbarCommand.parseAsRoot([]) is StartCommand)
 
     let command = try #require(
@@ -21,7 +23,8 @@ struct SbarCommandTests {
     }
   }
 
-  @Test func clients() throws {
+  @Test("parseAsRoot(_:): parses client commands and validates their options")
+  func parseAsRootParsesClientCommands() throws {
     #expect(try SbarCommand.parseAsRoot(["stop"]) is StopCommand)
     #expect(try SbarCommand.parseAsRoot(["validate"]) is ValidateCommand)
 

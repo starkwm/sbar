@@ -4,10 +4,10 @@ import Testing
 @testable import SbarCore
 
 @MainActor
-@Suite("Configuration loading and observation")
+@Suite("ConfigurationStore")
 struct ConfigurationStoreTests {
-  @Test("Invalid reload retains valid configuration and reports the coding path")
-  func invalidReload() throws {
+  @Test("load(): retains valid configuration and reports the coding path after an invalid reload")
+  func loadRetainsConfigurationAfterInvalidReload() throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
     let url = directory.appending(path: "config.json")
@@ -32,8 +32,20 @@ struct ConfigurationStoreTests {
     #expect(store.errorMessage == nil)
   }
 
-  @Test("Standalone validation reports errors and never writes the file")
-  func validation() throws {
+  @Test("load(): uses defaults when the configuration file is missing")
+  func loadUsesDefaultsWhenFileIsMissing() throws {
+    let directory = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = ConfigurationStore(configurationURL: directory.appending(path: "missing.json"))
+
+    store.load()
+
+    #expect(store.configuration == .default)
+    #expect(store.errorMessage == nil)
+  }
+
+  @Test("ConfigurationValidation.validate(url:): reports errors without writing the file")
+  func validateReportsErrorsWithoutWritingFile() throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
     let url = directory.appending(path: "config.json")
@@ -61,20 +73,8 @@ struct ConfigurationStoreTests {
     }
   }
 
-  @Test("Missing configuration loads defaults without an error")
-  func missingFile() throws {
-    let directory = try temporaryDirectory()
-    defer { try? FileManager.default.removeItem(at: directory) }
-    let store = ConfigurationStore(configurationURL: directory.appending(path: "missing.json"))
-
-    store.load()
-
-    #expect(store.configuration == .default)
-    #expect(store.errorMessage == nil)
-  }
-
-  @Test("Only changed valid configurations notify the renderer")
-  func notifications() throws {
+  @Test("configurationDidChange: notifies only for changed valid configurations")
+  func configurationDidChangeNotifiesOnlyForValidChanges() throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
     let url = directory.appending(path: "config.json")
@@ -92,8 +92,8 @@ struct ConfigurationStoreTests {
     #expect(updates == 1)
   }
 
-  @Test("Observation survives atomic replacement, direct edits, deletion and recreation")
-  func fileChanges() async throws {
+  @Test("startObserving(): handles replacement, edits, deletion, and recreation")
+  func startObservingHandlesFileChanges() async throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
     let url = directory.appending(path: "config.json")
@@ -116,8 +116,8 @@ struct ConfigurationStoreTests {
     try await wait { store.configuration.bar.height == 60 }
   }
 
-  @Test("Observation finds a configuration created inside initially missing directories")
-  func firstCreation() async throws {
+  @Test("startObserving(): finds files created inside initially missing directories")
+  func startObservingFindsFilesInNewDirectories() async throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
     let parent = directory.appending(path: "nested/starkbar")
@@ -131,8 +131,8 @@ struct ConfigurationStoreTests {
     try await wait { store.configuration.bar.height == 56 }
   }
 
-  @Test("Stopping cancels pending reloads and observation can restart")
-  func stopAndRestart() async throws {
+  @Test("stopObserving(): cancels pending reloads and allows observation to restart")
+  func stopObservingCancelsReloadsAndAllowsRestart() async throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
     let url = directory.appending(path: "config.json")

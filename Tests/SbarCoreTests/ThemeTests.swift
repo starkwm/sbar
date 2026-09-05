@@ -3,10 +3,10 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Theme resolution and validation")
+@Suite("Theme")
 struct ThemeTests {
-  @Test("Item overrides win while omitted fields inherit the theme")
-  func inheritance() {
+  @Test("ItemStyle.resolved(over:): applies item overrides and inherits omitted fields")
+  func resolvedAppliesOverridesAndInheritsOmittedFields() {
     let theme = ItemStyle(
       tint: "#112233",
       background: "#223344",
@@ -29,8 +29,8 @@ struct ThemeTests {
     #expect(result.cornerRadius == 6)
   }
 
-  @Test("Empty styling retains built-in defaults")
-  func defaults() throws {
+  @Test("ItemStyle.resolved(over:): uses built-in defaults without styling")
+  func resolvedUsesBuiltInDefaultsWithoutStyling() throws {
     let config = try JSONDecoder().decode(
       BarConfiguration.self,
       from: Data(#"{"schemaVersion":1,"bar":{},"items":{}}"#.utf8)
@@ -47,8 +47,10 @@ struct ThemeTests {
     #expect(style.horizontalPadding == 0)
   }
 
-  @Test("Partial theme and item styling survive configuration round trips")
-  func roundTrip() throws {
+  @Test(
+    "BarConfiguration.init(from:): preserves partial theme and item styling through round trips"
+  )
+  func initPreservesPartialStylingThroughRoundTrips() throws {
     let json =
       ##"{"schemaVersion":1,"bar":{},"theme":{"itemSpacing":5,"itemStyle":{"tint":"#aabbcc","fontWeight":"semibold"}},"items":{"right":[{"id":"clock","type":"clock","style":{"fontSize":16,"background":"#11223380"}}]}}"##
 
@@ -63,8 +65,8 @@ struct ThemeTests {
     )
   }
 
-  @Test("Colors accept RGB and RGBA with an alpha suffix")
-  func colors() throws {
+  @Test("RGBA.init(hex:): accepts RGB and RGBA with an alpha suffix")
+  func initAcceptsRGBAndRGBA() throws {
     let rgb = try #require(RGBA(hex: "#FF0080"))
 
     #expect(rgb.red == 1)
@@ -79,10 +81,10 @@ struct ThemeTests {
   }
 
   @Test(
-    "Malformed colors are rejected",
+    "BarConfiguration.validate(): rejects malformed theme colors",
     arguments: ["red", "#fff", "#gg0000", "#1234567", "123456", "#１２３４５６"]
   )
-  func invalidColors(value: String) {
+  func validateRejectsMalformedThemeColors(value: String) {
     #expect(RGBA(hex: value) == nil)
 
     var config = BarConfiguration.default
@@ -98,8 +100,8 @@ struct ThemeTests {
     }
   }
 
-  @Test("Invalid item styles report their exact location")
-  func invalidItem() {
+  @Test("BarConfiguration.validate(): reports the exact location of invalid item styles")
+  func validateReportsInvalidItemStyleLocation() {
     var config = BarConfiguration.default
     config.items.right[1].style = ItemStyle(fontSize: 0)
 
@@ -114,10 +116,10 @@ struct ThemeTests {
   }
 
   @Test(
-    "Nonfinite and negative spacing is rejected",
+    "BarConfiguration.validate(): rejects nonfinite and negative theme spacing",
     arguments: [-1.0, Double.infinity, Double.nan]
   )
-  func invalidSpacing(value: Double) {
+  func validateRejectsNonfiniteAndNegativeSpacing(value: Double) {
     var config = BarConfiguration.default
     config.theme = BarTheme(itemSpacing: value)
 

@@ -3,10 +3,10 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Bar configuration")
+@Suite("BarConfiguration")
 struct ConfigurationTests {
-  @Test("Example configuration decodes")
-  func exampleConfigurationDecodes() throws {
+  @Test("init(from:): decodes the example configuration")
+  func initDecodesExampleConfiguration() throws {
     let data = Data(
       #"""
       {"schemaVersion":1,"bar":{"position":"top","height":32,"displays":"all"},"items":{"left":[{"id":"app","type":"frontApplication"}],"center":[],"right":[{"id":"clock","type":"clock","format":"HH:mm"}]}}
@@ -20,8 +20,35 @@ struct ConfigurationTests {
     #expect(configuration.bar.displays == .all)
   }
 
-  @Test("Duplicate item IDs fail validation")
-  func duplicateItemIDsFailValidation() {
+  @Test("init(from:): defaults omitted bar settings and item sections")
+  func initDefaultsOmittedSettingsAndSections() throws {
+    let configuration = try JSONDecoder().decode(
+      BarConfiguration.self,
+      from: Data(#"{"schemaVersion":1,"bar":{},"items":{}}"#.utf8)
+    )
+
+    #expect(configuration.bar == BarSettings())
+    #expect(configuration.items.all.isEmpty)
+  }
+
+  @Test("init(from:): migrates version-one commands recursively")
+  func initMigratesVersionOneCommandsRecursively() throws {
+    let json =
+      #"{"schemaVersion":1,"bar":{},"items":{"left":[{"id":"group","type":"group","children":[{"id":"c","type":"command","command":{"script":"date","interval":12,"event":"refresh"}}]}]}}"#
+
+    let configuration = try JSONDecoder().decode(BarConfiguration.self, from: Data(json.utf8))
+    try configuration.validate()
+
+    let item = try #require(configuration.items.left.first?.children?.first)
+
+    #expect(configuration.schemaVersion == 2)
+    #expect(item.refresh == RefreshPolicy(mode: .interval, seconds: 12, event: "refresh"))
+    #expect(item.command?.interval == nil)
+    #expect(item.command?.event == nil)
+  }
+
+  @Test("validate(): rejects duplicate item IDs")
+  func validateRejectsDuplicateItemIDs() {
     let item = ItemConfiguration(id: "same", type: .text)
     let configuration = BarConfiguration(
       schemaVersion: BarConfiguration.currentSchemaVersion,
@@ -37,8 +64,8 @@ struct ConfigurationTests {
     ) { try configuration.validate() }
   }
 
-  @Test("Unsupported heights fail validation")
-  func unsupportedHeightsFailValidation() {
+  @Test("validate(): rejects unsupported bar heights")
+  func validateRejectsUnsupportedHeights() {
     let configuration = BarConfiguration(
       schemaVersion: BarConfiguration.currentSchemaVersion,
       bar: .init(height: 10),
@@ -48,19 +75,8 @@ struct ConfigurationTests {
     #expect(throws: ConfigurationError.invalidBarHeight(10)) { try configuration.validate() }
   }
 
-  @Test("Omitted bar settings and sections use defaults")
-  func defaultsDecode() throws {
-    let configuration = try JSONDecoder().decode(
-      BarConfiguration.self,
-      from: Data(#"{"schemaVersion":1,"bar":{},"items":{}}"#.utf8)
-    )
-
-    #expect(configuration.bar == BarSettings())
-    #expect(configuration.items.all.isEmpty)
-  }
-
-  @Test("Whitespace IDs report their location")
-  func emptyIdentifier() {
+  @Test("validate(): reports the location of whitespace-only item IDs")
+  func validateReportsWhitespaceOnlyItemIDs() {
     let configuration = BarConfiguration(
       schemaVersion: BarConfiguration.currentSchemaVersion,
       bar: .init(),
@@ -77,24 +93,8 @@ struct ConfigurationTests {
     }
   }
 
-  @Test("Version one commands migrate recursively without rewriting files")
-  func migration() throws {
-    let json =
-      #"{"schemaVersion":1,"bar":{},"items":{"left":[{"id":"group","type":"group","children":[{"id":"c","type":"command","command":{"script":"date","interval":12,"event":"refresh"}}]}]}}"#
-
-    let configuration = try JSONDecoder().decode(BarConfiguration.self, from: Data(json.utf8))
-    try configuration.validate()
-
-    let item = try #require(configuration.items.left.first?.children?.first)
-
-    #expect(configuration.schemaVersion == 2)
-    #expect(item.refresh == RefreshPolicy(mode: .interval, seconds: 12, event: "refresh"))
-    #expect(item.command?.interval == nil)
-    #expect(item.command?.event == nil)
-  }
-
-  @Test("Selected displays need IDs and interval refresh needs seconds")
-  func validation() {
+  @Test("validate(): requires selected display IDs and interval refresh durations")
+  func validateRequiresDisplayIDsAndRefreshDurations() {
     var config = BarConfiguration.default
     config.bar.displays = .selected
 

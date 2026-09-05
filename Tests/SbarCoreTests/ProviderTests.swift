@@ -3,9 +3,12 @@ import Testing
 
 @testable import SbarCore
 
+@Suite("Providers")
 struct ProviderTests {
-  @Test("CPU usage uses sample deltas, not lifetime totals")
-  func cpuDelta() {
+  @Test(
+    "SystemMetricsSampler.cpuUsage: uses sample deltas and rejects missing or unchanged samples"
+  )
+  func cpuUsageUsesSampleDeltas() {
     #expect(
       SystemMetricsSampler.cpuUsage(previous: [100, 100, 800, 0], current: [120, 110, 870, 0])
         == 0.3
@@ -15,8 +18,10 @@ struct ProviderTests {
     #expect(SystemMetricsSampler.cpuUsage(previous: [1, 2, 3, 4], current: [1, 2, 3, 4]) == nil)
   }
 
-  @MainActor @Test("Manual clock snapshots remain stable until explicitly triggered")
-  func manualClock() async throws {
+  @MainActor
+
+  @Test("ProviderRuntime.trigger(_:value:): updates a manual clock snapshot only when triggered")
+  func triggerUpdatesManualClockSnapshot() async throws {
     let providers = ProviderRuntime()
     var config = BarConfiguration.default
     config.items.left = []
@@ -33,8 +38,8 @@ struct ProviderTests {
     #expect(try #require(providers.itemDates["clock"]) > #require(initial))
   }
 
-  @MainActor @Test("Cosmetic command edits do not rerun the process")
-  func cosmeticChanges() async throws {
+  @MainActor @Test("ProviderRuntime.configure(_:): does not rerun commands after cosmetic edits")
+  func configureDoesNotRerunCommandsAfterCosmeticEdits() async throws {
     let url = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
     let providers = ProviderRuntime()
     defer {
