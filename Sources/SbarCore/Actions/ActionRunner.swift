@@ -66,7 +66,7 @@ final class ActionRunner {
   }
 
   func stop() {
-    tasks.values.forEach { $0.cancel() }
+    for task in tasks.values { task.cancel() }
     tasks.removeAll()
   }
 }

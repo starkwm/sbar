@@ -164,11 +164,11 @@ final class ProviderRegistry {
     dates = [:]
     lastRefresh = [:]
     pluginGeneration = UUID()
-    pluginTasks.values.forEach { $0.cancel() }
+    for task in pluginTasks.values { task.cancel() }
     pluginTasks.removeAll()
     pluginInputs.removeAll()
     pluginItems = []
-    commandTasks.values.forEach { $0.cancel() }
+    for task in commandTasks.values { task.cancel() }
     commandTasks.removeAll()
     commandItems = []
     stopNative()
@@ -234,7 +234,7 @@ final class ProviderRegistry {
     }
     pluginGeneration = UUID()
     let generation = pluginGeneration
-    pluginTasks.values.forEach { $0.cancel() }
+    for task in pluginTasks.values { task.cancel() }
     pluginTasks.removeAll()
     pluginInputs.removeAll()
     pluginItems = items
@@ -315,7 +315,7 @@ final class ProviderRegistry {
     adapterTask = nil
     task?.cancel()
     task = nil
-    observers.forEach { $0.0.removeObserver($0.1) }
+    for (center, observer) in observers { center.removeObserver(observer) }
     observers.removeAll()
     monitor?.cancel()
     monitor = nil

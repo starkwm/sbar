@@ -61,13 +61,19 @@ final class BarCoordinator: NSObject {
     localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [
       .mouseMoved, .leftMouseDragged, .rightMouseDragged,
     ]) { [weak self] event in
-      self?.panels.values.forEach { $0.updateMousePolicy() }
+      if let self {
+        for panel in self.panels.values { panel.updateMousePolicy() }
+      }
       return event
     }
     globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [
       .mouseMoved, .leftMouseDragged, .rightMouseDragged,
     ]) { [weak self] _ in
-      MainActor.assumeIsolated { self?.panels.values.forEach { $0.updateMousePolicy() } }
+      MainActor.assumeIsolated {
+        if let self {
+          for panel in self.panels.values { panel.updateMousePolicy() }
+        }
+      }
     }
     store.startObserving()
     store.configurationDidChange = { [weak self] in
@@ -117,7 +123,7 @@ final class BarCoordinator: NSObject {
     providers.stop()
     store.stopObserving()
     store.configurationDidChange = nil
-    panels.values.forEach { $0.close() }
+    for panel in panels.values { panel.close() }
     panels.removeAll()
     isStarted = false
   }
@@ -196,7 +202,7 @@ final class BarCoordinator: NSObject {
       panel.updateMousePolicy()
       updated[identifier] = panel
     }
-    remaining.values.forEach { $0.close() }
+    for panel in remaining.values { panel.close() }
     panels = updated
   }
 }

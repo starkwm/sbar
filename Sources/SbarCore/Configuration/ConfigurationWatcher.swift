@@ -24,12 +24,12 @@ final class ConfigurationWatcher {
     isStarted = false
     reloadTask?.cancel()
     reloadTask = nil
-    sources.forEach { $0.cancel() }
+    for source in sources { source.cancel() }
     sources.removeAll()
   }
 
   private func installSources() {
-    sources.forEach { $0.cancel() }
+    for source in sources { source.cancel() }
     sources.removeAll()
     var directory = url.deletingLastPathComponent()
     while !FileManager.default.fileExists(atPath: directory.path), directory.path != "/" {

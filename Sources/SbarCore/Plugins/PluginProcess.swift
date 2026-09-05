@@ -25,9 +25,9 @@ struct PluginProcess {
     var input: [Int32] = [0, 0]
     var stdout: [Int32] = [0, 0]
     guard pipe(&input) == 0 else { throw CommandFailure.launch(errno) }
-    defer { input.forEach { close($0) } }
+    defer { for descriptor in input { close(descriptor) } }
     guard pipe(&stdout) == 0 else { throw CommandFailure.launch(errno) }
-    defer { stdout.forEach { close($0) } }
+    defer { for descriptor in stdout { close(descriptor) } }
     for fd in input + stdout { _ = fcntl(fd, F_SETFD, FD_CLOEXEC) }
     _ = fcntl(stdout[0], F_SETFL, O_NONBLOCK)
     _ = fcntl(input[1], F_SETFL, O_NONBLOCK)
@@ -45,9 +45,9 @@ struct PluginProcess {
     posix_spawnattr_setflags(&attributes, Int16(POSIX_SPAWN_SETPGROUP))
     posix_spawnattr_setpgroup(&attributes, 0)
     let strings = ([configuration.executable] + (configuration.arguments ?? [])).map { strdup($0) }
-    defer { strings.forEach { free($0) } }
+    defer { for string in strings { free(string) } }
     let environment = ProcessInfo.processInfo.environment.map { strdup("\($0.key)=\($0.value)") }
-    defer { environment.forEach { free($0) } }
+    defer { for string in environment { free(string) } }
     var argv = strings + [nil]
     var envp = environment + [nil]
     var pid: pid_t = 0

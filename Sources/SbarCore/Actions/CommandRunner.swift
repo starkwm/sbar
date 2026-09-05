@@ -62,9 +62,9 @@ struct CommandRunner {
     posix_spawnattr_setflags(&attributes, Int16(POSIX_SPAWN_SETPGROUP))
     posix_spawnattr_setpgroup(&attributes, 0)
     let strings = ([executable] + arguments).map { strdup($0) }
-    defer { strings.forEach { free($0) } }
+    defer { for string in strings { free(string) } }
     let environment = ProcessInfo.processInfo.environment.map { strdup("\($0.key)=\($0.value)") }
-    defer { environment.forEach { free($0) } }
+    defer { for string in environment { free(string) } }
     var argv = strings + [nil]
     var envp = environment + [nil]
     var pid: pid_t = 0
