@@ -74,30 +74,29 @@ final class ProviderRuntime {
     activeTypes = requested
 
     if activeTypes.contains(.frontApplication) {
-      application.start { [weak self] in self?.sharedValues[.frontApplication] = $0 }
+      application.start { [weak self] in self?.updateSharedValues([.frontApplication: $0]) }
     }
 
     if activeTypes.contains(.battery) {
-      battery.start { [weak self] in self?.sharedValues[.battery] = $0 }
+      battery.start { [weak self] in self?.updateSharedValues([.battery: $0]) }
     }
 
     if activeTypes.contains(.volume) {
-      volume.start { [weak self] in self?.sharedValues[.volume] = $0 }
+      volume.start { [weak self] in self?.updateSharedValues([.volume: $0]) }
     }
 
     if activeTypes.contains(.network) || activeTypes.contains(.wifi) {
       network.start { [weak self] network, wifi in
-        self?.sharedValues[.network] = network
-        self?.sharedValues[.wifi] = wifi
+        self?.updateSharedValues([.network: network, .wifi: wifi])
       }
     }
 
     if activeTypes.contains(.media) {
-      media.start { [weak self] in self?.sharedValues[.media] = $0 }
+      media.start { [weak self] in self?.updateSharedValues([.media: $0]) }
     }
 
     if activeTypes.contains(.spaces) {
-      spaces.start { [weak self] in self?.sharedValues[.spaces] = $0 }
+      spaces.start { [weak self] in self?.updateSharedValues([.spaces: $0]) }
     }
 
     let adapters = activeTypes.intersection([.aerospace, .yabai])
@@ -108,7 +107,7 @@ final class ProviderRuntime {
             let value = (try? await WorkspaceAdapter.query(adapter)) ?? "Workspace unavailable"
             guard !Task.isCancelled else { return }
 
-            self?.sharedValues[adapter] = value
+            self?.updateSharedValues([adapter: value])
           }
 
           do { try await Task.sleep(for: .seconds(2)) } catch { return }
@@ -124,18 +123,30 @@ final class ProviderRuntime {
 
         while !Task.isCancelled {
           if needsClock { self?.currentDate = Date() }
-          if tick % 2 == 0, !sampled.isEmpty {
+          if !needsClock || tick % 2 == 0, !sampled.isEmpty {
             let snapshot = await metrics.sample(sampled)
             guard !Task.isCancelled else { return }
 
-            self?.sharedValues.merge(snapshot) { _, new in new }
+            self?.updateSharedValues(snapshot)
           }
 
           tick += 1
-          do { try await Task.sleep(for: .seconds(1)) } catch { return }
+          do { try await Task.sleep(for: .seconds(needsClock ? 1 : 2)) } catch { return }
         }
       }
     }
+  }
+
+  func updateSharedValues(_ values: [ItemType: String]) {
+    guard values.contains(where: { sharedValues[$0.key] != $0.value }) else { return }
+
+    sharedValues.merge(values) { _, new in new }
+  }
+
+  func updateItemValue(_ value: String, for id: String) {
+    guard itemValues[id] != value else { return }
+
+    itemValues[id] = value
   }
 
   func trigger(_ event: String, value: JSONValue? = nil) {
@@ -219,7 +230,7 @@ final class ProviderRuntime {
 
   private func capture(_ item: ItemConfiguration) {
     if let value = sharedValues[item.type] {
-      itemSnapshots[item.id] = value
+      if itemSnapshots[item.id] != value { itemSnapshots[item.id] = value }
       lastRefresh[item.id] = Date()
     }
 
@@ -267,13 +278,13 @@ final class ProviderRuntime {
               Task { @MainActor [weak self] in
                 guard self?.pluginGeneration == generation else { return }
 
-                self?.itemValues[item.id] = text
+                self?.updateItemValue(text, for: item.id)
               }
             }
           } catch {
             guard !Task.isCancelled, self?.pluginGeneration == generation else { return }
 
-            self?.itemValues[item.id] = error.localizedDescription
+            self?.updateItemValue(error.localizedDescription, for: item.id)
           }
 
           guard configuration.restart ?? true else { return }
@@ -317,12 +328,14 @@ final class ProviderRuntime {
           )
           guard !Task.isCancelled else { return }
 
-          self?.itemValues[item.id] =
-            result.exitCode == 0 ? result.output : "Exit \(result.exitCode): \(result.output)"
+          self?.updateItemValue(
+            result.exitCode == 0 ? result.output : "Exit \(result.exitCode): \(result.output)",
+            for: item.id
+          )
         } catch {
           guard !Task.isCancelled else { return }
 
-          self?.itemValues[item.id] = error.localizedDescription
+          self?.updateItemValue(error.localizedDescription, for: item.id)
         }
 
         let duration =
