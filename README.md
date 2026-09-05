@@ -196,6 +196,59 @@ Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeigh
 
 `media` listens for Music and Spotify playback notifications. It waits for the next notification after startup and does not query or control other players. Wi-Fi reports connection state, not the location-protected SSID.
 
+### Battery and Wi-Fi appearance
+
+Without widget settings, battery and Wi-Fi retain their text presentation and optional static `symbol`.
+Add a `battery` or `wifi` block to enable state-dependent icons:
+
+```json
+{
+  "id": "battery",
+  "type": "battery",
+  "battery": {
+    "showPercentage": false,
+    "lowThreshold": 20,
+    "lowTint": "#FF6655",
+    "chargingTint": "#66CC88",
+    "pluggedInSymbol": "powerplug"
+  }
+}
+```
+
+Battery settings: `showPercentage` and `showSymbol` default to `true`. The icon follows charge
+level in 25% steps, uses `chargingSymbol` (default `battery.100percent.bolt`) while charging,
+and `pluggedInSymbol` (default `powerplug`) on AC power without charging. `lowThreshold`
+defaults to 20 and accepts 0–100, inclusive. `lowTint` applies at or below that threshold
+while running on battery; `chargingTint` and `pluggedInTint` apply to their respective power
+states. A computer without a battery displays `AC power` and the plugged-in icon.
+
+```json
+{
+  "id": "wifi",
+  "type": "wifi",
+  "wifi": {
+    "showLabel": false,
+    "connectedTint": "#66CC88",
+    "disconnectedTint": "#FF6655",
+    "hideWhenDisconnected": true
+  }
+}
+```
+
+Wi-Fi settings: `showLabel` and `showSymbol` default to `true`; `hideWhenDisconnected` defaults
+to `false`. Customize `connectedLabel` / `disconnectedLabel` (defaults `Wi-Fi connected` /
+`Wi-Fi disconnected`) and `connectedSymbol` / `disconnectedSymbol` (defaults `wifi` /
+`wifi.slash`). Connection means the current satisfied network path uses Wi-Fi; it does not
+report radio power, association, SSID, or signal strength. Ethernet taking over the path can
+therefore make this widget report disconnected.
+
+For either widget, an item-level `symbol` overrides the dynamic symbol, while `showSymbol: false`
+hides it. State colors override `style.tint` when supplied; otherwise the normal item/theme tint
+applies. Colors accept `#RRGGBB` or `#RRGGBBAA`. Icon-only widgets retain an accessibility label.
+Refresh policies capture text, symbols, colors, and visibility together. Edit these settings in
+the configuration file and reload; the `set` command does not accept the widget blocks.
+
+
 ## Actions
 
 Items accept `primaryAction` and `secondaryAction` objects with `kind` (`command`, `url`, or `application`) and `value`. Primary actions run on click; secondary actions appear in the context menu. URL actions allow HTTP, HTTPS, and mailto. Application values are bundle IDs or paths; `${NAME}` and `~` expand in URL/application paths. Shell actions use `/bin/sh -c` and inherit the environment.

@@ -106,6 +106,16 @@ struct Configuration: Codable, Equatable, Sendable {
           path: "\(location).command.timeout"
         )
 
+        try item.battery?.validate(path: "\(location).battery")
+        try item.wifi?.validate(path: "\(location).wifi")
+        if (item.battery != nil && item.type != .battery)
+          || (item.wifi != nil && item.type != .wifi)
+        {
+          throw ConfigurationError.invalidValue(
+            path: location,
+            reason: "Widget settings must match the item type."
+          )
+        }
         try item.style?.validate(path: "\(location).style")
 
         guard !item.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -224,7 +234,7 @@ struct ItemSections: Codable, Equatable, Sendable {
 struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case enabled, format, id, label, priority, style, symbol, type, primaryAction, secondaryAction,
-      popup, command, children, plugin, refresh
+      popup, command, children, plugin, refresh, battery, wifi
   }
 
   var id: String
@@ -244,6 +254,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var command: ShellCommand?
   var children: [Item]?
   var plugin: Plugin?
+  var battery: BatteryConfiguration?
+  var wifi: WifiConfiguration?
   var refresh: RefreshPolicy?
 
   var active: [Item] { enabled ? [self] + (children ?? []).flatMap(\.active) : [] }
@@ -265,6 +277,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     command: ShellCommand? = nil,
     children: [Item]? = nil,
     plugin: Plugin? = nil,
+    battery: BatteryConfiguration? = nil,
+    wifi: WifiConfiguration? = nil,
     refresh: RefreshPolicy? = nil
   ) {
     self.id = id
@@ -284,6 +298,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.command = command
     self.children = children
     self.plugin = plugin
+    self.battery = battery
+    self.wifi = wifi
     self.refresh = refresh
   }
 
@@ -307,6 +323,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     command = try container.decodeIfPresent(ShellCommand.self, forKey: .command)
     children = try container.decodeIfPresent([Item].self, forKey: .children)
     plugin = try container.decodeIfPresent(Plugin.self, forKey: .plugin)
+    battery = try container.decodeIfPresent(BatteryConfiguration.self, forKey: .battery)
+    wifi = try container.decodeIfPresent(WifiConfiguration.self, forKey: .wifi)
     refresh = try container.decodeIfPresent(RefreshPolicy.self, forKey: .refresh)
   }
 }

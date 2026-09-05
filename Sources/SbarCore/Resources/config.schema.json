@@ -359,6 +359,12 @@
               ]
             }
           }
+        },
+        "battery": {
+          "$ref": "#/$defs/battery"
+        },
+        "wifi": {
+          "$ref": "#/$defs/wifi"
         }
       }
     },
@@ -446,6 +452,134 @@
           "type": "string"
         }
       }
+    },
+    "battery": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "showPercentage": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "chargingSymbol": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pluggedInSymbol": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lowTint": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+        },
+        "chargingTint": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+        },
+        "pluggedInTint": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+        },
+        "lowThreshold": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100,
+          "default": 20
+        }
+      },
+      "additionalProperties": false
+    },
+    "wifi": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "showLabel": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "hideWhenDisconnected": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "connectedLabel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "disconnectedLabel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "connectedSymbol": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "disconnectedSymbol": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "connectedTint": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+        },
+        "disconnectedTint": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

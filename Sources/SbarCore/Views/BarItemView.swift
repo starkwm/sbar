@@ -5,7 +5,14 @@ struct BarItemView: View {
   let configuration: Item
 
   var body: some View {
-    if let symbol = configuration.symbol, configuration.type != .divider,
+    if let presentation = providers.presentation(for: configuration) {
+      HStack(spacing: 4) {
+        if let symbol = presentation.symbol { Image(systemName: symbol) }
+        if !presentation.text.isEmpty { Text(presentation.text).monospacedDigit() }
+      }
+      .accessibilityElement(children: .ignore)
+      .accessibilityLabel(presentation.accessibilityLabel)
+    } else if let symbol = configuration.symbol, configuration.type != .divider,
       configuration.type != .spacer
     {
       HStack(spacing: 4) {

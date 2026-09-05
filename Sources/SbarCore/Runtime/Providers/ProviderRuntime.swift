@@ -34,6 +34,8 @@ final class ProviderRuntime {
   }
 
   private(set) var itemSnapshots: [String: String] = [:]
+  private(set) var widgetStates: [ItemType: WidgetState] = [:]
+  private(set) var widgetSnapshots: [String: WidgetState] = [:]
   private(set) var itemDates: [String: Date] = [:]
 
   @ObservationIgnored private var refreshItems: [Item] = []
@@ -78,7 +80,7 @@ final class ProviderRuntime {
     }
 
     if activeTypes.contains(.battery) {
-      battery.start { [weak self] in self?.updateSharedValues([.battery: $0]) }
+      battery.start { [weak self] in self?.updateWidgetState($0, for: .battery) }
     }
 
     if activeTypes.contains(.volume) {
@@ -87,7 +89,8 @@ final class ProviderRuntime {
 
     if activeTypes.contains(.network) || activeTypes.contains(.wifi) {
       network.start { [weak self] network, wifi in
-        self?.updateSharedValues([.network: network, .wifi: wifi])
+        self?.updateWidgetState(wifi, for: .wifi)
+        self?.updateSharedValues([.network: network])
       }
     }
 
@@ -137,6 +140,23 @@ final class ProviderRuntime {
     }
   }
 
+  func presentation(for item: Item) -> WidgetPresentation? {
+    let state = item.refresh == nil ? widgetStates[item.type] : widgetSnapshots[item.id]
+    return state?.presentation(for: item)
+  }
+
+  func updateWidgetState(_ state: WidgetState, for type: ItemType) {
+    guard widgetStates[type] != state else { return }
+    widgetStates[type] = state
+    updateSharedValues([type: state.text])
+    for item in refreshItems
+    where item.type == type
+      && (item.refresh?.mode == .event || widgetSnapshots[item.id] == nil)
+    {
+      capture(item)
+    }
+  }
+
   func updateSharedValues(_ values: [ItemType: String]) {
     guard values.contains(where: { sharedValues[$0.key] != $0.value }) else { return }
 
@@ -168,8 +188,10 @@ final class ProviderRuntime {
     refreshItems = []
 
     sharedValues = [:]
+    widgetStates = [:]
     itemValues = [:]
     itemSnapshots = [:]
+    widgetSnapshots = [:]
     itemDates = [:]
     lastRefresh = [:]
 
@@ -203,6 +225,7 @@ final class ProviderRuntime {
     refreshTask?.cancel()
     refreshItems = requested
     itemSnapshots = [:]
+    widgetSnapshots = [:]
     itemDates = [:]
     lastRefresh = [:]
     for item in requested { capture(item) }
@@ -229,6 +252,7 @@ final class ProviderRuntime {
   }
 
   private func capture(_ item: Item) {
+    if let state = widgetStates[item.type] { widgetSnapshots[item.id] = state }
     if let value = sharedValues[item.type] {
       if itemSnapshots[item.id] != value { itemSnapshots[item.id] = value }
       lastRefresh[item.id] = Date()

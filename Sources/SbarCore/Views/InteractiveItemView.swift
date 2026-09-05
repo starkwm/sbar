@@ -6,6 +6,18 @@ struct InteractiveItemView: View {
   var tracksHitRegion = true
 
   var body: some View {
+    if providers.presentation(for: item)?.hidden != true { decoratedContent }
+  }
+
+  @Environment(ProviderRuntime.self) private var providers
+
+  private var resolvedStyle: ItemStyle {
+    var style = (item.style ?? ItemStyle()).resolved(over: defaultStyle)
+    if let tint = providers.presentation(for: item)?.tint { style.tint = tint }
+    return style
+  }
+
+  private var decoratedContent: some View {
     Group {
       if item.type == .group {
         HStack(spacing: 4) {
@@ -31,7 +43,7 @@ struct InteractiveItemView: View {
         BarItemView(configuration: item)
       }
     }
-    .modifier(ItemStyleModifier(style: (item.style ?? ItemStyle()).resolved(over: defaultStyle)))
+    .modifier(ItemStyleModifier(style: resolvedStyle))
     .modifier(HitRegionModifier(enabled: tracksHitRegion))
     .contentShape(Rectangle())
     .onHover { hovering = $0 }

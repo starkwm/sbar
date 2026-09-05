@@ -4,7 +4,7 @@ import Network
 final class NetworkProvider {
   private var monitor: NWPathMonitor?
 
-  func start(update: @escaping @MainActor (String, String) -> Void) {
+  func start(update: @escaping @MainActor (String, WidgetState) -> Void) {
     stop()
 
     let monitor = NWPathMonitor()
@@ -12,7 +12,7 @@ final class NetworkProvider {
       let connected = path.status == .satisfied
       let wifi = path.usesInterfaceType(.wifi)
       let network = connected ? (wifi ? "Wi-Fi" : "Connected") : "Offline"
-      let wireless = wifi && connected ? "Wi-Fi connected" : "Wi-Fi disconnected"
+      let wireless = WidgetState.wifi(connected: wifi && connected)
 
       Task { @MainActor in update(network, wireless) }
     }

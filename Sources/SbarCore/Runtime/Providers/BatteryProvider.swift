@@ -4,9 +4,9 @@ import IOKit.ps
 @MainActor
 final class BatteryProvider {
   private var source: CFRunLoopSource?
-  private var update: (@MainActor (String) -> Void)?
+  private var update: (@MainActor (WidgetState) -> Void)?
 
-  func start(update: @escaping @MainActor (String) -> Void) {
+  func start(update: @escaping @MainActor (WidgetState) -> Void) {
     stop()
     self.update = update
     refresh()
@@ -42,11 +42,18 @@ final class BatteryProvider {
         let maximum = info[kIOPSMaxCapacityKey] as? Int, maximum > 0
       else { continue }
 
-      let charging = info[kIOPSPowerSourceStateKey] as? String == kIOPSACPowerValue
-      update?("\(charging ? "⚡ " : "")\(capacity * 100 / maximum)%")
+      let pluggedIn = info[kIOPSPowerSourceStateKey] as? String == kIOPSACPowerValue
+      let charging = info[kIOPSIsChargingKey] as? Bool ?? false
+      update?(
+        .battery(
+          percentage: min(100, max(0, capacity * 100 / maximum)),
+          charging: charging,
+          pluggedIn: pluggedIn
+        )
+      )
       return
     }
 
-    update?("AC power")
+    update?(.battery(percentage: nil, charging: false, pluggedIn: true))
   }
 }
