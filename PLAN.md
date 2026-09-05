@@ -209,7 +209,7 @@ All eight phases have implementation coverage, with signing and distribution def
 | Phase | Delivered |
 | --- | --- |
 | Foundation | Native panels per primary/all/selected displays; centered regions; menu extra and Settings; empty-region mouse pass-through; configurable level. |
-| Configuration | Versioned JSON, v1-to-v2 migration, precise validation, defaults, atomic saves/backups, schema, filesystem reload, themes/overrides, and `--config`. |
+| Configuration | Version-1 JSON, precise validation, defaults, atomic saves/backups, schema, filesystem reload, themes/overrides, and `--config`. |
 | Native items | Shared clock/date, application, battery, volume, connection status, CPU/memory, disk, throughput, and Music/Spotify playback notifications. |
 | Interaction | Primary/context-menu actions, hover, bounded shell output, groups, child/text popups, compression, and priority overflow. |
 | Runtime control | Typed events, same-user Unix socket, `sbarctl` query/reload/set/trigger/subscribe, transient validated edits. |

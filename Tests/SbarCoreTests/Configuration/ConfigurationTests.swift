@@ -31,20 +31,29 @@ struct ConfigurationTests {
     #expect(configuration.items.all.isEmpty)
   }
 
-  @Test("init: migrates version-one commands recursively")
-  func initMigratesVersionOneCommandsRecursively() throws {
+  @Test("init: decodes version-one refresh policies in groups")
+  func initDecodesVersionOneRefreshPoliciesInGroups() throws {
     let json =
-      #"{"schemaVersion":1,"bar":{},"items":{"left":[{"id":"group","type":"group","children":[{"id":"c","type":"command","command":{"script":"date","interval":12,"event":"refresh"}}]}]}}"#
+      #"{"schemaVersion":1,"bar":{},"items":{"left":[{"id":"group","type":"group","children":[{"id":"c","type":"command","command":{"script":"date"},"refresh":{"mode":"interval","seconds":12,"event":"refresh"}}]}]}}"#
 
     let configuration = try JSONDecoder().decode(BarConfiguration.self, from: Data(json.utf8))
     try configuration.validate()
 
     let item = try #require(configuration.items.left.first?.children?.first)
 
-    #expect(configuration.schemaVersion == 2)
+    #expect(configuration.schemaVersion == 1)
     #expect(item.refresh == RefreshPolicy(mode: .interval, seconds: 12, event: "refresh"))
-    #expect(item.command?.interval == nil)
-    #expect(item.command?.event == nil)
+    #expect(item.command?.script == "date")
+  }
+
+  @Test("validate: rejects unsupported schema versions", arguments: [0, 2, 3])
+  func validateRejectsUnsupportedSchemaVersions(version: Int) throws {
+    let json = "{\"schemaVersion\":\(version),\"bar\":{},\"items\":{}}"
+    let configuration = try JSONDecoder().decode(BarConfiguration.self, from: Data(json.utf8))
+
+    #expect(throws: ConfigurationError.unsupportedSchemaVersion(version)) {
+      try configuration.validate()
+    }
   }
 
   @Test("validate: rejects duplicate item IDs")

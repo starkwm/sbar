@@ -1,6 +1,6 @@
 {
   "$schema": "../../Sources/SbarCore/Resources/config.schema.json",
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "bar": {
     "position": "bottom",
     "height": 38,

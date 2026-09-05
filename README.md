@@ -63,7 +63,7 @@ Create `~/.config/starkbar/config.json` with a configuration such as:
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "bar": {},
   "items": {
     "left": [
@@ -77,7 +77,7 @@ Create `~/.config/starkbar/config.json` with a configuration such as:
 }
 ```
 
-Version-1 files migrate to version 2 in memory: legacy command intervals/events become item refresh policies, including inside groups. Loading never rewrites the source file; update it manually to persist the version-2 format. Future schema versions are rejected.
+Only `schemaVersion: 1` is supported.
 
 ### Bar settings
 
@@ -134,7 +134,7 @@ The optional top-level `theme` sets bar appearance and default item styling. Eac
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "bar": {},
   "theme": {
     "background": "#18202EEE",

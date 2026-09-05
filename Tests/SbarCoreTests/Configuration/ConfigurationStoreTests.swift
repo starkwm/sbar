@@ -63,7 +63,7 @@ struct ConfigurationStoreTests {
     #expect(throws: (any Error).self) { try ConfigurationValidation.validate(url: url) }
 
     try Data(
-      #"{"schemaVersion": 2, "bar": {}, "items": {"right": [{"id": "clock", "type": 42}]}}"#.utf8
+      #"{"schemaVersion": 1, "bar": {}, "items": {"right": [{"id": "clock", "type": 42}]}}"#.utf8
     ).write(to: url)
     do {
       try ConfigurationValidation.validate(url: url)

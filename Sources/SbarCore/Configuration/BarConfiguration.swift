@@ -3,7 +3,7 @@ import Foundation
 struct BarConfiguration: Codable, Equatable, Sendable {
   private enum CodingKeys: String, CodingKey { case schemaVersion, bar, items, theme }
 
-  static let currentSchemaVersion = 2
+  static let currentSchemaVersion = 1
   static let `default` = BarConfiguration(
     schemaVersion: currentSchemaVersion,
     bar: .init(),
@@ -30,42 +30,6 @@ struct BarConfiguration: Codable, Equatable, Sendable {
     self.bar = bar
     self.items = items
     self.theme = theme
-  }
-
-  init(from decoder: any Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-    let version = try container.decode(Int.self, forKey: .schemaVersion)
-
-    schemaVersion = version == 1 ? Self.currentSchemaVersion : version
-    bar = try container.decode(BarSettings.self, forKey: .bar)
-    items = try container.decode(ItemSections.self, forKey: .items)
-    theme = try container.decodeIfPresent(BarTheme.self, forKey: .theme)
-
-    if version == 1 {
-      func migrate(_ entries: [ItemConfiguration]) -> [ItemConfiguration] {
-        entries.map { original in
-          var item = original
-
-          if item.refresh == nil, let command = item.command {
-            item.refresh = RefreshPolicy(
-              mode: command.interval == nil ? .manual : .interval,
-              seconds: command.interval,
-              event: command.event
-            )
-            item.command?.interval = nil
-            item.command?.event = nil
-          }
-
-          if let children = item.children { item.children = migrate(children) }
-
-          return item
-        }
-      }
-
-      items.left = migrate(items.left)
-      items.center = migrate(items.center)
-      items.right = migrate(items.right)
-    }
   }
 
   func validate() throws {
@@ -130,11 +94,6 @@ struct BarConfiguration: Codable, Equatable, Sendable {
             reason: "Command settings are required."
           )
         }
-        try ItemStyle.validateNumber(
-          item.command?.interval,
-          range: 1...86400,
-          path: "\(location).command.interval"
-        )
         try ItemStyle.validateNumber(
           item.command?.timeout,
           range: 0.1...60,

@@ -157,7 +157,7 @@ final class ProviderRuntime {
     for input in pluginInputs.values { input.send(PluginInput(event: event, value: value)) }
 
     for item in commandItems
-    where item.command?.event == event || item.refresh?.event == event || item.id == event {
+    where item.refresh?.event == event || item.id == event {
       startCommand(item)
     }
   }
@@ -338,9 +338,7 @@ final class ProviderRuntime {
           self?.updateItemValue(error.localizedDescription, for: item.id)
         }
 
-        let duration =
-          item.refresh == nil
-          ? command.interval : (item.refresh?.mode == .interval ? item.refresh?.seconds : nil)
+        let duration = item.refresh?.mode == .interval ? item.refresh?.seconds : nil
         guard let interval = duration else { return }
         do { try await Task.sleep(for: .seconds(interval)) } catch { return }
       } while !Task.isCancelled
