@@ -12,7 +12,16 @@ make release
 
 The executable is `.build/debug/sbar` (or `.build/release/sbar` for release builds). Run `sbar` or `sbar start` to start the bar. Use `sbar --help` for commands. Keep the SwiftPM resource bundle alongside the executable when copying build outputs.
 
-`Sources/Sbar` contains the command-line entry point and commands. `Sources/SbarCore` contains the app, bar runtime, providers, configuration, and IPC. Client commands run without starting the bar. There is no Settings window or menu bar icon; control the app through the executable.
+`Sources/Sbar` contains the command-line entry point, with subcommands in `Commands` and shared argument groups in `Options`. `Sources/SbarCore` groups code by responsibility:
+
+- `Configuration`: configuration types, validation, schema loading, storage, and file observation.
+- `Runtime`: app lifecycle, bar coordination, and events, with `Actions`, `Providers`, and `Plugins` subdirectories.
+- `IPC`: control messages, routing, clients, servers, and local sockets.
+- `Views`: SwiftUI bar rendering, layout, styling, and interaction.
+- `Windowing`: AppKit panels, screen placement, and hit regions.
+- `Resources`: the bundled configuration schema.
+
+Client commands run without starting the bar. There is no Settings window or menu bar icon; control the app through the executable.
 
 The Makefile follows the `skbd` and `swm` workflow: `make` builds debug executables, `make release` builds optimized executables, `make format` formats Swift sources, `make lint` checks formatting, and `make clean` removes SwiftPM build products.
 
