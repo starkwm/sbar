@@ -345,7 +345,7 @@ enum BarWindowLevel: String, Codable, CaseIterable, Sendable {
 
 enum ItemType: String, CaseIterable, Codable, Sendable {
   case clock, date, divider, frontApplication, spacer, text, battery, volume, network, wifi, cpu,
-    memory, disk, throughput, media, command, group, popup, plugin, aerospace, yabai
+    memory, disk, throughput, media, command, group, popup, plugin, aerospace, yabai, spaces
 }
 
 enum ConfigurationError: Error, Equatable, LocalizedError {

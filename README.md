@@ -144,4 +144,12 @@ Each output line is limited to 64 KB and displayed text to 4,096 characters. Bur
 
 `aerospace` and `yabai` items show the focused workspace, using [AeroSpace's focused-workspace query](https://nikitabobko.github.io/AeroSpace/commands#list-workspaces) and [yabai's space query](https://github.com/asmvik/yabai/wiki/Commands#querying-information). Executables are located in PATH or the standard Homebrew prefixes. Queries run every two seconds with a two-second timeout; missing or unavailable integrations show a status message. No adapter changes window-manager configuration.
 
+A `spaces` item shows the focused native macOS Space, without a window-manager integration:
+
+```json
+{"id": "spaces", "type": "spaces", "symbol": "rectangle.3.group"}
+```
+
+The number is a one-based position in WindowServer's current Space ordering across displays, including fullscreen Spaces. It can change when Spaces are reordered, added, or removed. All bars show the focused Space rather than a separate value for each display. The provider refreshes on Space switches, application activation, and display changes. It uses private SkyLight APIs and shows `Spaces unavailable` if those APIs or the current Space cannot be read.
+
 The app pauses providers and commands during sleep and restarts them after wake. Panels follow screen and Space changes. See [manual validation](docs/manual-validation.md) for the remaining live checks; automated tests do not establish hardware or desktop behavior.

@@ -45,6 +45,7 @@ final class ProviderRuntime {
   @ObservationIgnored private let volume = VolumeProvider()
   @ObservationIgnored private let network = NetworkProvider()
   @ObservationIgnored private let media = MediaProvider()
+  @ObservationIgnored private let spaces = SpacesProvider()
   @ObservationIgnored private var samplingTask: Task<Void, Never>?
 
   @ObservationIgnored private var commandTasks: [String: Task<Void, Never>] = [:]
@@ -93,6 +94,10 @@ final class ProviderRuntime {
 
     if activeTypes.contains(.media) {
       media.start { [weak self] in self?.sharedValues[.media] = $0 }
+    }
+
+    if activeTypes.contains(.spaces) {
+      spaces.start { [weak self] in self?.sharedValues[.spaces] = $0 }
     }
 
     let adapters = activeTypes.intersection([.aerospace, .yabai])
@@ -340,6 +345,7 @@ final class ProviderRuntime {
     volume.stop()
     network.stop()
     media.stop()
+    spaces.stop()
 
     activeTypes = []
   }
