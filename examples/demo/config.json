@@ -112,6 +112,12 @@
         "popup": "Hostname runs at startup. Trigger demo-refresh to run it again."
       },
       {
+        "id": "spaces",
+        "type": "spaces",
+        "symbol": "rectangle.3.group",
+        "priority": 70
+      },
+      {
         "id": "aerospace",
         "type": "aerospace",
         "enabled": false,

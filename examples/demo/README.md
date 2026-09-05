@@ -12,6 +12,7 @@ Quit any running sbar instance first. This uses a separate configuration and con
 - **sbar** opens a launcher popup with application, URL, and shell actions.
 - The active application follows focus; its context menu opens Activity Monitor.
 - The hostname demonstrates a command with manual refresh.
+- Native Spaces shows the focused Space's one-based position across displays.
 - Music/Spotify playback notifications update the center media item. Start or change a track after launching.
 - **Events** is a self-contained shell plugin counting its start event and runtime triggers.
 - CPU and memory form an inline group. **System** opens disk, network, Wi-Fi, throughput, uptime, and a manually refreshed clock snapshot.
