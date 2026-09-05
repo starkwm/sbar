@@ -5,6 +5,7 @@ import Foundation
 final class ConfigurationWatcher {
   private let url: URL
   private let onChange: () -> Void
+
   private var sources: [any DispatchSourceFileSystemObject] = []
   private var reloadTask: Task<Void, Never>?
   private var isStarted = false
@@ -16,6 +17,7 @@ final class ConfigurationWatcher {
 
   func start() {
     guard !isStarted else { return }
+
     isStarted = true
     installSources()
   }
@@ -24,6 +26,7 @@ final class ConfigurationWatcher {
     isStarted = false
     reloadTask?.cancel()
     reloadTask = nil
+
     for source in sources { source.cancel() }
     sources.removeAll()
   }
@@ -31,10 +34,12 @@ final class ConfigurationWatcher {
   private func installSources() {
     for source in sources { source.cancel() }
     sources.removeAll()
+
     var directory = url.deletingLastPathComponent()
     while !FileManager.default.fileExists(atPath: directory.path), directory.path != "/" {
       directory.deleteLastPathComponent()
     }
+
     watch(directory)
     watch(url)
   }
@@ -42,6 +47,7 @@ final class ConfigurationWatcher {
   private func watch(_ target: URL) {
     let descriptor = open(target.path, O_EVTONLY)
     guard descriptor >= 0 else { return }
+
     let source = DispatchSource.makeFileSystemObjectSource(
       fileDescriptor: descriptor,
       eventMask: [.write, .extend, .attrib, .rename, .delete, .revoke],
@@ -57,10 +63,12 @@ final class ConfigurationWatcher {
 
   private func scheduleReload() {
     guard isStarted else { return }
+
     reloadTask?.cancel()
     reloadTask = Task { [weak self] in
       do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
       guard let self, self.isStarted else { return }
+
       self.installSources()
       self.onChange()
     }

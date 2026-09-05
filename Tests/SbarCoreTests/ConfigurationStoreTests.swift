@@ -12,16 +12,22 @@ struct ConfigurationStoreTests {
     defer { try? FileManager.default.removeItem(at: directory) }
     let url = directory.appending(path: "config.json")
     let store = ConfigurationStore(configurationURL: url)
+
     try write(height: 48, to: url)
     store.load()
+
     #expect(store.configuration.bar.height == 48)
+
     try Data(#"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"clock","type":42}]}}"#.utf8)
       .write(to: url)
     store.load()
+
     #expect(store.configuration.bar.height == 48)
     #expect(store.errorMessage?.hasPrefix("items.right[0].type:") == true)
+
     try write(height: 40, to: url)
     store.load()
+
     #expect(store.configuration.bar.height == 40)
     #expect(store.errorMessage == nil)
   }
@@ -31,13 +37,19 @@ struct ConfigurationStoreTests {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
     let url = directory.appending(path: "config.json")
+
     #expect(throws: (any Error).self) { try ConfigurationValidation.validate(url: url) }
+
     try write(height: 48, to: url)
     let original = try Data(contentsOf: url)
+
     try ConfigurationValidation.validate(url: url)
+
     #expect(try Data(contentsOf: url) == original)
+
     try write(height: 1, to: url)
     #expect(throws: (any Error).self) { try ConfigurationValidation.validate(url: url) }
+
     try Data(
       #"{"schemaVersion": 2, "bar": {}, "items": {"right": [{"id": "clock", "type": 42}]}}"#.utf8
     ).write(to: url)
@@ -54,7 +66,9 @@ struct ConfigurationStoreTests {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
     let store = ConfigurationStore(configurationURL: directory.appending(path: "missing.json"))
+
     store.load()
+
     #expect(store.configuration == .default)
     #expect(store.errorMessage == nil)
   }
@@ -67,11 +81,14 @@ struct ConfigurationStoreTests {
     let store = ConfigurationStore(configurationURL: url)
     var updates = 0
     store.configurationDidChange = { updates += 1 }
+
     try write(height: 40, to: url)
     store.load()
     store.load()
+
     try Data("{".utf8).write(to: url)
     store.load()
+
     #expect(updates == 1)
   }
 
@@ -81,15 +98,20 @@ struct ConfigurationStoreTests {
     defer { try? FileManager.default.removeItem(at: directory) }
     let url = directory.appending(path: "config.json")
     try write(height: 40, to: url)
+
     let store = ConfigurationStore(configurationURL: url)
     store.startObserving()
     defer { store.stopObserving() }
+
     try write(height: 48, to: url)
     try await wait { store.configuration.bar.height == 48 }
+
     try write(height: 52, to: url, atomic: false)
     try await wait { store.configuration.bar.height == 52 }
+
     try FileManager.default.removeItem(at: url)
     try await wait { store.configuration == .default }
+
     try write(height: 60, to: url)
     try await wait { store.configuration.bar.height == 60 }
   }
@@ -103,6 +125,7 @@ struct ConfigurationStoreTests {
     let store = ConfigurationStore(configurationURL: url)
     store.startObserving()
     defer { store.stopObserving() }
+
     try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
     try write(height: 56, to: url)
     try await wait { store.configuration.bar.height == 56 }
@@ -114,15 +137,20 @@ struct ConfigurationStoreTests {
     defer { try? FileManager.default.removeItem(at: directory) }
     let url = directory.appending(path: "config.json")
     try write(height: 40, to: url)
+
     let store = ConfigurationStore(configurationURL: url)
     store.startObserving()
     defer { store.stopObserving() }
+
     try write(height: 48, to: url)
     store.stopObserving()
     try await Task.sleep(for: .milliseconds(200))
+
     #expect(store.configuration.bar.height == 40)
+
     store.startObserving()
     #expect(store.configuration.bar.height == 48)
+
     try write(height: 56, to: url)
     try await wait { store.configuration.bar.height == 56 }
   }
@@ -130,6 +158,7 @@ struct ConfigurationStoreTests {
   private func temporaryDirectory() throws -> URL {
     let url = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+
     return url
   }
 
@@ -139,14 +168,17 @@ struct ConfigurationStoreTests {
       bar: .init(height: height),
       items: .init()
     )
+
     try JSONEncoder().encode(configuration).write(to: url, options: atomic ? .atomic : [])
   }
 
   private func wait(until condition: () -> Bool) async throws {
     let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+
     while !condition(), ContinuousClock.now < deadline {
       try await Task.sleep(for: .milliseconds(20))
     }
+
     #expect(condition(), "Configuration did not reload before the deadline")
   }
 }

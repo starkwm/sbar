@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BarHitRegionsKey: PreferenceKey {
   static let defaultValue: [CGRect] = []
+
   static func reduce(value: inout [CGRect], nextValue: () -> [CGRect]) {
     value.append(contentsOf: nextValue())
   }

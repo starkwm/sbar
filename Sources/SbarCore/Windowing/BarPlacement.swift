@@ -4,6 +4,7 @@ struct BarPlacement {
   static func frame(screenFrame: CGRect, visibleFrame: CGRect, settings: BarSettings) -> CGRect {
     let bounds = settings.position == .top ? screenFrame : visibleFrame
     let height = min(settings.height, bounds.height)
+
     return CGRect(
       x: bounds.minX,
       y: settings.position == .top ? bounds.maxY - height : bounds.minY,
@@ -17,6 +18,7 @@ struct BarPlacement {
     -> CGRect?
   {
     guard let leftArea, let rightArea, rightArea.minX > leftArea.maxX else { return nil }
+
     let bottom = min(leftArea.minY, rightArea.minY)
     let obstruction = CGRect(
       x: leftArea.maxX,
@@ -25,6 +27,7 @@ struct BarPlacement {
       height: screenFrame.maxY - bottom
     ).intersection(panelFrame)
     guard !obstruction.isNull, !obstruction.isEmpty else { return nil }
+
     return CGRect(
       x: obstruction.minX - panelFrame.minX,
       y: panelFrame.maxY - obstruction.maxY,

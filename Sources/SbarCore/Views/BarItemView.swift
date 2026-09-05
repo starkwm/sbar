@@ -56,5 +56,4 @@ struct BarItemView: View {
   }
 
   @Environment(ProviderRuntime.self) private var providers
-
 }

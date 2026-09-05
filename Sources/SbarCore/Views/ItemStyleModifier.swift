@@ -28,6 +28,7 @@ struct ItemStyleModifier: ViewModifier {
 extension Color {
   init?(hex: String?) {
     guard let hex, let rgba = RGBA(hex: hex) else { return nil }
+
     self.init(.sRGB, red: rgba.red, green: rgba.green, blue: rgba.blue, opacity: rgba.alpha)
   }
 }

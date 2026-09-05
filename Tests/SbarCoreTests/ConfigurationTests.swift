@@ -12,8 +12,10 @@ struct ConfigurationTests {
       {"schemaVersion":1,"bar":{"position":"top","height":32,"displays":"all"},"items":{"left":[{"id":"app","type":"frontApplication"}],"center":[],"right":[{"id":"clock","type":"clock","format":"HH:mm"}]}}
       """#.utf8
     )
+
     let configuration = try JSONDecoder().decode(BarConfiguration.self, from: data)
     try configuration.validate()
+
     #expect(configuration.items.left.first?.id == "app")
     #expect(configuration.bar.displays == .all)
   }
@@ -26,6 +28,7 @@ struct ConfigurationTests {
       bar: .init(),
       items: .init(left: [item], right: [item])
     )
+
     #expect(
       throws: ConfigurationError.invalidItemIdentifier(
         path: "items.right[0].id",
@@ -41,6 +44,7 @@ struct ConfigurationTests {
       bar: .init(height: 10),
       items: .init()
     )
+
     #expect(throws: ConfigurationError.invalidBarHeight(10)) { try configuration.validate() }
   }
 
@@ -50,6 +54,7 @@ struct ConfigurationTests {
       BarConfiguration.self,
       from: Data(#"{"schemaVersion":1,"bar":{},"items":{}}"#.utf8)
     )
+
     #expect(configuration.bar == BarSettings())
     #expect(configuration.items.all.isEmpty)
   }
@@ -61,6 +66,7 @@ struct ConfigurationTests {
       bar: .init(),
       items: .init(center: [.init(id: " ", type: .text)])
     )
+
     #expect(
       throws: ConfigurationError.invalidItemIdentifier(
         path: "items.center[0].id",
@@ -75,9 +81,12 @@ struct ConfigurationTests {
   func migration() throws {
     let json =
       #"{"schemaVersion":1,"bar":{},"items":{"left":[{"id":"group","type":"group","children":[{"id":"c","type":"command","command":{"script":"date","interval":12,"event":"refresh"}}]}]}}"#
+
     let configuration = try JSONDecoder().decode(BarConfiguration.self, from: Data(json.utf8))
     try configuration.validate()
+
     let item = try #require(configuration.items.left.first?.children?.first)
+
     #expect(configuration.schemaVersion == 2)
     #expect(item.refresh == RefreshPolicy(mode: .interval, seconds: 12, event: "refresh"))
     #expect(item.command?.interval == nil)
@@ -88,9 +97,12 @@ struct ConfigurationTests {
   func validation() {
     var config = BarConfiguration.default
     config.bar.displays = .selected
+
     #expect(throws: (any Error).self) { try config.validate() }
+
     config.bar.displayIDs = [1]
     config.items.right[1].refresh = RefreshPolicy(mode: .interval)
+
     #expect(throws: (any Error).self) { try config.validate() }
   }
 }

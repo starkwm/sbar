@@ -7,6 +7,7 @@ struct QueryCommand: ParsableCommand {
     commandName: "query",
     abstract: "Query the running bar."
   )
+
   @OptionGroup var options: SocketOptions
 
   @Flag(help: "Show configuration errors, action failures, and recent events.")
@@ -23,6 +24,7 @@ struct QueryCommand: ParsableCommand {
 
   mutating func run() throws {
     let arguments = diagnostics ? ["diagnostics"] : displays ? ["displays"] : []
+
     try options.send(ControlRequest(command: "query", arguments: arguments))
   }
 }

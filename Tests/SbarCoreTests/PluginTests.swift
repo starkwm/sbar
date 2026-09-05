@@ -10,14 +10,17 @@ struct PluginTests {
     let messages = OSAllocatedUnfairLock(initialState: [String]())
     let mailbox = PluginMailbox()
     mailbox.send(PluginInput(event: "refresh", value: nil))
+
     let script =
       #"read event; case "$event" in *refresh*) printf '{"text":'; sleep 0.02; printf '"received"}\n';; esac"#
+
     try await PluginRunner.run(
       configuration: .init(executable: "/bin/sh", arguments: ["-c", script], restart: false),
       mailbox: mailbox
     ) { value in
       messages.withLock { $0.append(value) }
     }
+
     #expect(messages.withLock { $0 } == ["received"])
   }
 
@@ -43,8 +46,10 @@ struct PluginTests {
         mailbox: PluginMailbox()
       ) { _ in }
     }
+
     try await Task.sleep(for: .milliseconds(50))
     task.cancel()
+
     await #expect(throws: (any Error).self) { try await task.value }
   }
 

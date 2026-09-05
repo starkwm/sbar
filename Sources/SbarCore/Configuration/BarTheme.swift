@@ -32,8 +32,10 @@ struct ItemStyle: Codable, Equatable, Sendable {
 
   var tint: String?
   var background: String?
+
   var fontSize: Double?
   var fontWeight: ItemFontWeight?
+
   var horizontalPadding: Double?
   var verticalPadding: Double?
   var cornerRadius: Double?
@@ -53,6 +55,7 @@ struct ItemStyle: Codable, Equatable, Sendable {
   func validate(path: String) throws {
     try Self.validateColor(tint, path: "\(path).tint")
     try Self.validateColor(background, path: "\(path).background")
+
     try Self.validateNumber(fontSize, range: 8...72, path: "\(path).fontSize")
     try Self.validateNumber(horizontalPadding, range: 0...96, path: "\(path).horizontalPadding")
     try Self.validateNumber(verticalPadding, range: 0...48, path: "\(path).verticalPadding")
@@ -72,9 +75,11 @@ struct RGBA: Equatable, Sendable {
 
   init?(hex: String) {
     guard hex.first == "#", hex.count == 7 || hex.count == 9 else { return nil }
+
     let digits = hex.dropFirst()
     guard digits.allSatisfy({ $0.isASCII && $0.isHexDigit }), let value = UInt32(digits, radix: 16)
     else { return nil }
+
     let rgba = hex.count == 7 ? (value << 8) | 255 : value
     red = Double((rgba >> 24) & 255) / 255
     green = Double((rgba >> 16) & 255) / 255

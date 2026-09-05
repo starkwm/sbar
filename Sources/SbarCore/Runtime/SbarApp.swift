@@ -7,6 +7,7 @@ public enum SbarApp {
     let delegate = AppDelegate(configurationURL: configurationURL)
     app.setActivationPolicy(.accessory)
     app.delegate = delegate
+
     withExtendedLifetime(delegate) { app.run() }
   }
 }
@@ -22,6 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       actions: ActionRunner(),
       events: EventBus()
     )
+
     super.init()
   }
 

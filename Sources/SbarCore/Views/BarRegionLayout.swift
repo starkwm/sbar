@@ -7,6 +7,7 @@ struct BarRegionLayout: Layout {
     let center = min(max(0, centerIdeal), width / 3)
     let gap = center > 0 ? min(spacing, (width - center) / 2) : 0
     let side = max(0, (width - center) / 2 - gap)
+
     return [side, center, side]
   }
 
@@ -18,6 +19,7 @@ struct BarRegionLayout: Layout {
       let gap = hasCenter ? min(10, rightWidth) : 0
       let centerWidth = hasCenter ? (rightWidth - gap) / 2 : 0
       let trailingStart = rightStart + centerWidth + gap
+
       return [
         CGRect(x: bounds.minX, y: bounds.minY, width: leftEnd - bounds.minX, height: bounds.height),
         CGRect(x: rightStart, y: bounds.minY, width: centerWidth, height: bounds.height),
@@ -29,8 +31,10 @@ struct BarRegionLayout: Layout {
         ),
       ]
     }
+
     let widths = Self.widths(available: bounds.width, centerIdeal: hasCenter ? bounds.width / 3 : 0)
     let origins = [bounds.minX, bounds.midX - widths[1] / 2, bounds.maxX - widths[2]]
+
     return (0..<3).map {
       CGRect(x: origins[$0], y: bounds.minY, width: widths[$0], height: bounds.height)
     }
@@ -50,7 +54,9 @@ struct BarRegionLayout: Layout {
     cache: inout ()
   ) {
     guard subviews.count == 3 else { return }
+
     let frames = Self.frames(in: bounds, hasCenter: hasCenter, notch: notch)
+
     for index in 0..<3 {
       subviews[index].place(
         at: frames[index].origin,

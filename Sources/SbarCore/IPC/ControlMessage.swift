@@ -10,6 +10,7 @@ public enum JSONValue: Codable, Equatable, Sendable {
 
   public init(from decoder: any Decoder) throws {
     let value = try decoder.singleValueContainer()
+
     if value.decodeNil() {
       self = .null
     } else if let v = try? value.decode(Bool.self) {
@@ -27,6 +28,7 @@ public enum JSONValue: Codable, Equatable, Sendable {
 
   public func encode(to encoder: any Encoder) throws {
     var container = encoder.singleValueContainer()
+
     switch self {
     case .string(let value): try container.encode(value)
     case .number(let value): try container.encode(value)

@@ -14,6 +14,7 @@ final class BarPanel: NSPanel {
       backing: .buffered,
       defer: false
     )
+
     backgroundColor = .clear
     collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
     hasShadow = false
@@ -27,6 +28,7 @@ final class BarPanel: NSPanel {
     acceptsMouseMovedEvents = true
     level = .statusBar
   }
+
   override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
     frameRect
   }
@@ -34,6 +36,7 @@ final class BarPanel: NSPanel {
   func updateMousePassthrough() {
     let local = convertPoint(fromScreen: NSEvent.mouseLocation)
     let point = CGPoint(x: local.x, y: frame.height - local.y)
+
     ignoresMouseEvents = passesThroughEmptyRegions && !hitRegions.contains { $0.contains(point) }
   }
 }

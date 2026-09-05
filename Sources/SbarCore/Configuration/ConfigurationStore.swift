@@ -6,6 +6,7 @@ final class ConfigurationStore {
   nonisolated static func describe(_ error: any Error) -> String {
     let path: [any CodingKey]
     let message: String
+
     switch error {
     case DecodingError.keyNotFound(let key, let context):
       path = context.codingPath + [key]
@@ -22,10 +23,13 @@ final class ConfigurationStore {
     default:
       return error.localizedDescription
     }
+
     let location = path.reduce("") { result, key in
       if let index = key.intValue { return result + "[\(index)]" }
+
       return result.isEmpty ? key.stringValue : result + "." + key.stringValue
     }
+
     return "\(location.isEmpty ? "$" : location): \(message)"
   }
 
@@ -35,6 +39,7 @@ final class ConfigurationStore {
   private(set) var errorMessage: String?
 
   @ObservationIgnored var configurationDidChange: (() -> Void)?
+
   @ObservationIgnored private var watcher: ConfigurationWatcher?
 
   init(
@@ -47,6 +52,7 @@ final class ConfigurationStore {
 
   func startObserving() {
     guard watcher == nil else { return }
+
     watcher = ConfigurationWatcher(url: configurationURL) { [weak self] in self?.load() }
     watcher?.start()
     load()
@@ -60,6 +66,7 @@ final class ConfigurationStore {
   func apply(_ candidate: BarConfiguration) throws {
     try candidate.validate()
     guard candidate != configuration else { return }
+
     configuration = candidate
     configurationDidChange?()
   }
@@ -75,14 +82,15 @@ final class ConfigurationStore {
       } catch CocoaError.fileReadNoSuchFile {
         decoded = .default
       }
+
       try decoded.validate()
       errorMessage = nil
       guard decoded != configuration else { return }
+
       configuration = decoded
       configurationDidChange?()
     } catch {
       errorMessage = Self.describe(error)
     }
   }
-
 }

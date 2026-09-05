@@ -8,12 +8,14 @@ final class BarCoordinator: NSObject {
   let actions: ActionRunner
   let events: EventBus
   private(set) var controlError: String?
+
   private var server: ControlServer?
 
   private let store: ConfigurationStore
   private var panels: [CGDirectDisplayID: BarPanel] = [:]
   private var isStarted = false
   private var sleeping = false
+
   private var localMouseMonitor: Any?
   private var globalMouseMonitor: Any?
 
@@ -27,18 +29,22 @@ final class BarCoordinator: NSObject {
     self.actions = actions
     self.events = events
     self.store = store
+
     super.init()
   }
 
   func start() {
     guard !isStarted else { return }
+
     isStarted = true
+
     NotificationCenter.default.addObserver(
       self,
       selector: #selector(screenParametersDidChange),
       name: NSApplication.didChangeScreenParametersNotification,
       object: nil
     )
+
     let workspace = NSWorkspace.shared.notificationCenter
     workspace.addObserver(
       self,
@@ -58,14 +64,17 @@ final class BarCoordinator: NSObject {
       name: NSWorkspace.activeSpaceDidChangeNotification,
       object: nil
     )
+
     localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [
       .mouseMoved, .leftMouseDragged, .rightMouseDragged,
     ]) { [weak self] event in
       if let self {
         for panel in self.panels.values { panel.updateMousePassthrough() }
       }
+
       return event
     }
+
     globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [
       .mouseMoved, .leftMouseDragged, .rightMouseDragged,
     ]) { [weak self] _ in
@@ -75,14 +84,17 @@ final class BarCoordinator: NSObject {
         }
       }
     }
+
     store.startObserving()
     store.configurationDidChange = { [weak self] in
       self?.updatePanels()
       self?.events.emit(RuntimeEvent(kind: .configuration, name: "configuration", value: nil))
     }
+
     providers.onValueChange = { [weak self] name, value in
       self?.events.emit(RuntimeEvent(kind: .provider, name: name, value: .string(value)))
     }
+
     let router = ControlRouter(store: store, providers: providers, events: events, actions: actions)
     let server = ControlServer(
       path: store.configurationURL.deletingLastPathComponent().appending(path: "control.sock").path,
@@ -96,6 +108,7 @@ final class BarCoordinator: NSObject {
         server?.publish(ControlResponse(value: value))
       }
     }
+
     do {
       try server.start()
       self.server = server
@@ -105,24 +118,30 @@ final class BarCoordinator: NSObject {
         "Control server failed: \(error.localizedDescription, privacy: .public)"
       )
     }
+
     updatePanels()
   }
 
   func stop() {
     NotificationCenter.default.removeObserver(self)
     NSWorkspace.shared.notificationCenter.removeObserver(self)
+
     if let localMouseMonitor { NSEvent.removeMonitor(localMouseMonitor) }
     if let globalMouseMonitor { NSEvent.removeMonitor(globalMouseMonitor) }
     localMouseMonitor = nil
     globalMouseMonitor = nil
+
     server?.stop()
     server = nil
     events.onEvent = nil
+
     actions.stop()
     providers.onValueChange = nil
     providers.stop()
+
     store.stopObserving()
     store.configurationDidChange = nil
+
     for panel in panels.values { panel.close() }
     panels.removeAll()
     isStarted = false
@@ -145,8 +164,10 @@ final class BarCoordinator: NSObject {
 
   private func updatePanels() {
     guard isStarted, !sleeping else { return }
+
     let configuration = store.configuration
     providers.configure(configuration)
+
     // The first screen is the primary display; NSScreen.main follows the key window.
     let screens: [NSScreen]
     switch configuration.bar.displays {
@@ -157,21 +178,26 @@ final class BarCoordinator: NSObject {
         guard
           let id = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
         else { return false }
+
         return configuration.bar.displayIDs?.contains(id.uint32Value) == true
       }
     }
+
     var remaining = panels
     var updated: [CGDirectDisplayID: BarPanel] = [:]
+
     for screen in screens {
       guard
         let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
       else { continue }
+
       let identifier = number.uint32Value
       let frame = BarPlacement.frame(
         screenFrame: screen.frame,
         visibleFrame: screen.visibleFrame,
         settings: configuration.bar
       )
+
       let panel = remaining.removeValue(forKey: identifier) ?? BarPanel(contentRect: frame)
       panel.setFrame(frame, display: true)
       switch configuration.bar.windowLevel ?? .statusBar {
@@ -180,6 +206,7 @@ final class BarCoordinator: NSObject {
       case .screenSaver: panel.level = .screenSaver
       }
       panel.passesThroughEmptyRegions = configuration.bar.mousePassThrough ?? false
+
       let notch = BarPlacement.notch(
         screenFrame: screen.frame,
         leftArea: screen.auxiliaryTopLeftArea,
@@ -202,6 +229,7 @@ final class BarCoordinator: NSObject {
       panel.updateMousePassthrough()
       updated[identifier] = panel
     }
+
     for panel in remaining.values { panel.close() }
     panels = updated
   }

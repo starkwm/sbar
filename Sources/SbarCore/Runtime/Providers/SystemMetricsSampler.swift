@@ -4,8 +4,10 @@ import Foundation
 actor SystemMetricsSampler {
   static func cpuUsage(previous: [UInt32], current: [UInt32]) -> Double? {
     guard previous.count == 4, current.count == 4 else { return nil }
+
     let delta = zip(current, previous).map { Double($0 &- $1) }
     let total = delta.reduce(0, +)
+
     return total > 0 ? (total - delta[Int(CPU_STATE_IDLE)]) / total : nil
   }
 
@@ -15,7 +17,9 @@ actor SystemMetricsSampler {
   func sample(_ types: Set<ItemType>) -> [ItemType: String] {
     let host = mach_host_self()
     defer { mach_port_deallocate(mach_task_self_, host) }
+
     var values: [ItemType: String] = [:]
+
     if types.contains(.cpu) {
       var info = host_cpu_load_info()
       var count = mach_msg_type_number_t(
@@ -26,6 +30,7 @@ actor SystemMetricsSampler {
           host_statistics(host, HOST_CPU_LOAD_INFO, $0, &count)
         }
       }
+
       if result == KERN_SUCCESS {
         let current = [info.cpu_ticks.0, info.cpu_ticks.1, info.cpu_ticks.2, info.cpu_ticks.3]
         values[.cpu] =
@@ -34,6 +39,7 @@ actor SystemMetricsSampler {
         previousCPU = current
       }
     }
+
     if types.contains(.memory) {
       var info = vm_statistics64()
       var count = mach_msg_type_number_t(
@@ -44,6 +50,7 @@ actor SystemMetricsSampler {
           host_statistics64(host, HOST_VM_INFO64, $0, &count)
         }
       }
+
       if result == KERN_SUCCESS {
         let pages =
           UInt64(info.active_count) + UInt64(info.wire_count) + UInt64(info.compressor_page_count)
@@ -52,6 +59,7 @@ actor SystemMetricsSampler {
           "RAM \(ByteCountFormatter.string(fromByteCount: Int64(used), countStyle: .memory))"
       }
     }
+
     if types.contains(.disk) {
       if let attributes = try? FileManager.default.attributesOfFileSystem(
         forPath: NSHomeDirectory()
@@ -62,6 +70,7 @@ actor SystemMetricsSampler {
           "\(ByteCountFormatter.string(fromByteCount: free.int64Value, countStyle: .file)) free"
       }
     }
+
     if types.contains(.throughput) {
       var head: UnsafeMutablePointer<ifaddrs>?
       if getifaddrs(&head) == 0 {
@@ -69,6 +78,7 @@ actor SystemMetricsSampler {
         var received: UInt64 = 0
         var sent: UInt64 = 0
         var cursor = head
+
         while let entry = cursor {
           let interface = entry.pointee
           if interface.ifa_addr?.pointee.sa_family == UInt8(AF_LINK),
@@ -80,6 +90,7 @@ actor SystemMetricsSampler {
           }
           cursor = interface.ifa_next
         }
+
         let now = Date()
         if let previousNetwork {
           let seconds = max(0.1, now.timeIntervalSince(previousNetwork.date))
@@ -89,9 +100,11 @@ actor SystemMetricsSampler {
           let up = sent >= previousNetwork.sent ? Double(sent - previousNetwork.sent) / seconds : 0
           values[.throughput] = "↓\(Int(down / 1024)) ↑\(Int(up / 1024)) KB/s"
         }
+
         previousNetwork = (now, received, sent)
       }
     }
+
     return values
   }
 }

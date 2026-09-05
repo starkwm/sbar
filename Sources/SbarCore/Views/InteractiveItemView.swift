@@ -44,6 +44,7 @@ struct InteractiveItemView: View {
     .popover(isPresented: $showingPopup) {
       VStack(alignment: .leading, spacing: 8) {
         if let popup = item.popup { Text(popup).textSelection(.enabled) }
+
         ForEach((item.children ?? []).filter(\.enabled)) { child in
           AnyView(
             InteractiveItemView(
@@ -53,6 +54,7 @@ struct InteractiveItemView: View {
             )
           )
         }
+
         if let error = actions.errorMessage { Text(error).foregroundStyle(.red) }
       }
       .padding()
@@ -62,8 +64,10 @@ struct InteractiveItemView: View {
   }
 
   @Environment(ActionRunner.self) private var actions
+
   @State private var hovering = false
   @State private var showingPopup = false
+
   private var interactive: Bool {
     item.primaryAction != nil || item.secondaryAction != nil || item.popup != nil
       || item.type == .popup

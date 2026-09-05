@@ -7,6 +7,7 @@ struct SubscribeCommand: ParsableCommand {
     commandName: "subscribe",
     abstract: "Stream bar events."
   )
+
   @OptionGroup var options: SocketOptions
 
   mutating func run() throws { try options.send(ControlRequest(command: "subscribe")) }

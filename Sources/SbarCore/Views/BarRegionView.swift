@@ -9,11 +9,14 @@ struct OverflowSelection {
   ) -> Set<String> {
     var selected = items
     let flexible: Set<ItemType> = [.text, .frontApplication, .media, .command, .plugin]
+
     func width() -> CGFloat {
       selected.reduce(0) { $0 + (widths[$1.id] ?? 40) * (flexible.contains($1.type) ? 0.8 : 1) }
         + CGFloat(max(0, selected.count - 1)) * spacing
     }
+
     if width() <= available { return Set(selected.map(\.id)) }
+
     for item in items.enumerated().sorted(by: {
       $0.element.priority == $1.element.priority
         ? $0.offset > $1.offset : $0.element.priority < $1.element.priority
@@ -21,6 +24,7 @@ struct OverflowSelection {
       selected.removeAll { $0.id == item.element.id }
       if width() + (selected.isEmpty ? 0 : spacing) + 28 <= available { break }
     }
+
     return Set(selected.map(\.id))
   }
 }
@@ -40,12 +44,14 @@ struct BarRegionView: View {
         available: geometry.size.width,
         spacing: spacing
       )
+
       HStack(spacing: spacing) {
         ForEach(enabled.filter { visible.contains($0.id) }) { item in
           InteractiveItemView(item: item, defaultStyle: theme?.itemStyle)
             .lineLimit(1)
             .minimumScaleFactor(0.8)
         }
+
         if visible.count < enabled.count {
           Button {
             showingOverflow.toggle()
@@ -94,6 +100,7 @@ struct BarRegionView: View {
 
 private struct ItemWidthsKey: PreferenceKey {
   static let defaultValue: [String: CGFloat] = [:]
+
   static func reduce(value: inout [String: CGFloat], nextValue: () -> [String: CGFloat]) {
     value.merge(nextValue()) { _, new in new }
   }
