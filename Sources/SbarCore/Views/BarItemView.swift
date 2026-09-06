@@ -15,6 +15,16 @@ struct BarItemView: View {
       }
       .accessibilityElement(children: .ignore)
       .accessibilityLabel(presentation.accessibilityLabel)
+    } else if let icon = providers.applicationIcon(for: configuration) {
+      HStack(spacing: 4) {
+        Image(nsImage: icon)
+          .renderingMode(.original)
+          .resizable()
+          .scaledToFit()
+          .frame(width: symbolFontSize, height: symbolFontSize)
+          .accessibilityHidden(true)
+        content
+      }
     } else if let symbol = configuration.symbol, configuration.type != .divider,
       configuration.type != .spacer
     {

@@ -357,6 +357,9 @@
             }
           }
         },
+        "frontApplication": {
+          "$ref": "#/$defs/frontApplication"
+        },
         "battery": {
           "$ref": "#/$defs/battery"
         },
@@ -448,6 +451,13 @@
         "value": {
           "type": "string"
         }
+      }
+    },
+    "frontApplication": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "showIcon": { "type": "boolean", "default": false }
       }
     },
     "battery": {

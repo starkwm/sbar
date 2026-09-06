@@ -4,16 +4,16 @@ import AppKit
 final class FrontApplicationProvider {
   private var observer: NSObjectProtocol?
 
-  func start(update: @escaping @MainActor (String) -> Void) {
+  func start(update: @escaping @MainActor (FrontApplicationState) -> Void) {
     stop()
-    update(NSWorkspace.shared.frontmostApplication?.localizedName ?? "")
+    update(FrontApplicationState(application: NSWorkspace.shared.frontmostApplication))
     observer = NSWorkspace.shared.notificationCenter.addObserver(
       forName: NSWorkspace.didActivateApplicationNotification,
       object: nil,
       queue: .main
     ) { _ in
       MainActor.assumeIsolated {
-        update(NSWorkspace.shared.frontmostApplication?.localizedName ?? "")
+        update(FrontApplicationState(application: NSWorkspace.shared.frontmostApplication))
       }
     }
   }
@@ -21,5 +21,20 @@ final class FrontApplicationProvider {
   func stop() {
     if let observer { NSWorkspace.shared.notificationCenter.removeObserver(observer) }
     observer = nil
+  }
+}
+
+struct FrontApplicationState {
+  var name: String
+  var icon: NSImage?
+
+  init(name: String, icon: NSImage?) {
+    self.name = name
+    self.icon = icon
+  }
+
+  init(application: NSRunningApplication?) {
+    name = application?.localizedName ?? ""
+    icon = application?.icon
   }
 }

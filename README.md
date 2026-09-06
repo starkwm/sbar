@@ -248,6 +248,19 @@ Battery `levelSymbols` accepts exactly five symbols, ordered 0%, 25%, 50%, 75%, 
 
 The existing transient `set` command also accepts a glyph object for the item-level `symbol`.
 
+### Frontmost application icon
+
+Set `frontApplication.showIcon` to show the active application's native colour icon:
+
+```json
+{ "id": "app", "type": "frontApplication", "frontApplication": { "showIcon": true } }
+```
+
+This defaults to `false`. The icon replaces the item's `symbol`; if macOS provides no icon,
+the configured symbol is used as a fallback. Its size follows the resolved item font size (`style.fontSize`, then the theme font size).
+The icon and application name follow the item's refresh policy together. A fixed `label`
+still overrides the name; use `"label": ""` for an icon-only item.
+
 ### Battery and Wi-Fi appearance
 
 Without widget settings, battery and Wi-Fi retain their text presentation and optional static `symbol`.

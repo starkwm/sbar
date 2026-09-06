@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Observation
 
@@ -36,6 +37,8 @@ final class ProviderRuntime {
   private(set) var itemSnapshots: [String: String] = [:]
   private(set) var widgetStates: [ItemType: WidgetState] = [:]
   private(set) var widgetSnapshots: [String: WidgetState] = [:]
+  private(set) var frontApplication: FrontApplicationState?
+  private(set) var applicationSnapshots: [String: FrontApplicationState] = [:]
   private(set) var itemDates: [String: Date] = [:]
 
   @ObservationIgnored private var refreshItems: [Item] = []
@@ -76,7 +79,7 @@ final class ProviderRuntime {
     activeTypes = requested
 
     if activeTypes.contains(.frontApplication) {
-      application.start { [weak self] in self?.updateSharedValues([.frontApplication: $0]) }
+      application.start { [weak self] in self?.updateFrontApplication($0) }
     }
 
     if activeTypes.contains(.battery) {
@@ -145,6 +148,24 @@ final class ProviderRuntime {
     return state?.presentation(for: item)
   }
 
+  func applicationIcon(for item: Item) -> NSImage? {
+    guard item.type == .frontApplication, item.frontApplication?.showIcon == true else {
+      return nil
+    }
+    return (item.refresh == nil ? frontApplication : applicationSnapshots[item.id])?.icon
+  }
+
+  func updateFrontApplication(_ state: FrontApplicationState) {
+    frontApplication = state
+    updateSharedValues([.frontApplication: state.name])
+    for item in refreshItems
+    where item.type == .frontApplication
+      && (item.refresh?.mode == .event || applicationSnapshots[item.id] == nil)
+    {
+      capture(item)
+    }
+  }
+
   func updateWidgetState(_ state: WidgetState, for type: ItemType) {
     guard widgetStates[type] != state else { return }
     widgetStates[type] = state
@@ -187,11 +208,13 @@ final class ProviderRuntime {
     refreshTask = nil
     refreshItems = []
 
+    frontApplication = nil
     sharedValues = [:]
     widgetStates = [:]
     itemValues = [:]
     itemSnapshots = [:]
     widgetSnapshots = [:]
+    applicationSnapshots = [:]
     itemDates = [:]
     lastRefresh = [:]
 
@@ -226,6 +249,7 @@ final class ProviderRuntime {
     refreshItems = requested
     itemSnapshots = [:]
     widgetSnapshots = [:]
+    applicationSnapshots = [:]
     itemDates = [:]
     lastRefresh = [:]
     for item in requested { capture(item) }
@@ -252,6 +276,9 @@ final class ProviderRuntime {
   }
 
   private func capture(_ item: Item) {
+    if item.type == .frontApplication, let frontApplication {
+      applicationSnapshots[item.id] = frontApplication
+    }
     if let state = widgetStates[item.type] { widgetSnapshots[item.id] = state }
     if let value = sharedValues[item.type] {
       if itemSnapshots[item.id] != value { itemSnapshots[item.id] = value }

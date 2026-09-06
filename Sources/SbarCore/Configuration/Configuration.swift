@@ -110,6 +110,7 @@ struct Configuration: Codable, Equatable, Sendable {
         try item.wifi?.validate(path: "\(location).wifi")
         if (item.battery != nil && item.type != .battery)
           || (item.wifi != nil && item.type != .wifi)
+          || (item.frontApplication != nil && item.type != .frontApplication)
         {
           throw ConfigurationError.invalidValue(
             path: location,
@@ -234,7 +235,7 @@ struct ItemSections: Codable, Equatable, Sendable {
 struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case enabled, format, id, label, priority, style, symbol, type, primaryAction, secondaryAction,
-      popup, command, children, plugin, refresh, battery, wifi
+      popup, command, children, plugin, refresh, battery, wifi, frontApplication
   }
 
   var id: String
@@ -254,6 +255,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var command: ShellCommand?
   var children: [Item]?
   var plugin: Plugin?
+  var frontApplication: FrontApplicationConfiguration?
   var battery: BatteryConfiguration?
   var wifi: WifiConfiguration?
   var refresh: RefreshPolicy?
@@ -277,6 +279,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     command: ShellCommand? = nil,
     children: [Item]? = nil,
     plugin: Plugin? = nil,
+    frontApplication: FrontApplicationConfiguration? = nil,
     battery: BatteryConfiguration? = nil,
     wifi: WifiConfiguration? = nil,
     refresh: RefreshPolicy? = nil
@@ -298,6 +301,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.command = command
     self.children = children
     self.plugin = plugin
+    self.frontApplication = frontApplication
     self.battery = battery
     self.wifi = wifi
     self.refresh = refresh
@@ -323,10 +327,18 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     command = try container.decodeIfPresent(ShellCommand.self, forKey: .command)
     children = try container.decodeIfPresent([Item].self, forKey: .children)
     plugin = try container.decodeIfPresent(Plugin.self, forKey: .plugin)
+    frontApplication = try container.decodeIfPresent(
+      FrontApplicationConfiguration.self,
+      forKey: .frontApplication
+    )
     battery = try container.decodeIfPresent(BatteryConfiguration.self, forKey: .battery)
     wifi = try container.decodeIfPresent(WifiConfiguration.self, forKey: .wifi)
     refresh = try container.decodeIfPresent(RefreshPolicy.self, forKey: .refresh)
   }
+}
+
+struct FrontApplicationConfiguration: Codable, Equatable, Sendable {
+  var showIcon: Bool?
 }
 
 enum BarPosition: String, Codable, Sendable { case top, bottom }
