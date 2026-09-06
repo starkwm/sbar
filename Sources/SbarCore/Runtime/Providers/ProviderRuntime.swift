@@ -64,13 +64,15 @@ final class ProviderRuntime {
   @ObservationIgnored private var pluginInputs: [String: PluginMailbox] = [:]
   @ObservationIgnored private var pluginGeneration = UUID()
 
-  @ObservationIgnored private var adapterTask: Task<Void, Never>?
+  @ObservationIgnored private let yabai: YabaiProvider
+  @ObservationIgnored private var yabaiCaptures = Set<String>()
   @ObservationIgnored private var commandItems: [Item] = []
   @ObservationIgnored private var activeTypes: Set<ItemType> = []
   @ObservationIgnored private let metrics = SystemMetricsSampler()
 
-  init(aerospace: AerospaceProvider = AerospaceProvider()) {
+  init(aerospace: AerospaceProvider = AerospaceProvider(), yabai: YabaiProvider = YabaiProvider()) {
     self.aerospace = aerospace
+    self.yabai = yabai
   }
 
   func configure(_ configuration: Configuration) {
@@ -136,14 +138,13 @@ final class ProviderRuntime {
     }
 
     if activeTypes.contains(.yabai) {
-      adapterTask = Task { [weak self] in
-        while !Task.isCancelled {
-          let value = (try? await WorkspaceProvider.queryYabai()) ?? "Workspace unavailable"
-          guard !Task.isCancelled else { return }
-          self?.updateSharedValues([.yabai: value])
-
-          do { try await Task.sleep(for: .seconds(2)) } catch { return }
+      yabai.start { [weak self] state in
+        guard let self else { return }
+        self.updateWidgetState(.yabai(state), for: .yabai)
+        for item in self.refreshItems where self.yabaiCaptures.contains(item.id) {
+          self.capture(item)
         }
+        self.yabaiCaptures.removeAll()
       }
     }
 
@@ -257,6 +258,9 @@ final class ProviderRuntime {
       if item.type == .aerospace {
         aerospaceCaptures.insert(item.id)
         aerospace.requestRefresh()
+      } else if item.type == .yabai {
+        yabaiCaptures.insert(item.id)
+        yabai.requestRefresh()
       } else {
         capture(item)
       }
@@ -474,8 +478,6 @@ final class ProviderRuntime {
   }
 
   private func stopNative() {
-    adapterTask?.cancel()
-    adapterTask = nil
     samplingTask?.cancel()
     samplingTask = nil
 
@@ -485,6 +487,8 @@ final class ProviderRuntime {
     network.stop()
     media.stop()
     spaces.stop()
+    yabai.stop()
+    yabaiCaptures.removeAll()
     aerospace.stop()
     aerospaceCaptures.removeAll()
 

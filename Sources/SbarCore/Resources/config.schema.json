@@ -417,6 +417,9 @@
         },
         "aerospace": {
           "$ref": "#/$defs/aerospace"
+        },
+        "yabai": {
+          "$ref": "#/$defs/yabai"
         }
       }
     },
@@ -2020,6 +2023,151 @@
       ]
     },
     "aerospaceTints": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "inactive": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        },
+        "unavailable": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        },
+        "focused": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        },
+        "visible": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "yabai": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "scope": {
+          "enum": [
+            "focused",
+            "display",
+            null
+          ],
+          "default": "focused"
+        },
+        "format": {
+          "enum": [
+            "current",
+            "list",
+            null
+          ],
+          "default": "current"
+        },
+        "symbols": {
+          "$ref": "#/$defs/yabaiSymbols"
+        },
+        "tints": {
+          "$ref": "#/$defs/yabaiTints"
+        },
+        "showValue": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "includeFullscreen": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "yabaiSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "available": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unavailable": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "available": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unavailable": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "yabaiTints": {
       "type": [
         "object",
         "null"

@@ -127,6 +127,7 @@
       {
         "id": "yabai",
         "type": "yabai",
+        "yabai": {"scope": "display"},
         "enabled": false,
         "priority": 70
       }

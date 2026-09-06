@@ -1,4 +1,5 @@
 enum WidgetState: Equatable, Sendable {
+  case yabai(YabaiState)
   case aerospace(AerospaceState)
   case spaces(SpacesState)
   case media(MediaState)
@@ -12,6 +13,8 @@ enum WidgetState: Equatable, Sendable {
 
   var text: String {
     switch self {
+    case .yabai(let state):
+      state.text
     case .aerospace(let state):
       state.text
     case .spaces(let state):
@@ -38,6 +41,8 @@ enum WidgetState: Equatable, Sendable {
 
   func presentation(for item: Item, displayUUID: String? = nil) -> WidgetPresentation {
     switch self {
+    case .yabai(let state):
+      return state.presentation(for: item, displayUUID: displayUUID)
     case .aerospace(let state):
       return state.presentation(for: item, displayUUID: displayUUID)
     case .spaces(let state):
