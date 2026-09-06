@@ -402,6 +402,9 @@
         },
         "memory": {
           "$ref": "#/$defs/memory"
+        },
+        "disk": {
+          "$ref": "#/$defs/disk"
         }
       }
     },
@@ -1303,6 +1306,173 @@
           }
         }
       ]
+    },
+    "disk": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(~|/).*",
+          "description": "Existing file or directory on the desired volume; defaults to the home directory."
+        },
+        "format": {
+          "enum": [
+            "free",
+            "used",
+            "total",
+            "usedTotal",
+            "percentage",
+            null
+          ],
+          "default": "free"
+        },
+        "symbols": {
+          "$ref": "#/$defs/diskSymbols"
+        },
+        "tints": {
+          "$ref": "#/$defs/diskTints"
+        },
+        "showLabel": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showValue": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "warningThreshold": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100,
+          "default": 20
+        },
+        "criticalThreshold": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100,
+          "default": 10
+        }
+      },
+      "additionalProperties": false,
+      "description": "Critical free-space threshold must be below warning, including defaults."
+    },
+    "diskSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "available": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unavailable": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "available": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unavailable": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "diskTints": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "normal": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        },
+        "warning": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        },
+        "critical": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        },
+        "unavailable": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

@@ -202,7 +202,10 @@
         "children": [
           {
             "id": "disk",
-            "type": "disk"
+            "type": "disk",
+            "disk": {
+              "tints": { "warning": "#EBCB8B", "critical": "#BF616A" }
+            }
           },
           {
             "id": "network",

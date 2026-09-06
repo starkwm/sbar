@@ -35,12 +35,14 @@ final class ProviderRuntime {
   }
 
   private(set) var itemSnapshots: [String: String] = [:]
+  private(set) var diskStates: [String: DiskState] = [:]
   private(set) var widgetStates: [ItemType: WidgetState] = [:]
   private(set) var widgetSnapshots: [String: WidgetState] = [:]
   private(set) var frontApplication: FrontApplicationState?
   private(set) var applicationSnapshots: [String: FrontApplicationState] = [:]
   private(set) var itemDates: [String: Date] = [:]
 
+  @ObservationIgnored private var diskItems: [String: String] = [:]
   @ObservationIgnored private var refreshItems: [Item] = []
   @ObservationIgnored private var refreshTask: Task<Void, Never>?
   @ObservationIgnored private var lastRefresh: [String: Date] = [:]
@@ -66,6 +68,18 @@ final class ProviderRuntime {
   @ObservationIgnored private let metrics = SystemMetricsSampler()
 
   func configure(_ configuration: Configuration) {
+    let disks = Dictionary(
+      uniqueKeysWithValues: configuration.items.active.filter { $0.type == .disk }.map {
+        ($0.id, ($0.disk ?? DiskConfiguration()).resolvedPath)
+      }
+    )
+    for (id, path) in disks where diskItems[id] != path {
+      widgetSnapshots.removeValue(forKey: id)
+      itemSnapshots.removeValue(forKey: id)
+      lastRefresh.removeValue(forKey: id)
+    }
+    diskItems = disks
+    diskStates = diskStates.filter { disks.values.contains($0.key) }
     configureRefresh(configuration.items.active)
     configurePlugins(configuration.items.active.filter { $0.type == .plugin })
     configureCommands(configuration.items.active.filter { $0.enabled && $0.type == .command })
@@ -132,13 +146,15 @@ final class ProviderRuntime {
         while !Task.isCancelled {
           if needsClock { self?.currentDate = Date() }
           if !needsClock || tick % 2 == 0, !sampled.isEmpty {
-            let snapshot = await metrics.sample(sampled)
+            let paths = Set(self?.diskItems.values.map { $0 } ?? [])
+            let snapshot = await metrics.sample(sampled, diskPaths: paths)
             guard !Task.isCancelled else { return }
 
             if let cpu = snapshot.cpu { self?.updateWidgetState(.cpu(cpu), for: .cpu) }
             if let memory = snapshot.memory {
               self?.updateWidgetState(.memory(memory), for: .memory)
             }
+            self?.updateDiskStates(snapshot.disks)
             self?.updateSharedValues(snapshot.values)
           }
 
@@ -150,6 +166,13 @@ final class ProviderRuntime {
   }
 
   func presentation(for item: Item) -> WidgetPresentation? {
+    if item.type == .disk {
+      let state: WidgetState =
+        item.refresh == nil
+        ? .disk(diskStates[(item.disk ?? DiskConfiguration()).resolvedPath] ?? DiskState())
+        : widgetSnapshots[item.id] ?? .disk(DiskState())
+      return state.presentation(for: item)
+    }
     let state = item.refresh == nil ? widgetStates[item.type] : widgetSnapshots[item.id]
     return state?.presentation(for: item)
   }
@@ -178,6 +201,21 @@ final class ProviderRuntime {
     updateSharedValues([type: state.text])
     for item in refreshItems
     where item.type == type
+      && (item.refresh?.mode == .event || widgetSnapshots[item.id] == nil)
+    {
+      capture(item)
+    }
+  }
+
+  func updateDiskStates(_ states: [String: DiskState]) {
+    let previous = diskStates
+    diskStates = states.filter { diskItems.values.contains($0.key) }
+    for (id, path) in diskItems {
+      let state = diskStates[path] ?? DiskState()
+      if previous[path] != state { onValueChange?(id, state.text) }
+    }
+    for item in refreshItems
+    where item.type == .disk
       && (item.refresh?.mode == .event || widgetSnapshots[item.id] == nil)
     {
       capture(item)
@@ -216,6 +254,8 @@ final class ProviderRuntime {
 
     frontApplication = nil
     sharedValues = [:]
+    diskStates = [:]
+    diskItems = [:]
     widgetStates = [:]
     itemValues = [:]
     itemSnapshots = [:]
@@ -244,6 +284,7 @@ final class ProviderRuntime {
       && requested.allSatisfy { item in
         refreshItems.contains {
           $0.id == item.id && $0.type == item.type && $0.refresh == item.refresh
+            && $0.disk?.path == item.disk?.path
         }
       }
     guard !same else {
@@ -282,6 +323,13 @@ final class ProviderRuntime {
   }
 
   private func capture(_ item: Item) {
+    if item.type == .disk {
+      let state = diskStates[(item.disk ?? DiskConfiguration()).resolvedPath] ?? DiskState()
+      widgetSnapshots[item.id] = .disk(state)
+      itemSnapshots[item.id] = state.text
+      lastRefresh[item.id] = Date()
+      return
+    }
     if item.type == .frontApplication, let frontApplication {
       applicationSnapshots[item.id] = frontApplication
     }

@@ -1,6 +1,7 @@
 import Darwin
 
 actor SystemMetricsSampler {
+  private var disk = DiskProvider()
   private var cpu = CPUProvider()
   private var throughput = ThroughputProvider()
 
@@ -8,7 +9,7 @@ actor SystemMetricsSampler {
     cpu.reset()
   }
 
-  func sample(_ types: Set<ItemType>) -> MetricsSnapshot {
+  func sample(_ types: Set<ItemType>, diskPaths: Set<String> = []) -> MetricsSnapshot {
     let host = mach_host_self()
     defer { mach_port_deallocate(mach_task_self_, host) }
 
@@ -16,10 +17,10 @@ actor SystemMetricsSampler {
 
     let cpuState = types.contains(.cpu) ? cpu.sample(host: host) : nil
     let memoryState = types.contains(.memory) ? MemoryProvider.sample(host: host) : nil
-    if types.contains(.disk) { values[.disk] = DiskProvider.sample() }
+    let disks = disk.sample(paths: diskPaths)
     if types.contains(.throughput) { values[.throughput] = throughput.sample() }
 
-    return MetricsSnapshot(values: values, cpu: cpuState, memory: memoryState)
+    return MetricsSnapshot(values: values, cpu: cpuState, memory: memoryState, disks: disks)
   }
 }
 
@@ -27,4 +28,5 @@ struct MetricsSnapshot: Sendable {
   var values: [ItemType: String]
   var cpu: CPUState?
   var memory: MemoryState?
+  var disks: [String: DiskState]
 }

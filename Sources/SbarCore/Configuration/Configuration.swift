@@ -106,12 +106,14 @@ struct Configuration: Codable, Equatable, Sendable {
           path: "\(location).command.timeout"
         )
 
+        try item.disk?.validate(path: "\(location).disk")
         try item.memory?.validate(path: "\(location).memory")
         try item.cpu?.validate(path: "\(location).cpu")
         try item.network?.validate(path: "\(location).network")
         try item.battery?.validate(path: "\(location).battery")
         try item.volume?.validate(path: "\(location).volume")
         if (item.battery != nil && item.type != .battery)
+          || (item.disk != nil && item.type != .disk)
           || (item.memory != nil && item.type != .memory)
           || (item.cpu != nil && item.type != .cpu)
           || (item.network != nil && item.type != .network)
@@ -242,7 +244,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case enabled, format, dateStyle, timeStyle, id, label, priority, style, symbol, type,
       primaryAction, secondaryAction,
-      popup, command, children, plugin, refresh, battery, cpu, memory, volume, network,
+      popup, command, children, plugin, refresh, battery, cpu, disk, memory, volume, network,
       frontApplication
   }
 
@@ -266,6 +268,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var children: [Item]?
   var plugin: Plugin?
   var frontApplication: FrontApplicationConfiguration?
+  var disk: DiskConfiguration?
   var memory: MemoryConfiguration?
   var cpu: CPUConfiguration?
   var battery: BatteryConfiguration?
@@ -295,6 +298,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     children: [Item]? = nil,
     plugin: Plugin? = nil,
     frontApplication: FrontApplicationConfiguration? = nil,
+    disk: DiskConfiguration? = nil,
     memory: MemoryConfiguration? = nil,
     cpu: CPUConfiguration? = nil,
     battery: BatteryConfiguration? = nil,
@@ -322,6 +326,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.children = children
     self.plugin = plugin
     self.frontApplication = frontApplication
+    self.disk = disk
     self.memory = memory
     self.cpu = cpu
     self.battery = battery
@@ -356,6 +361,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
       FrontApplicationConfiguration.self,
       forKey: .frontApplication
     )
+    disk = try container.decodeIfPresent(DiskConfiguration.self, forKey: .disk)
     memory = try container.decodeIfPresent(MemoryConfiguration.self, forKey: .memory)
     cpu = try container.decodeIfPresent(CPUConfiguration.self, forKey: .cpu)
     battery = try container.decodeIfPresent(BatteryConfiguration.self, forKey: .battery)
