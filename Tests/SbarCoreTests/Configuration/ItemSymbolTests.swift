@@ -31,12 +31,18 @@ struct ItemSymbolTests {
   @Test("battery levels can mix glyphs and SF Symbols")
   func batteryLevels() throws {
     let glyph = ItemSymbol.glyph("\u{f240}", font: "Symbols Nerd Font Mono")
+    let configuredGlyph = BatterySymbol.glyph("\u{f240}", font: "Symbols Nerd Font Mono")
     var item = Item(
       id: "battery",
       type: .battery,
       battery: BatteryConfiguration(
-        levelSymbols: ["battery.0percent", glyph, glyph, glyph, glyph],
-        chargingSymbol: glyph
+        symbols: BatterySymbols(
+          levels: [
+            .system("battery.0percent"), configuredGlyph, configuredGlyph, configuredGlyph,
+            configuredGlyph,
+          ],
+          charging: configuredGlyph
+        )
       )
     )
     try item.battery?.validate(path: "battery")
@@ -53,7 +59,7 @@ struct ItemSymbolTests {
       WidgetState.battery(percentage: 50, charging: true, pluggedIn: true).presentation(for: item)
         .symbol == glyph
     )
-    item.battery?.levelSymbols = [glyph]
+    item.battery?.symbols?.levels = [configuredGlyph]
     #expect(throws: ConfigurationError.self) { try item.battery?.validate(path: "battery") }
   }
 
@@ -65,9 +71,7 @@ struct ItemSymbolTests {
           "levels":["battery.0percent",{"glyph":"a"},{"glyph":"b","font":"Other"},
             {"glyph":"c","size":24},{"glyph":"d","font":"Other","size":20}],
           "charging":{"glyph":"bolt"}},
-        "tints":{"low":"#ff0000","charging":"#00ff00","pluggedIn":"#0000ff"},
-        "chargingSymbol":"legacy","pluggedInSymbol":"legacy.plug",
-        "lowTint":"#111111","chargingTint":"#222222","pluggedInTint":"#333333"
+        "tints":{"low":"#ff0000","charging":"#00ff00","pluggedIn":"#0000ff"}
       }}
       """#
     var item = try JSONDecoder().decode(Item.self, from: Data(json.utf8))
@@ -88,8 +92,10 @@ struct ItemSymbolTests {
     #expect(charging.presentation(for: item).symbol == .glyph("bolt", font: "Shared", size: 18))
     #expect(charging.presentation(for: item).tint == "#00ff00")
     let pluggedIn = WidgetState.battery(percentage: nil, charging: false, pluggedIn: true)
-    #expect(pluggedIn.presentation(for: item).symbol == "legacy.plug")
+    #expect(pluggedIn.presentation(for: item).symbol == "powerplug")
     #expect(pluggedIn.presentation(for: item).tint == "#0000ff")
+    item.battery?.symbols?.pluggedIn = .glyph("plug")
+    #expect(pluggedIn.presentation(for: item).symbol == .glyph("plug", font: "Shared", size: 18))
     item.symbol = "star"
     #expect(charging.presentation(for: item).symbol == "star")
     item.battery?.showSymbol = false

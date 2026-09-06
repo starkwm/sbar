@@ -516,33 +516,6 @@
             "null"
           ]
         },
-        "chargingSymbol": {
-          "$ref": "#/$defs/symbol"
-        },
-        "pluggedInSymbol": {
-          "$ref": "#/$defs/symbol"
-        },
-        "lowTint": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
-        },
-        "chargingTint": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
-        },
-        "pluggedInTint": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
-        },
         "lowThreshold": {
           "type": [
             "integer",
@@ -551,26 +524,6 @@
           "minimum": 0,
           "maximum": 100,
           "default": 20
-        },
-        "levelSymbols": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "minItems": 5,
-          "maxItems": 5,
-          "items": {
-            "allOf": [
-              {
-                "$ref": "#/$defs/symbol"
-              },
-              {
-                "not": {
-                  "type": "null"
-                }
-              }
-            ]
-          }
         },
         "symbols": {
           "$ref": "#/$defs/batterySymbols"

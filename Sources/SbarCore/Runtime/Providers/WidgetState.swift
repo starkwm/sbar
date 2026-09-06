@@ -24,24 +24,22 @@ enum WidgetState: Equatable, Sendable {
         let resolved = symbols.resolve(levels[index])
       {
         batterySymbol = resolved
-      } else if let symbols = settings.levelSymbols, symbols.count == 5 {
-        batterySymbol = symbols[index]
       } else {
         batterySymbol = .system("battery.\(index * 25)percent")
       }
       let symbol =
         charging
-        ? (settings.symbols?.resolve(settings.symbols?.charging) ?? settings.chargingSymbol
+        ? (settings.symbols?.resolve(settings.symbols?.charging)
           ?? "battery.100percent.bolt")
         : pluggedIn
-          ? (settings.symbols?.resolve(settings.symbols?.pluggedIn) ?? settings.pluggedInSymbol
+          ? (settings.symbols?.resolve(settings.symbols?.pluggedIn)
             ?? "powerplug") : batterySymbol
       let tint =
         charging
-        ? settings.tints?.charging ?? settings.chargingTint
+        ? settings.tints?.charging
         : pluggedIn
-          ? settings.tints?.pluggedIn ?? settings.pluggedInTint
-          : level <= (settings.lowThreshold ?? 20) ? settings.tints?.low ?? settings.lowTint : nil
+          ? settings.tints?.pluggedIn
+          : level <= (settings.lowThreshold ?? 20) ? settings.tints?.low : nil
       let label =
         percentage.map {
           "\($0) percent, \(charging ? "charging" : pluggedIn ? "plugged in" : "on battery")"

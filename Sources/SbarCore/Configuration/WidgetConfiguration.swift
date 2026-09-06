@@ -5,32 +5,17 @@ struct BatteryConfiguration: Codable, Equatable, Sendable {
   var tints: BatteryTints?
   var showPercentage: Bool?
   var showSymbol: Bool?
-  var levelSymbols: [ItemSymbol]?
-  var chargingSymbol: ItemSymbol?
-  var pluggedInSymbol: ItemSymbol?
   var lowThreshold: Int?
-  var lowTint: String?
-  var chargingTint: String?
-  var pluggedInTint: String?
 
   func validate(path: String) throws {
     try symbols?.validate(path: "\(path).symbols")
     try tints?.validate(path: "\(path).tints")
-    if let levelSymbols, levelSymbols.count != 5 {
-      throw ConfigurationError.invalidValue(
-        path: "\(path).levelSymbols",
-        reason: "Provide five symbols for 0, 25, 50, 75, and 100 percent."
-      )
-    }
     if let lowThreshold, !(0...100).contains(lowThreshold) {
       throw ConfigurationError.invalidValue(
         path: "\(path).lowThreshold",
         reason: "Must be between 0 and 100."
       )
     }
-    try ItemStyle.validateColor(lowTint, path: "\(path).lowTint")
-    try ItemStyle.validateColor(chargingTint, path: "\(path).chargingTint")
-    try ItemStyle.validateColor(pluggedInTint, path: "\(path).pluggedInTint")
   }
 }
 

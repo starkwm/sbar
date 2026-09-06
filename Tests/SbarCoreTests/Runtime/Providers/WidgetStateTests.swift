@@ -59,11 +59,9 @@ struct WidgetStateTests {
       id: "battery",
       type: .battery,
       battery: BatteryConfiguration(
+        tints: BatteryTints(low: "#ff0000", charging: "#00ff00", pluggedIn: "#0000ff"),
         showPercentage: false,
-        lowThreshold: 20,
-        lowTint: "#ff0000",
-        chargingTint: "#00ff00",
-        pluggedInTint: "#0000ff"
+        lowThreshold: 20
       )
     )
     let low = WidgetState.battery(percentage: 20, charging: false, pluggedIn: false).presentation(

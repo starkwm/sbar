@@ -261,9 +261,7 @@ Each glyph can override either value. A font must be provided locally or inherit
 without either size, the resolved item/theme font size is used. Strings remain SF Symbol
 names and do not inherit glyph font settings. Omitted state symbols use the built-in defaults.
 
-The legacy `levelSymbols`, `chargingSymbol`, `pluggedInSymbol`, `lowTint`, `chargingTint`,
-and `pluggedInTint` keys remain supported. Each non-null grouped value takes precedence
-over its corresponding legacy key. An item-level `symbol` overrides all state symbols;
+An item-level `symbol` overrides all state symbols;
 `showSymbol: false` hides the symbol regardless of these settings.
 
 The existing transient `set` command also accepts a glyph object for the item-level `symbol`.
