@@ -106,6 +106,7 @@ struct Configuration: Codable, Equatable, Sendable {
           path: "\(location).command.timeout"
         )
 
+        try item.aerospace?.validate(path: "\(location).aerospace")
         try item.spaces?.validate(path: "\(location).spaces")
         try item.media?.validate(path: "\(location).media")
         try item.throughput?.validate(path: "\(location).throughput")
@@ -116,6 +117,7 @@ struct Configuration: Codable, Equatable, Sendable {
         try item.battery?.validate(path: "\(location).battery")
         try item.volume?.validate(path: "\(location).volume")
         if (item.battery != nil && item.type != .battery)
+          || (item.aerospace != nil && item.type != .aerospace)
           || (item.spaces != nil && item.type != .spaces)
           || (item.media != nil && item.type != .media)
           || (item.throughput != nil && item.type != .throughput)
@@ -250,7 +252,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case enabled, format, dateStyle, timeStyle, id, label, priority, style, symbol, type,
       primaryAction, secondaryAction,
-      popup, command, children, plugin, refresh, battery, cpu, disk, media, memory, spaces,
+      popup, command, children, plugin, refresh, aerospace, battery, cpu, disk, media, memory,
+      spaces,
       throughput,
       volume,
       network,
@@ -277,6 +280,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var children: [Item]?
   var plugin: Plugin?
   var frontApplication: FrontApplicationConfiguration?
+  var aerospace: AerospaceConfiguration?
   var spaces: SpacesConfiguration?
   var media: MediaConfiguration?
   var throughput: ThroughputConfiguration?
@@ -310,6 +314,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     children: [Item]? = nil,
     plugin: Plugin? = nil,
     frontApplication: FrontApplicationConfiguration? = nil,
+    aerospace: AerospaceConfiguration? = nil,
     spaces: SpacesConfiguration? = nil,
     media: MediaConfiguration? = nil,
     throughput: ThroughputConfiguration? = nil,
@@ -341,6 +346,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.children = children
     self.plugin = plugin
     self.frontApplication = frontApplication
+    self.aerospace = aerospace
     self.spaces = spaces
     self.media = media
     self.throughput = throughput
@@ -379,6 +385,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
       FrontApplicationConfiguration.self,
       forKey: .frontApplication
     )
+    aerospace = try container.decodeIfPresent(AerospaceConfiguration.self, forKey: .aerospace)
     spaces = try container.decodeIfPresent(SpacesConfiguration.self, forKey: .spaces)
     media = try container.decodeIfPresent(MediaConfiguration.self, forKey: .media)
     throughput = try container.decodeIfPresent(ThroughputConfiguration.self, forKey: .throughput)

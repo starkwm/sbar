@@ -120,6 +120,7 @@
       {
         "id": "aerospace",
         "type": "aerospace",
+        "aerospace": {"scope": "display"},
         "enabled": false,
         "priority": 70
       },

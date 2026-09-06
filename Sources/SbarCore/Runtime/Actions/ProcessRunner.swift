@@ -23,12 +23,23 @@ enum ProcessError: Error, LocalizedError {
 }
 
 struct ProcessRunner {
-  static func run(executable: String, arguments: [String], timeout: Double = 5) async throws
+  static func run(
+    executable: String,
+    arguments: [String],
+    timeout: Double = 5,
+    mergeStandardError: Bool = true
+  ) async throws
     -> ProcessResult
   {
     let events = try ProcessEvents()
     let worker = Task.detached {
-      try execute(executable: executable, arguments: arguments, timeout: timeout, events: events)
+      try execute(
+        executable: executable,
+        arguments: arguments,
+        timeout: timeout,
+        events: events,
+        mergeStandardError: mergeStandardError
+      )
     }
 
     return try await withTaskCancellationHandler {
@@ -43,7 +54,8 @@ struct ProcessRunner {
     executable: String,
     arguments: [String],
     timeout: Double,
-    events: ProcessEvents
+    events: ProcessEvents,
+    mergeStandardError: Bool
   ) throws
     -> ProcessResult
   {
@@ -63,7 +75,11 @@ struct ProcessRunner {
     defer { posix_spawn_file_actions_destroy(&actions) }
     posix_spawn_file_actions_addopen(&actions, STDIN_FILENO, "/dev/null", O_RDONLY, 0)
     posix_spawn_file_actions_adddup2(&actions, descriptors[1], STDOUT_FILENO)
-    posix_spawn_file_actions_adddup2(&actions, descriptors[1], STDERR_FILENO)
+    if mergeStandardError {
+      posix_spawn_file_actions_adddup2(&actions, descriptors[1], STDERR_FILENO)
+    } else {
+      posix_spawn_file_actions_addopen(&actions, STDERR_FILENO, "/dev/null", O_WRONLY, 0)
+    }
     posix_spawn_file_actions_addclose(&actions, descriptors[0])
     posix_spawn_file_actions_addclose(&actions, descriptors[1])
 

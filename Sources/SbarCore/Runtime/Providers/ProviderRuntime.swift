@@ -52,6 +52,8 @@ final class ProviderRuntime {
   @ObservationIgnored private let volume = VolumeProvider()
   @ObservationIgnored private let network = NetworkProvider()
   @ObservationIgnored private let media = MediaProvider()
+  @ObservationIgnored private let aerospace: AerospaceProvider
+  @ObservationIgnored private var aerospaceCaptures = Set<String>()
   @ObservationIgnored private let spaces = SpacesProvider()
   @ObservationIgnored private var samplingTask: Task<Void, Never>?
 
@@ -66,6 +68,10 @@ final class ProviderRuntime {
   @ObservationIgnored private var commandItems: [Item] = []
   @ObservationIgnored private var activeTypes: Set<ItemType> = []
   @ObservationIgnored private let metrics = SystemMetricsSampler()
+
+  init(aerospace: AerospaceProvider = AerospaceProvider()) {
+    self.aerospace = aerospace
+  }
 
   func configure(_ configuration: Configuration) {
     let disks = Dictionary(
@@ -118,16 +124,23 @@ final class ProviderRuntime {
       spaces.start { [weak self] in self?.updateWidgetState(.spaces($0), for: .spaces) }
     }
 
-    let adapters = activeTypes.intersection([.aerospace, .yabai])
-    if !adapters.isEmpty {
+    if activeTypes.contains(.aerospace) {
+      aerospace.start { [weak self] state in
+        guard let self else { return }
+        self.updateWidgetState(.aerospace(state), for: .aerospace)
+        for item in self.refreshItems where self.aerospaceCaptures.contains(item.id) {
+          self.capture(item)
+        }
+        self.aerospaceCaptures.removeAll()
+      }
+    }
+
+    if activeTypes.contains(.yabai) {
       adapterTask = Task { [weak self] in
         while !Task.isCancelled {
-          for adapter in adapters {
-            let value = (try? await WorkspaceProvider.query(adapter)) ?? "Workspace unavailable"
-            guard !Task.isCancelled else { return }
-
-            self?.updateSharedValues([adapter: value])
-          }
+          let value = (try? await WorkspaceProvider.queryYabai()) ?? "Workspace unavailable"
+          guard !Task.isCancelled else { return }
+          self?.updateSharedValues([.yabai: value])
 
           do { try await Task.sleep(for: .seconds(2)) } catch { return }
         }
@@ -241,7 +254,12 @@ final class ProviderRuntime {
 
   func trigger(_ event: String, value: JSONValue? = nil) {
     for item in refreshItems where item.id == event || item.refresh?.event == event {
-      capture(item)
+      if item.type == .aerospace {
+        aerospaceCaptures.insert(item.id)
+        aerospace.requestRefresh()
+      } else {
+        capture(item)
+      }
     }
 
     for input in pluginInputs.values { input.send(PluginInput(event: event, value: value)) }
@@ -467,6 +485,8 @@ final class ProviderRuntime {
     network.stop()
     media.stop()
     spaces.stop()
+    aerospace.stop()
+    aerospaceCaptures.removeAll()
 
     activeTypes = []
   }
