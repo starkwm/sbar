@@ -408,6 +408,9 @@
         },
         "throughput": {
           "$ref": "#/$defs/throughput"
+        },
+        "media": {
+          "$ref": "#/$defs/media"
         }
       }
     },
@@ -1605,6 +1608,137 @@
                 "$ref": "#/$defs/symbol"
               },
               "upload": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unavailable": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "media": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "source": {
+          "enum": [
+            "automatic",
+            "music",
+            "spotify",
+            null
+          ],
+          "default": "automatic"
+        },
+        "separator": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": " \u2014 "
+        },
+        "symbols": {
+          "$ref": "#/$defs/mediaSymbols"
+        },
+        "showTitle": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showArtist": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "hideWhenPaused": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
+        },
+        "hideWhenStopped": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "mediaSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "playing": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "paused": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "stopped": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unavailable": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "playing": {
+                "$ref": "#/$defs/symbol"
+              },
+              "paused": {
+                "$ref": "#/$defs/symbol"
+              },
+              "stopped": {
                 "$ref": "#/$defs/symbol"
               },
               "unavailable": {

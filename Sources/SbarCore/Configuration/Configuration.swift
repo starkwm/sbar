@@ -106,6 +106,7 @@ struct Configuration: Codable, Equatable, Sendable {
           path: "\(location).command.timeout"
         )
 
+        try item.media?.validate(path: "\(location).media")
         try item.throughput?.validate(path: "\(location).throughput")
         try item.disk?.validate(path: "\(location).disk")
         try item.memory?.validate(path: "\(location).memory")
@@ -114,6 +115,7 @@ struct Configuration: Codable, Equatable, Sendable {
         try item.battery?.validate(path: "\(location).battery")
         try item.volume?.validate(path: "\(location).volume")
         if (item.battery != nil && item.type != .battery)
+          || (item.media != nil && item.type != .media)
           || (item.throughput != nil && item.type != .throughput)
           || (item.disk != nil && item.type != .disk)
           || (item.memory != nil && item.type != .memory)
@@ -246,7 +248,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case enabled, format, dateStyle, timeStyle, id, label, priority, style, symbol, type,
       primaryAction, secondaryAction,
-      popup, command, children, plugin, refresh, battery, cpu, disk, memory, throughput, volume,
+      popup, command, children, plugin, refresh, battery, cpu, disk, media, memory, throughput,
+      volume,
       network,
       frontApplication
   }
@@ -271,6 +274,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var children: [Item]?
   var plugin: Plugin?
   var frontApplication: FrontApplicationConfiguration?
+  var media: MediaConfiguration?
   var throughput: ThroughputConfiguration?
   var disk: DiskConfiguration?
   var memory: MemoryConfiguration?
@@ -302,6 +306,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     children: [Item]? = nil,
     plugin: Plugin? = nil,
     frontApplication: FrontApplicationConfiguration? = nil,
+    media: MediaConfiguration? = nil,
     throughput: ThroughputConfiguration? = nil,
     disk: DiskConfiguration? = nil,
     memory: MemoryConfiguration? = nil,
@@ -331,6 +336,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.children = children
     self.plugin = plugin
     self.frontApplication = frontApplication
+    self.media = media
     self.throughput = throughput
     self.disk = disk
     self.memory = memory
@@ -367,6 +373,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
       FrontApplicationConfiguration.self,
       forKey: .frontApplication
     )
+    media = try container.decodeIfPresent(MediaConfiguration.self, forKey: .media)
     throughput = try container.decodeIfPresent(ThroughputConfiguration.self, forKey: .throughput)
     disk = try container.decodeIfPresent(DiskConfiguration.self, forKey: .disk)
     memory = try container.decodeIfPresent(MemoryConfiguration.self, forKey: .memory)

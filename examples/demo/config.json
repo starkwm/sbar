@@ -134,12 +134,12 @@
       {
         "id": "media",
         "type": "media",
-        "symbol": "music.note",
+        "media": { "hideWhenStopped": true },
         "priority": 10,
         "style": {
           "tint": "#B48EAD"
         },
-        "popup": "Music and Spotify update this item on playback notifications. Start or change a track after launching the bar."
+        "popup": "Follows the playing Music or Spotify source. Start or change a track after launching the bar to receive the first playback notification."
       },
       {
         "id": "stream",

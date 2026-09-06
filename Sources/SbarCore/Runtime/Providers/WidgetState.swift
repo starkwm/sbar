@@ -1,4 +1,5 @@
 enum WidgetState: Equatable, Sendable {
+  case media(MediaState)
   case throughput(ThroughputState)
   case disk(DiskState)
   case memory(MemoryState)
@@ -9,6 +10,8 @@ enum WidgetState: Equatable, Sendable {
 
   var text: String {
     switch self {
+    case .media(let state):
+      state.text
     case .throughput(let state):
       state.text
     case .disk(let state):
@@ -29,6 +32,8 @@ enum WidgetState: Equatable, Sendable {
 
   func presentation(for item: Item) -> WidgetPresentation {
     switch self {
+    case .media(let state):
+      return state.presentation(for: item)
     case .throughput(let state):
       return state.presentation(for: item)
     case .disk(let state):

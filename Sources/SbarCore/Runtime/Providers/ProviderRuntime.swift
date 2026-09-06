@@ -111,7 +111,7 @@ final class ProviderRuntime {
     }
 
     if activeTypes.contains(.media) {
-      media.start { [weak self] in self?.updateSharedValues([.media: $0]) }
+      media.start { [weak self] in self?.updateWidgetState(.media($0), for: .media) }
     }
 
     if activeTypes.contains(.spaces) {
