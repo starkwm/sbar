@@ -186,6 +186,7 @@
           {
             "id": "memory",
             "type": "memory",
+            "memory": { "format": "usedTotal", "showLabel": false },
             "style": {
               "tint": "#B48EAD"
             }

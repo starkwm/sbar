@@ -399,6 +399,9 @@
         },
         "cpu": {
           "$ref": "#/$defs/cpu"
+        },
+        "memory": {
+          "$ref": "#/$defs/memory"
         }
       }
     },
@@ -1202,6 +1205,104 @@
         }
       },
       "additionalProperties": false
+    },
+    "memory": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "format": {
+          "enum": [
+            "used",
+            "percentage",
+            "usedTotal",
+            null
+          ],
+          "default": "used"
+        },
+        "symbols": {
+          "$ref": "#/$defs/memorySymbols"
+        },
+        "showLabel": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showValue": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "memorySymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "available": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unavailable": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "available": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unavailable": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

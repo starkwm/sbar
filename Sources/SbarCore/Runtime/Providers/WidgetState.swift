@@ -1,4 +1,5 @@
 enum WidgetState: Equatable, Sendable {
+  case memory(MemoryState)
   case cpu(CPUState)
   case network(NetworkConnection)
   case battery(percentage: Int?, charging: Bool, pluggedIn: Bool)
@@ -6,6 +7,8 @@ enum WidgetState: Equatable, Sendable {
 
   var text: String {
     switch self {
+    case .memory(let state):
+      state.text
     case .cpu(let state):
       state.text
     case .network(let connection):
@@ -20,6 +23,8 @@ enum WidgetState: Equatable, Sendable {
 
   func presentation(for item: Item) -> WidgetPresentation {
     switch self {
+    case .memory(let state):
+      return state.presentation(for: item)
     case .cpu(let state):
       return state.presentation(for: item)
     case .network(let connection):

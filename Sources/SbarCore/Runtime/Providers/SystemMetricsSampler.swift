@@ -15,15 +15,16 @@ actor SystemMetricsSampler {
     var values: [ItemType: String] = [:]
 
     let cpuState = types.contains(.cpu) ? cpu.sample(host: host) : nil
-    if types.contains(.memory) { values[.memory] = MemoryProvider.sample(host: host) }
+    let memoryState = types.contains(.memory) ? MemoryProvider.sample(host: host) : nil
     if types.contains(.disk) { values[.disk] = DiskProvider.sample() }
     if types.contains(.throughput) { values[.throughput] = throughput.sample() }
 
-    return MetricsSnapshot(values: values, cpu: cpuState)
+    return MetricsSnapshot(values: values, cpu: cpuState, memory: memoryState)
   }
 }
 
 struct MetricsSnapshot: Sendable {
   var values: [ItemType: String]
   var cpu: CPUState?
+  var memory: MemoryState?
 }
