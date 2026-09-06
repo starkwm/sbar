@@ -12,7 +12,23 @@ struct BarItemView: View {
         if let symbol = presentation.symbol {
           ItemSymbolView(symbol: symbol, fontSize: symbolFontSize, fontWeight: symbolFontWeight)
         }
-        if !presentation.text.isEmpty { Text(presentation.text).monospacedDigit() }
+        if !presentation.segments.isEmpty {
+          ForEach(presentation.segments.indices, id: \.self) { index in
+            let segment = presentation.segments[index]
+            HStack(spacing: 4) {
+              if let symbol = segment.symbol {
+                ItemSymbolView(
+                  symbol: symbol,
+                  fontSize: symbolFontSize,
+                  fontWeight: symbolFontWeight
+                )
+              }
+              if !segment.text.isEmpty { Text(segment.text).monospacedDigit() }
+            }
+          }
+        } else if !presentation.text.isEmpty {
+          Text(presentation.text).monospacedDigit()
+        }
       }
       .accessibilityElement(children: .ignore)
       .accessibilityLabel(presentation.accessibilityLabel)

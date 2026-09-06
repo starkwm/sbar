@@ -405,6 +405,9 @@
         },
         "disk": {
           "$ref": "#/$defs/disk"
+        },
+        "throughput": {
+          "$ref": "#/$defs/throughput"
         }
       }
     },
@@ -1473,6 +1476,144 @@
         }
       },
       "additionalProperties": false
+    },
+    "throughput": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "interfaces": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^\\S(?:.*\\S)?$"
+          }
+        },
+        "unit": {
+          "enum": [
+            "bytes",
+            "bits",
+            null
+          ],
+          "default": "bytes"
+        },
+        "smoothingSamples": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 30,
+          "default": 1
+        },
+        "symbols": {
+          "$ref": "#/$defs/throughputSymbols"
+        },
+        "showDownload": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showUpload": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showValue": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showUnits": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "throughputSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "download": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "upload": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unavailable": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "download": {
+                "$ref": "#/$defs/symbol"
+              },
+              "upload": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unavailable": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

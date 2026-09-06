@@ -206,7 +206,7 @@ Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeigh
 
 ## Native items
 
-`frontApplication`, `battery`, `volume`, and `network` use native change notifications. `cpu`, `memory`, `disk`, and `throughput` sample once every two seconds, shared across displays. All `datetime` items share one clock. Memory reports active, wired, and compressed pages; disk defaults to free space on the home volume. Throughput totals non-loopback interfaces, so tunnels may contribute additional traffic. Fixed-volume outputs display that status rather than a fabricated percentage.
+`frontApplication`, `battery`, `volume`, and `network` use native change notifications. `cpu`, `memory`, `disk`, and `throughput` sample once every two seconds, shared across displays. All `datetime` items share one clock. Memory reports active, wired, and compressed pages; disk defaults to free space on the home volume. Throughput defaults to totaling non-loopback interfaces, so tunnels may contribute additional traffic. Fixed-volume outputs display that status rather than a fabricated percentage.
 
 `media` listens for Music and Spotify playback notifications. It waits for the next notification after startup and does not query or control other players. Wi-Fi reports connection state, not the location-protected SSID.
 
@@ -364,6 +364,63 @@ display mode. Refresh policies capture each item's full capacity state; manual
 items hold their snapshot until triggered. Changing an item's path clears its old
 snapshot immediately.
 
+### Throughput interfaces and appearance
+
+Throughput samples every two seconds, calculates download/upload deltas separately
+for each non-loopback interface, then combines the rates. Configure an item with:
+
+```json
+{
+  "id": "throughput",
+  "type": "throughput",
+  "throughput": {
+    "interfaces": ["en0"],
+    "unit": "bytes",
+    "smoothingSamples": 3,
+    "showDownload": true,
+    "showUpload": true
+  }
+}
+```
+
+Omit `interfaces` to total all non-loopback interfaces, including tunnels.
+Specify a nonempty list of unique interface names to restrict sampling results;
+interface names depend on the machine and do not imply Wi-Fi or Ethernet.
+Explicitly selected interfaces must all have valid readings; a missing, newly
+appeared, or reset interface makes that item's reading unavailable. With no filter,
+only interfaces with valid deltas contribute, and new/reset interfaces join after
+a fresh interval. If none have valid deltas, the item is unavailable.
+Loopback interfaces are excluded even when named explicitly.
+
+`unit` is `bytes` (default) or `bits`. Rates scale automatically through
+B/s, KiB/s, MiB/s, GiB/s for bytes, or bit/s, kbit/s, Mbit/s, Gbit/s for bits.
+Values round to at most one decimal place, retaining small rates such as
+`0.5 B/s`. This replaces the previous truncated, fixed `KB/s` display.
+
+`showDownload`, `showUpload`, `showValue`, `showUnits`, and `showSymbol` default
+to `true`. Hide either direction independently. Hide values for directional icons
+alone; hide symbols for values alone. `showUnits: false` hides suffixes but retains
+automatic scaling. Accessibility includes direction names and units even when
+their visible symbols or units are hidden.
+
+Customize `symbols.download`, `symbols.upload`, and `symbols.unavailable`
+(defaults `arrow.down`, `arrow.up`, `questionmark`). Glyphs inherit `symbols.font`
+and optional `symbols.size`, with per-glyph overrides. An item-level `symbol`
+replaces the directional symbols with one fixed icon; `showSymbol: false` hides it.
+
+`smoothingSamples` accepts 1–30 (default 1, no smoothing). Each interface's recent
+rates are averaged before summing; fewer samples are used during warm-up.
+Items can select different interfaces and windows while sharing native sampling
+across displays. Provider events retain unsmoothed, all-interface rates in bytes.
+
+Timing uses a monotonic clock. Startup, failed reads, sampling restarts, and gaps
+longer than ten seconds clear baselines/history and show `—` with an unavailable
+icon until a fresh interval exists. Counter decreases (reset or wraparound) and
+interface identity changes reset only that interface's history, without generating
+a traffic spike. Unchanged counters are a valid zero rate. Removed interfaces
+are discarded immediately. Refresh policies capture the full per-interface
+history, so manual/interval items retain their presentation until refreshed.
+
 ### Network symbols
 
 Configure connection symbols and label visibility under `network`:
@@ -480,7 +537,7 @@ Battery `symbols.levels` accepts exactly five symbols, ordered 0%, 25%, 50%, 75%
 }
 ```
 
-Within `battery.symbols`, `cpu.symbols`, `disk.symbols`, `memory.symbols`, `network.symbols`, and `volume.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
+Within `battery.symbols`, `cpu.symbols`, `disk.symbols`, `memory.symbols`, `network.symbols`, `throughput.symbols`, and `volume.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
 Each glyph can override either value. A font must be provided locally or inherited;
 without either size, the resolved item/theme font size is used. Strings remain SF Symbol
 names and do not inherit glyph font settings. Omitted state symbols use the built-in defaults.
