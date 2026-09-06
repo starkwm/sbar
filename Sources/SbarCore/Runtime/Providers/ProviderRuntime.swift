@@ -93,7 +93,7 @@ final class ProviderRuntime {
     if activeTypes.contains(.network) || activeTypes.contains(.wifi) {
       network.start { [weak self] network, wifi in
         self?.updateWidgetState(wifi, for: .wifi)
-        self?.updateSharedValues([.network: network])
+        self?.updateWidgetState(network, for: .network)
       }
     }
 

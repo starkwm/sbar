@@ -211,6 +211,35 @@ Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeigh
 
 `media` listens for Music and Spotify playback notifications. It waits for the next notification after startup and does not query or control other players. Wi-Fi reports connection state, not the location-protected SSID.
 
+### Network symbols
+
+A network item can switch symbols with the active macOS network path:
+
+```json
+{
+  "id": "network",
+  "type": "network",
+  "symbol": {
+    "wifi": "wifi",
+    "ethernet": "cable.connector",
+    "cellular": "antenna.radiowaves.left.and.right",
+    "other": "network",
+    "offline": "network.slash"
+  }
+}
+```
+
+These are the defaults for omitted keys in a symbol map; `"symbol": {}` enables
+all defaults. Each value accepts an SF Symbol name or a complete font glyph object.
+A string or glyph at the item level remains a fixed symbol. Omitting `symbol`
+keeps the network item text-only.
+
+The text remains `Wi-Fi`, `Connected` (Ethernet, cellular, or other), or `Offline`.
+An unsatisfied path is offline; otherwise Wi-Fi takes precedence over Ethernet,
+then cellular, then other when macOS reports multiple interface types.
+This describes the active path, not all connected adapters, and does not identify VPNs.
+Refresh policies capture the connection state and symbol together.
+
 ### Font glyph symbols
 
 Every `symbol`, including battery and Wi-Fi state symbols, accepts either an SF Symbol name

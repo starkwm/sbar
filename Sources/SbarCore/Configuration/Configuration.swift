@@ -106,6 +106,12 @@ struct Configuration: Codable, Equatable, Sendable {
           path: "\(location).command.timeout"
         )
 
+        if case .network = item.symbol, item.type != .network {
+          throw ConfigurationError.invalidValue(
+            path: "\(location).symbol",
+            reason: "Network symbol maps require a network item."
+          )
+        }
         try item.battery?.validate(path: "\(location).battery")
         try item.wifi?.validate(path: "\(location).wifi")
         try item.volume?.validate(path: "\(location).volume")

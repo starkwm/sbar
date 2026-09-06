@@ -230,7 +230,14 @@
           ]
         },
         "symbol": {
-          "$ref": "#/$defs/symbol"
+          "oneOf": [
+            {
+              "$ref": "#/$defs/symbol"
+            },
+            {
+              "$ref": "#/$defs/networkSymbols"
+            }
+          ]
         },
         "format": {
           "type": [
@@ -398,7 +405,25 @@
         "volume": {
           "$ref": "#/$defs/volume"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "network"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "symbol": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
     },
     "itemStyle": {
       "type": [
@@ -983,6 +1008,72 @@
           }
         }
       ]
+    },
+    "networkSymbols": {
+      "type": "object",
+      "properties": {
+        "wifi": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/symbol"
+            },
+            {
+              "not": {
+                "type": "null"
+              }
+            }
+          ]
+        },
+        "ethernet": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/symbol"
+            },
+            {
+              "not": {
+                "type": "null"
+              }
+            }
+          ]
+        },
+        "cellular": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/symbol"
+            },
+            {
+              "not": {
+                "type": "null"
+              }
+            }
+          ]
+        },
+        "other": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/symbol"
+            },
+            {
+              "not": {
+                "type": "null"
+              }
+            }
+          ]
+        },
+        "offline": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/symbol"
+            },
+            {
+              "not": {
+                "type": "null"
+              }
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

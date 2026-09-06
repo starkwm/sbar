@@ -1,10 +1,13 @@
 enum WidgetState: Equatable, Sendable {
+  case network(NetworkConnection)
   case battery(percentage: Int?, charging: Bool, pluggedIn: Bool)
   case wifi(connected: Bool)
   case volume(percentage: Int?, muted: Bool, available: Bool)
 
   var text: String {
     switch self {
+    case .network(let connection):
+      connection.text
     case .battery(let percentage, let charging, _):
       percentage.map { "\(charging ? "⚡ " : "")\($0)%" } ?? "AC power"
     case .volume(let percentage, let muted, let available):
@@ -17,6 +20,20 @@ enum WidgetState: Equatable, Sendable {
 
   func presentation(for item: Item) -> WidgetPresentation {
     switch self {
+    case .network(let connection):
+      let symbol: ItemSymbol?
+      if case .network(let symbols) = item.symbol {
+        symbol =
+          symbols[connection.rawValue]?.resolve(font: nil, size: nil)
+          ?? connection.defaultSymbol
+      } else {
+        symbol = item.symbol
+      }
+      return WidgetPresentation(
+        text: text,
+        symbol: symbol,
+        accessibilityLabel: text
+      )
     case .battery(let percentage, let charging, let pluggedIn):
       let settings = item.battery ?? BatteryConfiguration()
       let level = min(100, max(0, percentage ?? 100))
