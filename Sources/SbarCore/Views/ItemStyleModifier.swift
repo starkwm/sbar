@@ -5,7 +5,9 @@ struct ItemStyleModifier: ViewModifier {
 
   func body(content: Content) -> some View {
     content
-      .font(.system(size: style.fontSize ?? 13, weight: fontWeight))
+      .font(
+        .system(size: style.fontSize ?? 13, weight: (style.fontWeight ?? .regular).swiftUIWeight)
+      )
       .foregroundStyle(Color(hex: style.tint) ?? .primary)
       .padding(.horizontal, style.horizontalPadding ?? 0)
       .padding(.vertical, style.verticalPadding ?? 0)
@@ -15,8 +17,11 @@ struct ItemStyleModifier: ViewModifier {
       )
   }
 
-  private var fontWeight: Font.Weight {
-    switch style.fontWeight ?? .regular {
+}
+
+extension ItemFontWeight {
+  var swiftUIWeight: Font.Weight {
+    switch self {
     case .regular: .regular
     case .medium: .medium
     case .semibold: .semibold

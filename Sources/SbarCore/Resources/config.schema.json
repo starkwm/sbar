@@ -434,6 +434,15 @@
             null
           ]
         },
+        "symbolFontWeight": {
+          "enum": [
+            "regular",
+            "medium",
+            "semibold",
+            "bold",
+            null
+          ]
+        },
         "horizontalPadding": {
           "type": [
             "number",

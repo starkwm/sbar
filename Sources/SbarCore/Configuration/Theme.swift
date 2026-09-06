@@ -39,6 +39,7 @@ struct ItemStyle: Codable, Equatable, Sendable {
 
   var fontSize: Double?
   var fontWeight: ItemFontWeight?
+  var symbolFontWeight: ItemFontWeight?
 
   var horizontalPadding: Double?
   var verticalPadding: Double?
@@ -50,6 +51,7 @@ struct ItemStyle: Codable, Equatable, Sendable {
       background: background ?? theme?.background,
       fontSize: fontSize ?? theme?.fontSize ?? 13,
       fontWeight: fontWeight ?? theme?.fontWeight ?? .regular,
+      symbolFontWeight: symbolFontWeight ?? theme?.symbolFontWeight,
       horizontalPadding: horizontalPadding ?? theme?.horizontalPadding ?? 0,
       verticalPadding: verticalPadding ?? theme?.verticalPadding ?? 0,
       cornerRadius: cornerRadius ?? theme?.cornerRadius ?? 0

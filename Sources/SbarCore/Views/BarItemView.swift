@@ -4,12 +4,13 @@ import SwiftUI
 struct BarItemView: View {
   let configuration: Item
   var symbolFontSize: Double = 13
+  var symbolFontWeight: ItemFontWeight?
 
   var body: some View {
     if let presentation = providers.presentation(for: configuration) {
       HStack(spacing: 4) {
         if let symbol = presentation.symbol {
-          ItemSymbolView(symbol: symbol, fontSize: symbolFontSize)
+          ItemSymbolView(symbol: symbol, fontSize: symbolFontSize, fontWeight: symbolFontWeight)
         }
         if !presentation.text.isEmpty { Text(presentation.text).monospacedDigit() }
       }
@@ -29,7 +30,8 @@ struct BarItemView: View {
       configuration.type != .spacer
     {
       HStack(spacing: 4) {
-        ItemSymbolView(symbol: symbol, fontSize: symbolFontSize).accessibilityHidden(true)
+        ItemSymbolView(symbol: symbol, fontSize: symbolFontSize, fontWeight: symbolFontWeight)
+          .accessibilityHidden(true)
         content
       }
     } else {

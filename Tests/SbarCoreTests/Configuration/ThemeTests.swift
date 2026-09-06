@@ -65,6 +65,29 @@ struct ThemeTests {
     )
   }
 
+  @Test("Symbol weight inherits independently and round trips")
+  func symbolWeight() throws {
+    let theme = ItemStyle(fontWeight: .bold, symbolFontWeight: .medium)
+    let inherited = ItemStyle(fontWeight: .regular).resolved(over: theme)
+    #expect(inherited.fontWeight == .regular)
+    #expect(inherited.symbolFontWeight == .medium)
+    #expect(
+      ItemStyle(symbolFontWeight: .semibold).resolved(over: theme).symbolFontWeight == .semibold
+    )
+    #expect(ItemStyle().resolved(over: ItemStyle(fontWeight: .bold)).symbolFontWeight == nil)
+    let decoded = try JSONDecoder().decode(
+      ItemStyle.self,
+      from: Data(#"{"symbolFontWeight":"bold"}"#.utf8)
+    )
+    #expect(decoded.symbolFontWeight == .bold)
+    #expect(
+      try JSONDecoder().decode(ItemStyle.self, from: JSONEncoder().encode(decoded)) == decoded
+    )
+    #expect(throws: (any Error).self) {
+      try JSONDecoder().decode(ItemStyle.self, from: Data(#"{"symbolFontWeight":"invalid"}"#.utf8))
+    }
+  }
+
   @Test("RGBA.init: accepts RGB and RGBA with an alpha suffix")
   func initAcceptsRGBAndRGBA() throws {
     let rgb = try #require(RGBA(hex: "#FF0080"))
