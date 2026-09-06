@@ -1,11 +1,15 @@
 enum WidgetState: Equatable, Sendable {
   case battery(percentage: Int?, charging: Bool, pluggedIn: Bool)
   case wifi(connected: Bool)
+  case volume(percentage: Int?, muted: Bool, available: Bool)
 
   var text: String {
     switch self {
     case .battery(let percentage, let charging, _):
       percentage.map { "\(charging ? "⚡ " : "")\($0)%" } ?? "AC power"
+    case .volume(let percentage, let muted, let available):
+      !available
+        ? "No output" : muted ? "Muted" : percentage.map { "Volume \($0)%" } ?? "Fixed volume"
     case .wifi(let connected):
       connected ? "Wi-Fi connected" : "Wi-Fi disconnected"
     }
@@ -47,6 +51,41 @@ enum WidgetState: Equatable, Sendable {
         symbol: settings.showSymbol == false ? nil : item.symbol ?? symbol,
         tint: tint,
         accessibilityLabel: label
+      )
+    case .volume(let percentage, let muted, let available):
+      let settings = item.volume ?? VolumeConfiguration()
+      let symbol: ItemSymbol
+      let tint: String?
+      if !available {
+        symbol = settings.symbols?.resolve(settings.symbols?.unavailable) ?? "speaker.slash"
+        tint = settings.tints?.unavailable
+      } else if muted {
+        symbol = settings.symbols?.resolve(settings.symbols?.muted) ?? "speaker.slash.fill"
+        tint = settings.tints?.muted
+      } else if let percentage {
+        let level = min(100, max(0, percentage))
+        let index = level == 0 ? 0 : level <= 33 ? 1 : level <= 66 ? 2 : 3
+        if let symbols = settings.symbols, let levels = symbols.levels, levels.count == 4,
+          let resolved = symbols.resolve(levels[index])
+        {
+          symbol = resolved
+        } else {
+          symbol = .system(
+            [
+              "speaker.fill", "speaker.wave.1.fill", "speaker.wave.2.fill", "speaker.wave.3.fill",
+            ][index]
+          )
+        }
+        tint = nil
+      } else {
+        symbol = settings.symbols?.resolve(settings.symbols?.fixed) ?? "speaker.wave.3.fill"
+        tint = settings.tints?.fixed
+      }
+      return WidgetPresentation(
+        text: settings.showPercentage == false ? "" : text,
+        symbol: settings.showSymbol == false ? nil : item.symbol ?? symbol,
+        tint: tint,
+        accessibilityLabel: text
       )
     case .wifi(let connected):
       let settings = item.wifi ?? WifiConfiguration()

@@ -394,6 +394,9 @@
             null
           ],
           "description": "Localized datetime time style. Defaults to short; ignored when format is nonempty."
+        },
+        "volume": {
+          "$ref": "#/$defs/volume"
         }
       }
     },
@@ -495,7 +498,10 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "showIcon": { "type": "boolean", "default": false }
+        "showIcon": {
+          "type": "boolean",
+          "default": false
+        }
       }
     },
     "battery": {
@@ -830,6 +836,147 @@
                 "$ref": "#/$defs/symbol"
               },
               "disconnected": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "volume": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "showPercentage": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "symbols": {
+          "$ref": "#/$defs/volumeSymbols"
+        },
+        "tints": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "muted": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+            },
+            "fixed": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+            },
+            "unavailable": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "volumeSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "levels": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/widgetSymbol"
+              },
+              {
+                "not": {
+                  "type": "null"
+                }
+              }
+            ]
+          }
+        },
+        "muted": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "fixed": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unavailable": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "levels": {
+                "items": {
+                  "$ref": "#/$defs/symbol"
+                }
+              },
+              "muted": {
+                "$ref": "#/$defs/symbol"
+              },
+              "fixed": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unavailable": {
                 "$ref": "#/$defs/symbol"
               }
             }

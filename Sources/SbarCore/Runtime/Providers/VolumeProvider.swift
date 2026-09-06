@@ -5,9 +5,9 @@ import Foundation
 final class VolumeProvider {
   private var audioListeners:
     [(AudioObjectID, AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
-  private var update: (@MainActor (String) -> Void)?
+  private var update: (@MainActor (WidgetState) -> Void)?
 
-  func start(update: @escaping @MainActor (String) -> Void) {
+  func start(update: @escaping @MainActor (WidgetState) -> Void) {
     stop()
     self.update = update
     installAudioListeners()
@@ -57,7 +57,7 @@ final class VolumeProvider {
     audioListeners.append((AudioObjectID(kAudioObjectSystemObject), address, changed))
 
     guard device != 0 else {
-      update?("No output")
+      update?(.volume(percentage: nil, muted: false, available: false))
       return
     }
 
@@ -112,10 +112,12 @@ final class VolumeProvider {
     AudioObjectGetPropertyData(device, &address, 0, nil, &size, &muted)
 
     update?(
-      muted != 0
-        ? "Muted"
-        : result == noErr
-          ? "Volume \(Int((volume.isFinite ? min(1, max(0, volume)) : 0) * 100))%" : "Fixed volume"
+      .volume(
+        percentage: result == noErr
+          ? Int((volume.isFinite ? min(1, max(0, volume)) : 0) * 100) : nil,
+        muted: muted != 0,
+        available: true
+      )
     )
   }
 }

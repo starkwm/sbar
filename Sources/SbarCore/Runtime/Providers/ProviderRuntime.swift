@@ -87,7 +87,7 @@ final class ProviderRuntime {
     }
 
     if activeTypes.contains(.volume) {
-      volume.start { [weak self] in self?.updateSharedValues([.volume: $0]) }
+      volume.start { [weak self] in self?.updateWidgetState($0, for: .volume) }
     }
 
     if activeTypes.contains(.network) || activeTypes.contains(.wifi) {

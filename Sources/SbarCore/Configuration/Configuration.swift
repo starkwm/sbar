@@ -108,8 +108,10 @@ struct Configuration: Codable, Equatable, Sendable {
 
         try item.battery?.validate(path: "\(location).battery")
         try item.wifi?.validate(path: "\(location).wifi")
+        try item.volume?.validate(path: "\(location).volume")
         if (item.battery != nil && item.type != .battery)
           || (item.wifi != nil && item.type != .wifi)
+          || (item.volume != nil && item.type != .volume)
           || (item.frontApplication != nil && item.type != .frontApplication)
         {
           throw ConfigurationError.invalidValue(
@@ -236,7 +238,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case enabled, format, dateStyle, timeStyle, id, label, priority, style, symbol, type,
       primaryAction, secondaryAction,
-      popup, command, children, plugin, refresh, battery, wifi, frontApplication
+      popup, command, children, plugin, refresh, battery, wifi, volume, frontApplication
   }
 
   var id: String
@@ -261,6 +263,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var frontApplication: FrontApplicationConfiguration?
   var battery: BatteryConfiguration?
   var wifi: WifiConfiguration?
+  var volume: VolumeConfiguration?
   var refresh: RefreshPolicy?
 
   var active: [Item] { enabled ? [self] + (children ?? []).flatMap(\.active) : [] }
@@ -287,6 +290,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     frontApplication: FrontApplicationConfiguration? = nil,
     battery: BatteryConfiguration? = nil,
     wifi: WifiConfiguration? = nil,
+    volume: VolumeConfiguration? = nil,
     refresh: RefreshPolicy? = nil
   ) {
     self.id = id
@@ -311,6 +315,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.frontApplication = frontApplication
     self.battery = battery
     self.wifi = wifi
+    self.volume = volume
     self.refresh = refresh
   }
 
@@ -342,6 +347,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     )
     battery = try container.decodeIfPresent(BatteryConfiguration.self, forKey: .battery)
     wifi = try container.decodeIfPresent(WifiConfiguration.self, forKey: .wifi)
+    volume = try container.decodeIfPresent(VolumeConfiguration.self, forKey: .volume)
     refresh = try container.decodeIfPresent(RefreshPolicy.self, forKey: .refresh)
   }
 }

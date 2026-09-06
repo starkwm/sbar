@@ -259,7 +259,7 @@ Battery `symbols.levels` accepts exactly five symbols, ordered 0%, 25%, 50%, 75%
 }
 ```
 
-Within `battery.symbols` and `wifi.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
+Within `battery.symbols`, `wifi.symbols`, and `volume.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
 Each glyph can override either value. A font must be provided locally or inherited;
 without either size, the resolved item/theme font size is used. Strings remain SF Symbol
 names and do not inherit glyph font settings. Omitted state symbols use the built-in defaults.
@@ -281,6 +281,46 @@ This defaults to `false`. The icon replaces the item's `symbol`; if macOS provid
 the configured symbol is used as a fallback. Its size follows the resolved item font size (`style.fontSize`, then the theme font size).
 The icon and application name follow the item's refresh policy together. A fixed `label`
 still overrides the name; use `"label": ""` for an icon-only item.
+
+### Volume appearance
+
+Volume displays text and a state-dependent icon by default. An omitted `volume` block
+behaves the same as `{}`. Customize it using grouped symbols and tints:
+
+```json
+{
+  "id": "volume",
+  "type": "volume",
+  "volume": {
+    "showPercentage": false,
+    "symbols": {
+      "levels": [
+        "speaker.fill",
+        "speaker.wave.1.fill",
+        "speaker.wave.2.fill",
+        "speaker.wave.3.fill"
+      ],
+      "muted": "speaker.slash.fill"
+    },
+    "tints": { "muted": "#FF6655" }
+  }
+}
+```
+
+`symbols.levels` accepts exactly four symbols: zero (0%), low (1–33%), medium (34–66%),
+and high (67–100%). The example shows the default level and mute symbols. Zero volume
+and mute are separate states. `symbols.fixed` defaults to `speaker.wave.3.fill` for outputs
+without a readable volume; `symbols.unavailable` defaults to `speaker.slash` when no output
+is available. No output takes precedence over mute, which takes precedence over volume level.
+
+Glyphs inherit `symbols.font` and optional `symbols.size`, with per-symbol overrides,
+just like battery and Wi-Fi. `tints.muted`, `tints.fixed`, and `tints.unavailable` override
+the normal item/theme tint in their respective states.
+
+`showPercentage` and `showSymbol` default to `true`. Text is `Volume N%`, `Muted`,
+`Fixed volume`, or `No output`; `showPercentage: false` hides all of that text for an
+icon-only widget while retaining its accessibility label. An item-level `symbol` overrides
+the automatic icon; `showSymbol: false` hides it.
 
 ### Battery and Wi-Fi appearance
 

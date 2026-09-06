@@ -34,6 +34,18 @@ struct WifiConfiguration: Codable, Equatable, Sendable {
   }
 }
 
+struct VolumeConfiguration: Codable, Equatable, Sendable {
+  var symbols: VolumeSymbols?
+  var tints: VolumeTints?
+  var showPercentage: Bool?
+  var showSymbol: Bool?
+
+  func validate(path: String) throws {
+    try symbols?.validate(path: "\(path).symbols")
+    try tints?.validate(path: "\(path).tints")
+  }
+}
+
 struct BatterySymbols: Codable, Equatable, Sendable {
   var font: String?
   var size: Double?
@@ -113,6 +125,55 @@ struct WifiTints: Codable, Equatable, Sendable {
   func validate(path: String) throws {
     try ItemStyle.validateColor(connected, path: "\(path).connected")
     try ItemStyle.validateColor(disconnected, path: "\(path).disconnected")
+  }
+}
+
+struct VolumeSymbols: Codable, Equatable, Sendable {
+  var font: String?
+  var size: Double?
+  var levels: [WidgetSymbol]?
+  var muted: WidgetSymbol?
+  var fixed: WidgetSymbol?
+  var unavailable: WidgetSymbol?
+
+  func validate(path: String) throws {
+    if let font, font.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      throw ConfigurationError.invalidValue(path: "\(path).font", reason: "Must not be blank.")
+    }
+    if let size, !(8...72).contains(size) {
+      throw ConfigurationError.invalidValue(
+        path: "\(path).size",
+        reason: "Must be between 8 and 72."
+      )
+    }
+    if let levels, levels.count != 4 {
+      throw ConfigurationError.invalidValue(
+        path: "\(path).levels",
+        reason: "Provide four symbols for zero, low, medium, and high volume."
+      )
+    }
+    for (index, symbol) in (levels ?? []).enumerated() {
+      try symbol.validate(font: font, path: "\(path).levels[\(index)]")
+    }
+    try muted?.validate(font: font, path: "\(path).muted")
+    try fixed?.validate(font: font, path: "\(path).fixed")
+    try unavailable?.validate(font: font, path: "\(path).unavailable")
+  }
+
+  func resolve(_ symbol: WidgetSymbol?) -> ItemSymbol? {
+    symbol?.resolve(font: font, size: size)
+  }
+}
+
+struct VolumeTints: Codable, Equatable, Sendable {
+  var muted: String?
+  var fixed: String?
+  var unavailable: String?
+
+  func validate(path: String) throws {
+    try ItemStyle.validateColor(muted, path: "\(path).muted")
+    try ItemStyle.validateColor(fixed, path: "\(path).fixed")
+    try ItemStyle.validateColor(unavailable, path: "\(path).unavailable")
   }
 }
 
