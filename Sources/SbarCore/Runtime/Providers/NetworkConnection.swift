@@ -1,4 +1,4 @@
-enum NetworkConnection: String, CaseIterable, Sendable {
+enum NetworkConnection: String, Codable, CaseIterable, Sendable {
   case wifi, ethernet, cellular, other, offline
 
   static func classify(

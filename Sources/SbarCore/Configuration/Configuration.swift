@@ -108,11 +108,9 @@ struct Configuration: Codable, Equatable, Sendable {
 
         try item.network?.validate(path: "\(location).network")
         try item.battery?.validate(path: "\(location).battery")
-        try item.wifi?.validate(path: "\(location).wifi")
         try item.volume?.validate(path: "\(location).volume")
         if (item.battery != nil && item.type != .battery)
           || (item.network != nil && item.type != .network)
-          || (item.wifi != nil && item.type != .wifi)
           || (item.volume != nil && item.type != .volume)
           || (item.frontApplication != nil && item.type != .frontApplication)
         {
@@ -240,7 +238,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case enabled, format, dateStyle, timeStyle, id, label, priority, style, symbol, type,
       primaryAction, secondaryAction,
-      popup, command, children, plugin, refresh, battery, wifi, volume, network,
+      popup, command, children, plugin, refresh, battery, volume, network,
       frontApplication
   }
 
@@ -266,7 +264,6 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var frontApplication: FrontApplicationConfiguration?
   var battery: BatteryConfiguration?
   var network: NetworkConfiguration?
-  var wifi: WifiConfiguration?
   var volume: VolumeConfiguration?
   var refresh: RefreshPolicy?
 
@@ -294,7 +291,6 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     frontApplication: FrontApplicationConfiguration? = nil,
     battery: BatteryConfiguration? = nil,
     network: NetworkConfiguration? = nil,
-    wifi: WifiConfiguration? = nil,
     volume: VolumeConfiguration? = nil,
     refresh: RefreshPolicy? = nil
   ) {
@@ -320,7 +316,6 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.frontApplication = frontApplication
     self.battery = battery
     self.network = network
-    self.wifi = wifi
     self.volume = volume
     self.refresh = refresh
   }
@@ -353,7 +348,6 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     )
     battery = try container.decodeIfPresent(BatteryConfiguration.self, forKey: .battery)
     network = try container.decodeIfPresent(NetworkConfiguration.self, forKey: .network)
-    wifi = try container.decodeIfPresent(WifiConfiguration.self, forKey: .wifi)
     volume = try container.decodeIfPresent(VolumeConfiguration.self, forKey: .volume)
     refresh = try container.decodeIfPresent(RefreshPolicy.self, forKey: .refresh)
   }
@@ -372,7 +366,7 @@ enum BarWindowLevel: String, Codable, CaseIterable, Sendable {
 }
 
 enum ItemType: String, CaseIterable, Codable, Sendable {
-  case datetime, divider, frontApplication, spacer, text, battery, volume, network, wifi, cpu,
+  case datetime, divider, frontApplication, spacer, text, battery, volume, network, cpu,
     memory, disk, throughput, media, command, group, popup, plugin, aerospace, yabai, spaces
 }
 

@@ -129,7 +129,6 @@ The theme's `verticalPadding` and `cornerRadius` accept 0–48 points and defaul
 | `battery` | Battery charge and power state |
 | `volume` | Output volume and mute state |
 | `network` | Network connection state |
-| `wifi` | Wi-Fi connection state |
 | `cpu` | CPU usage |
 | `memory` | Memory usage |
 | `disk` | Free space on the home volume |
@@ -203,11 +202,11 @@ The optional top-level `theme` sets bar appearance and default item styling. Eac
 
 Colors use `#RRGGBB` or `#RRGGBBAA` (alpha last). An omitted bar background uses the system material. An omitted item tint uses the system primary color; item backgrounds default to transparent. Use `#00000000` to clear an inherited background.
 
-Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeight` (`regular`, `medium`, `semibold`, `bold`), `horizontalPadding` (0–96), `verticalPadding` (0–48), and `cornerRadius` (0–48). Use `symbolFontWeight` (the same weight values) to override SF Symbol weight independently of text, either in `theme.itemStyle` or an item’s `style`. For example, `"style": {"symbolFontWeight": "bold"}`. Item values override the theme; when neither sets it, symbols inherit the resolved text weight. This also applies to battery and Wi-Fi state symbols; font glyphs keep their custom font. Defaults are 13-point regular text with no item padding or corner radius. The theme's bar `horizontalPadding` and `itemSpacing` default to 10 points and accept 0–96. Oversized content stays clipped to its bar region; styling does not increase bar height.
+Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeight` (`regular`, `medium`, `semibold`, `bold`), `horizontalPadding` (0–96), `verticalPadding` (0–48), and `cornerRadius` (0–48). Use `symbolFontWeight` (the same weight values) to override SF Symbol weight independently of text, either in `theme.itemStyle` or an item’s `style`. For example, `"style": {"symbolFontWeight": "bold"}`. Item values override the theme; when neither sets it, symbols inherit the resolved text weight. This also applies to battery and network state symbols; font glyphs keep their custom font. Defaults are 13-point regular text with no item padding or corner radius. The theme's bar `horizontalPadding` and `itemSpacing` default to 10 points and accept 0–96. Oversized content stays clipped to its bar region; styling does not increase bar height.
 
 ## Native items
 
-`frontApplication`, `battery`, `volume`, `network`, and `wifi` use native change notifications. `cpu`, `memory`, `disk`, and `throughput` sample once every two seconds, shared across displays. All `datetime` items share one clock. Memory reports active, wired, and compressed pages; disk reports free space on the home volume. Throughput totals non-loopback interfaces, so tunnels may contribute additional traffic. Fixed-volume outputs display that status rather than a fabricated percentage.
+`frontApplication`, `battery`, `volume`, and `network` use native change notifications. `cpu`, `memory`, `disk`, and `throughput` sample once every two seconds, shared across displays. All `datetime` items share one clock. Memory reports active, wired, and compressed pages; disk reports free space on the home volume. Throughput totals non-loopback interfaces, so tunnels may contribute additional traffic. Fixed-volume outputs display that status rather than a fabricated percentage.
 
 `media` listens for Music and Spotify playback notifications. It waits for the next notification after startup and does not query or control other players. Wi-Fi reports connection state, not the location-protected SSID.
 
@@ -220,7 +219,7 @@ Configure connection symbols and label visibility under `network`:
   "id": "network",
   "type": "network",
   "network": {
-    "showConnected": false,
+    "showLabel": false,
     "symbols": {
       "wifi": "wifi",
       "ethernet": "cable.connector",
@@ -232,35 +231,68 @@ Configure connection symbols and label visibility under `network`:
 }
 ```
 
-These are the defaults for omitted keys in `network.symbols`; `"symbols": {}`
-enables all defaults. Each value accepts an SF Symbol name or a complete font glyph
-object. An item-level `symbol` remains a fixed override. Omitting both `symbol`
-and `network.symbols` keeps the network item text-only.
+These are the default symbols, including when the `network` block is omitted.
+Each value accepts an SF Symbol name or a font glyph object. Glyphs inherit
+`symbols.font` and optional `symbols.size`, with per-symbol overrides.
+An item-level `symbol` remains a fixed override; `network.showSymbol: false`
+hides the icon, including an override.
 
-Set `network.showConnected` to `false` to show only the symbol while retaining
+Set `network.showLabel` to `false` to show only the symbol while retaining
 the connection status for accessibility. It defaults to `true`.
 
 The text remains `Wi-Fi`, `Connected` (Ethernet, cellular, or other), or `Offline`.
 An unsatisfied path is offline; otherwise Wi-Fi takes precedence over Ethernet,
 then cellular, then other when macOS reports multiple interface types.
 This describes the active path, not all connected adapters, and does not identify VPNs.
-Refresh policies capture the connection state and symbol together.
+Use `network.labels` and `network.tints` with the same five state keys to customize
+text and colors. `showLabel` and `showSymbol` default to `true`;
+`hideWhenDisconnected` defaults to `false` and hides the item in its offline state.
+Refresh policies capture the connection state, text, symbol, color, and visibility together.
+
+To monitor Wi-Fi specifically:
+
+```json
+{
+  "id": "wifi",
+  "type": "network",
+  "network": {
+    "interface": "wifi",
+    "showLabel": false,
+    "hideWhenDisconnected": true,
+    "tints": { "wifi": "#66CC88", "offline": "#FF6655" }
+  }
+}
+```
+
+`interface` accepts `wifi`, `ethernet`, `cellular`, or `other`. Omit it to follow
+the active connection. A different active interface is presented as `offline`
+for the filtered item. Wi-Fi filtering defaults to `Wi-Fi connected` /
+`Wi-Fi disconnected` and `wifi` / `wifi.slash`. It describes the active path,
+not radio power, association, SSID, or signal strength.
+
+Migration: replace `"type": "wifi"` with `"type": "network"`, rename its `wifi`
+block to `network`, and add `"interface": "wifi"`. Rename `connected` /
+`disconnected` symbol and tint keys to `wifi` / `offline`; move
+`connectedLabel` / `disconnectedLabel` into `labels.wifi` / `labels.offline`.
+Existing network items should rename `network.showConnected` to
+`network.showLabel`. Set `network.showSymbol: false` to retain a text-only item.
 
 ### Font glyph symbols
 
-Every `symbol`, including battery and Wi-Fi state symbols, accepts either an SF Symbol name
+Every `symbol`, including battery and network state symbols, accepts either an SF Symbol name
 or a glyph object. Install the font on your Mac first and use its font name:
 
 ```json
 {
   "id": "wifi",
-  "type": "wifi",
-  "wifi": {
+  "type": "network",
+  "network": {
+    "interface": "wifi",
     "showLabel": false,
     "symbols": {
       "font": "Symbols Nerd Font Mono",
-      "connected": { "glyph": "\uf1eb" },
-      "disconnected": "wifi.slash"
+      "wifi": { "glyph": "\uf1eb" },
+      "offline": "wifi.slash"
     }
   }
 }
@@ -294,7 +326,7 @@ Battery `symbols.levels` accepts exactly five symbols, ordered 0%, 25%, 50%, 75%
 }
 ```
 
-Within `battery.symbols`, `wifi.symbols`, and `volume.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
+Within `battery.symbols`, `network.symbols`, and `volume.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
 Each glyph can override either value. A font must be provided locally or inherited;
 without either size, the resolved item/theme font size is used. Strings remain SF Symbol
 names and do not inherit glyph font settings. Omitted state symbols use the built-in defaults.
@@ -349,7 +381,7 @@ without a readable volume; `symbols.unavailable` defaults to `speaker.slash` whe
 is available. No output takes precedence over mute, which takes precedence over volume level.
 
 Glyphs inherit `symbols.font` and optional `symbols.size`, with per-symbol overrides,
-just like battery and Wi-Fi. `tints.muted`, `tints.fixed`, and `tints.unavailable` override
+just like battery and network. `tints.muted`, `tints.fixed`, and `tints.unavailable` override
 the normal item/theme tint in their respective states.
 
 `showPercentage` and `showSymbol` default to `true`. Text is `Volume N%`, `Muted`,
@@ -357,10 +389,10 @@ the normal item/theme tint in their respective states.
 icon-only widget while retaining its accessibility label. An item-level `symbol` overrides
 the automatic icon; `showSymbol: false` hides it.
 
-### Battery and Wi-Fi appearance
+### Battery appearance
 
-Battery and Wi-Fi display text and state-dependent icons by default. Omitting their
-configuration block behaves the same as an empty `{}` block. Add a `battery` or `wifi`
+Battery displays text and state-dependent icons by default. Omitting its
+configuration block behaves the same as an empty `{}` block. Add a `battery`
 block to customize the appearance; use `showSymbol: false` for text only:
 
 ```json
@@ -386,29 +418,7 @@ defaults to 20 and accepts 0–100, inclusive. `tints.low` applies at or below t
 while running on battery; `tints.charging` and `tints.pluggedIn` apply to their respective power
 states. A computer without a battery displays `AC power` and the plugged-in icon.
 
-```json
-{
-  "id": "wifi",
-  "type": "wifi",
-  "wifi": {
-    "showLabel": false,
-    "tints": {
-      "connected": "#66CC88",
-      "disconnected": "#FF6655"
-    },
-    "hideWhenDisconnected": true
-  }
-}
-```
-
-Wi-Fi settings: `showLabel` and `showSymbol` default to `true`; `hideWhenDisconnected` defaults
-to `false`. Customize `connectedLabel` / `disconnectedLabel` (defaults `Wi-Fi connected` /
-`Wi-Fi disconnected`) and `symbols.connected` / `symbols.disconnected` (defaults `wifi` /
-`wifi.slash`). Use `tints.connected` and `tints.disconnected` for state colors. Connection means the current satisfied network path uses Wi-Fi; it does not
-report radio power, association, SSID, or signal strength. Ethernet taking over the path can
-therefore make this widget report disconnected.
-
-For either widget, an item-level `symbol` overrides the dynamic symbol, while `showSymbol: false`
+An item-level `symbol` overrides the dynamic symbol, while `showSymbol: false`
 hides it. State colors override `style.tint` when supplied; otherwise the normal item/theme tint
 applies. Colors accept `#RRGGBB` or `#RRGGBBAA`. Icon-only widgets retain an accessibility label.
 Refresh policies capture text, symbols, colors, and visibility together. Edit these settings in

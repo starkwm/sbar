@@ -50,7 +50,7 @@ struct WidgetStateTests {
     let state = WidgetState.battery(percentage: 80, charging: false, pluggedIn: true)
     #expect(state.text == "80%")
     #expect(state.presentation(for: item).symbol == "bolt")
-    #expect(WidgetState.wifi(connected: false).text == "Wi-Fi disconnected")
+    #expect(WidgetState.network(.offline).text == "Offline")
   }
 
   @Test("omitted widget settings use the same presentation as empty settings")
@@ -69,8 +69,8 @@ struct WidgetStateTests {
         .battery, .battery(percentage: nil, charging: false, pluggedIn: true), "powerplug",
         "AC power"
       ),
-      (.wifi, .wifi(connected: true), "wifi", "Wi-Fi connected"),
-      (.wifi, .wifi(connected: false), "wifi.slash", "Wi-Fi disconnected"),
+      (.network, .network(.wifi), "wifi", "Wi-Fi"),
+      (.network, .network(.offline), "network.slash", "Offline"),
     ]
     for (type, state, symbol, text) in cases {
       let omitted = Item(id: "widget", type: type)
@@ -123,31 +123,31 @@ struct WidgetStateTests {
   func wifiStates() {
     var item = Item(
       id: "wifi",
-      type: .wifi,
-      wifi: WifiConfiguration(
-        symbols: WifiSymbols(connected: .system("checkmark"), disconnected: .system("xmark")),
-        tints: WifiTints(connected: "#00ff00", disconnected: "#ff0000"),
-        connectedLabel: "Online",
-        disconnectedLabel: "Offline",
+      type: .network,
+      network: NetworkConfiguration(
+        interface: .wifi,
+        symbols: NetworkSymbols(wifi: .system("checkmark"), offline: .system("xmark")),
+        labels: ["wifi": "Online", "offline": "Offline"],
+        tints: ["wifi": "#00ff00", "offline": "#ff0000"],
         hideWhenDisconnected: true
       )
     )
-    let online = WidgetState.wifi(connected: true).presentation(for: item)
+    let online = WidgetState.network(.wifi).presentation(for: item)
     #expect(online.text == "Online")
     #expect(online.symbol == "checkmark")
     #expect(online.tint == "#00ff00")
     #expect(!online.hidden)
-    let offline = WidgetState.wifi(connected: false).presentation(for: item)
+    let offline = WidgetState.network(.offline).presentation(for: item)
     #expect(offline.hidden)
     #expect(offline.text == "Offline")
     #expect(offline.symbol == "xmark")
     #expect(offline.tint == "#ff0000")
-    item.wifi?.showLabel = false
-    #expect(WidgetState.wifi(connected: true).presentation(for: item).text.isEmpty)
+    item.network?.showLabel = false
+    #expect(WidgetState.network(.wifi).presentation(for: item).text.isEmpty)
     item.symbol = "star"
-    #expect(WidgetState.wifi(connected: true).presentation(for: item).symbol == "star")
-    item.wifi?.showSymbol = false
-    #expect(WidgetState.wifi(connected: true).presentation(for: item).symbol == nil)
+    #expect(WidgetState.network(.wifi).presentation(for: item).symbol == "star")
+    item.network?.showSymbol = false
+    #expect(WidgetState.network(.wifi).presentation(for: item).symbol == nil)
   }
 
   @Test("settings decode with defaults, round trip, and validate")
@@ -165,7 +165,7 @@ struct WidgetStateTests {
       try BatteryConfiguration(lowThreshold: 101).validate(path: "battery")
     }
     #expect(throws: ConfigurationError.self) {
-      try WifiConfiguration(tints: WifiTints(connected: "invalid")).validate(path: "wifi")
+      try NetworkConfiguration(tints: ["wifi": "invalid"]).validate(path: "wifi")
     }
   }
 
@@ -176,15 +176,15 @@ struct WidgetStateTests {
     let configuration = try JSONDecoder().decode(
       Configuration.self,
       from: Data(
-        #"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"wifi","type":"wifi","wifi":{},"refresh":{"mode":"manual"}}]}}"#
+        #"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"wifi","type":"network","network":{"interface":"wifi",},"refresh":{"mode":"manual"}}]}}"#
           .utf8
       )
     )
     runtime.configure(configuration)
     defer { runtime.stop() }
     let item = try #require(configuration.items.active.first)
-    runtime.updateWidgetState(.wifi(connected: true), for: .wifi)
-    runtime.updateWidgetState(.wifi(connected: false), for: .wifi)
+    runtime.updateWidgetState(.network(.wifi), for: .network)
+    runtime.updateWidgetState(.network(.offline), for: .network)
     #expect(runtime.presentation(for: item)?.symbol == "wifi")
     runtime.trigger("wifi")
     #expect(runtime.presentation(for: item)?.symbol == "wifi.slash")

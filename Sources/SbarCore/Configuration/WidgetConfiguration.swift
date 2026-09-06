@@ -20,31 +20,33 @@ struct BatteryConfiguration: Codable, Equatable, Sendable {
 }
 
 struct NetworkConfiguration: Codable, Equatable, Sendable {
-  var symbols: [String: ItemSymbol]?
-  var showConnected: Bool?
-
-  func validate(path: String) throws {
-    for key in (symbols ?? [:]).keys where NetworkConnection(rawValue: key) == nil {
-      throw ConfigurationError.invalidValue(
-        path: "\(path).symbols.\(key)",
-        reason: "Unknown network connection type."
-      )
-    }
-  }
-}
-
-struct WifiConfiguration: Codable, Equatable, Sendable {
-  var symbols: WifiSymbols?
-  var tints: WifiTints?
+  var interface: NetworkConnection?
+  var symbols: NetworkSymbols?
+  var labels: [String: String]?
+  var tints: [String: String]?
   var showLabel: Bool?
   var showSymbol: Bool?
-  var connectedLabel: String?
-  var disconnectedLabel: String?
   var hideWhenDisconnected: Bool?
 
   func validate(path: String) throws {
+    if interface == .offline {
+      throw ConfigurationError.invalidValue(
+        path: "\(path).interface",
+        reason: "Select a connected interface type."
+      )
+    }
     try symbols?.validate(path: "\(path).symbols")
-    try tints?.validate(path: "\(path).tints")
+    for (field, values) in [("labels", labels), ("tints", tints)] {
+      for (key, value) in values ?? [:] {
+        guard NetworkConnection(rawValue: key) != nil else {
+          throw ConfigurationError.invalidValue(
+            path: "\(path).\(field).\(key)",
+            reason: "Unknown network connection type."
+          )
+        }
+        if field == "tints" { try ItemStyle.validateColor(value, path: "\(path).tints.\(key)") }
+      }
+    }
   }
 }
 
@@ -107,11 +109,18 @@ struct BatteryTints: Codable, Equatable, Sendable {
   }
 }
 
-struct WifiSymbols: Codable, Equatable, Sendable {
+struct NetworkSymbols: Codable, Equatable, Sendable {
+  private enum CodingKeys: String, CodingKey, CaseIterable {
+    case font, size, wifi, ethernet, cellular, other, offline
+  }
+
   var font: String?
   var size: Double?
-  var connected: WidgetSymbol?
-  var disconnected: WidgetSymbol?
+  var wifi: WidgetSymbol?
+  var ethernet: WidgetSymbol?
+  var cellular: WidgetSymbol?
+  var other: WidgetSymbol?
+  var offline: WidgetSymbol?
 
   func validate(path: String) throws {
     if let font, font.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -123,22 +132,44 @@ struct WifiSymbols: Codable, Equatable, Sendable {
         reason: "Must be between 8 and 72."
       )
     }
-    try connected?.validate(font: font, path: "\(path).connected")
-    try disconnected?.validate(font: font, path: "\(path).disconnected")
+    for (key, symbol) in [
+      ("wifi", wifi), ("ethernet", ethernet), ("cellular", cellular),
+      ("other", other), ("offline", offline),
+    ] {
+      try symbol?.validate(font: font, path: "\(path).\(key)")
+    }
   }
 
-  func resolve(_ symbol: WidgetSymbol?) -> ItemSymbol? {
-    symbol?.resolve(font: font, size: size)
+  func resolve(_ connection: NetworkConnection) -> ItemSymbol? {
+    let symbol: WidgetSymbol?
+    switch connection {
+    case .wifi: symbol = wifi
+    case .ethernet: symbol = ethernet
+    case .cellular: symbol = cellular
+    case .other: symbol = other
+    case .offline: symbol = offline
+    }
+    return symbol?.resolve(font: font, size: size)
   }
 }
 
-struct WifiTints: Codable, Equatable, Sendable {
-  var connected: String?
-  var disconnected: String?
-
-  func validate(path: String) throws {
-    try ItemStyle.validateColor(connected, path: "\(path).connected")
-    try ItemStyle.validateColor(disconnected, path: "\(path).disconnected")
+extension NetworkSymbols {
+  init(from decoder: any Decoder) throws {
+    let values = try decoder.singleValueContainer().decode([String: JSONValue].self)
+    let supported = Set(CodingKeys.allCases.map(\.rawValue))
+    guard Set(values.keys).isSubset(of: supported) else {
+      throw DecodingError.dataCorrupted(
+        .init(codingPath: decoder.codingPath, debugDescription: "Unknown network symbol key.")
+      )
+    }
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    font = try container.decodeIfPresent(String.self, forKey: .font)
+    size = try container.decodeIfPresent(Double.self, forKey: .size)
+    wifi = try container.decodeIfPresent(WidgetSymbol.self, forKey: .wifi)
+    ethernet = try container.decodeIfPresent(WidgetSymbol.self, forKey: .ethernet)
+    cellular = try container.decodeIfPresent(WidgetSymbol.self, forKey: .cellular)
+    other = try container.decodeIfPresent(WidgetSymbol.self, forKey: .other)
+    offline = try container.decodeIfPresent(WidgetSymbol.self, forKey: .offline)
   }
 }
 

@@ -141,35 +141,35 @@ struct ItemSymbolTests {
   @Test("Wi-Fi glyphs inherit shared defaults and allow local overrides")
   func wifiSymbolDefaults() throws {
     let json = #"""
-      {"id":"wifi","type":"wifi","wifi":{
+      {"id":"wifi","type":"network","network":{"interface":"wifi",
         "symbols":{"font":"Shared","size":18,
-          "connected":{"glyph":"a"},
-          "disconnected":{"glyph":"b","font":"Other","size":24}},
-        "tints":{"connected":"#00ff00","disconnected":"#ff0000"}
+          "wifi":{"glyph":"a"},
+          "offline":{"glyph":"b","font":"Other","size":24}},
+        "tints":{"wifi":"#00ff00","offline":"#ff0000"}
       }}
       """#
     let item = try JSONDecoder().decode(Item.self, from: Data(json.utf8))
-    try item.wifi?.validate(path: "wifi")
+    try item.network?.validate(path: "wifi")
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
     #expect(
-      WidgetState.wifi(connected: true).presentation(for: item).symbol
+      WidgetState.network(.wifi).presentation(for: item).symbol
         == .glyph("a", font: "Shared", size: 18)
     )
     #expect(
-      WidgetState.wifi(connected: false).presentation(for: item).symbol
+      WidgetState.network(.offline).presentation(for: item).symbol
         == .glyph("b", font: "Other", size: 24)
     )
     for json in [
-      #"{"symbols":{"connected":{"glyph":"x"}}}"#,
+      #"{"symbols":{"wifi":{"glyph":"x"}}}"#,
       #"{"symbols":{"font":" "}}"#,
       #"{"symbols":{"size":73}}"#,
-      #"{"symbols":{"font":"Shared","connected":{"glyph":" "}}}"#,
-      #"{"symbols":{"font":"Shared","disconnected":{"glyph":"x","font":" "}}}"#,
-      #"{"symbols":{"font":"Shared","disconnected":{"glyph":"x","size":7}}}"#,
-      #"{"tints":{"connected":"red"}}"#,
-      #"{"tints":{"disconnected":"red"}}"#,
+      #"{"symbols":{"font":"Shared","wifi":{"glyph":" "}}}"#,
+      #"{"symbols":{"font":"Shared","offline":{"glyph":"x","font":" "}}}"#,
+      #"{"symbols":{"font":"Shared","offline":{"glyph":"x","size":7}}}"#,
+      #"{"tints":{"wifi":"red"}}"#,
+      #"{"tints":{"offline":"red"}}"#,
     ] {
-      let settings = try JSONDecoder().decode(WifiConfiguration.self, from: Data(json.utf8))
+      let settings = try JSONDecoder().decode(NetworkConfiguration.self, from: Data(json.utf8))
       #expect(throws: ConfigurationError.self) { try settings.validate(path: "wifi") }
     }
   }
@@ -177,14 +177,14 @@ struct ItemSymbolTests {
   @Test("glyphs decode in item and Wi-Fi state symbols")
   func wifiGlyphs() throws {
     let json =
-      #"{"id":"wifi","type":"wifi","wifi":{"symbols":{"font":"Symbols Nerd Font Mono","connected":{"glyph":"\uf1eb"}}}}"#
+      #"{"id":"wifi","type":"network","network":{"interface":"wifi","symbols":{"font":"Symbols Nerd Font Mono","wifi":{"glyph":"\uf1eb"}}}}"#
     var item = try JSONDecoder().decode(Item.self, from: Data(json.utf8))
-    try item.wifi?.validate(path: "wifi")
+    try item.network?.validate(path: "wifi")
     let glyph = ItemSymbol.glyph("\u{f1eb}", font: "Symbols Nerd Font Mono")
-    #expect(WidgetState.wifi(connected: true).presentation(for: item).symbol == glyph)
-    #expect(WidgetState.wifi(connected: false).presentation(for: item).symbol == "wifi.slash")
+    #expect(WidgetState.network(.wifi).presentation(for: item).symbol == glyph)
+    #expect(WidgetState.network(.offline).presentation(for: item).symbol == "wifi.slash")
     item.symbol = glyph
-    #expect(WidgetState.wifi(connected: false).presentation(for: item).symbol == glyph)
+    #expect(WidgetState.network(.offline).presentation(for: item).symbol == glyph)
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
   }
 }

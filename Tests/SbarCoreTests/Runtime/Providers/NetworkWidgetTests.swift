@@ -11,7 +11,7 @@ struct NetworkWidgetTests {
     let item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        #"{"id":"net","type":"network","network":{"symbols":{},"showConnected":false}}"#.utf8
+        #"{"id":"net","type":"network","network":{"symbols":{},"showLabel":false}}"#.utf8
       )
     )
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
@@ -22,15 +22,114 @@ struct NetworkWidgetTests {
       #expect(presentation.symbol == connection.defaultSymbol)
       #expect(presentation.accessibilityLabel == state.text)
       var visible = item
-      visible.network?.showConnected = nil
+      visible.network?.showLabel = nil
       #expect(state.presentation(for: visible).text == state.text)
-      visible.network?.showConnected = true
+      visible.network?.showLabel = true
       #expect(state.presentation(for: visible).text == state.text)
     }
     var invalid = item
     invalid.type = .text
     let configuration = Configuration(bar: .init(), items: .init(right: [invalid]))
     #expect(throws: ConfigurationError.self) { try configuration.validate() }
+  }
+
+  @Test("interface filters report other active connections as disconnected")
+  func interfaceFilters() {
+    for interface in NetworkConnection.allCases where interface != .offline {
+      let item = Item(
+        id: "filtered",
+        type: .network,
+        network: NetworkConfiguration(interface: interface, hideWhenDisconnected: true)
+      )
+      for connection in NetworkConnection.allCases {
+        let result = WidgetState.network(connection).presentation(for: item)
+        let connected = interface == connection
+        #expect(result.hidden == !connected)
+        #expect(result.text.hasSuffix(connected ? " connected" : " disconnected"))
+        #expect(result.accessibilityLabel == result.text)
+        #expect(
+          result.symbol
+            == (connected
+              ? interface.defaultSymbol : interface == .wifi ? "wifi.slash" : "network.slash")
+        )
+      }
+    }
+  }
+
+  @Test("unfiltered network appearance follows every state and respects overrides")
+  func appearance() {
+    for connection in NetworkConnection.allCases {
+      var item = Item(
+        id: "net",
+        type: .network,
+        symbol: "star",
+        network: NetworkConfiguration(
+          labels: [connection.rawValue: "Custom status"],
+          tints: [connection.rawValue: "#123456"],
+          showLabel: false,
+          showSymbol: false,
+          hideWhenDisconnected: true
+        )
+      )
+      let result = WidgetState.network(connection).presentation(for: item)
+      #expect(result.text.isEmpty)
+      #expect(result.symbol == nil)
+      #expect(result.tint == "#123456")
+      #expect(result.accessibilityLabel == "Custom status")
+      #expect(result.hidden == (connection == .offline))
+      item.network?.showSymbol = true
+      #expect(WidgetState.network(connection).presentation(for: item).symbol == "star")
+    }
+  }
+
+  @Test("network configuration rejects invalid filters, state keys, and old Wi-Fi type")
+  func invalidConfiguration() {
+    for json in [
+      #"{"interface":"offline"}"#, #"{"interface":"invalid"}"#,
+      #"{"labels":{"connected":"Online"}}"#, #"{"tints":{"wifi":"red"}}"#,
+      ##"{"tints":{"connected":"#123456"}}"##,
+    ] {
+      #expect(throws: (any Error).self) {
+        let settings = try JSONDecoder().decode(NetworkConfiguration.self, from: Data(json.utf8))
+        try settings.validate(path: "network")
+      }
+    }
+    #expect(throws: DecodingError.self) {
+      try JSONDecoder().decode(Item.self, from: Data(#"{"id":"old","type":"wifi"}"#.utf8))
+    }
+  }
+
+  @Test("manual and event refresh keep filtered presentation state together")
+  @MainActor
+  func filteredRefresh() throws {
+    for mode in ["manual", "event"] {
+      let configuration = try JSONDecoder().decode(
+        Configuration.self,
+        from: Data(
+          """
+          {"schemaVersion":1,"bar":{},"items":{"right":[{"id":"net","type":"network","network":{"interface":"wifi","hideWhenDisconnected":true,"labels":{"offline":"Unavailable"},"tints":{"offline":"#FF0000"}},"refresh":{"mode":"\(mode)"}}]}}
+          """.utf8
+        )
+      )
+      let runtime = ProviderRuntime()
+      runtime.configure(configuration)
+      defer { runtime.stop() }
+      let item = try #require(configuration.items.active.first)
+      runtime.updateWidgetState(.network(.wifi), for: .network)
+      runtime.updateWidgetState(.network(.ethernet), for: .network)
+      #expect(runtime.presentation(for: item)?.hidden == (mode == "event"))
+      if mode == "manual" {
+        #expect(runtime.presentation(for: item)?.text == "Wi-Fi connected")
+        #expect(runtime.presentation(for: item)?.symbol == "wifi")
+        #expect(runtime.presentation(for: item)?.tint == nil)
+      }
+      runtime.trigger("net")
+      let result = try #require(runtime.presentation(for: item))
+      #expect(result.hidden)
+      #expect(result.text == "Unavailable")
+      #expect(result.symbol == "wifi.slash")
+      #expect(result.tint == "#FF0000")
+    }
   }
 
   @Test("network classification handles offline and multiple interface types")
@@ -74,12 +173,18 @@ struct NetworkWidgetTests {
     )
     for connection in NetworkConnection.allCases {
       let state = WidgetState.network(connection)
-      let defaults = Item(id: "net", type: .network, network: NetworkConfiguration(symbols: [:]))
+      let defaults = Item(
+        id: "net",
+        type: .network,
+        network: NetworkConfiguration(symbols: NetworkSymbols())
+      )
       #expect(state.presentation(for: defaults).symbol == connection.defaultSymbol)
       if case .system(let name) = connection.defaultSymbol {
         #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil)
       }
-      #expect(state.presentation(for: Item(id: "net", type: .network)).symbol == nil)
+      #expect(
+        state.presentation(for: Item(id: "net", type: .network)).symbol == connection.defaultSymbol
+      )
       #expect(
         state.presentation(for: Item(id: "net", type: .network, symbol: "star")).symbol == "star"
       )
@@ -104,7 +209,9 @@ struct NetworkWidgetTests {
     let configuration = Configuration(
       bar: .init(),
       items: .init(
-        right: [Item(id: "text", type: .text, network: NetworkConfiguration(symbols: [:]))]
+        right: [
+          Item(id: "text", type: .text, network: NetworkConfiguration(symbols: NetworkSymbols()))
+        ]
       )
     )
     #expect(throws: ConfigurationError.self) { try configuration.validate() }

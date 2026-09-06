@@ -201,7 +201,6 @@
             "battery",
             "volume",
             "network",
-            "wifi",
             "cpu",
             "memory",
             "disk",
@@ -361,9 +360,6 @@
         },
         "battery": {
           "$ref": "#/$defs/battery"
-        },
-        "wifi": {
-          "$ref": "#/$defs/wifi"
         },
         "dateStyle": {
           "type": [
@@ -570,71 +566,6 @@
       },
       "additionalProperties": false
     },
-    "wifi": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "showLabel": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "showSymbol": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "hideWhenDisconnected": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "connectedLabel": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "disconnectedLabel": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "symbols": {
-          "$ref": "#/$defs/wifiSymbols"
-        },
-        "tints": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "properties": {
-            "connected": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
-            },
-            "disconnected": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
     "symbol": {
       "oneOf": [
         {
@@ -790,62 +721,6 @@
         }
       ]
     },
-    "wifiSymbols": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "font": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "pattern": "\\S"
-        },
-        "size": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "minimum": 8,
-          "maximum": 72
-        },
-        "connected": {
-          "$ref": "#/$defs/widgetSymbol"
-        },
-        "disconnected": {
-          "$ref": "#/$defs/widgetSymbol"
-        }
-      },
-      "additionalProperties": false,
-      "allOf": [
-        {
-          "if": {
-            "not": {
-              "required": [
-                "font"
-              ],
-              "properties": {
-                "font": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "connected": {
-                "$ref": "#/$defs/symbol"
-              },
-              "disconnected": {
-                "$ref": "#/$defs/symbol"
-              }
-            }
-          }
-        }
-      ]
-    },
     "volume": {
       "type": [
         "object",
@@ -988,70 +863,78 @@
       ]
     },
     "networkSymbols": {
-      "type": "object",
+      "type": [
+        "object",
+        "null"
+      ],
       "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
         "wifi": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/symbol"
-            },
-            {
-              "not": {
-                "type": "null"
-              }
-            }
-          ]
+          "$ref": "#/$defs/widgetSymbol"
         },
         "ethernet": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/symbol"
-            },
-            {
-              "not": {
-                "type": "null"
-              }
-            }
-          ]
+          "$ref": "#/$defs/widgetSymbol"
         },
         "cellular": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/symbol"
-            },
-            {
-              "not": {
-                "type": "null"
-              }
-            }
-          ]
+          "$ref": "#/$defs/widgetSymbol"
         },
         "other": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/symbol"
-            },
-            {
-              "not": {
-                "type": "null"
-              }
-            }
-          ]
+          "$ref": "#/$defs/widgetSymbol"
         },
         "offline": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/symbol"
-            },
-            {
-              "not": {
-                "type": "null"
-              }
-            }
-          ]
+          "$ref": "#/$defs/widgetSymbol"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "wifi": {
+                "$ref": "#/$defs/symbol"
+              },
+              "ethernet": {
+                "$ref": "#/$defs/symbol"
+              },
+              "cellular": {
+                "$ref": "#/$defs/symbol"
+              },
+              "other": {
+                "$ref": "#/$defs/symbol"
+              },
+              "offline": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
     },
     "network": {
       "type": [
@@ -1059,15 +942,91 @@
         "null"
       ],
       "properties": {
+        "interface": {
+          "enum": [
+            "wifi",
+            "ethernet",
+            "cellular",
+            "other",
+            null
+          ]
+        },
         "symbols": {
           "$ref": "#/$defs/networkSymbols"
         },
-        "showConnected": {
+        "labels": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "wifi": {
+              "type": "string"
+            },
+            "ethernet": {
+              "type": "string"
+            },
+            "cellular": {
+              "type": "string"
+            },
+            "other": {
+              "type": "string"
+            },
+            "offline": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "tints": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "wifi": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "ethernet": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "cellular": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "other": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "offline": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "showLabel": {
           "type": [
             "boolean",
             "null"
           ],
           "default": true
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "hideWhenDisconnected": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
         }
       },
       "additionalProperties": false

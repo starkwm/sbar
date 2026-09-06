@@ -114,7 +114,10 @@ struct VolumeWidgetTests {
       WidgetState.volume(percentage: nil, muted: false, available: false).presentation(for: item)
         .symbol == .glyph("u", font: "Shared", size: 18)
     )
-    let wrongType = json.replacingOccurrences(of: "\"type\":\"volume\"", with: "\"type\":\"wifi\"")
+    let wrongType = json.replacingOccurrences(
+      of: "\"type\":\"volume\"",
+      with: "\"type\":\"network\""
+    )
     let invalid = try JSONDecoder().decode(Configuration.self, from: Data(wrongType.utf8))
     #expect(throws: ConfigurationError.self) { try invalid.validate() }
   }

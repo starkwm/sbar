@@ -90,9 +90,8 @@ final class ProviderRuntime {
       volume.start { [weak self] in self?.updateWidgetState($0, for: .volume) }
     }
 
-    if activeTypes.contains(.network) || activeTypes.contains(.wifi) {
-      network.start { [weak self] network, wifi in
-        self?.updateWidgetState(wifi, for: .wifi)
+    if activeTypes.contains(.network) {
+      network.start { [weak self] network in
         self?.updateWidgetState(network, for: .network)
       }
     }

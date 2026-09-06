@@ -205,7 +205,8 @@
           },
           {
             "id": "wifi",
-            "type": "wifi"
+            "type": "network",
+            "network": { "interface": "wifi" }
           },
           {
             "id": "throughput",

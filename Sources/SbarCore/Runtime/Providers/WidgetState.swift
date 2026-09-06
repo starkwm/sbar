@@ -1,7 +1,6 @@
 enum WidgetState: Equatable, Sendable {
   case network(NetworkConnection)
   case battery(percentage: Int?, charging: Bool, pluggedIn: Bool)
-  case wifi(connected: Bool)
   case volume(percentage: Int?, muted: Bool, available: Bool)
 
   var text: String {
@@ -13,21 +12,28 @@ enum WidgetState: Equatable, Sendable {
     case .volume(let percentage, let muted, let available):
       !available
         ? "No output" : muted ? "Muted" : percentage.map { "Volume \($0)%" } ?? "Fixed volume"
-    case .wifi(let connected):
-      connected ? "Wi-Fi connected" : "Wi-Fi disconnected"
     }
   }
 
   func presentation(for item: Item) -> WidgetPresentation {
     switch self {
     case .network(let connection):
+      let settings = item.network ?? NetworkConfiguration()
+      let state = settings.interface.map { $0 == connection ? connection : .offline } ?? connection
+      let defaultLabel =
+        settings.interface.map {
+          "\($0 == .wifi ? "Wi-Fi" : $0.rawValue.capitalized) \(state == .offline ? "disconnected" : "connected")"
+        } ?? state.text
+      let label = settings.labels?[state.rawValue] ?? defaultLabel
       let symbol =
-        item.symbol ?? item.network?.symbols?[connection.rawValue]
-        ?? (item.network?.symbols == nil ? nil : connection.defaultSymbol)
+        item.symbol ?? settings.symbols?.resolve(state)
+        ?? (state == .offline && settings.interface == .wifi ? "wifi.slash" : state.defaultSymbol)
       return WidgetPresentation(
-        text: item.network?.showConnected == false ? "" : text,
-        symbol: symbol,
-        accessibilityLabel: text
+        text: settings.showLabel == false ? "" : label,
+        symbol: settings.showSymbol == false ? nil : symbol,
+        tint: settings.tints?[state.rawValue],
+        hidden: state == .offline && settings.hideWhenDisconnected == true,
+        accessibilityLabel: label
       )
     case .battery(let percentage, let charging, let pluggedIn):
       let settings = item.battery ?? BatteryConfiguration()
@@ -97,24 +103,6 @@ enum WidgetState: Equatable, Sendable {
         text: settings.showPercentage == false ? "" : text,
         symbol: settings.showSymbol == false ? nil : item.symbol ?? symbol,
         tint: tint,
-        accessibilityLabel: text
-      )
-    case .wifi(let connected):
-      let settings = item.wifi ?? WifiConfiguration()
-      let label =
-        connected
-        ? settings.connectedLabel ?? "Wi-Fi connected"
-        : settings.disconnectedLabel ?? "Wi-Fi disconnected"
-      return WidgetPresentation(
-        text: settings.showLabel == false ? "" : label,
-        symbol: settings.showSymbol == false
-          ? nil
-          : item.symbol
-            ?? (connected
-              ? settings.symbols?.resolve(settings.symbols?.connected) ?? "wifi"
-              : settings.symbols?.resolve(settings.symbols?.disconnected) ?? "wifi.slash"),
-        tint: connected ? settings.tints?.connected : settings.tints?.disconnected,
-        hidden: !connected && settings.hideWhenDisconnected == true,
         accessibilityLabel: text
       )
     }

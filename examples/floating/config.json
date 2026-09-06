@@ -22,7 +22,7 @@
     "center": [],
     "right": [
       { "id": "battery", "type": "battery" },
-      { "id": "wifi", "type": "wifi" },
+      { "id": "wifi", "type": "network", "network": { "interface": "wifi" } },
       { "id": "clock", "type": "datetime", "format": "HH:mm", "priority": 100 }
     ]
   }
