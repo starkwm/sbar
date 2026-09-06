@@ -1,8 +1,6 @@
 import Foundation
 
-struct PluginOutput: Codable, Equatable, Sendable {
-  let text: String
-}
+typealias PluginOutput = CommandValue
 
 struct PluginInput: Codable, Sendable {
   var version = 1

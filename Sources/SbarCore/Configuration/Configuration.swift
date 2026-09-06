@@ -87,12 +87,7 @@ struct Configuration: Codable, Equatable, Sendable {
             reason: "Plugin settings are required."
           )
         }
-        if let plugin = item.plugin, plugin.executable.isEmpty {
-          throw ConfigurationError.invalidValue(
-            path: "\(location).plugin.executable",
-            reason: "Executable must not be empty."
-          )
-        }
+        try item.plugin?.validate(path: "\(location).plugin")
 
         if item.type == .command && item.command == nil {
           throw ConfigurationError.invalidValue(
@@ -113,7 +108,8 @@ struct Configuration: Codable, Equatable, Sendable {
         try item.network?.validate(path: "\(location).network")
         try item.battery?.validate(path: "\(location).battery")
         try item.volume?.validate(path: "\(location).volume")
-        if (item.command != nil && item.type != .command)
+        if (item.plugin != nil && item.type != .plugin)
+          || (item.command != nil && item.type != .command)
           || (item.battery != nil && item.type != .battery)
           || (item.yabai != nil && item.type != .yabai)
           || (item.aerospace != nil && item.type != .aerospace)

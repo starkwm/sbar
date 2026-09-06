@@ -5,15 +5,31 @@ struct PluginRunner {
   static func run(
     configuration: Plugin,
     mailbox: PluginMailbox,
-    output: @escaping @Sendable (String) -> Void
+    output: @escaping @Sendable (PluginOutput) async -> Void
   ) async throws {
     let events = try ProcessEvents()
+    let (stream, continuation) = AsyncThrowingStream<PluginOutput, any Error>.makeStream(
+      bufferingPolicy: .bufferingNewest(1)
+    )
     let task = Task.detached {
-      try execute(configuration: configuration, mailbox: mailbox, events: events, output: output)
+      do {
+        try execute(configuration: configuration, mailbox: mailbox, events: events) {
+          continuation.yield($0)
+        }
+        continuation.finish()
+      } catch { continuation.finish(throwing: error) }
     }
-
     try await withTaskCancellationHandler {
-      try await task.value
+      defer {
+        task.cancel()
+        events.wake()
+      }
+      for try await value in stream {
+        try Task.checkCancellation()
+        await output(value)
+      }
+      await task.value
+      try Task.checkCancellation()
     } onCancel: {
       task.cancel()
       events.wake()
@@ -24,7 +40,7 @@ struct PluginRunner {
     configuration: Plugin,
     mailbox: PluginMailbox,
     events: ProcessEvents,
-    output: @escaping @Sendable (String) -> Void
+    output: @escaping @Sendable (PluginOutput) -> Void
   ) throws {
     var input: [Int32] = [0, 0]
     var stdout: [Int32] = [0, 0]
@@ -79,12 +95,11 @@ struct PluginRunner {
     mailbox.setWakeHandler { events.wake() }
     defer { mailbox.setWakeHandler(nil) }
 
-    var pendingOutput = Data()
     var pendingInput = Data()
     var buffer = [UInt8](repeating: 0, count: 4096)
     var outputClosed = false
     var inputClosed = false
-    let decoder = JSONDecoder()
+    var framer = PluginOutputFramer()
 
     while !Task.isCancelled {
       var wroteInput = false
@@ -104,26 +119,13 @@ struct PluginRunner {
       if count == 0 { outputClosed = true }
       if count < 0 && errno != EAGAIN && errno != EINTR { throw ProcessError.launch(errno) }
       if count > 0 {
-        pendingOutput.append(contentsOf: buffer.prefix(count))
-        guard pendingOutput.count <= 65_536 else { throw ProcessError.outputLimit }
-
-        var latest: String?
-        while let newline = pendingOutput.firstIndex(of: 10) {
-          let message = try decoder.decode(
-            PluginOutput.self,
-            from: pendingOutput.prefix(upTo: newline)
-          )
-          latest = String(message.text.prefix(4096))
-          pendingOutput.removeSubrange(...newline)
-        }
-
-        if let latest { output(latest) }
+        if let latest = try framer.append(Data(buffer.prefix(count))) { output(latest) }
       }
 
       let result = waitpid(pid, &status, WNOHANG)
       if result == pid { exited = true }
       if exited && count <= 0 {
-        if !pendingOutput.isEmpty { throw ProcessError.launch(EPROTO) }
+        try framer.finish()
         if status != 0 {
           throw ProcessError.exitStatus(
             status & 0x7f == 0 ? (status >> 8) & 0xff : 128 + (status & 0x7f)

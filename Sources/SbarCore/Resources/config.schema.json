@@ -382,7 +382,8 @@
           "properties": {
             "executable": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "pattern": "\\S"
             },
             "arguments": {
               "type": [
@@ -394,6 +395,44 @@
               }
             },
             "restart": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": true
+            },
+            "maxLength": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 4096,
+              "default": 4096
+            },
+            "onError": {
+              "enum": [
+                "show",
+                "keepLast",
+                "hide",
+                null
+              ],
+              "default": "show"
+            },
+            "symbols": {
+              "$ref": "#/$defs/commandSymbols"
+            },
+            "tints": {
+              "$ref": "#/$defs/commandTints"
+            },
+            "showValue": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": true
+            },
+            "showSymbol": {
               "type": [
                 "boolean",
                 "null"

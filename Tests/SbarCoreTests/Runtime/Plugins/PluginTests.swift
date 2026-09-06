@@ -19,7 +19,7 @@ struct PluginTests {
       configuration: .init(executable: "/bin/sh", arguments: ["-c", script], restart: false),
       mailbox: mailbox
     ) { value in
-      messages.withLock { $0.append(value) }
+      messages.withLock { $0.append(value.text) }
     }
 
     #expect(messages.withLock { $0 } == ["received"])
@@ -68,7 +68,7 @@ struct PluginTests {
           restart: false
         ),
         mailbox: mailbox
-      ) { value in messages.withLock { $0.append(value) } }
+      ) { value in messages.withLock { $0.append(value.text) } }
     }
     defer { task.cancel() }
     try await Task.sleep(for: .milliseconds(100))
@@ -94,7 +94,7 @@ struct PluginTests {
         restart: false
       ),
       mailbox: mailbox
-    ) { value in messages.withLock { $0.append(value) } }
+    ) { value in messages.withLock { $0.append(value.text) } }
     #expect(messages.withLock { $0 } == ["drained"])
   }
 

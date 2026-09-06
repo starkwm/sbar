@@ -36,6 +36,7 @@ final class ProviderRuntime {
 
   private(set) var itemSnapshots: [String: String] = [:]
   private(set) var diskStates: [String: DiskState] = [:]
+  private(set) var pluginStates: [String: PluginState] = [:]
   private(set) var commandStates: [String: CommandState] = [:]
   private(set) var widgetStates: [ItemType: WidgetState] = [:]
   private(set) var widgetSnapshots: [String: WidgetState] = [:]
@@ -64,7 +65,9 @@ final class ProviderRuntime {
   @ObservationIgnored private var pluginItems: [Item] = []
   @ObservationIgnored private var pluginTasks: [String: Task<Void, Never>] = [:]
   @ObservationIgnored private var pluginInputs: [String: PluginMailbox] = [:]
-  @ObservationIgnored private var pluginGeneration = UUID()
+  @ObservationIgnored private var pluginGenerations: [String: UUID] = [:]
+  @ObservationIgnored private var pluginHadOutput: [String: Bool] = [:]
+  @ObservationIgnored private var pluginPublishedValues: [String: String] = [:]
 
   @ObservationIgnored private let yabai: YabaiProvider
   @ObservationIgnored private var yabaiCaptures = Set<String>()
@@ -187,6 +190,16 @@ final class ProviderRuntime {
   }
 
   func presentation(for item: Item, displayUUID: String? = nil) -> WidgetPresentation? {
+    if item.type == .plugin {
+      var result = (pluginStates[item.id] ?? PluginState()).presentation(for: item)
+      if item.plugin?.showValue != false, let value = itemValues[item.id],
+        value != pluginPublishedValues[item.id]
+      {
+        result.text = CommandState.displayText(value, limit: item.plugin?.maxLength ?? 4096)
+        result.accessibilityLabel = result.text
+      }
+      return result
+    }
     if item.type == .command {
       var result = (commandStates[item.id] ?? CommandState()).presentation(for: item)
       if item.command?.showValue != false, let value = itemValues[item.id],
@@ -303,7 +316,10 @@ final class ProviderRuntime {
     itemDates = [:]
     lastRefresh = [:]
 
-    pluginGeneration = UUID()
+    pluginGenerations = [:]
+    pluginStates = [:]
+    pluginHadOutput = [:]
+    pluginPublishedValues = [:]
     for task in pluginTasks.values { task.cancel() }
     pluginTasks.removeAll()
     pluginInputs.removeAll()
@@ -387,58 +403,88 @@ final class ProviderRuntime {
   }
 
   private func configurePlugins(_ items: [Item]) {
-    let same =
-      items.count == pluginItems.count
-      && items.allSatisfy { item in
-        pluginItems.contains { $0.id == item.id && $0.plugin == item.plugin }
-      }
-    guard !same else {
-      pluginItems = items
-      return
+    let previous = Dictionary(uniqueKeysWithValues: pluginItems.map { ($0.id, $0) })
+    let ids = Set(items.map(\.id))
+    for id in pluginTasks.keys.filter({ !ids.contains($0) }) {
+      pluginGenerations[id] = nil
+      pluginInputs[id] = nil
+      pluginTasks.removeValue(forKey: id)?.cancel()
     }
-
-    pluginGeneration = UUID()
-    let generation = pluginGeneration
-
-    for task in pluginTasks.values { task.cancel() }
-    pluginTasks.removeAll()
-    pluginInputs.removeAll()
     pluginItems = items
-
-    for item in items {
-      guard var configuration = item.plugin else { continue }
-
-      configuration.executable = ActionRunner.expand(configuration.executable)
-
-      let input = PluginMailbox()
-      pluginInputs[item.id] = input
-
-      pluginTasks[item.id] = Task { [weak self, configuration] in
-        var delay = 1.0
-
-        repeat {
-          input.send(PluginInput(event: "start", value: nil))
-          do {
-            try await PluginRunner.run(configuration: configuration, mailbox: input) {
-              [weak self] text in
-              Task { @MainActor [weak self] in
-                guard self?.pluginGeneration == generation else { return }
-
-                self?.updateItemValue(text, for: item.id)
-              }
-            }
-          } catch {
-            guard !Task.isCancelled, self?.pluginGeneration == generation else { return }
-
-            self?.updateItemValue(error.localizedDescription, for: item.id)
-          }
-
-          guard configuration.restart ?? true else { return }
-          do { try await Task.sleep(for: .seconds(delay)) } catch { return }
-          delay = min(30, delay * 2)
-        } while !Task.isCancelled
-      }
+    pluginStates = pluginStates.filter { ids.contains($0.key) }
+    pluginHadOutput = pluginHadOutput.filter { ids.contains($0.key) }
+    pluginPublishedValues = pluginPublishedValues.filter { ids.contains($0.key) }
+    for item in items where item.plugin?.sameExecution(as: previous[item.id]?.plugin) != true {
+      pluginGenerations[item.id] = nil
+      pluginInputs[item.id] = nil
+      pluginTasks.removeValue(forKey: item.id)?.cancel()
+      pluginStates[item.id] = nil
+      pluginPublishedValues[item.id] = nil
+      itemValues[item.id] = nil
+      startPlugin(item)
     }
+  }
+
+  private func publishPlugin(_ state: PluginState, item: Item) {
+    pluginStates[item.id] = state
+    let current = pluginItems.first { $0.id == item.id } ?? item
+    let retaining = state.status != .failure || current.plugin?.onError == .keepLast
+    let text =
+      retaining ? state.lastSuccess?.text ?? state.error ?? "…" : state.error ?? "Plugin failed"
+    pluginPublishedValues[item.id] = text
+    updateItemValue(text, for: item.id)
+  }
+
+  private func startPlugin(_ item: Item) {
+    guard var configuration = item.plugin else { return }
+    configuration.executable = ActionRunner.expand(configuration.executable)
+    pluginTasks[item.id] = Task { [weak self, configuration] in
+      var delay = 1.0
+      repeat {
+        guard !Task.isCancelled else { return }
+        let generation = UUID()
+        let input = PluginMailbox()
+        input.send(PluginInput(event: "start", value: nil))
+        self?.pluginHadOutput[item.id] = false
+        self?.pluginGenerations[item.id] = generation
+        self?.pluginInputs[item.id] = input
+        var state = self?.pluginStates[item.id] ?? PluginState()
+        state.status = .running
+        state.error = nil
+        self?.publishPlugin(state, item: item)
+        let started = ContinuousClock.now
+        do {
+          try await PluginRunner.run(configuration: configuration, mailbox: input) {
+            [weak self] value in
+            await self?.receivePlugin(value, item: item, generation: generation)
+          }
+        } catch {
+          guard !Task.isCancelled, self?.pluginGenerations[item.id] == generation else { return }
+          var failed = self?.pluginStates[item.id] ?? PluginState()
+          failed.status = .failure
+          failed.error = error.localizedDescription
+          self?.publishPlugin(failed, item: item)
+        }
+        guard !Task.isCancelled, self?.pluginGenerations[item.id] == generation else { return }
+        let receivedOutput = self?.pluginHadOutput[item.id] == true
+        self?.pluginGenerations[item.id] = nil
+        self?.pluginInputs[item.id] = nil
+        guard configuration.restart ?? true else { return }
+        delay = PluginState.restartDelay(
+          delay,
+          uptime: started.duration(to: .now),
+          receivedOutput: receivedOutput
+        )
+        do { try await Task.sleep(for: .seconds(delay)) } catch { return }
+        delay = min(30, delay * 2)
+      } while !Task.isCancelled
+    }
+  }
+
+  private func receivePlugin(_ value: PluginOutput, item: Item, generation: UUID) {
+    guard pluginGenerations[item.id] == generation else { return }
+    pluginHadOutput[item.id] = true
+    publishPlugin(PluginState(status: .success, lastSuccess: value), item: item)
   }
 
   private func configureCommands(_ items: [Item]) {
