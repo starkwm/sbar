@@ -213,6 +213,9 @@ final class BarCoordinator: NSObject {
         rightArea: screen.auxiliaryTopRightArea,
         panelFrame: frame
       )
+      let displayUUID = CGDisplayCreateUUIDFromDisplayID(identifier).map {
+        CFUUIDCreateString(nil, $0.takeRetainedValue()) as String
+      }
       let hostingView = NSHostingView(
         rootView: BarView(
           configuration: configuration,
@@ -221,7 +224,7 @@ final class BarCoordinator: NSObject {
             panel?.hitRegions = regions
             panel?.updateMousePassthrough()
           }
-        ).environment(providers).environment(actions)
+        ).environment(providers).environment(actions).environment(\.barDisplayUUID, displayUUID)
       )
       hostingView.safeAreaRegions = []
       panel.contentView = hostingView

@@ -6,14 +6,20 @@ struct InteractiveItemView: View {
   var tracksHitRegion = true
 
   var body: some View {
-    if providers.presentation(for: item)?.hidden != true { decoratedContent }
+    if providers.presentation(for: item, displayUUID: barDisplayUUID)?.hidden != true {
+      decoratedContent
+    }
   }
+
+  @Environment(\.barDisplayUUID) private var barDisplayUUID
 
   @Environment(ProviderRuntime.self) private var providers
 
   private var resolvedStyle: ItemStyle {
     var style = (item.style ?? ItemStyle()).resolved(over: defaultStyle)
-    if let tint = providers.presentation(for: item)?.tint { style.tint = tint }
+    if let tint = providers.presentation(for: item, displayUUID: barDisplayUUID)?.tint {
+      style.tint = tint
+    }
     return style
   }
 

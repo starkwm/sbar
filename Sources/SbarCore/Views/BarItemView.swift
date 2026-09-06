@@ -7,7 +7,7 @@ struct BarItemView: View {
   var symbolFontWeight: ItemFontWeight?
 
   var body: some View {
-    if let presentation = providers.presentation(for: configuration) {
+    if let presentation = providers.presentation(for: configuration, displayUUID: barDisplayUUID) {
       HStack(spacing: 4) {
         if let symbol = presentation.symbol {
           ItemSymbolView(symbol: symbol, fontSize: symbolFontSize, fontWeight: symbolFontWeight)
@@ -25,6 +25,8 @@ struct BarItemView: View {
               }
               if !segment.text.isEmpty { Text(segment.text).monospacedDigit() }
             }
+            .foregroundColor(segment.tint.flatMap { Color(hex: $0) })
+            .fontWeight(segment.emphasized ? .bold : nil)
           }
         } else if !presentation.text.isEmpty {
           Text(presentation.text).monospacedDigit()
@@ -91,6 +93,8 @@ struct BarItemView: View {
       )
     }
   }
+
+  @Environment(\.barDisplayUUID) private var barDisplayUUID
 
   @Environment(ProviderRuntime.self) private var providers
 }

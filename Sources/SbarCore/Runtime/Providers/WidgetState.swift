@@ -1,4 +1,5 @@
 enum WidgetState: Equatable, Sendable {
+  case spaces(SpacesState)
   case media(MediaState)
   case throughput(ThroughputState)
   case disk(DiskState)
@@ -10,6 +11,8 @@ enum WidgetState: Equatable, Sendable {
 
   var text: String {
     switch self {
+    case .spaces(let state):
+      state.text
     case .media(let state):
       state.text
     case .throughput(let state):
@@ -30,8 +33,10 @@ enum WidgetState: Equatable, Sendable {
     }
   }
 
-  func presentation(for item: Item) -> WidgetPresentation {
+  func presentation(for item: Item, displayUUID: String? = nil) -> WidgetPresentation {
     switch self {
+    case .spaces(let state):
+      return state.presentation(for: item, displayUUID: displayUUID)
     case .media(let state):
       return state.presentation(for: item)
     case .throughput(let state):
@@ -146,4 +151,6 @@ struct WidgetPresentation: Equatable {
 struct WidgetSegment: Equatable {
   var text: String
   var symbol: ItemSymbol?
+  var tint: String? = nil
+  var emphasized = false
 }

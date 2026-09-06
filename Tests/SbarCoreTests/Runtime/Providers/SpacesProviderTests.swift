@@ -48,28 +48,36 @@ struct SpacesProviderTests {
   }
 
   @Test("start: replaces observers and stops delivering updates after stop")
-  func startReplacesObserversAndStopsUpdates() {
-    let provider = SpacesProvider()
+  func startReplacesObserversAndStopsUpdates() async throws {
+    let workspace = NotificationCenter()
+    let application = NotificationCenter()
+    let state = SpacesState.parse(
+      displays: [["Display Identifier": "Main", "Spaces": [["ManagedSpaceID": 10]]]],
+      activeSpaceID: 10
+    )
+    let provider = SpacesProvider(query: { state }, workspace: workspace, application: application)
     defer { provider.stop() }
     var previousUpdates = 0
     var updates = 0
 
     provider.start { _ in previousUpdates += 1 }
     provider.start { _ in updates += 1 }
-    NSWorkspace.shared.notificationCenter.post(
+    workspace.post(
       name: NSWorkspace.activeSpaceDidChangeNotification,
       object: nil
     )
 
+    try await Task.sleep(for: .milliseconds(150))
     #expect(previousUpdates == 1)
     #expect(updates == 2)
 
     provider.stop()
-    NSWorkspace.shared.notificationCenter.post(
+    workspace.post(
       name: NSWorkspace.activeSpaceDidChangeNotification,
       object: nil
     )
 
+    try await Task.sleep(for: .milliseconds(150))
     #expect(updates == 2)
   }
 }

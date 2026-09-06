@@ -5,6 +5,7 @@ final class SpacesProvider {
   private struct API {
     let connection: @convention(c) () -> Int32
     let activeSpace: @convention(c) (Int32) -> UInt64
+    let currentSpace: (@convention(c) (Int32, CFString) -> UInt64)?
     let displaySpaces: @convention(c) (Int32) -> Unmanaged<CFArray>?
   }
 
@@ -28,6 +29,9 @@ final class SpacesProvider {
     return API(
       connection: unsafeBitCast(connection, to: (@convention(c) () -> Int32).self),
       activeSpace: unsafeBitCast(activeSpace, to: (@convention(c) (Int32) -> UInt64).self),
+      currentSpace: dlsym(handle, "SLSManagedDisplayGetCurrentSpace").map {
+        unsafeBitCast($0, to: (@convention(c) (Int32, CFString) -> UInt64).self)
+      },
       displaySpaces: unsafeBitCast(
         displaySpaces,
         to: (@convention(c) (Int32) -> Unmanaged<CFArray>?).self
@@ -36,56 +40,88 @@ final class SpacesProvider {
   }()
 
   static func label(displays: [[String: Any]], activeSpaceID: UInt64) -> String {
-    var identifiers: [UInt64] = []
-    var seen = Set<UInt64>()
-
-    for display in displays {
-      for space in display["Spaces"] as? [[String: Any]] ?? [] {
-        guard let number = space["ManagedSpaceID"] as? NSNumber else { continue }
-        let id = number.uint64Value
-        guard id != 0, seen.insert(id).inserted else { continue }
-
-        identifiers.append(id)
-      }
-    }
-
-    guard let index = identifiers.firstIndex(of: activeSpaceID) else { return "Spaces unavailable" }
-
-    return String(index + 1)
+    SpacesState.parse(displays: displays, activeSpaceID: activeSpaceID).text
   }
 
-  static func currentLabel() -> String {
-    guard let api else { return "Spaces unavailable" }
-
+  static func currentState() -> SpacesState {
+    guard let api else { return SpacesState() }
     let connection = api.connection()
     guard let data = api.displaySpaces(connection)?.takeRetainedValue(),
-      let displays = data as? [[String: Any]]
-    else { return "Spaces unavailable" }
-
-    return label(displays: displays, activeSpaceID: api.activeSpace(connection))
+      var displays = data as? [[String: Any]]
+    else { return SpacesState() }
+    if let currentSpace = api.currentSpace {
+      for index in displays.indices {
+        if let identifier = displays[index]["Display Identifier"] as? String {
+          let current = currentSpace(connection, identifier as CFString)
+          if current != 0 { displays[index]["Current Space"] = ["ManagedSpaceID": current] }
+        }
+      }
+    }
+    return SpacesState.parse(displays: displays, activeSpaceID: api.activeSpace(connection))
   }
 
+  private let query: @MainActor () -> SpacesState
+  private let workspace: NotificationCenter
+  private let application: NotificationCenter
   private var observers: [(NotificationCenter, NSObjectProtocol)] = []
+  private var refreshTask: Task<Void, Never>?
+  private var update: (@MainActor (SpacesState) -> Void)?
+  private var generation = UUID()
 
-  func start(update: @escaping @MainActor (String) -> Void) {
+  init(
+    query: @escaping @MainActor () -> SpacesState = SpacesProvider.currentState,
+    workspace: NotificationCenter = NSWorkspace.shared.notificationCenter,
+    application: NotificationCenter = .default
+  ) {
+    self.query = query
+    self.workspace = workspace
+    self.application = application
+  }
+
+  func start(update: @escaping @MainActor (SpacesState) -> Void) {
     stop()
-    update(Self.currentLabel())
-
-    let workspace = NSWorkspace.shared.notificationCenter
+    self.update = update
+    let initial = query()
+    update(initial)
+    if !initial.complete { scheduleRefresh() }
+    let generation = generation
     for (center, name) in [
       (workspace, NSWorkspace.activeSpaceDidChangeNotification),
       (workspace, NSWorkspace.didActivateApplicationNotification),
-      (NotificationCenter.default, NSApplication.didChangeScreenParametersNotification),
+      (application, NSApplication.didChangeScreenParametersNotification),
     ] {
-      let observer = center.addObserver(forName: name, object: nil, queue: .main) { _ in
-        MainActor.assumeIsolated { update(Self.currentLabel()) }
+      let observer = center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+        MainActor.assumeIsolated {
+          guard let self, self.generation == generation else { return }
+          self.scheduleRefresh()
+        }
       }
       observers.append((center, observer))
     }
   }
 
   func stop() {
+    generation = UUID()
+    refreshTask?.cancel()
+    refreshTask = nil
     for (center, observer) in observers { center.removeObserver(observer) }
-    observers.removeAll()
+    observers = []
+    update = nil
+  }
+
+  private func scheduleRefresh() {
+    refreshTask?.cancel()
+    refreshTask = Task { [weak self] in
+      do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
+      for attempt in 0..<4 {
+        guard let self, !Task.isCancelled else { return }
+        let state = self.query()
+        if state.complete || attempt == 3 {
+          self.update?(state)
+          return
+        }
+        do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
+      }
+    }
   }
 }

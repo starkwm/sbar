@@ -115,7 +115,7 @@ final class ProviderRuntime {
     }
 
     if activeTypes.contains(.spaces) {
-      spaces.start { [weak self] in self?.updateSharedValues([.spaces: $0]) }
+      spaces.start { [weak self] in self?.updateWidgetState(.spaces($0), for: .spaces) }
     }
 
     let adapters = activeTypes.intersection([.aerospace, .yabai])
@@ -170,7 +170,7 @@ final class ProviderRuntime {
     }
   }
 
-  func presentation(for item: Item) -> WidgetPresentation? {
+  func presentation(for item: Item, displayUUID: String? = nil) -> WidgetPresentation? {
     if item.type == .disk {
       let state: WidgetState =
         item.refresh == nil
@@ -179,7 +179,7 @@ final class ProviderRuntime {
       return state.presentation(for: item)
     }
     let state = item.refresh == nil ? widgetStates[item.type] : widgetSnapshots[item.id]
-    return state?.presentation(for: item)
+    return state?.presentation(for: item, displayUUID: displayUUID)
   }
 
   func applicationIcon(for item: Item) -> NSImage? {

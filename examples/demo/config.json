@@ -114,7 +114,7 @@
       {
         "id": "spaces",
         "type": "spaces",
-        "symbol": "rectangle.3.group",
+        "spaces": {"format": "currentTotal"},
         "priority": 70
       },
       {
