@@ -404,6 +404,9 @@
         },
         "volume": {
           "$ref": "#/$defs/volume"
+        },
+        "network": {
+          "$ref": "#/$defs/network"
         }
       },
       "allOf": [
@@ -1071,6 +1074,22 @@
               }
             }
           ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "network": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "showLabel": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
         }
       },
       "additionalProperties": false

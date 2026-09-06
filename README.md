@@ -234,6 +234,18 @@ all defaults. Each value accepts an SF Symbol name or a complete font glyph obje
 A string or glyph at the item level remains a fixed symbol. Omitting `symbol`
 keeps the network item text-only.
 
+Set `network.showLabel` to `false` to show only the symbol while retaining the
+connection status for accessibility. It defaults to `true`:
+
+```json
+{
+  "id": "network",
+  "type": "network",
+  "symbol": {},
+  "network": { "showLabel": false }
+}
+```
+
 The text remains `Wi-Fi`, `Connected` (Ethernet, cellular, or other), or `Offline`.
 An unsatisfied path is offline; otherwise Wi-Fi takes precedence over Ethernet,
 then cellular, then other when macOS reports multiple interface types.

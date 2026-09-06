@@ -6,6 +6,33 @@ import Testing
 
 @Suite("Network symbols")
 struct NetworkWidgetTests {
+  @Test("icon-only network settings round trip and preserve accessible connection status")
+  func hiddenLabel() throws {
+    let item = try JSONDecoder().decode(
+      Item.self,
+      from: Data(
+        #"{"id":"net","type":"network","symbol":{},"network":{"showLabel":false}}"#.utf8
+      )
+    )
+    #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+    for connection in NetworkConnection.allCases {
+      let state = WidgetState.network(connection)
+      let presentation = state.presentation(for: item)
+      #expect(presentation.text.isEmpty)
+      #expect(presentation.symbol == connection.defaultSymbol)
+      #expect(presentation.accessibilityLabel == state.text)
+      var visible = item
+      visible.network = NetworkConfiguration()
+      #expect(state.presentation(for: visible).text == state.text)
+      visible.network?.showLabel = true
+      #expect(state.presentation(for: visible).text == state.text)
+    }
+    var invalid = item
+    invalid.type = .text
+    let configuration = Configuration(bar: .init(), items: .init(right: [invalid]))
+    #expect(throws: ConfigurationError.self) { try configuration.validate() }
+  }
+
   @Test("network classification handles offline and multiple interface types")
   func classification() {
     #expect(
