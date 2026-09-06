@@ -106,17 +106,12 @@ struct Configuration: Codable, Equatable, Sendable {
           path: "\(location).command.timeout"
         )
 
-        if case .network = item.symbol, item.type != .network {
-          throw ConfigurationError.invalidValue(
-            path: "\(location).symbol",
-            reason: "Network symbol maps require a network item."
-          )
-        }
+        try item.network?.validate(path: "\(location).network")
         try item.battery?.validate(path: "\(location).battery")
         try item.wifi?.validate(path: "\(location).wifi")
         try item.volume?.validate(path: "\(location).volume")
         if (item.battery != nil && item.type != .battery)
-          || (item.showConnected != nil && item.type != .network)
+          || (item.network != nil && item.type != .network)
           || (item.wifi != nil && item.type != .wifi)
           || (item.volume != nil && item.type != .volume)
           || (item.frontApplication != nil && item.type != .frontApplication)
@@ -245,7 +240,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case enabled, format, dateStyle, timeStyle, id, label, priority, style, symbol, type,
       primaryAction, secondaryAction,
-      popup, command, children, plugin, refresh, battery, wifi, volume, showConnected,
+      popup, command, children, plugin, refresh, battery, wifi, volume, network,
       frontApplication
   }
 
@@ -270,7 +265,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var plugin: Plugin?
   var frontApplication: FrontApplicationConfiguration?
   var battery: BatteryConfiguration?
-  var showConnected: Bool?
+  var network: NetworkConfiguration?
   var wifi: WifiConfiguration?
   var volume: VolumeConfiguration?
   var refresh: RefreshPolicy?
@@ -298,7 +293,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     plugin: Plugin? = nil,
     frontApplication: FrontApplicationConfiguration? = nil,
     battery: BatteryConfiguration? = nil,
-    showConnected: Bool? = nil,
+    network: NetworkConfiguration? = nil,
     wifi: WifiConfiguration? = nil,
     volume: VolumeConfiguration? = nil,
     refresh: RefreshPolicy? = nil
@@ -324,7 +319,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.plugin = plugin
     self.frontApplication = frontApplication
     self.battery = battery
-    self.showConnected = showConnected
+    self.network = network
     self.wifi = wifi
     self.volume = volume
     self.refresh = refresh
@@ -357,7 +352,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
       forKey: .frontApplication
     )
     battery = try container.decodeIfPresent(BatteryConfiguration.self, forKey: .battery)
-    showConnected = try container.decodeIfPresent(Bool.self, forKey: .showConnected)
+    network = try container.decodeIfPresent(NetworkConfiguration.self, forKey: .network)
     wifi = try container.decodeIfPresent(WifiConfiguration.self, forKey: .wifi)
     volume = try container.decodeIfPresent(VolumeConfiguration.self, forKey: .volume)
     refresh = try container.decodeIfPresent(RefreshPolicy.self, forKey: .refresh)

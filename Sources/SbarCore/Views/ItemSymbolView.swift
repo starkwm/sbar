@@ -8,8 +8,6 @@ struct ItemSymbolView: View {
   var body: some View {
     Group {
       switch symbol {
-      case .network:
-        EmptyView()
       case .system(let name):
         Image(systemName: name).fontWeight(fontWeight?.swiftUIWeight)
       case .glyph(let glyph, let font, let size):

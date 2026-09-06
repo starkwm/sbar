@@ -230,14 +230,7 @@
           ]
         },
         "symbol": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/symbol"
-            },
-            {
-              "$ref": "#/$defs/networkSymbols"
-            }
-          ]
+          "$ref": "#/$defs/symbol"
         },
         "format": {
           "type": [
@@ -405,33 +398,10 @@
         "volume": {
           "$ref": "#/$defs/volume"
         },
-        "showConnected": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true,
-          "description": "Show connection text for network items."
+        "network": {
+          "$ref": "#/$defs/network"
         }
-      },
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "network"
-              }
-            }
-          },
-          "else": {
-            "properties": {
-              "symbol": {
-                "$ref": "#/$defs/symbol"
-              }
-            }
-          }
-        }
-      ]
+      }
     },
     "itemStyle": {
       "type": [
@@ -1079,6 +1049,25 @@
               }
             }
           ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "network": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "symbols": {
+          "$ref": "#/$defs/networkSymbols"
+        },
+        "showConnected": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
         }
       },
       "additionalProperties": false

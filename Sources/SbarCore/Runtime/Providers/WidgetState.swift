@@ -21,16 +21,11 @@ enum WidgetState: Equatable, Sendable {
   func presentation(for item: Item) -> WidgetPresentation {
     switch self {
     case .network(let connection):
-      let symbol: ItemSymbol?
-      if case .network(let symbols) = item.symbol {
-        symbol =
-          symbols[connection.rawValue]?.resolve(font: nil, size: nil)
-          ?? connection.defaultSymbol
-      } else {
-        symbol = item.symbol
-      }
+      let symbol =
+        item.symbol ?? item.network?.symbols?[connection.rawValue]
+        ?? (item.network?.symbols == nil ? nil : connection.defaultSymbol)
       return WidgetPresentation(
-        text: item.showConnected == false ? "" : text,
+        text: item.network?.showConnected == false ? "" : text,
         symbol: symbol,
         accessibilityLabel: text
       )

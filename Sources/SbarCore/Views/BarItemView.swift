@@ -64,7 +64,7 @@ struct BarItemView: View {
       Text(configuration.label ?? "")
     case .command, .plugin:
       Text(providers.itemValues[configuration.id] ?? "…")
-    case .network where configuration.showConnected == false:
+    case .network where configuration.network?.showConnected == false:
       EmptyView()
     case .group, .popup:
       Text(configuration.label ?? configuration.id)

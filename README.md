@@ -213,38 +213,32 @@ Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeigh
 
 ### Network symbols
 
-A network item can switch symbols with the active macOS network path:
+Configure connection symbols and label visibility under `network`:
 
 ```json
 {
   "id": "network",
   "type": "network",
-  "symbol": {
-    "wifi": "wifi",
-    "ethernet": "cable.connector",
-    "cellular": "antenna.radiowaves.left.and.right",
-    "other": "network",
-    "offline": "network.slash"
+  "network": {
+    "showConnected": false,
+    "symbols": {
+      "wifi": "wifi",
+      "ethernet": "cable.connector",
+      "cellular": "antenna.radiowaves.left.and.right",
+      "other": "network",
+      "offline": "network.slash"
+    }
   }
 }
 ```
 
-These are the defaults for omitted keys in a symbol map; `"symbol": {}` enables
-all defaults. Each value accepts an SF Symbol name or a complete font glyph object.
-A string or glyph at the item level remains a fixed symbol. Omitting `symbol`
-keeps the network item text-only.
+These are the defaults for omitted keys in `network.symbols`; `"symbols": {}`
+enables all defaults. Each value accepts an SF Symbol name or a complete font glyph
+object. An item-level `symbol` remains a fixed override. Omitting both `symbol`
+and `network.symbols` keeps the network item text-only.
 
-Set `showConnected` to `false` to show only the symbol while retaining the
-connection status for accessibility. It defaults to `true`:
-
-```json
-{
-  "id": "network",
-  "type": "network",
-  "symbol": {},
-  "showConnected": false
-}
-```
+Set `network.showConnected` to `false` to show only the symbol while retaining
+the connection status for accessibility. It defaults to `true`.
 
 The text remains `Wi-Fi`, `Connected` (Ethernet, cellular, or other), or `Offline`.
 An unsatisfied path is offline; otherwise Wi-Fi takes precedence over Ethernet,

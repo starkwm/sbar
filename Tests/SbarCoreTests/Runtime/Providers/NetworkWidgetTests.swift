@@ -11,7 +11,7 @@ struct NetworkWidgetTests {
     let item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        #"{"id":"net","type":"network","symbol":{},"showConnected":false}"#.utf8
+        #"{"id":"net","type":"network","network":{"symbols":{},"showConnected":false}}"#.utf8
       )
     )
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
@@ -22,9 +22,9 @@ struct NetworkWidgetTests {
       #expect(presentation.symbol == connection.defaultSymbol)
       #expect(presentation.accessibilityLabel == state.text)
       var visible = item
-      visible.showConnected = nil
+      visible.network?.showConnected = nil
       #expect(state.presentation(for: visible).text == state.text)
-      visible.showConnected = true
+      visible.network?.showConnected = true
       #expect(state.presentation(for: visible).text == state.text)
     }
     var invalid = item
@@ -62,7 +62,7 @@ struct NetworkWidgetTests {
     let item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        #"{"id":"net","type":"network","symbol":{"wifi":"custom","ethernet":{"glyph":"E","font":"Test","size":18}}}"#
+        #"{"id":"net","type":"network","network":{"symbols":{"wifi":"custom","ethernet":{"glyph":"E","font":"Test","size":18}}}}"#
           .utf8
       )
     )
@@ -74,7 +74,7 @@ struct NetworkWidgetTests {
     )
     for connection in NetworkConnection.allCases {
       let state = WidgetState.network(connection)
-      let defaults = Item(id: "net", type: .network, symbol: .network([:]))
+      let defaults = Item(id: "net", type: .network, network: NetworkConfiguration(symbols: [:]))
       #expect(state.presentation(for: defaults).symbol == connection.defaultSymbol)
       if case .system(let name) = connection.defaultSymbol {
         #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil)
@@ -94,13 +94,17 @@ struct NetworkWidgetTests {
       #"{"wifi":{"glyph":"x"}}"#,
     ] {
       #expect(throws: (any Error).self) {
-        try JSONDecoder().decode(ItemSymbol.self, from: Data(json.utf8))
+        let settings = try JSONDecoder().decode(
+          NetworkConfiguration.self,
+          from: Data("{\"symbols\":\(json)}".utf8)
+        )
+        try settings.validate(path: "network")
       }
     }
     let configuration = Configuration(
       bar: .init(),
       items: .init(
-        right: [Item(id: "text", type: .text, symbol: .network([:]))]
+        right: [Item(id: "text", type: .text, network: NetworkConfiguration(symbols: [:]))]
       )
     )
     #expect(throws: ConfigurationError.self) { try configuration.validate() }
@@ -114,7 +118,7 @@ struct NetworkWidgetTests {
         Configuration.self,
         from: Data(
           """
-          {"schemaVersion":1,"bar":{},"items":{"right":[{"id":"net","type":"network","symbol":{},"refresh":{"mode":"\(mode)"}}]}}
+          {"schemaVersion":1,"bar":{},"items":{"right":[{"id":"net","type":"network","network":{"symbols":{}},"refresh":{"mode":"\(mode)"}}]}}
           """.utf8
         )
       )

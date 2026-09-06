@@ -19,6 +19,20 @@ struct BatteryConfiguration: Codable, Equatable, Sendable {
   }
 }
 
+struct NetworkConfiguration: Codable, Equatable, Sendable {
+  var symbols: [String: ItemSymbol]?
+  var showConnected: Bool?
+
+  func validate(path: String) throws {
+    for key in (symbols ?? [:]).keys where NetworkConnection(rawValue: key) == nil {
+      throw ConfigurationError.invalidValue(
+        path: "\(path).symbols.\(key)",
+        reason: "Unknown network connection type."
+      )
+    }
+  }
+}
+
 struct WifiConfiguration: Codable, Equatable, Sendable {
   var symbols: WifiSymbols?
   var tints: WifiTints?

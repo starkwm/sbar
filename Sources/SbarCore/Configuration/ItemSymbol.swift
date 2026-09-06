@@ -1,7 +1,6 @@
 import Foundation
 
 enum ItemSymbol: Codable, Equatable, Sendable, ExpressibleByStringLiteral {
-  case network([String: WidgetSymbol])
   case system(String)
   case glyph(String, font: String, size: Double? = nil)
 
@@ -17,22 +16,6 @@ enum ItemSymbol: Codable, Equatable, Sendable, ExpressibleByStringLiteral {
       return
     }
     let container = try decoder.container(keyedBy: CodingKeys.self)
-    if !container.contains(.glyph) && !container.contains(.font) && !container.contains(.size) {
-      let symbols = try decoder.singleValueContainer().decode([String: WidgetSymbol].self)
-      for (key, symbol) in symbols {
-        guard NetworkConnection(rawValue: key) != nil else {
-          throw DecodingError.dataCorrupted(
-            .init(
-              codingPath: decoder.codingPath,
-              debugDescription: "Unknown network symbol key: \(key)"
-            )
-          )
-        }
-        try symbol.validate(font: nil, path: "symbol.\(key)")
-      }
-      self = .network(symbols)
-      return
-    }
     let glyph = try container.decode(String.self, forKey: .glyph)
     let font = try container.decode(String.self, forKey: .font)
     let size = try container.decodeIfPresent(Double.self, forKey: .size)
@@ -52,9 +35,6 @@ enum ItemSymbol: Codable, Equatable, Sendable, ExpressibleByStringLiteral {
 
   func encode(to encoder: any Encoder) throws {
     switch self {
-    case .network(let symbols):
-      var container = encoder.singleValueContainer()
-      try container.encode(symbols)
     case .system(let name):
       var container = encoder.singleValueContainer()
       try container.encode(name)

@@ -201,7 +201,7 @@
           {
             "id": "network",
             "type": "network",
-            "symbol": {}
+            "network": { "symbols": {} }
           },
           {
             "id": "wifi",
