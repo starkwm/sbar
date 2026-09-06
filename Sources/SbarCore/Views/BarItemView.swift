@@ -39,20 +39,15 @@ struct BarItemView: View {
 
   @ViewBuilder private var content: some View {
     switch configuration.type {
-    case .clock:
+    case .datetime:
       Text(
-        ClockFormatter.string(
+        DateTimeFormatter.string(
           providers.itemDates[configuration.id] ?? providers.currentDate,
-          format: configuration.format
+          format: configuration.format,
+          dateStyle: configuration.dateStyle,
+          timeStyle: configuration.timeStyle
         )
       ).monospacedDigit()
-    case .date:
-      Text(
-        DateItemFormatter.string(
-          providers.itemDates[configuration.id] ?? providers.currentDate,
-          format: configuration.format
-        )
-      )
     case .divider:
       Rectangle().frame(width: 1, height: 16).opacity(0.3).accessibilityHidden(true)
     case .frontApplication:

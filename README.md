@@ -71,7 +71,7 @@ Create `~/.config/starkbar/config.json` with a configuration such as:
     ],
     "right": [
       { "id": "battery", "type": "battery" },
-      { "id": "clock", "type": "clock", "format": "HH:mm" }
+      { "id": "clock", "type": "datetime", "format": "HH:mm" }
     ]
   }
 }
@@ -109,7 +109,7 @@ For a floating bar, inset the panel and round its background:
     "verticalPadding": 4,
     "cornerRadius": 12
   },
-  "items": { "right": [{ "id": "clock", "type": "clock", "format": "HH:mm" }] }
+  "items": { "right": [{ "id": "clock", "type": "datetime", "format": "HH:mm" }] }
 }
 ```
 
@@ -124,8 +124,7 @@ The theme's `verticalPadding` and `cornerRadius` accept 0–48 points and defaul
 | Type | Content |
 | --- | --- |
 | `text` | Static text from `label` |
-| `clock` | Current time; `format` supports `HH:mm` and `HH:mm:ss`, otherwise the system's short time style |
-| `date` | Current date; `format` accepts date style presets or a custom pattern (see below) |
+| `datetime` | Current date and/or time; custom `format` or localized `dateStyle` and `timeStyle` |
 | `frontApplication` | Active application's name, or a fixed `label` |
 | `battery` | Battery charge and power state |
 | `volume` | Output volume and mute state |
@@ -145,13 +144,21 @@ The theme's `verticalPadding` and `cornerRadius` accept 0–48 points and defaul
 | `divider` | Vertical separator |
 | `spacer` | Flexible empty space |
 
-Date items default to the current weekday, month, and day. Set `format` to `short`, `medium`, `long`, or `full` for a localized date style, or use a Unicode date pattern:
+`datetime` items default to the system’s short time style. Use `format` for a Unicode date/time pattern:
 
 ```json
-{ "id": "date", "type": "date", "format": "yyyy-MM-dd" }
+{ "id": "date", "type": "datetime", "format": "yyyy-MM-dd" }
 ```
 
-For example, `dd/MM/yyyy` gives a numeric day/month/year, `EEEE, d MMMM` includes the full weekday and month names, and `MMM d 'at' HH:mm` includes the time. Patterns use the system locale and time zone; quote literal words with single quotes. Use `yyyy` for the calendar year (`YYYY` is the week-based year). Omitting `format`, setting it to `null`, or using an empty string keeps the default display. You can also change it at runtime with `sbar set date format '"EEEE, d MMMM"'`.
+For example, `dd/MM/yyyy` gives a numeric day/month/year, `EEEE, d MMMM` includes the full weekday and month names, and `MMM d 'at' HH:mm` includes the time. Patterns use the system locale and time zone; quote literal words with single quotes. Use `yyyy` for the calendar year (`YYYY` is the week-based year). A nonempty `format` overrides `dateStyle` and `timeStyle`. Omitting `format`, setting it to `null`, or using an empty string uses those styles. You can also change it at runtime with `sbar set date format '"EEEE, d MMMM"'`.
+
+For localized formatting, `dateStyle` and `timeStyle` each accept `none`, `short`, `medium`, `long`, or `full`. They default to `none` and `short`, respectively. Set `timeStyle` to `none` for a date-only display:
+
+```json
+{ "id": "date", "type": "datetime", "dateStyle": "full", "timeStyle": "none" }
+```
+
+Both style properties can also be changed with `sbar set`.
 
 Optional properties include `enabled` (default `true`), `label`, `symbol` (an SF Symbol name or font glyph object), `priority` (default `0`), `style`, `refresh`, `primaryAction`, `secondaryAction`, and `popup` text. Symbols appear beside item content except for groups, dividers, and spacers. Type-specific settings are described below.
 
@@ -184,7 +191,7 @@ The optional top-level `theme` sets bar appearance and default item styling. Eac
     "right": [
       {
         "id": "clock",
-        "type": "clock",
+        "type": "datetime",
         "symbol": "clock",
         "format": "HH:mm",
         "style": { "tint": "#88C0D0", "background": "#FFFFFF18" }
@@ -200,7 +207,7 @@ Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeigh
 
 ## Native items
 
-`frontApplication`, `battery`, `volume`, `network`, and `wifi` use native change notifications. `cpu`, `memory`, `disk`, and `throughput` sample once every two seconds, shared across displays. `clock` and `date` share one clock. Memory reports active, wired, and compressed pages; disk reports free space on the home volume. Throughput totals non-loopback interfaces, so tunnels may contribute additional traffic. Fixed-volume outputs display that status rather than a fabricated percentage.
+`frontApplication`, `battery`, `volume`, `network`, and `wifi` use native change notifications. `cpu`, `memory`, `disk`, and `throughput` sample once every two seconds, shared across displays. All `datetime` items share one clock. Memory reports active, wired, and compressed pages; disk reports free space on the home volume. Throughput totals non-loopback interfaces, so tunnels may contribute additional traffic. Fixed-volume outputs display that status rather than a fabricated percentage.
 
 `media` listens for Music and Spotify playback notifications. It waits for the next notification after startup and does not query or control other players. Wi-Fi reports connection state, not the location-protected SSID.
 
@@ -394,7 +401,7 @@ sbar set clock enabled false
 sbar set clock style '{"tint":"#88C0D0"}'
 ```
 
-`set` changes in-memory configuration only. Supported properties are `label`, `symbol`, `enabled`, `priority`, `format`, `style`, and `popup`. Edit the config file to make changes persistent. Reload or restart discards transient changes.
+`set` changes in-memory configuration only. Supported properties are `label`, `symbol`, `enabled`, `priority`, `format`, `dateStyle`, `timeStyle`, `style`, and `popup`. Edit the config file to make changes persistent. Reload or restart discards transient changes.
 
 ### Trigger events
 

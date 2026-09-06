@@ -5,11 +5,27 @@ import Testing
 
 @Suite("Configuration")
 struct ConfigurationTests {
+  @Test("datetime: decodes and round trips localized styles")
+  func datetimeStyles() throws {
+    let data = Data(#"{"id":"date","type":"datetime","dateStyle":"full","timeStyle":"none"}"#.utf8)
+    let item = try JSONDecoder().decode(Item.self, from: data)
+    #expect(item.type == .datetime)
+    #expect(item.dateStyle == .full)
+    #expect(item.timeStyle == DateTimeStyle.none)
+    #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+    #expect(throws: DecodingError.self) {
+      try JSONDecoder().decode(
+        Item.self,
+        from: Data(#"{"id":"date","type":"datetime","dateStyle":"invalid"}"#.utf8)
+      )
+    }
+  }
+
   @Test("init: decodes the example configuration")
   func initDecodesExampleConfiguration() throws {
     let data = Data(
       #"""
-      {"schemaVersion":1,"bar":{"position":"top","height":32,"displays":"all"},"items":{"left":[{"id":"app","type":"frontApplication"}],"center":[],"right":[{"id":"clock","type":"clock","format":"HH:mm"}]}}
+      {"schemaVersion":1,"bar":{"position":"top","height":32,"displays":"all"},"items":{"left":[{"id":"app","type":"frontApplication"}],"center":[],"right":[{"id":"clock","type":"datetime","format":"HH:mm"}]}}
       """#.utf8
     )
 

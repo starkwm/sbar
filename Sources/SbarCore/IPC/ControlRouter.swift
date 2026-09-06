@@ -97,7 +97,10 @@ final class ControlRouter {
         let id = request.arguments[0]
         let property = request.arguments[1]
         guard
-          ["label", "symbol", "enabled", "priority", "format", "style", "popup"].contains(property)
+          [
+            "label", "symbol", "enabled", "priority", "format", "dateStyle", "timeStyle", "style",
+            "popup",
+          ].contains(property)
         else { throw MessageError.message("Property cannot be changed at runtime.") }
 
         var candidate = store.configuration

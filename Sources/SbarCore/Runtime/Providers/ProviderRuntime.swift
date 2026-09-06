@@ -11,7 +11,7 @@ final class ProviderRuntime {
       }
 
       for item in refreshItems
-      where item.type != .clock && item.type != .date
+      where item.type != .datetime
         && (item.refresh?.mode == .event || itemSnapshots[item.id] == nil)
       { capture(item) }
     }
@@ -28,7 +28,7 @@ final class ProviderRuntime {
   private(set) var currentDate = Date() {
     didSet {
       for item in refreshItems
-      where item.refresh?.mode == .event && (item.type == .clock || item.type == .date) {
+      where item.refresh?.mode == .event && item.type == .datetime {
         capture(item)
       }
     }
@@ -122,7 +122,7 @@ final class ProviderRuntime {
     }
 
     let sampled = activeTypes.intersection([.cpu, .memory, .disk, .throughput])
-    let needsClock = !activeTypes.isDisjoint(with: [.clock, .date])
+    let needsClock = activeTypes.contains(.datetime)
     if !sampled.isEmpty || needsClock {
       samplingTask = Task { [weak self, metrics] in
         var tick = 0
@@ -285,7 +285,7 @@ final class ProviderRuntime {
       lastRefresh[item.id] = Date()
     }
 
-    if item.type == .clock || item.type == .date {
+    if item.type == .datetime {
       itemDates[item.id] = Date()
       lastRefresh[item.id] = Date()
     }

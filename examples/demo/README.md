@@ -16,7 +16,7 @@ Quit any running sbar instance first. This uses a separate configuration and con
 - Music/Spotify playback notifications update the center media item. Start or change a track after launching.
 - **Events** is a self-contained shell plugin counting its start event and runtime triggers.
 - CPU and memory form an inline group. **System** opens disk, network, Wi-Fi, throughput, uptime, and a manually refreshed clock snapshot.
-- Volume, battery, date, and clock round out the native providers. Date and clock open Calendar; the clock context menu opens System Settings.
+- Volume, battery, and date/time displays using `datetime` round out the native providers. Date and clock open Calendar; the clock context menu opens System Settings.
 - Lower-priority items move into overflow when space is tight. Clock and launcher have the highest priority.
 
 Try runtime updates in another terminal, also from the repository root:

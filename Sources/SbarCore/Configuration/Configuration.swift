@@ -10,7 +10,7 @@ struct Configuration: Codable, Equatable, Sendable {
     items: .init(
       left: [.init(id: "app", type: .frontApplication)],
       right: [
-        .init(id: "divider", type: .divider), .init(id: "clock", type: .clock, format: "HH:mm"),
+        .init(id: "divider", type: .divider), .init(id: "clock", type: .datetime, format: "HH:mm"),
       ]
     )
   )
@@ -234,7 +234,8 @@ struct ItemSections: Codable, Equatable, Sendable {
 
 struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
-    case enabled, format, id, label, priority, style, symbol, type, primaryAction, secondaryAction,
+    case enabled, format, dateStyle, timeStyle, id, label, priority, style, symbol, type,
+      primaryAction, secondaryAction,
       popup, command, children, plugin, refresh, battery, wifi, frontApplication
   }
 
@@ -245,6 +246,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var label: String?
   var symbol: ItemSymbol?
   var format: String?
+  var dateStyle: DateTimeStyle?
+  var timeStyle: DateTimeStyle?
   var priority: Int = 0
   var style: ItemStyle?
 
@@ -271,6 +274,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     label: String? = nil,
     symbol: ItemSymbol? = nil,
     format: String? = nil,
+    dateStyle: DateTimeStyle? = nil,
+    timeStyle: DateTimeStyle? = nil,
     priority: Int = 0,
     style: ItemStyle? = nil,
     primaryAction: ItemAction? = nil,
@@ -291,6 +296,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.label = label
     self.symbol = symbol
     self.format = format
+    self.dateStyle = dateStyle
+    self.timeStyle = timeStyle
     self.priority = priority
     self.style = style
 
@@ -317,6 +324,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     label = try container.decodeIfPresent(String.self, forKey: .label)
     symbol = try container.decodeIfPresent(ItemSymbol.self, forKey: .symbol)
     format = try container.decodeIfPresent(String.self, forKey: .format)
+    dateStyle = try container.decodeIfPresent(DateTimeStyle.self, forKey: .dateStyle)
+    timeStyle = try container.decodeIfPresent(DateTimeStyle.self, forKey: .timeStyle)
     priority = try container.decodeIfPresent(Int.self, forKey: .priority) ?? 0
     style = try container.decodeIfPresent(ItemStyle.self, forKey: .style)
 
@@ -350,7 +359,7 @@ enum BarWindowLevel: String, Codable, CaseIterable, Sendable {
 }
 
 enum ItemType: String, CaseIterable, Codable, Sendable {
-  case clock, date, divider, frontApplication, spacer, text, battery, volume, network, wifi, cpu,
+  case datetime, divider, frontApplication, spacer, text, battery, volume, network, wifi, cpu,
     memory, disk, throughput, media, command, group, popup, plugin, aerospace, yabai, spaces
 }
 
@@ -369,4 +378,8 @@ enum ConfigurationError: Error, Equatable, LocalizedError {
     case .unsupportedSchemaVersion(let version): "schemaVersion: \(version) is not supported."
     }
   }
+}
+
+enum DateTimeStyle: String, Codable, CaseIterable, Sendable {
+  case none, short, medium, long, full
 }

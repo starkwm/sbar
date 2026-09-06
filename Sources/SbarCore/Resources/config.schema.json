@@ -193,8 +193,7 @@
         },
         "type": {
           "enum": [
-            "clock",
-            "date",
+            "datetime",
             "divider",
             "frontApplication",
             "spacer",
@@ -238,7 +237,7 @@
             "string",
             "null"
           ],
-          "description": "Clock formats HH:mm and HH:mm:ss are recognized; other values use the default time style. Date formats accept short, medium, long, full, or a Unicode date pattern such as yyyy-MM-dd. Omitted or empty date formats show weekday, month, and day."
+          "description": "Unicode date/time pattern such as yyyy-MM-dd or HH:mm:ss. A nonempty format overrides dateStyle and timeStyle."
         },
         "priority": {
           "type": [
@@ -365,6 +364,36 @@
         },
         "wifi": {
           "$ref": "#/$defs/wifi"
+        },
+        "dateStyle": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "none",
+            "short",
+            "medium",
+            "long",
+            "full",
+            null
+          ],
+          "description": "Localized datetime date style. Defaults to none; ignored when format is nonempty."
+        },
+        "timeStyle": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "none",
+            "short",
+            "medium",
+            "long",
+            "full",
+            null
+          ],
+          "description": "Localized datetime time style. Defaults to short; ignored when format is nonempty."
         }
       }
     },

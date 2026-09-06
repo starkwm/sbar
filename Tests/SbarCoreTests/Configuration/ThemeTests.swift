@@ -52,7 +52,7 @@ struct ThemeTests {
   )
   func initPreservesPartialStylingThroughRoundTrips() throws {
     let json =
-      ##"{"schemaVersion":1,"bar":{},"theme":{"itemSpacing":5,"itemStyle":{"tint":"#aabbcc","fontWeight":"semibold"}},"items":{"right":[{"id":"clock","type":"clock","style":{"fontSize":16,"background":"#11223380"}}]}}"##
+      ##"{"schemaVersion":1,"bar":{},"theme":{"itemSpacing":5,"itemStyle":{"tint":"#aabbcc","fontWeight":"semibold"}},"items":{"right":[{"id":"clock","type":"datetime","style":{"fontSize":16,"background":"#11223380"}}]}}"##
 
     let config = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
     try config.validate()

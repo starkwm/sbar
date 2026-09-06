@@ -225,7 +225,7 @@
           },
           {
             "id": "snapshot",
-            "type": "clock",
+            "type": "datetime",
             "symbol": "camera",
             "format": "HH:mm:ss",
             "refresh": {
@@ -258,7 +258,8 @@
       },
       {
         "id": "date",
-        "type": "date",
+        "type": "datetime",
+        "format": "EEE MMM d",
         "priority": -20,
         "primaryAction": {
           "kind": "application",
@@ -272,7 +273,7 @@
       },
       {
         "id": "clock",
-        "type": "clock",
+        "type": "datetime",
         "format": "HH:mm:ss",
         "symbol": "clock",
         "priority": 100,

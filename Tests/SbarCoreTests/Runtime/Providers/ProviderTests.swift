@@ -25,7 +25,7 @@ struct ProviderTests {
     let providers = ProviderRuntime()
     var config = Configuration.default
     config.items.left = []
-    config.items.right = [.init(id: "clock", type: .clock, refresh: .init(mode: .manual))]
+    config.items.right = [.init(id: "clock", type: .datetime, refresh: .init(mode: .manual))]
 
     providers.configure(config)
     defer { providers.stop() }
