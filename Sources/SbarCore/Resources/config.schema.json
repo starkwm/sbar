@@ -405,8 +405,13 @@
         "volume": {
           "$ref": "#/$defs/volume"
         },
-        "network": {
-          "$ref": "#/$defs/network"
+        "showConnected": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true,
+          "description": "Show connection text for network items."
         }
       },
       "allOf": [
@@ -1074,22 +1079,6 @@
               }
             }
           ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "network": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "properties": {
-        "showLabel": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
         }
       },
       "additionalProperties": false

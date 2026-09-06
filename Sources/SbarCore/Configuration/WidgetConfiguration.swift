@@ -19,10 +19,6 @@ struct BatteryConfiguration: Codable, Equatable, Sendable {
   }
 }
 
-struct NetworkConfiguration: Codable, Equatable, Sendable {
-  var showLabel: Bool?
-}
-
 struct WifiConfiguration: Codable, Equatable, Sendable {
   var symbols: WifiSymbols?
   var tints: WifiTints?

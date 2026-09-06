@@ -234,7 +234,7 @@ all defaults. Each value accepts an SF Symbol name or a complete font glyph obje
 A string or glyph at the item level remains a fixed symbol. Omitting `symbol`
 keeps the network item text-only.
 
-Set `network.showLabel` to `false` to show only the symbol while retaining the
+Set `showConnected` to `false` to show only the symbol while retaining the
 connection status for accessibility. It defaults to `true`:
 
 ```json
@@ -242,7 +242,7 @@ connection status for accessibility. It defaults to `true`:
   "id": "network",
   "type": "network",
   "symbol": {},
-  "network": { "showLabel": false }
+  "showConnected": false
 }
 ```
 

@@ -11,7 +11,7 @@ struct NetworkWidgetTests {
     let item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        #"{"id":"net","type":"network","symbol":{},"network":{"showLabel":false}}"#.utf8
+        #"{"id":"net","type":"network","symbol":{},"showConnected":false}"#.utf8
       )
     )
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
@@ -22,9 +22,9 @@ struct NetworkWidgetTests {
       #expect(presentation.symbol == connection.defaultSymbol)
       #expect(presentation.accessibilityLabel == state.text)
       var visible = item
-      visible.network = NetworkConfiguration()
+      visible.showConnected = nil
       #expect(state.presentation(for: visible).text == state.text)
-      visible.network?.showLabel = true
+      visible.showConnected = true
       #expect(state.presentation(for: visible).text == state.text)
     }
     var invalid = item

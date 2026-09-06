@@ -30,7 +30,7 @@ enum WidgetState: Equatable, Sendable {
         symbol = item.symbol
       }
       return WidgetPresentation(
-        text: item.network?.showLabel == false ? "" : text,
+        text: item.showConnected == false ? "" : text,
         symbol: symbol,
         accessibilityLabel: text
       )
