@@ -597,25 +597,31 @@
             "null"
           ]
         },
-        "connectedSymbol": {
-          "$ref": "#/$defs/symbol"
+        "symbols": {
+          "$ref": "#/$defs/wifiSymbols"
         },
-        "disconnectedSymbol": {
-          "$ref": "#/$defs/symbol"
-        },
-        "connectedTint": {
+        "tints": {
           "type": [
-            "string",
+            "object",
             "null"
           ],
-          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
-        },
-        "disconnectedTint": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+          "properties": {
+            "connected": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+            },
+            "disconnected": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -641,44 +647,6 @@
             },
             "font": {
               "type": "string",
-              "pattern": "\\S"
-            },
-            "size": {
-              "type": [
-                "number",
-                "null"
-              ],
-              "minimum": 8,
-              "maximum": 72
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
-    },
-    "batterySymbol": {
-      "oneOf": [
-        {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        {
-          "type": "object",
-          "required": [
-            "glyph"
-          ],
-          "properties": {
-            "glyph": {
-              "type": "string",
-              "pattern": "\\S"
-            },
-            "font": {
-              "type": [
-                "string",
-                "null"
-              ],
               "pattern": "\\S"
             },
             "size": {
@@ -725,7 +693,7 @@
           "items": {
             "allOf": [
               {
-                "$ref": "#/$defs/batterySymbol"
+                "$ref": "#/$defs/widgetSymbol"
               },
               {
                 "not": {
@@ -736,10 +704,10 @@
           }
         },
         "charging": {
-          "$ref": "#/$defs/batterySymbol"
+          "$ref": "#/$defs/widgetSymbol"
         },
         "pluggedIn": {
-          "$ref": "#/$defs/batterySymbol"
+          "$ref": "#/$defs/widgetSymbol"
         }
       },
       "additionalProperties": false,
@@ -768,6 +736,100 @@
                 "$ref": "#/$defs/symbol"
               },
               "pluggedIn": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "widgetSymbol": {
+      "oneOf": [
+        {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "glyph"
+          ],
+          "properties": {
+            "glyph": {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            "font": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "\\S"
+            },
+            "size": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 8,
+              "maximum": 72
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "wifiSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "connected": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "disconnected": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "connected": {
+                "$ref": "#/$defs/symbol"
+              },
+              "disconnected": {
                 "$ref": "#/$defs/symbol"
               }
             }

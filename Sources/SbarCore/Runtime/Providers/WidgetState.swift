@@ -64,8 +64,9 @@ enum WidgetState: Equatable, Sendable {
           ? nil
           : item.symbol
             ?? (connected
-              ? settings.connectedSymbol ?? "wifi" : settings.disconnectedSymbol ?? "wifi.slash"),
-        tint: connected ? settings.connectedTint : settings.disconnectedTint,
+              ? settings.symbols?.resolve(settings.symbols?.connected) ?? "wifi"
+              : settings.symbols?.resolve(settings.symbols?.disconnected) ?? "wifi.slash"),
+        tint: connected ? settings.tints?.connected : settings.tints?.disconnected,
         hidden: !connected && settings.hideWhenDisconnected == true,
         accessibilityLabel: text
       )

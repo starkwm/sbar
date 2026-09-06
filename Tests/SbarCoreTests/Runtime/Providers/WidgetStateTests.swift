@@ -93,11 +93,10 @@ struct WidgetStateTests {
       id: "wifi",
       type: .wifi,
       wifi: WifiConfiguration(
+        symbols: WifiSymbols(connected: .system("checkmark"), disconnected: .system("xmark")),
+        tints: WifiTints(connected: "#00ff00", disconnected: "#ff0000"),
         connectedLabel: "Online",
         disconnectedLabel: "Offline",
-        connectedSymbol: "checkmark",
-        disconnectedSymbol: "xmark",
-        connectedTint: "#00ff00",
         hideWhenDisconnected: true
       )
     )
@@ -110,6 +109,7 @@ struct WidgetStateTests {
     #expect(offline.hidden)
     #expect(offline.text == "Offline")
     #expect(offline.symbol == "xmark")
+    #expect(offline.tint == "#ff0000")
     item.wifi?.showLabel = false
     #expect(WidgetState.wifi(connected: true).presentation(for: item).text.isEmpty)
     item.symbol = "star"
@@ -133,7 +133,7 @@ struct WidgetStateTests {
       try BatteryConfiguration(lowThreshold: 101).validate(path: "battery")
     }
     #expect(throws: ConfigurationError.self) {
-      try WifiConfiguration(connectedTint: "invalid").validate(path: "wifi")
+      try WifiConfiguration(tints: WifiTints(connected: "invalid")).validate(path: "wifi")
     }
   }
 

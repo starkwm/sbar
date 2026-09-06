@@ -12,8 +12,8 @@ struct ItemSymbolTests {
       let encoded = try JSONEncoder().encode(symbol)
       #expect(try JSONDecoder().decode(ItemSymbol.self, from: encoded) == symbol)
     }
-    let legacy = try JSONEncoder().encode(ItemSymbol.system("wifi"))
-    #expect(String(decoding: legacy, as: UTF8.self) == #""wifi""#)
+    let encodedSystem = try JSONEncoder().encode(ItemSymbol.system("wifi"))
+    #expect(String(decoding: encodedSystem, as: UTF8.self) == #""wifi""#)
   }
 
   @Test("invalid glyph objects are rejected")
@@ -31,7 +31,7 @@ struct ItemSymbolTests {
   @Test("battery levels can mix glyphs and SF Symbols")
   func batteryLevels() throws {
     let glyph = ItemSymbol.glyph("\u{f240}", font: "Symbols Nerd Font Mono")
-    let configuredGlyph = BatterySymbol.glyph("\u{f240}", font: "Symbols Nerd Font Mono")
+    let configuredGlyph = WidgetSymbol.glyph("\u{f240}", font: "Symbols Nerd Font Mono")
     var item = Item(
       id: "battery",
       type: .battery,
@@ -138,11 +138,48 @@ struct ItemSymbolTests {
     )
   }
 
+  @Test("Wi-Fi glyphs inherit shared defaults and allow local overrides")
+  func wifiSymbolDefaults() throws {
+    let json = #"""
+      {"id":"wifi","type":"wifi","wifi":{
+        "symbols":{"font":"Shared","size":18,
+          "connected":{"glyph":"a"},
+          "disconnected":{"glyph":"b","font":"Other","size":24}},
+        "tints":{"connected":"#00ff00","disconnected":"#ff0000"}
+      }}
+      """#
+    let item = try JSONDecoder().decode(Item.self, from: Data(json.utf8))
+    try item.wifi?.validate(path: "wifi")
+    #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+    #expect(
+      WidgetState.wifi(connected: true).presentation(for: item).symbol
+        == .glyph("a", font: "Shared", size: 18)
+    )
+    #expect(
+      WidgetState.wifi(connected: false).presentation(for: item).symbol
+        == .glyph("b", font: "Other", size: 24)
+    )
+    for json in [
+      #"{"symbols":{"connected":{"glyph":"x"}}}"#,
+      #"{"symbols":{"font":" "}}"#,
+      #"{"symbols":{"size":73}}"#,
+      #"{"symbols":{"font":"Shared","connected":{"glyph":" "}}}"#,
+      #"{"symbols":{"font":"Shared","disconnected":{"glyph":"x","font":" "}}}"#,
+      #"{"symbols":{"font":"Shared","disconnected":{"glyph":"x","size":7}}}"#,
+      #"{"tints":{"connected":"red"}}"#,
+      #"{"tints":{"disconnected":"red"}}"#,
+    ] {
+      let settings = try JSONDecoder().decode(WifiConfiguration.self, from: Data(json.utf8))
+      #expect(throws: ConfigurationError.self) { try settings.validate(path: "wifi") }
+    }
+  }
+
   @Test("glyphs decode in item and Wi-Fi state symbols")
   func wifiGlyphs() throws {
     let json =
-      #"{"id":"wifi","type":"wifi","wifi":{"connectedSymbol":{"glyph":"\uf1eb","font":"Symbols Nerd Font Mono"}}}"#
+      #"{"id":"wifi","type":"wifi","wifi":{"symbols":{"font":"Symbols Nerd Font Mono","connected":{"glyph":"\uf1eb"}}}}"#
     var item = try JSONDecoder().decode(Item.self, from: Data(json.utf8))
+    try item.wifi?.validate(path: "wifi")
     let glyph = ItemSymbol.glyph("\u{f1eb}", font: "Symbols Nerd Font Mono")
     #expect(WidgetState.wifi(connected: true).presentation(for: item).symbol == glyph)
     #expect(WidgetState.wifi(connected: false).presentation(for: item).symbol == "wifi.slash")

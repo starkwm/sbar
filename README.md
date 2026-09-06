@@ -222,8 +222,11 @@ or a glyph object. Install the font on your Mac first and use its font name:
   "type": "wifi",
   "wifi": {
     "showLabel": false,
-    "connectedSymbol": { "glyph": "\uf1eb", "font": "Symbols Nerd Font Mono" },
-    "disconnectedSymbol": "wifi.slash"
+    "symbols": {
+      "font": "Symbols Nerd Font Mono",
+      "connected": { "glyph": "\uf1eb" },
+      "disconnected": "wifi.slash"
+    }
   }
 }
 ```
@@ -256,7 +259,7 @@ Battery `symbols.levels` accepts exactly five symbols, ordered 0%, 25%, 50%, 75%
 }
 ```
 
-Within `battery.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
+Within `battery.symbols` and `wifi.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
 Each glyph can override either value. A font must be provided locally or inherited;
 without either size, the resolved item/theme font size is used. Strings remain SF Symbol
 names and do not inherit glyph font settings. Omitted state symbols use the built-in defaults.
@@ -313,8 +316,10 @@ states. A computer without a battery displays `AC power` and the plugged-in icon
   "type": "wifi",
   "wifi": {
     "showLabel": false,
-    "connectedTint": "#66CC88",
-    "disconnectedTint": "#FF6655",
+    "tints": {
+      "connected": "#66CC88",
+      "disconnected": "#FF6655"
+    },
     "hideWhenDisconnected": true
   }
 }
@@ -322,8 +327,8 @@ states. A computer without a battery displays `AC power` and the plugged-in icon
 
 Wi-Fi settings: `showLabel` and `showSymbol` default to `true`; `hideWhenDisconnected` defaults
 to `false`. Customize `connectedLabel` / `disconnectedLabel` (defaults `Wi-Fi connected` /
-`Wi-Fi disconnected`) and `connectedSymbol` / `disconnectedSymbol` (defaults `wifi` /
-`wifi.slash`). Connection means the current satisfied network path uses Wi-Fi; it does not
+`Wi-Fi disconnected`) and `symbols.connected` / `symbols.disconnected` (defaults `wifi` /
+`wifi.slash`). Use `tints.connected` and `tints.disconnected` for state colors. Connection means the current satisfied network path uses Wi-Fi; it does not
 report radio power, association, SSID, or signal strength. Ethernet taking over the path can
 therefore make this widget report disconnected.
 

@@ -20,28 +20,26 @@ struct BatteryConfiguration: Codable, Equatable, Sendable {
 }
 
 struct WifiConfiguration: Codable, Equatable, Sendable {
+  var symbols: WifiSymbols?
+  var tints: WifiTints?
   var showLabel: Bool?
   var showSymbol: Bool?
   var connectedLabel: String?
   var disconnectedLabel: String?
-  var connectedSymbol: ItemSymbol?
-  var disconnectedSymbol: ItemSymbol?
-  var connectedTint: String?
-  var disconnectedTint: String?
   var hideWhenDisconnected: Bool?
 
   func validate(path: String) throws {
-    try ItemStyle.validateColor(connectedTint, path: "\(path).connectedTint")
-    try ItemStyle.validateColor(disconnectedTint, path: "\(path).disconnectedTint")
+    try symbols?.validate(path: "\(path).symbols")
+    try tints?.validate(path: "\(path).tints")
   }
 }
 
 struct BatterySymbols: Codable, Equatable, Sendable {
   var font: String?
   var size: Double?
-  var levels: [BatterySymbol]?
-  var charging: BatterySymbol?
-  var pluggedIn: BatterySymbol?
+  var levels: [WidgetSymbol]?
+  var charging: WidgetSymbol?
+  var pluggedIn: WidgetSymbol?
 
   func validate(path: String) throws {
     if let font, font.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -66,7 +64,7 @@ struct BatterySymbols: Codable, Equatable, Sendable {
     try pluggedIn?.validate(font: font, path: "\(path).pluggedIn")
   }
 
-  func resolve(_ symbol: BatterySymbol?) -> ItemSymbol? {
+  func resolve(_ symbol: WidgetSymbol?) -> ItemSymbol? {
     symbol?.resolve(font: font, size: size)
   }
 }
@@ -83,7 +81,42 @@ struct BatteryTints: Codable, Equatable, Sendable {
   }
 }
 
-enum BatterySymbol: Codable, Equatable, Sendable {
+struct WifiSymbols: Codable, Equatable, Sendable {
+  var font: String?
+  var size: Double?
+  var connected: WidgetSymbol?
+  var disconnected: WidgetSymbol?
+
+  func validate(path: String) throws {
+    if let font, font.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      throw ConfigurationError.invalidValue(path: "\(path).font", reason: "Must not be blank.")
+    }
+    if let size, !(8...72).contains(size) {
+      throw ConfigurationError.invalidValue(
+        path: "\(path).size",
+        reason: "Must be between 8 and 72."
+      )
+    }
+    try connected?.validate(font: font, path: "\(path).connected")
+    try disconnected?.validate(font: font, path: "\(path).disconnected")
+  }
+
+  func resolve(_ symbol: WidgetSymbol?) -> ItemSymbol? {
+    symbol?.resolve(font: font, size: size)
+  }
+}
+
+struct WifiTints: Codable, Equatable, Sendable {
+  var connected: String?
+  var disconnected: String?
+
+  func validate(path: String) throws {
+    try ItemStyle.validateColor(connected, path: "\(path).connected")
+    try ItemStyle.validateColor(disconnected, path: "\(path).disconnected")
+  }
+}
+
+enum WidgetSymbol: Codable, Equatable, Sendable {
   case system(String)
   case glyph(String, font: String? = nil, size: Double? = nil)
 
