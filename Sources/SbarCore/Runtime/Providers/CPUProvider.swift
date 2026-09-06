@@ -12,8 +12,10 @@ struct CPUProvider {
   }
 
   private var previousCPU: [UInt32] = []
+  private var previousTime: TimeInterval?
+  private var samples: [Double] = []
 
-  mutating func sample(host: host_t) -> String? {
+  mutating func sample(host: host_t) -> CPUState {
     var info = host_cpu_load_info()
     var count = mach_msg_type_number_t(
       MemoryLayout<host_cpu_load_info>.size / MemoryLayout<integer_t>.size
@@ -24,15 +26,33 @@ struct CPUProvider {
       }
     }
 
-    if result == KERN_SUCCESS {
-      let current = [info.cpu_ticks.0, info.cpu_ticks.1, info.cpu_ticks.2, info.cpu_ticks.3]
-      let value =
-        Self.usage(previous: previousCPU, current: current).map { "CPU \(Int($0 * 100))%" }
-        ?? "CPU —"
-      previousCPU = current
-      return value
-    }
+    let ticks =
+      result == KERN_SUCCESS
+      ? [info.cpu_ticks.0, info.cpu_ticks.1, info.cpu_ticks.2, info.cpu_ticks.3] : nil
+    return record(ticks: ticks, at: Date.timeIntervalSinceReferenceDate)
+  }
 
-    return nil
+  mutating func reset() {
+    previousCPU = []
+    previousTime = nil
+    samples = []
+  }
+
+  mutating func record(ticks: [UInt32]?, at time: TimeInterval) -> CPUState {
+    guard let ticks, ticks.count == 4 else {
+      reset()
+      return CPUState()
+    }
+    let elapsed = previousTime.map { time - $0 }
+    let usage = Self.usage(previous: previousCPU, current: ticks)
+    previousCPU = ticks
+    previousTime = time
+    guard let elapsed, elapsed > 0, elapsed <= 10, let usage else {
+      samples = []
+      return CPUState()
+    }
+    samples.append(usage * 100)
+    if samples.count > 30 { samples.removeFirst(samples.count - 30) }
+    return CPUState(samples: samples)
   }
 }

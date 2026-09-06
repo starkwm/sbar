@@ -396,6 +396,9 @@
         },
         "network": {
           "$ref": "#/$defs/network"
+        },
+        "cpu": {
+          "$ref": "#/$defs/cpu"
         }
       }
     },
@@ -1027,6 +1030,175 @@
             "null"
           ],
           "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "cpu": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "showLabel": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showPercentage": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "warningThreshold": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100,
+          "default": 60
+        },
+        "highThreshold": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100,
+          "default": 85
+        },
+        "smoothingSamples": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 30,
+          "default": 1
+        },
+        "symbols": {
+          "$ref": "#/$defs/cpuSymbols"
+        },
+        "tints": {
+          "$ref": "#/$defs/cpuTints"
+        }
+      },
+      "additionalProperties": false,
+      "description": "warningThreshold must be below highThreshold, including default values."
+    },
+    "cpuSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "low": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "medium": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "high": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unavailable": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "low": {
+                "$ref": "#/$defs/symbol"
+              },
+              "medium": {
+                "$ref": "#/$defs/symbol"
+              },
+              "high": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unavailable": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cpuTints": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "low": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        },
+        "medium": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        },
+        "high": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        },
+        "unavailable": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
         }
       },
       "additionalProperties": false

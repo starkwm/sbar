@@ -4,17 +4,26 @@ actor SystemMetricsSampler {
   private var cpu = CPUProvider()
   private var throughput = ThroughputProvider()
 
-  func sample(_ types: Set<ItemType>) -> [ItemType: String] {
+  func resetCPU() {
+    cpu.reset()
+  }
+
+  func sample(_ types: Set<ItemType>) -> MetricsSnapshot {
     let host = mach_host_self()
     defer { mach_port_deallocate(mach_task_self_, host) }
 
     var values: [ItemType: String] = [:]
 
-    if types.contains(.cpu) { values[.cpu] = cpu.sample(host: host) }
+    let cpuState = types.contains(.cpu) ? cpu.sample(host: host) : nil
     if types.contains(.memory) { values[.memory] = MemoryProvider.sample(host: host) }
     if types.contains(.disk) { values[.disk] = DiskProvider.sample() }
     if types.contains(.throughput) { values[.throughput] = throughput.sample() }
 
-    return values
+    return MetricsSnapshot(values: values, cpu: cpuState)
   }
+}
+
+struct MetricsSnapshot: Sendable {
+  var values: [ItemType: String]
+  var cpu: CPUState?
 }

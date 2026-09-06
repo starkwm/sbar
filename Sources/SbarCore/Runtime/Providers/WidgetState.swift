@@ -1,10 +1,13 @@
 enum WidgetState: Equatable, Sendable {
+  case cpu(CPUState)
   case network(NetworkConnection)
   case battery(percentage: Int?, charging: Bool, pluggedIn: Bool)
   case volume(percentage: Int?, muted: Bool, available: Bool)
 
   var text: String {
     switch self {
+    case .cpu(let state):
+      state.text
     case .network(let connection):
       connection.text
     case .battery(let percentage, let charging, _):
@@ -17,6 +20,8 @@ enum WidgetState: Equatable, Sendable {
 
   func presentation(for item: Item) -> WidgetPresentation {
     switch self {
+    case .cpu(let state):
+      return state.presentation(for: item)
     case .network(let connection):
       let settings = item.network ?? NetworkConfiguration()
       let state = settings.interface.map { $0 == connection ? connection : .offline } ?? connection

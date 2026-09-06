@@ -106,10 +106,12 @@ struct Configuration: Codable, Equatable, Sendable {
           path: "\(location).command.timeout"
         )
 
+        try item.cpu?.validate(path: "\(location).cpu")
         try item.network?.validate(path: "\(location).network")
         try item.battery?.validate(path: "\(location).battery")
         try item.volume?.validate(path: "\(location).volume")
         if (item.battery != nil && item.type != .battery)
+          || (item.cpu != nil && item.type != .cpu)
           || (item.network != nil && item.type != .network)
           || (item.volume != nil && item.type != .volume)
           || (item.frontApplication != nil && item.type != .frontApplication)
@@ -238,7 +240,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
     case enabled, format, dateStyle, timeStyle, id, label, priority, style, symbol, type,
       primaryAction, secondaryAction,
-      popup, command, children, plugin, refresh, battery, volume, network,
+      popup, command, children, plugin, refresh, battery, cpu, volume, network,
       frontApplication
   }
 
@@ -262,6 +264,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var children: [Item]?
   var plugin: Plugin?
   var frontApplication: FrontApplicationConfiguration?
+  var cpu: CPUConfiguration?
   var battery: BatteryConfiguration?
   var network: NetworkConfiguration?
   var volume: VolumeConfiguration?
@@ -289,6 +292,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     children: [Item]? = nil,
     plugin: Plugin? = nil,
     frontApplication: FrontApplicationConfiguration? = nil,
+    cpu: CPUConfiguration? = nil,
     battery: BatteryConfiguration? = nil,
     network: NetworkConfiguration? = nil,
     volume: VolumeConfiguration? = nil,
@@ -314,6 +318,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.children = children
     self.plugin = plugin
     self.frontApplication = frontApplication
+    self.cpu = cpu
     self.battery = battery
     self.network = network
     self.volume = volume
@@ -346,6 +351,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
       FrontApplicationConfiguration.self,
       forKey: .frontApplication
     )
+    cpu = try container.decodeIfPresent(CPUConfiguration.self, forKey: .cpu)
     battery = try container.decodeIfPresent(BatteryConfiguration.self, forKey: .battery)
     network = try container.decodeIfPresent(NetworkConfiguration.self, forKey: .network)
     volume = try container.decodeIfPresent(VolumeConfiguration.self, forKey: .volume)

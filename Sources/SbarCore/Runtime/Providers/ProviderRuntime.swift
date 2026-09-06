@@ -122,8 +122,10 @@ final class ProviderRuntime {
 
     let sampled = activeTypes.intersection([.cpu, .memory, .disk, .throughput])
     let needsClock = activeTypes.contains(.datetime)
+    if sampled.contains(.cpu) { updateWidgetState(.cpu(CPUState()), for: .cpu) }
     if !sampled.isEmpty || needsClock {
       samplingTask = Task { [weak self, metrics] in
+        await metrics.resetCPU()
         var tick = 0
 
         while !Task.isCancelled {
@@ -132,7 +134,8 @@ final class ProviderRuntime {
             let snapshot = await metrics.sample(sampled)
             guard !Task.isCancelled else { return }
 
-            self?.updateSharedValues(snapshot)
+            if let cpu = snapshot.cpu { self?.updateWidgetState(.cpu(cpu), for: .cpu) }
+            self?.updateSharedValues(snapshot.values)
           }
 
           tick += 1
