@@ -125,7 +125,7 @@ The theme's `verticalPadding` and `cornerRadius` accept 0–48 points and defaul
 | --- | --- |
 | `text` | Static text from `label` |
 | `clock` | Current time; `format` supports `HH:mm` and `HH:mm:ss`, otherwise the system's short time style |
-| `date` | Current weekday, month, and day |
+| `date` | Current date; `format` accepts date style presets or a custom pattern (see below) |
 | `frontApplication` | Active application's name, or a fixed `label` |
 | `battery` | Battery charge and power state |
 | `volume` | Output volume and mute state |
@@ -144,6 +144,14 @@ The theme's `verticalPadding` and `cornerRadius` accept 0–48 points and defaul
 | `popup` | A label that opens child items in a popover |
 | `divider` | Vertical separator |
 | `spacer` | Flexible empty space |
+
+Date items default to the current weekday, month, and day. Set `format` to `short`, `medium`, `long`, or `full` for a localized date style, or use a Unicode date pattern:
+
+```json
+{ "id": "date", "type": "date", "format": "yyyy-MM-dd" }
+```
+
+For example, `dd/MM/yyyy` gives a numeric day/month/year, `EEEE, d MMMM` includes the full weekday and month names, and `MMM d 'at' HH:mm` includes the time. Patterns use the system locale and time zone; quote literal words with single quotes. Use `yyyy` for the calendar year (`YYYY` is the week-based year). Omitting `format`, setting it to `null`, or using an empty string keeps the default display. You can also change it at runtime with `sbar set date format '"EEEE, d MMMM"'`.
 
 Optional properties include `enabled` (default `true`), `label`, `symbol` (an SF Symbol name or font glyph object), `priority` (default `0`), `style`, `refresh`, `primaryAction`, `secondaryAction`, and `popup` text. Symbols appear beside item content except for groups, dividers, and spacers. Type-specific settings are described below.
 

@@ -238,7 +238,7 @@
             "string",
             "null"
           ],
-          "description": "Clock formats HH:mm and HH:mm:ss are recognized; other values use the default time style."
+          "description": "Clock formats HH:mm and HH:mm:ss are recognized; other values use the default time style. Date formats accept short, medium, long, full, or a Unicode date pattern such as yyyy-MM-dd. Omitted or empty date formats show weekday, month, and day."
         },
         "priority": {
           "type": [

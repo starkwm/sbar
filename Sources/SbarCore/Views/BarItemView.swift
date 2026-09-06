@@ -38,8 +38,10 @@ struct BarItemView: View {
       ).monospacedDigit()
     case .date:
       Text(
-        providers.itemDates[configuration.id] ?? providers.currentDate,
-        format: .dateTime.weekday().month().day()
+        DateItemFormatter.string(
+          providers.itemDates[configuration.id] ?? providers.currentDate,
+          format: configuration.format
+        )
       )
     case .divider:
       Rectangle().frame(width: 1, height: 16).opacity(0.3).accessibilityHidden(true)
