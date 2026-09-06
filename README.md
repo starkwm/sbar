@@ -284,8 +284,9 @@ still overrides the name; use `"label": ""` for an icon-only item.
 
 ### Battery and Wi-Fi appearance
 
-Without widget settings, battery and Wi-Fi retain their text presentation and optional static `symbol`.
-Add a `battery` or `wifi` block to enable state-dependent icons:
+Battery and Wi-Fi display text and state-dependent icons by default. Omitting their
+configuration block behaves the same as an empty `{}` block. Add a `battery` or `wifi`
+block to customize the appearance; use `showSymbol: false` for text only:
 
 ```json
 {

@@ -44,13 +44,45 @@ struct WidgetStateTests {
     #expect(runtime.sharedValues[.battery] == "50%")
   }
 
-  @Test("legacy text and static symbols are preserved")
-  func legacy() {
+  @Test("static symbols override automatic state symbols")
+  func staticSymbols() {
     let item = Item(id: "battery", type: .battery, symbol: "bolt")
     let state = WidgetState.battery(percentage: 80, charging: false, pluggedIn: true)
     #expect(state.text == "80%")
     #expect(state.presentation(for: item).symbol == "bolt")
     #expect(WidgetState.wifi(connected: false).text == "Wi-Fi disconnected")
+  }
+
+  @Test("omitted widget settings use the same presentation as empty settings")
+  func defaultSettings() throws {
+    let cases: [(ItemType, WidgetState, ItemSymbol, String)] = [
+      (
+        .battery, .battery(percentage: 50, charging: false, pluggedIn: false), "battery.50percent",
+        "50%"
+      ),
+      (
+        .battery, .battery(percentage: 50, charging: true, pluggedIn: true),
+        "battery.100percent.bolt", "50%"
+      ),
+      (.battery, .battery(percentage: 100, charging: false, pluggedIn: true), "powerplug", "100%"),
+      (
+        .battery, .battery(percentage: nil, charging: false, pluggedIn: true), "powerplug",
+        "AC power"
+      ),
+      (.wifi, .wifi(connected: true), "wifi", "Wi-Fi connected"),
+      (.wifi, .wifi(connected: false), "wifi.slash", "Wi-Fi disconnected"),
+    ]
+    for (type, state, symbol, text) in cases {
+      let omitted = Item(id: "widget", type: type)
+      let empty = try JSONDecoder().decode(
+        Item.self,
+        from: Data("{\"id\":\"widget\",\"type\":\"\(type.rawValue)\",\"\(type.rawValue)\":{}}".utf8)
+      )
+      let presentation = state.presentation(for: omitted)
+      #expect(presentation == state.presentation(for: empty))
+      #expect(presentation.symbol == symbol)
+      #expect(presentation.text == text)
+    }
   }
 
   @Test("battery distinguishes low, charging, plugged in, and no battery")

@@ -14,9 +14,7 @@ enum WidgetState: Equatable, Sendable {
   func presentation(for item: Item) -> WidgetPresentation {
     switch self {
     case .battery(let percentage, let charging, let pluggedIn):
-      guard let settings = item.battery else {
-        return WidgetPresentation(text: text, symbol: item.symbol, accessibilityLabel: text)
-      }
+      let settings = item.battery ?? BatteryConfiguration()
       let level = min(100, max(0, percentage ?? 100))
       let index = Int((Double(level) / 25).rounded())
       let batterySymbol: ItemSymbol
@@ -51,9 +49,7 @@ enum WidgetState: Equatable, Sendable {
         accessibilityLabel: label
       )
     case .wifi(let connected):
-      guard let settings = item.wifi else {
-        return WidgetPresentation(text: text, symbol: item.symbol, accessibilityLabel: text)
-      }
+      let settings = item.wifi ?? WifiConfiguration()
       let label =
         connected
         ? settings.connectedLabel ?? "Wi-Fi connected"
