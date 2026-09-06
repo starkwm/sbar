@@ -26,7 +26,7 @@ struct BarView: View {
       if let color = Color(hex: configuration.theme?.background) {
         color
       } else {
-        Rectangle().fill(.ultraThinMaterial)
+        BarBackgroundView()
       }
     }
     .clipShape(RoundedRectangle(cornerRadius: configuration.theme?.cornerRadius ?? 0))
