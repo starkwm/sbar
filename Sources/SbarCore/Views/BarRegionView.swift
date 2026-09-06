@@ -1,34 +1,5 @@
 import SwiftUI
 
-struct OverflowSelection {
-  static func visibleItemIDs(
-    items: [Item],
-    widths: [String: CGFloat],
-    available: CGFloat,
-    spacing: CGFloat
-  ) -> Set<String> {
-    var selected = items
-    let flexible: Set<ItemType> = [.text, .frontApplication, .media, .command, .plugin]
-
-    func width() -> CGFloat {
-      selected.reduce(0) { $0 + (widths[$1.id] ?? 40) * (flexible.contains($1.type) ? 0.8 : 1) }
-        + CGFloat(max(0, selected.count - 1)) * spacing
-    }
-
-    if width() <= available { return Set(selected.map(\.id)) }
-
-    for item in items.enumerated().sorted(by: {
-      $0.element.priority == $1.element.priority
-        ? $0.offset > $1.offset : $0.element.priority < $1.element.priority
-    }) {
-      selected.removeAll { $0.id == item.element.id }
-      if width() + (selected.isEmpty ? 0 : spacing) + 28 <= available { break }
-    }
-
-    return Set(selected.map(\.id))
-  }
-}
-
 struct BarRegionView: View {
   let items: [Item]
   let theme: Theme?
@@ -99,6 +70,35 @@ struct BarRegionView: View {
 
   @State private var widths: [String: CGFloat] = [:]
   @State private var showingOverflow = false
+}
+
+struct OverflowSelection {
+  static func visibleItemIDs(
+    items: [Item],
+    widths: [String: CGFloat],
+    available: CGFloat,
+    spacing: CGFloat
+  ) -> Set<String> {
+    var selected = items
+    let flexible: Set<ItemType> = [.text, .frontApplication, .media, .command, .plugin]
+
+    func width() -> CGFloat {
+      selected.reduce(0) { $0 + (widths[$1.id] ?? 40) * (flexible.contains($1.type) ? 0.8 : 1) }
+        + CGFloat(max(0, selected.count - 1)) * spacing
+    }
+
+    if width() <= available { return Set(selected.map(\.id)) }
+
+    for item in items.enumerated().sorted(by: {
+      $0.element.priority == $1.element.priority
+        ? $0.offset > $1.offset : $0.element.priority < $1.element.priority
+    }) {
+      selected.removeAll { $0.id == item.element.id }
+      if width() + (selected.isEmpty ? 0 : spacing) + 28 <= available { break }
+    }
+
+    return Set(selected.map(\.id))
+  }
 }
 
 private struct ItemWidthsKey: PreferenceKey {

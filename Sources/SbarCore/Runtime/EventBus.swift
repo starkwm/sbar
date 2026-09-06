@@ -1,14 +1,6 @@
 import Foundation
 import Observation
 
-struct RuntimeEvent: Codable, Sendable {
-  enum Kind: String, Codable, Sendable { case configuration, trigger, provider }
-
-  let kind: Kind
-  let name: String
-  let value: JSONValue?
-}
-
 @MainActor @Observable
 final class EventBus {
   private(set) var recent: [RuntimeEvent] = []
@@ -21,4 +13,12 @@ final class EventBus {
 
     onEvent?(event)
   }
+}
+
+struct RuntimeEvent: Codable, Sendable {
+  enum Kind: String, Codable, Sendable { case configuration, trigger, provider }
+
+  let kind: Kind
+  let name: String
+  let value: JSONValue?
 }

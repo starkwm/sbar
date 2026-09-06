@@ -1,27 +1,6 @@
 import Darwin
 import Foundation
 
-struct ProcessResult: Sendable {
-  let output: String
-  let exitCode: Int32
-}
-
-enum ProcessError: Error, LocalizedError {
-  case launch(Int32)
-  case exitStatus(Int32)
-  case timeout, outputLimit, cancelled
-
-  var errorDescription: String? {
-    switch self {
-    case .launch(let code): "Could not launch command (\(code))."
-    case .exitStatus(let code): "Process exited with status \(code)."
-    case .timeout: "Command timed out."
-    case .outputLimit: "Command exceeded 64 KB of output."
-    case .cancelled: "Command cancelled."
-    }
-  }
-}
-
 struct ProcessRunner {
   static func run(
     executable: String,
@@ -153,6 +132,27 @@ struct ProcessRunner {
         read: outputClosed ? nil : descriptors[0],
         timeout: ContinuousClock.now.duration(to: deadline)
       )
+    }
+  }
+}
+
+struct ProcessResult: Sendable {
+  let output: String
+  let exitCode: Int32
+}
+
+enum ProcessError: Error, LocalizedError {
+  case launch(Int32)
+  case exitStatus(Int32)
+  case timeout, outputLimit, cancelled
+
+  var errorDescription: String? {
+    switch self {
+    case .launch(let code): "Could not launch command (\(code))."
+    case .exitStatus(let code): "Process exited with status \(code)."
+    case .timeout: "Command timed out."
+    case .outputLimit: "Command exceeded 64 KB of output."
+    case .cancelled: "Command cancelled."
     }
   }
 }
