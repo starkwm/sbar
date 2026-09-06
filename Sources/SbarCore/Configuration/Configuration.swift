@@ -100,11 +100,7 @@ struct Configuration: Codable, Equatable, Sendable {
             reason: "Command settings are required."
           )
         }
-        try ItemStyle.validateNumber(
-          item.command?.timeout,
-          range: 0.1...60,
-          path: "\(location).command.timeout"
-        )
+        try item.command?.validate(path: "\(location).command")
 
         try item.yabai?.validate(path: "\(location).yabai")
         try item.aerospace?.validate(path: "\(location).aerospace")
@@ -117,7 +113,8 @@ struct Configuration: Codable, Equatable, Sendable {
         try item.network?.validate(path: "\(location).network")
         try item.battery?.validate(path: "\(location).battery")
         try item.volume?.validate(path: "\(location).volume")
-        if (item.battery != nil && item.type != .battery)
+        if (item.command != nil && item.type != .command)
+          || (item.battery != nil && item.type != .battery)
           || (item.yabai != nil && item.type != .yabai)
           || (item.aerospace != nil && item.type != .aerospace)
           || (item.spaces != nil && item.type != .spaces)

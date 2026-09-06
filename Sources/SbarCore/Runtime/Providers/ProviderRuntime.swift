@@ -36,6 +36,7 @@ final class ProviderRuntime {
 
   private(set) var itemSnapshots: [String: String] = [:]
   private(set) var diskStates: [String: DiskState] = [:]
+  private(set) var commandStates: [String: CommandState] = [:]
   private(set) var widgetStates: [ItemType: WidgetState] = [:]
   private(set) var widgetSnapshots: [String: WidgetState] = [:]
   private(set) var frontApplication: FrontApplicationState?
@@ -57,6 +58,7 @@ final class ProviderRuntime {
   @ObservationIgnored private let spaces = SpacesProvider()
   @ObservationIgnored private var samplingTask: Task<Void, Never>?
 
+  @ObservationIgnored private var commandPublishedValues: [String: String] = [:]
   @ObservationIgnored private var commandTasks: [String: Task<Void, Never>] = [:]
 
   @ObservationIgnored private var pluginItems: [Item] = []
@@ -185,6 +187,16 @@ final class ProviderRuntime {
   }
 
   func presentation(for item: Item, displayUUID: String? = nil) -> WidgetPresentation? {
+    if item.type == .command {
+      var result = (commandStates[item.id] ?? CommandState()).presentation(for: item)
+      if item.command?.showValue != false, let value = itemValues[item.id],
+        value != commandPublishedValues[item.id]
+      {
+        result.text = CommandState.displayText(value, limit: item.command?.maxLength ?? 256)
+        result.accessibilityLabel = result.text
+      }
+      return result
+    }
     if item.type == .disk {
       let state: WidgetState =
         item.refresh == nil
@@ -270,7 +282,7 @@ final class ProviderRuntime {
 
     for item in commandItems
     where item.refresh?.event == event || item.id == event {
-      startCommand(item)
+      startCommand(item, coalesce: true)
     }
   }
 
@@ -299,6 +311,8 @@ final class ProviderRuntime {
 
     for task in commandTasks.values { task.cancel() }
     commandTasks.removeAll()
+    commandStates = [:]
+    commandPublishedValues = [:]
     commandItems = []
 
     stopNative()
@@ -436,40 +450,68 @@ final class ProviderRuntime {
     }
 
     commandItems = items
+    commandStates = commandStates.filter { ids.contains($0.key) }
+    commandPublishedValues = commandPublishedValues.filter { ids.contains($0.key) }
     itemValues = itemValues.filter { key, _ in (items + pluginItems).contains { $0.id == key } }
 
     for item in items
-    where previous[item.id] == nil || previous[item.id]?.command != item.command
+    where previous[item.id] == nil
+      || item.command?.sameExecution(as: previous[item.id]?.command) != true
       || previous[item.id]?.refresh != item.refresh
     {
+      commandStates[item.id] = nil
+      commandPublishedValues[item.id] = nil
+      itemValues[item.id] = nil
       startCommand(item)
     }
   }
 
-  private func startCommand(_ item: Item) {
-    guard let command = item.command else { return }
+  private func publishCommand(_ state: CommandState, item: Item) {
+    commandStates[item.id] = state
+    let current = commandItems.first { $0.id == item.id } ?? item
+    // Keep raw text so later cosmetic changes can adjust truncation and visibility.
+    let retaining = state.status != .failure || current.command?.onError == .keepLast
+    let text =
+      retaining ? state.lastSuccess?.text ?? state.error ?? "…" : state.error ?? "Command failed"
+    commandPublishedValues[item.id] = text
+    updateItemValue(text, for: item.id)
+  }
 
+  private func startCommand(_ item: Item, coalesce: Bool = false) {
+    guard let command = item.command else { return }
     commandTasks[item.id]?.cancel()
     commandTasks[item.id] = Task { [weak self] in
+      if coalesce {
+        do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
+      }
       repeat {
+        guard !Task.isCancelled else { return }
+        var state = self?.commandStates[item.id] ?? CommandState()
+        state.status = .running
+        state.error = nil
+        self?.publishCommand(state, item: item)
         do {
           let result = try await ProcessRunner.run(
             executable: "/bin/sh",
             arguments: ["-c", command.script],
-            timeout: command.timeout ?? 5
+            timeout: command.timeout ?? 5,
+            mergeStandardError: command.format != .json && command.output != .stdout
           )
           guard !Task.isCancelled else { return }
-
-          self?.updateItemValue(
-            result.exitCode == 0 ? result.output : "Exit \(result.exitCode): \(result.output)",
-            for: item.id
-          )
+          if result.exitCode == 0 {
+            state.lastSuccess = try CommandState.decode(result.output, configuration: command)
+            state.status = .success
+          } else {
+            state.status = .failure
+            state.error = "Exit \(result.exitCode): \(result.output)"
+          }
         } catch {
           guard !Task.isCancelled else { return }
-
-          self?.updateItemValue(error.localizedDescription, for: item.id)
+          state.status = .failure
+          state.error = error is DecodingError ? "Invalid command JSON" : error.localizedDescription
         }
-
+        guard !Task.isCancelled else { return }
+        self?.publishCommand(state, item: item)
         let duration = item.refresh?.mode == .interval ? item.refresh?.seconds : nil
         guard let interval = duration else { return }
         do { try await Task.sleep(for: .seconds(interval)) } catch { return }

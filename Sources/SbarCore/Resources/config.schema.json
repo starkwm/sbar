@@ -280,7 +280,8 @@
           ],
           "properties": {
             "script": {
-              "type": "string"
+              "type": "string",
+              "pattern": "\\S"
             },
             "timeout": {
               "type": [
@@ -289,8 +290,86 @@
               ],
               "minimum": 0.1,
               "maximum": 60
+            },
+            "format": {
+              "enum": [
+                "text",
+                "json",
+                null
+              ],
+              "default": "text"
+            },
+            "output": {
+              "enum": [
+                "stdout",
+                "combined",
+                null
+              ]
+            },
+            "onError": {
+              "enum": [
+                "show",
+                "keepLast",
+                "hide",
+                null
+              ],
+              "default": "show"
+            },
+            "maxLength": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 4096,
+              "default": 256
+            },
+            "showValue": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": true
+            },
+            "showSymbol": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": true
+            },
+            "symbols": {
+              "$ref": "#/$defs/commandSymbols"
+            },
+            "tints": {
+              "$ref": "#/$defs/commandTints"
             }
-          }
+          },
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "required": [
+                  "format"
+                ],
+                "properties": {
+                  "format": {
+                    "const": "json"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "output": {
+                    "enum": [
+                      "stdout",
+                      null
+                    ]
+                  }
+                }
+              }
+            }
+          ]
         },
         "plugin": {
           "type": [
@@ -2195,6 +2274,98 @@
           "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
         },
         "visible": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "commandSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "running": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "success": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "failure": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "running": {
+                "$ref": "#/$defs/symbol"
+              },
+              "success": {
+                "$ref": "#/$defs/symbol"
+              },
+              "failure": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "commandTints": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "running": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        },
+        "success": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        },
+        "failure": {
           "type": [
             "string",
             "null"
