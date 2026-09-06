@@ -57,6 +57,81 @@ struct ItemSymbolTests {
     #expect(throws: ConfigurationError.self) { try item.battery?.validate(path: "battery") }
   }
 
+  @Test("grouped battery symbols inherit defaults and preserve overrides on round trip")
+  func groupedBatterySymbols() throws {
+    let json = #"""
+      {"id":"battery","type":"battery","battery":{
+        "symbols":{"font":"Shared","size":18,
+          "levels":["battery.0percent",{"glyph":"a"},{"glyph":"b","font":"Other"},
+            {"glyph":"c","size":24},{"glyph":"d","font":"Other","size":20}],
+          "charging":{"glyph":"bolt"}},
+        "tints":{"low":"#ff0000","charging":"#00ff00","pluggedIn":"#0000ff"},
+        "chargingSymbol":"legacy","pluggedInSymbol":"legacy.plug",
+        "lowTint":"#111111","chargingTint":"#222222","pluggedInTint":"#333333"
+      }}
+      """#
+    var item = try JSONDecoder().decode(Item.self, from: Data(json.utf8))
+    try item.battery?.validate(path: "battery")
+    #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+    let expected: [ItemSymbol] = [
+      .system("battery.0percent"), .glyph("a", font: "Shared", size: 18),
+      .glyph("b", font: "Other", size: 18), .glyph("c", font: "Shared", size: 24),
+      .glyph("d", font: "Other", size: 20),
+    ]
+    for (index, symbol) in expected.enumerated() {
+      let result = WidgetState.battery(percentage: index * 25, charging: false, pluggedIn: false)
+        .presentation(for: item)
+      #expect(result.symbol == symbol)
+      #expect(result.tint == (index == 0 ? "#ff0000" : nil))
+    }
+    let charging = WidgetState.battery(percentage: 20, charging: true, pluggedIn: true)
+    #expect(charging.presentation(for: item).symbol == .glyph("bolt", font: "Shared", size: 18))
+    #expect(charging.presentation(for: item).tint == "#00ff00")
+    let pluggedIn = WidgetState.battery(percentage: nil, charging: false, pluggedIn: true)
+    #expect(pluggedIn.presentation(for: item).symbol == "legacy.plug")
+    #expect(pluggedIn.presentation(for: item).tint == "#0000ff")
+    item.symbol = "star"
+    #expect(charging.presentation(for: item).symbol == "star")
+    item.battery?.showSymbol = false
+    #expect(charging.presentation(for: item).symbol == nil)
+  }
+
+  @Test("grouped battery configuration validates inherited glyphs and tints")
+  func invalidGroupedBatterySettings() throws {
+    for json in [
+      #"{"symbols":{"charging":{"glyph":"x"}}}"#,
+      #"{"symbols":{"font":" "}}"#,
+      #"{"symbols":{"size":73}}"#,
+      #"{"symbols":{"levels":["battery.0percent"]}}"#,
+      #"{"symbols":{"font":"Shared","charging":{"glyph":" "}}}"#,
+      #"{"symbols":{"font":"Shared","charging":{"glyph":"x","font":" "}}}"#,
+      #"{"symbols":{"font":"Shared","charging":{"glyph":"x","size":7}}}"#,
+      #"{"tints":{"low":"red"}}"#,
+      #"{"tints":{"charging":"red"}}"#,
+      #"{"tints":{"pluggedIn":"red"}}"#,
+    ] {
+      let settings = try JSONDecoder().decode(BatteryConfiguration.self, from: Data(json.utf8))
+      #expect(throws: ConfigurationError.self) { try settings.validate(path: "battery") }
+    }
+    for json in [
+      #"{"symbols":{},"tints":{}}"#,
+      #"{"symbols":{"charging":{"glyph":"x","font":"Local"}}}"#,
+      #"{"symbols":{"font":"Shared","size":8,"charging":{"glyph":"x","size":72}}}"#,
+    ] {
+      let settings = try JSONDecoder().decode(BatteryConfiguration.self, from: Data(json.utf8))
+      try settings.validate(path: "battery")
+    }
+    let item = Item(
+      id: "battery",
+      type: .battery,
+      battery: BatteryConfiguration(symbols: BatterySymbols())
+    )
+    #expect(
+      WidgetState.battery(percentage: 50, charging: false, pluggedIn: false)
+        .presentation(for: item).symbol == "battery.50percent"
+    )
+  }
+
   @Test("glyphs decode in item and Wi-Fi state symbols")
   func wifiGlyphs() throws {
     let json =

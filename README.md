@@ -234,24 +234,37 @@ font size. Only the symbol uses the custom font; item text retains its normal fo
 fonts or glyphs use macOS font fallback, which may display a missing-character box.
 SF Symbol strings continue to work, and can be mixed with glyph objects.
 
-Battery `levelSymbols` accepts exactly five symbols, ordered 0%, 25%, 50%, 75%, 100%:
+Battery `symbols.levels` accepts exactly five symbols, ordered 0%, 25%, 50%, 75%, 100%:
 
 ```json
 {
   "id": "battery",
   "type": "battery",
   "battery": {
-    "levelSymbols": [
-      { "glyph": "\uf244", "font": "Symbols Nerd Font Mono" },
-      { "glyph": "\uf243", "font": "Symbols Nerd Font Mono" },
-      { "glyph": "\uf242", "font": "Symbols Nerd Font Mono" },
-      { "glyph": "\uf241", "font": "Symbols Nerd Font Mono" },
-      { "glyph": "\uf240", "font": "Symbols Nerd Font Mono" }
-    ],
-    "chargingSymbol": { "glyph": "\uf0e7", "font": "Symbols Nerd Font Mono" }
+    "symbols": {
+      "font": "Symbols Nerd Font Mono",
+      "levels": [
+        { "glyph": "\uf244" },
+        { "glyph": "\uf243" },
+        { "glyph": "\uf242" },
+        { "glyph": "\uf241" },
+        { "glyph": "\uf240" }
+      ],
+      "charging": { "glyph": "\uf0e7" }
+    }
   }
 }
 ```
+
+Within `battery.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
+Each glyph can override either value. A font must be provided locally or inherited;
+without either size, the resolved item/theme font size is used. Strings remain SF Symbol
+names and do not inherit glyph font settings. Omitted state symbols use the built-in defaults.
+
+The legacy `levelSymbols`, `chargingSymbol`, `pluggedInSymbol`, `lowTint`, `chargingTint`,
+and `pluggedInTint` keys remain supported. Each non-null grouped value takes precedence
+over its corresponding legacy key. An item-level `symbol` overrides all state symbols;
+`showSymbol: false` hides the symbol regardless of these settings.
 
 The existing transient `set` command also accepts a glyph object for the item-level `symbol`.
 
@@ -280,18 +293,20 @@ Add a `battery` or `wifi` block to enable state-dependent icons:
   "battery": {
     "showPercentage": false,
     "lowThreshold": 20,
-    "lowTint": "#FF6655",
-    "chargingTint": "#66CC88",
-    "pluggedInSymbol": "powerplug"
+    "tints": {
+      "low": "#FF6655",
+      "charging": "#66CC88"
+    },
+    "symbols": { "pluggedIn": "powerplug" }
   }
 }
 ```
 
 Battery settings: `showPercentage` and `showSymbol` default to `true`. The icon follows charge
-level in 25% steps, uses `chargingSymbol` (default `battery.100percent.bolt`) while charging,
-and `pluggedInSymbol` (default `powerplug`) on AC power without charging. `lowThreshold`
-defaults to 20 and accepts 0–100, inclusive. `lowTint` applies at or below that threshold
-while running on battery; `chargingTint` and `pluggedInTint` apply to their respective power
+level in 25% steps, uses `symbols.charging` (default `battery.100percent.bolt`) while charging,
+and `symbols.pluggedIn` (default `powerplug`) on AC power without charging. `lowThreshold`
+defaults to 20 and accepts 0–100, inclusive. `tints.low` applies at or below that threshold
+while running on battery; `tints.charging` and `tints.pluggedIn` apply to their respective power
 states. A computer without a battery displays `AC power` and the plugged-in icon.
 
 ```json

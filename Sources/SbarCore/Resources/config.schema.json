@@ -571,6 +571,39 @@
               }
             ]
           }
+        },
+        "symbols": {
+          "$ref": "#/$defs/batterySymbols"
+        },
+        "tints": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "low": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+            },
+            "charging": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+            },
+            "pluggedIn": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -667,6 +700,125 @@
             }
           },
           "additionalProperties": false
+        }
+      ]
+    },
+    "batterySymbol": {
+      "oneOf": [
+        {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        {
+          "type": "object",
+          "required": [
+            "glyph"
+          ],
+          "properties": {
+            "glyph": {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            "font": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "\\S"
+            },
+            "size": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 8,
+              "maximum": 72
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "batterySymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "levels": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/batterySymbol"
+              },
+              {
+                "not": {
+                  "type": "null"
+                }
+              }
+            ]
+          }
+        },
+        "charging": {
+          "$ref": "#/$defs/batterySymbol"
+        },
+        "pluggedIn": {
+          "$ref": "#/$defs/batterySymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "levels": {
+                "items": {
+                  "$ref": "#/$defs/symbol"
+                }
+              },
+              "charging": {
+                "$ref": "#/$defs/symbol"
+              },
+              "pluggedIn": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
         }
       ]
     }
