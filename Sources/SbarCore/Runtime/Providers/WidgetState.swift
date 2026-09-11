@@ -8,6 +8,7 @@ enum WidgetState: Equatable, Sendable {
   case memory(MemoryState)
   case cpu(CPUState)
   case bluetooth(BluetoothState)
+  case audioDevice(AudioDeviceState)
   case vpn(VPNState)
   case network(NetworkConnection)
   case battery(percentage: Int?, charging: Bool, pluggedIn: Bool)
@@ -32,6 +33,8 @@ enum WidgetState: Equatable, Sendable {
     case .cpu(let state):
       state.text
     case .bluetooth(let state):
+      state.text
+    case .audioDevice(let state):
       state.text
     case .vpn(let state):
       state.text
@@ -64,6 +67,8 @@ enum WidgetState: Equatable, Sendable {
     case .cpu(let state):
       return state.presentation(for: item)
     case .bluetooth(let state):
+      return state.presentation(for: item)
+    case .audioDevice(let state):
       return state.presentation(for: item)
     case .vpn(let state):
       return state.presentation(for: item)

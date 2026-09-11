@@ -55,6 +55,7 @@ final class ProviderRuntime {
   @ObservationIgnored private let network = NetworkProvider()
   @ObservationIgnored private let vpn: VPNProvider
   @ObservationIgnored private let bluetooth: BluetoothProvider
+  @ObservationIgnored private let audioDevice: AudioDeviceProvider
   @ObservationIgnored private let media = MediaProvider()
   @ObservationIgnored private let aerospace: AerospaceProvider
   @ObservationIgnored private var aerospaceCaptures = Set<String>()
@@ -81,12 +82,14 @@ final class ProviderRuntime {
     aerospace: AerospaceProvider = AerospaceProvider(),
     yabai: YabaiProvider = YabaiProvider(),
     vpn: VPNProvider = VPNProvider(),
-    bluetooth: BluetoothProvider = BluetoothProvider()
+    bluetooth: BluetoothProvider = BluetoothProvider(),
+    audioDevice: AudioDeviceProvider = AudioDeviceProvider()
   ) {
     self.aerospace = aerospace
     self.yabai = yabai
     self.vpn = vpn
     self.bluetooth = bluetooth
+    self.audioDevice = audioDevice
   }
 
   func configure(_ configuration: Configuration) {
@@ -128,6 +131,12 @@ final class ProviderRuntime {
 
     if activeTypes.contains(.bluetooth) {
       bluetooth.start { [weak self] in self?.updateWidgetState(.bluetooth($0), for: .bluetooth) }
+    }
+
+    if activeTypes.contains(.audioDevice) {
+      audioDevice.start { [weak self] in
+        self?.updateWidgetState(.audioDevice($0), for: .audioDevice)
+      }
     }
 
     if activeTypes.contains(.vpn) {
@@ -592,6 +601,7 @@ final class ProviderRuntime {
     network.stop()
     vpn.stop()
     bluetooth.stop()
+    audioDevice.stop()
     media.stop()
     spaces.stop()
     yabai.stop()

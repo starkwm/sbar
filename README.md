@@ -128,6 +128,7 @@ The theme's `verticalPadding` and `cornerRadius` accept 0–48 points and defaul
 | `frontApplication` | Active application's name, or a fixed `label` |
 | `battery` | Battery charge and power state |
 | `volume` | Output volume and mute state |
+| `audioDevice` | Default audio output or input device name |
 | `network` | Network connection state |
 | `vpn` | VPN connection names and status |
 | `bluetooth` | Bluetooth power, connected devices, and access status |
@@ -208,7 +209,7 @@ Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeigh
 
 ## Native items
 
-`frontApplication`, `battery`, `volume`, `network`, `vpn`, and `bluetooth` use native change notifications. `cpu`, `memory`, `disk`, and `throughput` sample once every two seconds, shared across displays. All `datetime` items share one clock. Memory reports active, wired, and compressed pages; disk defaults to free space on the home volume. Throughput defaults to totaling non-loopback interfaces, so tunnels may contribute additional traffic. Fixed-volume outputs display that status rather than a fabricated percentage.
+`frontApplication`, `battery`, `volume`, `audioDevice`, `network`, `vpn`, and `bluetooth` use native change notifications. `cpu`, `memory`, `disk`, and `throughput` sample once every two seconds, shared across displays. All `datetime` items share one clock. Memory reports active, wired, and compressed pages; disk defaults to free space on the home volume. Throughput defaults to totaling non-loopback interfaces, so tunnels may contribute additional traffic. Fixed-volume outputs display that status rather than a fabricated percentage.
 
 `media` listens for Music and Spotify playback notifications. It waits for the next notification after startup and does not query or control other players. Wi-Fi reports connection state, not the location-protected SSID.
 
@@ -588,7 +589,7 @@ Battery `symbols.levels` accepts exactly five symbols, ordered 0%, 25%, 50%, 75%
 }
 ```
 
-Within `battery.symbols`, `cpu.symbols`, `disk.symbols`, `media.symbols`, `memory.symbols`, `network.symbols`, `throughput.symbols`, `volume.symbols`, `vpn.symbols`, and `bluetooth.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
+Within `battery.symbols`, `cpu.symbols`, `disk.symbols`, `media.symbols`, `memory.symbols`, `network.symbols`, `throughput.symbols`, `volume.symbols`, `vpn.symbols`, `bluetooth.symbols`, and `audioDevice.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
 Each glyph can override either value. A font must be provided locally or inherited;
 without either size, the resolved item/theme font size is used. Strings remain SF Symbol
 names and do not inherit glyph font settings. Omitted state symbols use the built-in defaults.
@@ -686,6 +687,53 @@ applies. Colors accept `#RRGGBB` or `#RRGGBBAA`. Icon-only widgets retain an acc
 Refresh policies capture text, symbols, colors, and visibility together. Edit these settings in
 the configuration file and reload; the `set` command does not accept the widget blocks.
 
+
+## Audio devices
+
+An `audioDevice` item shows the current default output device name. Set
+`audioDevice.device` to `input` to show the default microphone instead. Use two
+items to display both:
+
+```json
+[
+  { "id": "speakers", "type": "audioDevice" },
+  {
+    "id": "microphone",
+    "type": "audioDevice",
+    "audioDevice": { "device": "input" }
+  }
+]
+```
+
+`device` accepts `output` and `input`, defaulting to `output`. Available devices
+show their names, such as `Studio Display Speakers` or `USB Microphone`. A missing
+device shows `No output` or `No input`; a failed read shows `Output unavailable`
+or `Input unavailable`. Blank names use `Unnamed device`.
+
+`audioDevice.labels` and `audioDevice.tints` accept `available`, `disconnected`,
+and `unavailable`. `labels.available` replaces the device name with a fixed label.
+`showLabel:false` displays an icon only, and `showSymbol:false` hides the icon.
+Both options default to `true`. Accessibility labels retain the device name and
+whether it is the input or output. `hideWhenDisconnected:true` hides a missing
+device while keeping read errors visible; it defaults to `false`.
+
+`audioDevice.symbols` accepts `output`, `input`, `disconnected`, and `unavailable`,
+with the usual font and glyph support. Available outputs use
+`speaker.wave.2.fill`; inputs use `mic.fill`. Missing outputs use `speaker.slash`
+and missing inputs use `mic.slash`. Read errors use `exclamationmark.triangle`.
+A top-level item `symbol` overrides these symbols.
+
+The provider uses Core Audio metadata and notifications for default device
+changes, renames, device removal, and audio service restarts. Monitoring starts
+only while an audio device item is active and is shared across items and displays.
+Unavailable reads retry every two seconds. Event items follow changes; interval
+and manual items capture snapshots using the same refresh rules as other native
+providers.
+
+These are the macOS default input and normal output. Applications can choose
+different devices, and macOS has a separate output for alerts. Reading the names
+does not record audio or change audio settings. The `volume` provider supplies
+output volume and mute state.
 
 ## VPN
 

@@ -203,6 +203,7 @@
             "network",
             "vpn",
             "bluetooth",
+            "audioDevice",
             "cpu",
             "memory",
             "disk",
@@ -546,6 +547,9 @@
         },
         "bluetooth": {
           "$ref": "#/$defs/bluetooth"
+        },
+        "audioDevice": {
+          "$ref": "#/$defs/audioDevice"
         }
       }
     },
@@ -2752,6 +2756,158 @@
             "null"
           ],
           "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "audioDeviceSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "output": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "input": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "disconnected": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unavailable": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "output": {
+                "$ref": "#/$defs/symbol"
+              },
+              "input": {
+                "$ref": "#/$defs/symbol"
+              },
+              "disconnected": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unavailable": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "audioDevice": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "symbols": {
+          "$ref": "#/$defs/audioDeviceSymbols"
+        },
+        "labels": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "available": {
+              "type": "string"
+            },
+            "disconnected": {
+              "type": "string"
+            },
+            "unavailable": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "tints": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "available": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "disconnected": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "unavailable": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "showLabel": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "hideWhenDisconnected": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
+        },
+        "device": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "output",
+            "input",
+            null
+          ],
+          "default": "output"
         }
       },
       "additionalProperties": false
