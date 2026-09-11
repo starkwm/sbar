@@ -201,6 +201,7 @@
             "battery",
             "volume",
             "network",
+            "vpn",
             "cpu",
             "memory",
             "disk",
@@ -538,6 +539,9 @@
         },
         "yabai": {
           "$ref": "#/$defs/yabai"
+        },
+        "vpn": {
+          "$ref": "#/$defs/vpn"
         }
       }
     },
@@ -2410,6 +2414,173 @@
             "null"
           ],
           "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "vpnSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "connecting": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "connected": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "disconnecting": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "disconnected": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unavailable": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "connecting": {
+                "$ref": "#/$defs/symbol"
+              },
+              "connected": {
+                "$ref": "#/$defs/symbol"
+              },
+              "disconnecting": {
+                "$ref": "#/$defs/symbol"
+              },
+              "disconnected": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unavailable": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "vpn": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "symbols": {
+          "$ref": "#/$defs/vpnSymbols"
+        },
+        "labels": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "connecting": {
+              "type": "string"
+            },
+            "connected": {
+              "type": "string"
+            },
+            "disconnecting": {
+              "type": "string"
+            },
+            "disconnected": {
+              "type": "string"
+            },
+            "unavailable": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "tints": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "connecting": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "connected": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "disconnecting": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "disconnected": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "unavailable": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "showLabel": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "hideWhenDisconnected": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
+        },
+        "showName": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
         }
       },
       "additionalProperties": false

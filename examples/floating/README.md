@@ -1,6 +1,6 @@
 # Floating bar
 
-A small top bar for a notched MacBook Air, with the frontmost application and focused Space on the left, an empty center, and battery, Wi-Fi, and clock on the right. It uses the system material background and appears on the primary display.
+A small top bar for a notched MacBook Air, with the frontmost application and focused Space on the left, an empty center, and battery, Wi-Fi, VPN status, and clock on the right. It uses the system material background and appears on the primary display.
 
 From the repository root:
 

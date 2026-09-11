@@ -106,6 +106,7 @@ struct Configuration: Codable, Equatable, Sendable {
         try item.memory?.validate(path: "\(location).memory")
         try item.cpu?.validate(path: "\(location).cpu")
         try item.network?.validate(path: "\(location).network")
+        try item.vpn?.validate(path: "\(location).vpn")
         try item.battery?.validate(path: "\(location).battery")
         try item.volume?.validate(path: "\(location).volume")
         if (item.plugin != nil && item.type != .plugin)
@@ -120,6 +121,7 @@ struct Configuration: Codable, Equatable, Sendable {
           || (item.memory != nil && item.type != .memory)
           || (item.cpu != nil && item.type != .cpu)
           || (item.network != nil && item.type != .network)
+          || (item.vpn != nil && item.type != .vpn)
           || (item.volume != nil && item.type != .volume)
           || (item.frontApplication != nil && item.type != .frontApplication)
         {
@@ -253,6 +255,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
       throughput,
       volume,
       network,
+      vpn,
       frontApplication
   }
 
@@ -285,6 +288,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var memory: MemoryConfiguration?
   var cpu: CPUConfiguration?
   var battery: BatteryConfiguration?
+  var vpn: VPNConfiguration?
   var network: NetworkConfiguration?
   var volume: VolumeConfiguration?
   var refresh: RefreshPolicy?
@@ -320,6 +324,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     memory: MemoryConfiguration? = nil,
     cpu: CPUConfiguration? = nil,
     battery: BatteryConfiguration? = nil,
+    vpn: VPNConfiguration? = nil,
     network: NetworkConfiguration? = nil,
     volume: VolumeConfiguration? = nil,
     refresh: RefreshPolicy? = nil
@@ -353,6 +358,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.memory = memory
     self.cpu = cpu
     self.battery = battery
+    self.vpn = vpn
     self.network = network
     self.volume = volume
     self.refresh = refresh
@@ -393,6 +399,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     memory = try container.decodeIfPresent(MemoryConfiguration.self, forKey: .memory)
     cpu = try container.decodeIfPresent(CPUConfiguration.self, forKey: .cpu)
     battery = try container.decodeIfPresent(BatteryConfiguration.self, forKey: .battery)
+    vpn = try container.decodeIfPresent(VPNConfiguration.self, forKey: .vpn)
     network = try container.decodeIfPresent(NetworkConfiguration.self, forKey: .network)
     volume = try container.decodeIfPresent(VolumeConfiguration.self, forKey: .volume)
     refresh = try container.decodeIfPresent(RefreshPolicy.self, forKey: .refresh)
@@ -412,7 +419,7 @@ enum BarWindowLevel: String, Codable, CaseIterable, Sendable {
 }
 
 enum ItemType: String, CaseIterable, Codable, Sendable {
-  case datetime, divider, frontApplication, spacer, text, battery, volume, network, cpu,
+  case datetime, divider, frontApplication, spacer, text, battery, volume, network, vpn, cpu,
     memory, disk, throughput, media, command, group, popup, plugin, aerospace, yabai, spaces
 }
 

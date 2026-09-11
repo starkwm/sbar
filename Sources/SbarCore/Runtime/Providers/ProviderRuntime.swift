@@ -53,6 +53,7 @@ final class ProviderRuntime {
   @ObservationIgnored private let battery = BatteryProvider()
   @ObservationIgnored private let volume = VolumeProvider()
   @ObservationIgnored private let network = NetworkProvider()
+  @ObservationIgnored private let vpn: VPNProvider
   @ObservationIgnored private let media = MediaProvider()
   @ObservationIgnored private let aerospace: AerospaceProvider
   @ObservationIgnored private var aerospaceCaptures = Set<String>()
@@ -75,9 +76,14 @@ final class ProviderRuntime {
   @ObservationIgnored private var activeTypes: Set<ItemType> = []
   @ObservationIgnored private let metrics = SystemMetricsSampler()
 
-  init(aerospace: AerospaceProvider = AerospaceProvider(), yabai: YabaiProvider = YabaiProvider()) {
+  init(
+    aerospace: AerospaceProvider = AerospaceProvider(),
+    yabai: YabaiProvider = YabaiProvider(),
+    vpn: VPNProvider = VPNProvider()
+  ) {
     self.aerospace = aerospace
     self.yabai = yabai
+    self.vpn = vpn
   }
 
   func configure(_ configuration: Configuration) {
@@ -115,6 +121,10 @@ final class ProviderRuntime {
 
     if activeTypes.contains(.volume) {
       volume.start { [weak self] in self?.updateWidgetState($0, for: .volume) }
+    }
+
+    if activeTypes.contains(.vpn) {
+      vpn.start { [weak self] in self?.updateWidgetState(.vpn($0), for: .vpn) }
     }
 
     if activeTypes.contains(.network) {
@@ -573,6 +583,7 @@ final class ProviderRuntime {
     battery.stop()
     volume.stop()
     network.stop()
+    vpn.stop()
     media.stop()
     spaces.stop()
     yabai.stop()

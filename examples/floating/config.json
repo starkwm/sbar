@@ -23,6 +23,7 @@
     "right": [
       { "id": "battery", "type": "battery" },
       { "id": "wifi", "type": "network", "network": { "interface": "wifi" } },
+      { "id": "vpn", "type": "vpn" },
       { "id": "clock", "type": "datetime", "format": "HH:mm", "priority": 100 }
     ]
   }
