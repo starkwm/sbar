@@ -202,6 +202,7 @@
             "volume",
             "network",
             "vpn",
+            "bluetooth",
             "cpu",
             "memory",
             "disk",
@@ -542,6 +543,9 @@
         },
         "vpn": {
           "$ref": "#/$defs/vpn"
+        },
+        "bluetooth": {
+          "$ref": "#/$defs/bluetooth"
         }
       }
     },
@@ -2544,6 +2548,173 @@
               "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
             },
             "disconnected": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "unavailable": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            }
+          },
+          "additionalProperties": false
+        },
+        "showLabel": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "hideWhenDisconnected": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
+        },
+        "showName": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "bluetoothSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "on": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "off": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "connected": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unauthorized": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unavailable": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "on": {
+                "$ref": "#/$defs/symbol"
+              },
+              "off": {
+                "$ref": "#/$defs/symbol"
+              },
+              "connected": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unauthorized": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unavailable": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "bluetooth": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "symbols": {
+          "$ref": "#/$defs/bluetoothSymbols"
+        },
+        "labels": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "on": {
+              "type": "string"
+            },
+            "off": {
+              "type": "string"
+            },
+            "connected": {
+              "type": "string"
+            },
+            "unauthorized": {
+              "type": "string"
+            },
+            "unavailable": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "tints": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "on": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "off": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "connected": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "unauthorized": {
               "type": "string",
               "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
             },

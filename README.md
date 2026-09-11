@@ -130,6 +130,7 @@ The theme's `verticalPadding` and `cornerRadius` accept 0–48 points and defaul
 | `volume` | Output volume and mute state |
 | `network` | Network connection state |
 | `vpn` | VPN connection names and status |
+| `bluetooth` | Bluetooth power, connected devices, and access status |
 | `cpu` | CPU usage |
 | `memory` | Memory usage |
 | `disk` | Capacity of a selected volume (home volume by default) |
@@ -207,7 +208,7 @@ Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeigh
 
 ## Native items
 
-`frontApplication`, `battery`, `volume`, `network`, and `vpn` use native change notifications. `cpu`, `memory`, `disk`, and `throughput` sample once every two seconds, shared across displays. All `datetime` items share one clock. Memory reports active, wired, and compressed pages; disk defaults to free space on the home volume. Throughput defaults to totaling non-loopback interfaces, so tunnels may contribute additional traffic. Fixed-volume outputs display that status rather than a fabricated percentage.
+`frontApplication`, `battery`, `volume`, `network`, `vpn`, and `bluetooth` use native change notifications. `cpu`, `memory`, `disk`, and `throughput` sample once every two seconds, shared across displays. All `datetime` items share one clock. Memory reports active, wired, and compressed pages; disk defaults to free space on the home volume. Throughput defaults to totaling non-loopback interfaces, so tunnels may contribute additional traffic. Fixed-volume outputs display that status rather than a fabricated percentage.
 
 `media` listens for Music and Spotify playback notifications. It waits for the next notification after startup and does not query or control other players. Wi-Fi reports connection state, not the location-protected SSID.
 
@@ -587,7 +588,7 @@ Battery `symbols.levels` accepts exactly five symbols, ordered 0%, 25%, 50%, 75%
 }
 ```
 
-Within `battery.symbols`, `cpu.symbols`, `disk.symbols`, `media.symbols`, `memory.symbols`, `network.symbols`, `throughput.symbols`, `volume.symbols`, and `vpn.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
+Within `battery.symbols`, `cpu.symbols`, `disk.symbols`, `media.symbols`, `memory.symbols`, `network.symbols`, `throughput.symbols`, `volume.symbols`, `vpn.symbols`, and `bluetooth.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
 Each glyph can override either value. A font must be provided locally or inherited;
 without either size, the resolved item/theme font size is used. Strings remain SF Symbol
 names and do not inherit glyph font settings. Omitted state symbols use the built-in defaults.
@@ -734,6 +735,61 @@ native providers. It detects registered Network Extension, IPSec, and L2TP VPN
 services. Standalone tunnels that do not register a macOS service are outside its
 coverage. A connected state reports the VPN service's status, not whether all
 traffic uses that VPN or whether its remote network is reachable.
+
+## Bluetooth
+
+A `bluetooth` item shows Bluetooth power state and connected device names:
+
+```json
+{
+  "id": "bluetooth",
+  "type": "bluetooth",
+  "bluetooth": {
+    "hideWhenDisconnected": true,
+    "tints": {
+      "connected": "#8AADF4",
+      "unauthorized": "#ED8796"
+    }
+  }
+}
+```
+
+With connected devices, the default text lists their names and status, such as
+`Keyboard connected, Mouse connected`, sorted by name. Otherwise it shows
+`Bluetooth on` or `Bluetooth off`. Denied or restricted access shows
+`Bluetooth access denied`; missing hardware, read failures, or a resetting
+controller show `Bluetooth unavailable`.
+
+`showName`, `showLabel`, and `showSymbol` default to `true`. Set `showName:false`
+for a status-only label such as `Bluetooth connected`, or `showLabel:false` for
+an icon only. Accessibility labels retain connected device names. Set
+`hideWhenDisconnected:true` to hide the item when Bluetooth is off or on with
+no connected devices. Access errors remain visible. Hiding defaults to `false`.
+
+`bluetooth.labels`, `bluetooth.tints`, and `bluetooth.symbols` accept `on`, `off`,
+`connected`, `unauthorized`, and `unavailable`. Labels replace the status text.
+The default symbols are `antenna.radiowaves.left.and.right` for on and connected,
+`antenna.radiowaves.left.and.right.slash` for off, and `exclamationmark.triangle`
+for access errors or unavailable data. Custom symbols and font glyphs work as
+with other providers; a top-level item `symbol` overrides state symbols.
+
+Monitoring starts only when a Bluetooth item is active. macOS may request
+Bluetooth access at that point. The executable embeds the required usage
+description. If access is denied, allow it in System Settings > Privacy &
+Security > Bluetooth and restart sbar. Custom app bundles must also include
+`NSBluetoothAlwaysUsageDescription` in their Info.plist. The provider waits for
+the initial permission and power state before capturing refresh snapshots.
+
+Power and authorization use Core Bluetooth. Device names and connections use
+IOBluetooth's paired-device list and connection notifications. This covers
+connected devices exposed by IOBluetooth, including new connections observed
+while the provider is running. It does not scan, pair, connect, disconnect, or
+change Bluetooth power. Devices exposed only through Bluetooth Low Energy
+services may be absent. Device battery levels are not included.
+
+Items share one monitor across displays. Device and power changes update event
+items; interval and manual items capture snapshots as with other native
+providers. Unavailable reads retry every two seconds.
 
 ## Actions
 

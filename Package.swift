@@ -17,6 +17,13 @@ let package = Package(
       name: "Sbar",
       dependencies: [
         "SbarCore", .product(name: "ArgumentParser", package: "swift-argument-parser"),
+      ],
+      exclude: ["Info.plist"],
+      linkerSettings: [
+        .unsafeFlags([
+          "-Xlinker", "-sectcreate", "-Xlinker", "__TEXT", "-Xlinker", "__info_plist",
+          "-Xlinker", Context.packageDirectory + "/Sources/Sbar/Info.plist",
+        ])
       ]
     ),
     .target(
