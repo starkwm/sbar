@@ -5,6 +5,7 @@ struct BarItemView: View {
   let configuration: Item
   var symbolFontSize: Double = 13
   var symbolFontWeight: ItemFontWeight?
+  var tintOverride: String?
 
   var body: some View {
     if let presentation = providers.presentation(for: configuration, displayUUID: barDisplayUUID) {
@@ -27,7 +28,7 @@ struct BarItemView: View {
             } content: {
               if !segment.text.isEmpty { Text(segment.text).monospacedDigit() }
             }
-            .foregroundColor(segment.tint.flatMap { Color(hex: $0) })
+            .foregroundColor(Color(hex: tintOverride ?? segment.tint))
             .fontWeight(segment.emphasized ? .bold : nil)
           }
         } else if !presentation.text.isEmpty {

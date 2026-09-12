@@ -36,6 +36,8 @@ struct ItemStyle: Codable, Equatable, Sendable {
 
   var tint: String?
   var background: String?
+  var hoverTint: String?
+  var hoverBackground: String?
 
   var fontSize: Double?
   var fontWeight: ItemFontWeight?
@@ -53,6 +55,8 @@ struct ItemStyle: Codable, Equatable, Sendable {
     ItemStyle(
       tint: tint ?? theme?.tint,
       background: background ?? theme?.background,
+      hoverTint: hoverTint ?? theme?.hoverTint,
+      hoverBackground: hoverBackground ?? theme?.hoverBackground,
       fontSize: fontSize ?? theme?.fontSize ?? 13,
       fontWeight: fontWeight ?? theme?.fontWeight ?? .regular,
       symbolFontWeight: symbolFontWeight ?? theme?.symbolFontWeight,
@@ -68,6 +72,8 @@ struct ItemStyle: Codable, Equatable, Sendable {
   func validate(path: String) throws {
     try Self.validateColor(tint, path: "\(path).tint")
     try Self.validateColor(background, path: "\(path).background")
+    try Self.validateColor(hoverTint, path: "\(path).hoverTint")
+    try Self.validateColor(hoverBackground, path: "\(path).hoverBackground")
 
     try Self.validateNumber(fontSize, range: 8...72, path: "\(path).fontSize")
     try Self.validateNumber(horizontalPadding, range: 0...96, path: "\(path).horizontalPadding")

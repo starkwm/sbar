@@ -16,6 +16,8 @@
     "cornerRadius": 0,
     "itemSpacing": 6,
     "itemStyle": {
+      "hoverTint": "#FFFFFF",
+      "hoverBackground": "#414868",
       "fontSize": 12,
       "fontWeight": "medium",
       "horizontalPadding": 8,
@@ -28,69 +30,84 @@
       {
         "id": "spaces",
         "type": "spaces",
-        "spaces": { "scope": "display", "format": "current" },
         "priority": 40,
-        "style": { "tint": "#7AA2F7" },
-        "primaryAction": { "kind": "application", "value": "com.apple.exposelauncher" }
+        "style": {
+          "tint": "#7AA2F7",
+          "background": "#292E42"
+        },
+        "spaces": {
+          "scope": "display",
+          "format": "current"
+        }
       },
       {
         "id": "front-app",
         "type": "frontApplication",
         "priority": 80,
-        "style": { "tint": "#C0CAF5", "fontWeight": "semibold" }
+        "style": {
+          "tint": "#C0CAF5",
+          "fontWeight": "semibold"
+        },
+        "frontApplication": {
+          "showIcon": true
+        }
       },
       {
         "id": "media",
         "type": "media",
         "priority": 10,
-        "media": { "separator": " · ", "hideWhenNotPlaying": true },
-        "style": { "tint": "#FF9E64" }
+        "style": {
+          "tint": "#FF9E64"
+        },
+        "media": {
+          "separator": " · ",
+          "hideWhenNotPlaying": true
+        }
       }
     ],
-    "center": [],
     "right": [
-      {
-        "id": "memory",
-        "type": "memory",
-        "priority": 20,
-        "memory": { "format": "percentage", "showLabel": false },
-        "style": { "tint": "#7AA2F7", "background": "#292E42" },
-        "primaryAction": { "kind": "application", "value": "com.apple.ActivityMonitor" }
-      },
       {
         "id": "cpu",
         "type": "cpu",
         "priority": 20,
+        "symbolPosition": "right",
+        "style": {
+          "tint": "#BB9AF7",
+          "background": "#292E42",
+          "minWidth": 65
+        },
         "cpu": {
           "showLabel": false,
           "smoothingSamples": 3,
-          "tints": { "medium": "#E0AF68", "high": "#F7768E" }
-        },
-        "style": { "tint": "#BB9AF7", "background": "#292E42" },
-        "popup": "System",
-        "children": [
-          {
-            "id": "cpu-detail",
-            "type": "cpu",
-            "cpu": { "smoothingSamples": 3 }
-          },
-          {
-            "id": "memory-detail",
-            "type": "memory",
-            "memory": { "format": "usedTotal" }
-          },
-          {
-            "id": "disk",
-            "type": "disk"
-          },
-          {
-            "id": "activity-monitor",
-            "type": "text",
-            "label": "Open Activity Monitor",
-            "symbol": "chart.xyaxis.line",
-            "primaryAction": { "kind": "application", "value": "com.apple.ActivityMonitor" }
+          "tints": {
+            "medium": "#E0AF68",
+            "high": "#F7768E"
           }
-        ]
+        },
+        "primaryAction": {
+          "kind": "application",
+          "value": "com.apple.ActivityMonitor"
+        }
+      },
+      {
+        "id": "memory",
+        "type": "memory",
+        "priority": 20,
+        "symbolPosition": "right",
+        "style": {
+          "tint": "#7AA2F7",
+          "background": "#292E42",
+          "minWidth": 65,
+          "alignment": "center"
+        },
+        "memory": {
+          "format": "percentage",
+          "showLabel": false
+        },
+        "primaryAction": {
+          "kind": "application",
+          "value": "com.apple.ActivityMonitor"
+        }
       },
       {
         "id": "vpn",
@@ -98,7 +115,7 @@
         "priority": 70,
         "vpn": {
           "showLabel": false,
-          "hideWhenDisconnected": true,
+          "hideWhenDisconnected": false,
           "tints": {
             "connected": "#9ECE6A",
             "connecting": "#E0AF68",
@@ -106,15 +123,27 @@
             "unavailable": "#F7768E"
           }
         },
-        "style": { "tint": "#A9B1D6" },
-        "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
+        "style": {
+          "tint": "#A9B1D6"
+        },
+        "primaryAction": {
+          "kind": "command",
+          "value": "open 'x-apple.systempreferences:com.apple.NetworkExtensionSettingsUI.NESettingsUIExtension'"
+        }
       },
       {
         "id": "network",
         "type": "network",
         "priority": 60,
-        "network": { "showLabel": false, "tints": { "offline": "#F7768E" } },
-        "style": { "tint": "#7DCFFF" },
+        "style": {
+          "tint": "#7DCFFF"
+        },
+        "network": {
+          "showLabel": false,
+          "tints": {
+            "offline": "#F7768E"
+          }
+        },
         "popup": "Connections",
         "children": [
           {
@@ -137,13 +166,6 @@
             "id": "throughput",
             "type": "throughput",
             "throughput": { "smoothingSamples": 3 }
-          },
-          {
-            "id": "network-settings",
-            "type": "text",
-            "label": "Open System Settings",
-            "symbol": "gearshape",
-            "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
           }
         ]
       },
@@ -151,53 +173,20 @@
         "id": "sound",
         "type": "volume",
         "priority": 50,
-        "volume": { "showPercentage": false, "tints": { "muted": "#E0AF68" } },
-        "style": { "tint": "#73DACA" },
+        "style": {
+          "tint": "#73DACA"
+        },
+        "volume": {
+          "showPercentage": false,
+          "tints": {
+            "muted": "#E0AF68"
+          }
+        },
         "popup": "Sound",
         "children": [
           {
             "id": "volume",
             "type": "volume"
-          },
-          {
-            "id": "volume-controls",
-            "type": "group",
-            "style": { "horizontalPadding": 0, "verticalPadding": 0 },
-            "children": [
-              {
-                "id": "volume-down",
-                "type": "text",
-                "label": "Lower",
-                "symbol": "minus",
-                "style": { "background": "#737AA218" },
-                "primaryAction": {
-                  "kind": "command",
-                  "value": "/usr/bin/osascript -e 'set level to output volume of (get volume settings)' -e 'if level < 10 then set level to 10' -e 'set volume output volume (level - 10)'"
-                }
-              },
-              {
-                "id": "volume-mute",
-                "type": "text",
-                "label": "Mute / unmute",
-                "symbol": "speaker.slash",
-                "style": { "background": "#737AA218" },
-                "primaryAction": {
-                  "kind": "command",
-                  "value": "/usr/bin/osascript -e 'set volume output muted (not (output muted of (get volume settings)))'"
-                }
-              },
-              {
-                "id": "volume-up",
-                "type": "text",
-                "label": "Raise",
-                "symbol": "plus",
-                "style": { "background": "#737AA218" },
-                "primaryAction": {
-                  "kind": "command",
-                  "value": "/usr/bin/osascript -e 'set level to output volume of (get volume settings)' -e 'if level > 90 then set level to 90' -e 'set volume output volume (level + 10)'"
-                }
-              }
-            ]
           },
           {
             "id": "output",
@@ -207,13 +196,6 @@
             "id": "input",
             "type": "audioDevice",
             "audioDevice": { "device": "input" }
-          },
-          {
-            "id": "sound-settings",
-            "type": "text",
-            "label": "Open System Settings",
-            "symbol": "gearshape",
-            "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
           }
         ]
       },
@@ -221,20 +203,24 @@
         "id": "battery",
         "type": "battery",
         "priority": 80,
+        "symbolPosition": "right",
+        "style": {
+          "tint": "#C0CAF5"
+        },
         "battery": {
           "lowThreshold": 20,
-          "tints": { "low": "#F7768E", "charging": "#9ECE6A" }
-        },
-        "style": { "tint": "#C0CAF5" },
-        "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
+          "tints": {
+            "low": "#F7768E",
+            "charging": "#9ECE6A"
+          }
+        }
       },
       {
         "id": "date",
         "type": "datetime",
-        "format": "EEEE, d MMMM",
+        "format": "EE, d MMM",
         "priority": -10,
-        "style": { "tint": "#A9B1D6" },
-        "primaryAction": { "kind": "application", "value": "com.apple.iCal" }
+        "style": { "tint": "#A9B1D6" }
       },
       {
         "id": "clock",
@@ -246,29 +232,7 @@
           "background": "#292E42",
           "fontWeight": "semibold",
           "horizontalPadding": 10
-        },
-        "popup": "Today",
-        "children": [
-          {
-            "id": "full-date",
-            "type": "datetime",
-            "dateStyle": "full"
-          },
-          {
-            "id": "calendar",
-            "type": "text",
-            "label": "Open Calendar",
-            "symbol": "calendar",
-            "primaryAction": { "kind": "application", "value": "com.apple.iCal" }
-          },
-          {
-            "id": "reminders",
-            "type": "text",
-            "label": "Open Reminders",
-            "symbol": "checklist",
-            "primaryAction": { "kind": "application", "value": "com.apple.reminders" }
-          }
-        ]
+        }
       }
     ]
   }

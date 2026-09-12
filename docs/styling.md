@@ -41,6 +41,40 @@ Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeigh
 
 Set `bar.shadow` to `true` for a raised appearance. Inset or rounded bars use the native window shadow; square bars spanning the display width use a soft edge shadow without an outline. See [bar settings](configuration.md#bar-settings) for height, margins, placement, and shadow behavior, and [symbols](symbols.md) for SF Symbols and custom fonts.
 
+## Hover colours
+
+Use `hoverTint` and `hoverBackground` in `theme.itemStyle` for defaults, or in an item's `style` for overrides. They apply to items with a primary action, secondary action, or popup:
+
+```json
+{
+  "schemaVersion": 1,
+  "bar": {},
+  "theme": {
+    "itemStyle": {
+      "horizontalPadding": 8,
+      "verticalPadding": 4,
+      "cornerRadius": 7,
+      "hoverTint": "#FFFFFF",
+      "hoverBackground": "#3B4261"
+    }
+  },
+  "items": {
+    "right": [
+      {
+        "id": "cpu",
+        "type": "cpu",
+        "primaryAction": { "kind": "application", "value": "com.apple.ActivityMonitor" },
+        "style": { "background": "#292E42", "hoverBackground": "#414868" }
+      }
+    ]
+  }
+}
+```
+
+Both colours accept `#RRGGBB` and `#RRGGBBAA` and inherit independently when omitted or null. `hoverTint` overrides the normal text and symbol tint, including provider state and segment colours. Native application icons keep their original colours. Without `hoverTint`, the normal tint remains.
+
+`hoverBackground` replaces the normal item background while hovered. An explicit transparent colour clears the background during hover; use the normal background colour to keep it unchanged. Without a configured hover background, sbar draws an 8% system-primary-colour highlight over the normal background. The highlight uses the item's corner radius and covers its full width and padding. Non-interactive items do not change on hover.
+
 ## Item widths
 
 Use `style.minWidth` to reserve space for changing labels, such as percentages or transfer rates:

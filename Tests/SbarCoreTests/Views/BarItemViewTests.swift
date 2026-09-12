@@ -7,6 +7,43 @@ import Testing
 @Suite("BarItemView")
 @MainActor
 struct BarItemViewTests {
+  @Test("a hover tint overrides individual provider segment colours")
+  func segmentTintOverride() throws {
+    let runtime = ProviderRuntime()
+    runtime.updateWidgetState(
+      .spaces(
+        SpacesState(
+          displays: [
+            SpaceDisplay(
+              identifier: "main",
+              spaces: [SpaceEntry(id: 1), SpaceEntry(id: 2)],
+              activeID: 1
+            )
+          ],
+          focusedID: 1
+        )
+      ),
+      for: .spaces
+    )
+    var item = Item(
+      id: "spaces",
+      type: .spaces,
+      spaces: SpacesConfiguration(
+        format: .list,
+        tints: SpacesTints(active: "#FF0000", inactive: "#00FF00"),
+        showSymbol: false
+      )
+    )
+    let normal = try render(BarItemView(configuration: item).environment(runtime))
+    let hovered = try render(
+      BarItemView(configuration: item, tintOverride: "#0000FF").environment(runtime)
+    )
+    item.spaces?.tints = SpacesTints(active: "#0000FF", inactive: "#0000FF")
+    let expected = try render(BarItemView(configuration: item).environment(runtime))
+    #expect(hovered == expected)
+    #expect(hovered != normal)
+  }
+
   @Test(
     "item symbols render on the requested side, including the default",
     arguments: [nil, .left, .right] as [ItemSymbolPosition?],

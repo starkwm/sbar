@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ItemStyleModifier: ViewModifier {
   let style: ItemStyle
+  var hovering = false
 
   func body(content: Content) -> some View {
     sizedContent(
@@ -9,14 +10,24 @@ struct ItemStyleModifier: ViewModifier {
         .font(
           .system(size: style.fontSize ?? 13, weight: (style.fontWeight ?? .regular).swiftUIWeight)
         )
-        .foregroundStyle(Color(hex: style.tint) ?? .primary)
+        .foregroundStyle(
+          Color(hex: hovering ? style.hoverTint ?? style.tint : style.tint) ?? .primary
+        )
         .padding(.horizontal, style.horizontalPadding ?? 0)
         .padding(.vertical, style.verticalPadding ?? 0)
     )
-    .background(
-      Color(hex: style.background) ?? .clear,
-      in: RoundedRectangle(cornerRadius: style.cornerRadius ?? 0)
-    )
+    .background {
+      let shape = RoundedRectangle(cornerRadius: style.cornerRadius ?? 0)
+      ZStack {
+        shape.fill(
+          Color(hex: hovering ? style.hoverBackground ?? style.background : style.background)
+            ?? .clear
+        )
+        if hovering && style.hoverBackground == nil {
+          shape.fill(Color.primary.opacity(0.08))
+        }
+      }
+    }
   }
 
   @ViewBuilder

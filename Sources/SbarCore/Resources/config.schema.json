@@ -592,6 +592,22 @@
           ],
           "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
         },
+        "hoverTint": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$",
+          "description": "Text and symbol colour while an interactive item is hovered. Inherits from theme.itemStyle and otherwise keeps the normal tint."
+        },
+        "hoverBackground": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$",
+          "description": "Replacement background while an interactive item is hovered. Inherits from theme.itemStyle and otherwise adds a subtle highlight over the normal background."
+        },
         "fontSize": {
           "type": [
             "number",

@@ -5,6 +5,34 @@ import Testing
 
 @Suite("ConfigurationSchema")
 struct ConfigurationSchemaTests {
+  @Test("hover colour schema and decoding accept the same RGB and RGBA strings")
+  func hoverColours() throws {
+    let schema = try #require(
+      JSONSerialization.jsonObject(with: ConfigurationSchema.data()) as? [String: Any]
+    )
+    let definitions = try #require(schema["$defs"] as? [String: Any])
+    let style = try #require(definitions["itemStyle"] as? [String: Any])
+    let properties = try #require(style["properties"] as? [String: Any])
+    for key in ["hoverTint", "hoverBackground"] {
+      let field = try #require(properties[key] as? [String: Any])
+      #expect(field["type"] as? [String] == ["string", "null"])
+      let pattern = try #require(field["pattern"] as? String)
+      for value in ["#112233", "#AABBCC80", "#00000000", "red", "#fff", "#gg0000"] {
+        let matches = value.range(of: pattern, options: .regularExpression) != nil
+        let decoded = try JSONDecoder().decode(
+          ItemStyle.self,
+          from: JSONSerialization.data(withJSONObject: [key: value])
+        )
+        #expect(matches == (RGBA(hex: value) != nil))
+        if matches {
+          try decoded.validate(path: "style")
+        } else {
+          #expect(throws: (any Error).self) { try decoded.validate(path: "style") }
+        }
+      }
+    }
+  }
+
   @Test("item sizing schema matches the accepted width bounds and alignments")
   func itemSizing() throws {
     let schema = try #require(

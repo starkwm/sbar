@@ -45,7 +45,8 @@ struct InteractiveItemView: View {
           BarItemView(
             configuration: item,
             symbolFontSize: resolvedStyle.fontSize ?? 13,
-            symbolFontWeight: resolvedStyle.symbolFontWeight
+            symbolFontWeight: resolvedStyle.symbolFontWeight,
+            tintOverride: hovering && interactive ? resolvedStyle.hoverTint : nil
           )
         }
         .buttonStyle(.plain)
@@ -53,15 +54,15 @@ struct InteractiveItemView: View {
         BarItemView(
           configuration: item,
           symbolFontSize: resolvedStyle.fontSize ?? 13,
-          symbolFontWeight: resolvedStyle.symbolFontWeight
+          symbolFontWeight: resolvedStyle.symbolFontWeight,
+          tintOverride: hovering && interactive ? resolvedStyle.hoverTint : nil
         )
       }
     }
-    .modifier(ItemStyleModifier(style: resolvedStyle))
+    .modifier(ItemStyleModifier(style: resolvedStyle, hovering: hovering && interactive))
     .modifier(HitRegionModifier(enabled: tracksHitRegion))
     .contentShape(Rectangle())
     .onHover { hovering = $0 }
-    .background(hovering && interactive ? Color.primary.opacity(0.08) : .clear)
     .contextMenu {
       if let action = item.secondaryAction {
         Button("Run secondary action") { actions.run(action) }

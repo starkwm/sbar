@@ -144,6 +144,52 @@ struct ThemeTests {
     }
   }
 
+  @Test("hover colours inherit independently and preserve transparent overrides")
+  func hoverColours() throws {
+    let json = ##"{"hoverTint":null,"hoverBackground":"#00000000"}"##
+    let item = try JSONDecoder().decode(ItemStyle.self, from: Data(json.utf8))
+    let theme = ItemStyle(hoverTint: "#FFFFFF", hoverBackground: "#33445580")
+    let resolved = item.resolved(over: theme)
+    #expect(resolved.hoverTint == "#FFFFFF")
+    #expect(resolved.hoverBackground == "#00000000")
+    #expect(ItemStyle(hoverTint: "#112233").resolved(over: theme).hoverTint == "#112233")
+    #expect(ItemStyle().resolved(over: theme).hoverBackground == "#33445580")
+    #expect(ItemStyle().resolved(over: nil).hoverTint == nil)
+    #expect(ItemStyle().resolved(over: nil).hoverBackground == nil)
+    try resolved.validate(path: "style")
+    #expect(
+      try JSONDecoder().decode(ItemStyle.self, from: JSONEncoder().encode(resolved)) == resolved
+    )
+  }
+
+  @Test(
+    "hover colour validation reports the exact item or theme field",
+    arguments: ["hoverTint", "hoverBackground"],
+    ["red", "#fff", "#gg0000", "#1234567"]
+  )
+  func invalidHoverColours(field: String, value: String) throws {
+    let style = try JSONDecoder().decode(
+      ItemStyle.self,
+      from: JSONSerialization.data(withJSONObject: [field: value])
+    )
+    var config = Configuration.default
+    config.items.right[1].style = style
+    #expect(
+      throws: ConfigurationError.invalidValue(
+        path: "items.right[1].style.\(field)",
+        reason: "Use #RRGGBB or #RRGGBBAA."
+      )
+    ) { try config.validate() }
+    config.items.right[1].style = nil
+    config.theme = Theme(itemStyle: style)
+    #expect(
+      throws: ConfigurationError.invalidValue(
+        path: "theme.itemStyle.\(field)",
+        reason: "Use #RRGGBB or #RRGGBBAA."
+      )
+    ) { try config.validate() }
+  }
+
   @Test("RGBA.init: accepts RGB and RGBA with an alpha suffix")
   func initAcceptsRGBAndRGBA() throws {
     let rgb = try #require(RGBA(hex: "#FF0080"))

@@ -7,6 +7,62 @@ import Testing
 @Suite("ItemStyleModifier")
 @MainActor
 struct ItemStyleModifierTests {
+  @Test("the default hover highlight remains visible over an opaque rounded background")
+  func defaultHover() throws {
+    let style = ItemStyle(background: "#0000FF", cornerRadius: 8)
+    let content = Color.clear.frame(width: 40, height: 24)
+    let normal = try render(content.modifier(ItemStyleModifier(style: style)))
+    let hovered = try render(content.modifier(ItemStyleModifier(style: style, hovering: true)))
+    let center = try #require(hovered.colorAt(x: 20, y: 12)?.usingColorSpace(.deviceRGB))
+    #expect(center.blueComponent > 0.8)
+    #expect(center.blueComponent < 0.99)
+    #expect(center.alphaComponent == 1)
+    #expect(normal.colorAt(x: 20, y: 12)?.usingColorSpace(.deviceRGB)?.blueComponent == 1)
+    #expect(hovered.colorAt(x: 0, y: 0)?.alphaComponent == 0)
+    #expect(hovered.pixelsWide == normal.pixelsWide)
+    #expect(hovered.pixelsHigh == normal.pixelsHigh)
+  }
+
+  @Test("hover tint and background replace normal colours without changing the shape")
+  func hoverColours() throws {
+    let style = ItemStyle(
+      tint: "#0000FF",
+      background: "#00FF00",
+      hoverTint: "#FF0000",
+      hoverBackground: "#0000FF",
+      horizontalPadding: 10,
+      verticalPadding: 8,
+      cornerRadius: 8
+    )
+    let content = Rectangle().frame(width: 10, height: 10)
+    let normal = try render(content.modifier(ItemStyleModifier(style: style)))
+    let hovered = try render(content.modifier(ItemStyleModifier(style: style, hovering: true)))
+    #expect(normal.colorAt(x: 15, y: 13)?.usingColorSpace(.deviceRGB)?.blueComponent == 1)
+    #expect(hovered.colorAt(x: 15, y: 13)?.usingColorSpace(.deviceRGB)?.redComponent == 1)
+    #expect((normal.colorAt(x: 2, y: 13)?.usingColorSpace(.deviceRGB)?.greenComponent ?? 0) > 0.95)
+    #expect(hovered.colorAt(x: 2, y: 13)?.usingColorSpace(.deviceRGB)?.blueComponent == 1)
+    #expect(hovered.colorAt(x: 0, y: 0)?.alphaComponent == 0)
+    #expect(hovered.pixelsWide == normal.pixelsWide)
+    #expect(hovered.pixelsHigh == normal.pixelsHigh)
+  }
+
+  @Test("explicit transparent hover backgrounds replace the normal background")
+  func transparentHoverBackground() throws {
+    let style = ItemStyle(
+      background: "#0000FF",
+      hoverBackground: "#00000000",
+      horizontalPadding: 16,
+      verticalPadding: 8,
+      cornerRadius: 8
+    )
+    let image = try render(
+      Rectangle().fill(.white).frame(width: 8, height: 8)
+        .modifier(ItemStyleModifier(style: style, hovering: true))
+    )
+    #expect(image.colorAt(x: 8, y: 12)?.alphaComponent == 0)
+    #expect(image.colorAt(x: 20, y: 12)?.alphaComponent == 1)
+  }
+
   @Test("fixed widths include symbols and padding and survive changing labels")
   func fixedWidths() throws {
     let style = ItemStyle(horizontalPadding: 8, minWidth: 200, width: 80)
