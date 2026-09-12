@@ -100,7 +100,8 @@ struct SpacesState: Equatable, Sendable {
         ? accessible
         : "Spaces \(segments.map(\.text).joined(separator: ", ")). \(accessible)",
       tooltipValues: [
-        "workspace": label, "index": index.map { String($0 + 1) } ?? "",
+        "workspace": label,
+        "index": index.map { String($0 + 1) } ?? "",
         "workspaces": visible.indices.map { settings.labels?[String($0 + 1)] ?? String($0 + 1) }
           .joined(separator: ", "),
         "count": String(visible.count),

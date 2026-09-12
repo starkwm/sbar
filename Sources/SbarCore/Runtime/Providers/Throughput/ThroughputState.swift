@@ -62,7 +62,9 @@ struct ThroughputState: Equatable, Sendable {
           ? item.symbol ?? settings.symbols?.resolve(settings.symbols?.unavailable)
             ?? "questionmark" : nil,
         accessibilityLabel: "Network throughput unavailable",
-        tooltipValues: ["status": "unavailable"]
+        tooltipValues: [
+          "status": "unavailable"
+        ]
       )
     }
     var segments: [WidgetSegment] = []

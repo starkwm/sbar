@@ -84,7 +84,8 @@ struct YabaiState: Equatable, Sendable {
           separator: ", "
         ),
       tooltipValues: [
-        "workspace": label, "index": String(current.index),
+        "workspace": label,
+        "index": String(current.index),
         "workspaces": rows.filter { settings.includeFullscreen != false || !$0.fullscreen }
           .map(\.name).joined(separator: ", "),
         "count": String(

@@ -28,7 +28,8 @@ struct AudioDeviceState: Equatable, Sendable {
       accessibilityLabel: endpoint.status == .available ? "\(kind.label): \(label)" : label,
       tooltipValues: [
         "name": endpoint.status == .available ? (name.isEmpty ? "Unnamed device" : name) : "",
-        "device": kind.rawValue, "status": endpoint.status.rawValue,
+        "device": kind.rawValue,
+        "status": endpoint.status.rawValue,
       ]
     )
   }

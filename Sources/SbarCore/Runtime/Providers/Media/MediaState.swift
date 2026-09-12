@@ -64,8 +64,10 @@ struct MediaState: Equatable, Sendable {
         || status != .playing && settings.hideWhenNotPlaying == true,
       accessibilityLabel: label,
       tooltipValues: [
-        "title": player?.title ?? "", "artist": player?.artist ?? "",
-        "source": player?.source.name ?? "", "status": status.rawValue,
+        "title": player?.title ?? "",
+        "artist": player?.artist ?? "",
+        "source": player?.source.name ?? "",
+        "status": status.rawValue,
       ]
     )
   }

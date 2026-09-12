@@ -54,7 +54,11 @@ struct CommandState: Equatable, Sendable {
       tint: tint ?? value?.tint,
       hidden: (status == .failure && settings?.onError == .hide) || value?.hidden == true,
       accessibilityLabel: displayed,
-      tooltipValues: ["output": value?.text ?? "", "status": status.rawValue, "error": error ?? ""]
+      tooltipValues: [
+        "output": value?.text ?? "",
+        "status": status.rawValue,
+        "error": error ?? "",
+      ]
     )
   }
 }
