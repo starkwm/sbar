@@ -6,6 +6,8 @@
   <string>dev.starkwm.sbar</string>
   <key>CFBundleName</key>
   <string>sbar</string>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>sbar reads the unread inbox count from Mail to display it in your bar.</string>
   <key>NSBluetoothAlwaysUsageDescription</key>
   <string>sbar shows Bluetooth power status and the names of connected devices in your bar.</string>
 </dict>

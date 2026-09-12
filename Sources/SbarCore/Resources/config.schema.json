@@ -211,6 +211,7 @@
             "battery",
             "volume",
             "network",
+            "mail",
             "vpn",
             "bluetooth",
             "audioDevice",

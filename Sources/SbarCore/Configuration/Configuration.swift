@@ -446,7 +446,8 @@ enum BarWindowLevel: String, Codable, CaseIterable, Sendable {
 enum ItemSymbolPosition: String, Codable, CaseIterable, Sendable { case left, right }
 
 enum ItemType: String, CaseIterable, Codable, Sendable {
-  case datetime, divider, frontApplication, spacer, text, battery, volume, network, vpn, bluetooth,
+  case mail, datetime, divider, frontApplication, spacer, text, battery, volume, network, vpn,
+    bluetooth,
     audioDevice,
     cpu,
     memory, disk, throughput, media, command, group, popup, plugin, aerospace, yabai, spaces

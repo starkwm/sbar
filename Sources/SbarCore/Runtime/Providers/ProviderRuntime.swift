@@ -53,6 +53,7 @@ final class ProviderRuntime {
   @ObservationIgnored private let battery = BatteryProvider()
   @ObservationIgnored private let volume = VolumeProvider()
   @ObservationIgnored private let network = NetworkProvider()
+  @ObservationIgnored private let mail: MailProvider
   @ObservationIgnored private let vpn: VPNProvider
   @ObservationIgnored private let bluetooth: BluetoothProvider
   @ObservationIgnored private let audioDevice: AudioDeviceProvider
@@ -79,12 +80,14 @@ final class ProviderRuntime {
   init(
     aerospace: AerospaceProvider = AerospaceProvider(),
     yabai: YabaiProvider = YabaiProvider(),
+    mail: MailProvider = MailProvider(),
     vpn: VPNProvider = VPNProvider(),
     bluetooth: BluetoothProvider = BluetoothProvider(),
     audioDevice: AudioDeviceProvider = AudioDeviceProvider()
   ) {
     self.aerospace = aerospace
     self.yabai = yabai
+    self.mail = mail
     self.vpn = vpn
     self.bluetooth = bluetooth
     self.audioDevice = audioDevice
@@ -132,6 +135,10 @@ final class ProviderRuntime {
       audioDevice.start { [weak self] in
         self?.updateWidgetState(.audioDevice($0), for: .audioDevice)
       }
+    }
+
+    if added.contains(.mail) {
+      mail.start { [weak self] in self?.updateWidgetState(.mail($0), for: .mail) }
     }
 
     if added.contains(.vpn) {
@@ -587,6 +594,7 @@ final class ProviderRuntime {
     if types.contains(.battery) { battery.stop() }
     if types.contains(.volume) { volume.stop() }
     if types.contains(.network) { network.stop() }
+    if types.contains(.mail) { mail.stop() }
     if types.contains(.vpn) { vpn.stop() }
     if types.contains(.bluetooth) { bluetooth.stop() }
     if types.contains(.audioDevice) { audioDevice.stop() }

@@ -89,6 +89,7 @@ The shadow does not change the bar's configured height, content position, or mou
 | [`volume`](providers/volume.md) | Output volume and mute state |
 | [`audioDevice`](providers/audio-device.md) | Default audio output or input device name |
 | [`network`](providers/network.md) | Network connection state |
+| [`mail`](providers/mail.md) | Apple Mail combined inbox unread count |
 | [`vpn`](providers/vpn.md) | VPN connection names and status |
 | [`bluetooth`](providers/bluetooth.md) | Bluetooth power, connected devices, and access status |
 | [`cpu`](providers/cpu.md) | CPU usage |

@@ -110,6 +110,19 @@
         }
       },
       {
+        "id": "mail",
+        "type": "mail",
+        "symbolPosition": "right",
+        "priority": 70,
+        "style": {
+          "tint": "#A9B1D6"
+        },
+        "primaryAction": {
+          "kind": "application",
+          "value": "com.apple.mail"
+        }
+      },
+      {
         "id": "vpn",
         "type": "vpn",
         "priority": 70,
