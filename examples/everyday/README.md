@@ -28,7 +28,7 @@ Stop your usual sbar instance first if it would overlap. This example has its ow
 | Date | Opens Calendar. |
 | Memory | Shows used memory as a percentage. Click to open Activity Monitor. |
 | CPU | Shows smoothed usage. Click for CPU, memory, free disk space, and an Activity Monitor shortcut. |
-| Network | Follows the active connection. Click for connection type, VPN names and status, and download/upload rates. |
+| Network | Follows the active connection. Click for connection type, all monitored VPN services and their statuses, and download/upload rates. |
 | VPN | Shows a green shield when connected and a different color during transitions or read failures. Hides when disconnected. Click to open System Settings. |
 | Sound | Opens volume, mute controls, and default output and microphone names. |
 | Battery | Shows charge with low-battery and charging colors. Click to open System Settings. Desktops show AC power. |

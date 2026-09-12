@@ -170,7 +170,8 @@
           },
           {
             "id": "vpn-detail",
-            "type": "vpn"
+            "type": "vpn",
+            "text": "{{#services}}{{value}}{{#separator}}, {{/separator}}{{/services}}{{^services}}{{value}}{{/services}}"
           },
           {
             "id": "throughput",

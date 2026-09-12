@@ -18,13 +18,13 @@ struct VPNState: Equatable, Sendable {
     let active = services.filter { $0.status != .disconnected }.sorted {
       $0.name == $1.name ? $0.id < $1.id : $0.name < $1.name
     }
-    let label = settings.labels?[status.rawValue] ?? status.label
+    let label = status.label
     let summary = "VPN \(label)"
     let details =
       available && !active.isEmpty
       ? active.map { service in
         let name = service.name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
-        let label = settings.labels?[service.status.rawValue] ?? service.status.label
+        let label = service.status.label
         return "\(name.isEmpty ? "VPN" : name) \(label)"
       }.joined(separator: ", ")
       : summary

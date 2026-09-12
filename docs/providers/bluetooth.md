@@ -29,8 +29,10 @@ for connected device names, or use `text: ""` for an icon alone. `showSymbol`
 defaults to `true`. Accessibility retains device names. Set `hideWhenDisconnected`
 to `true` to hide the item when Bluetooth is off or has no connected devices.
 
-`bluetooth.labels`, `bluetooth.tints`, and `bluetooth.symbols` accept `on`, `off`,
-`connected`, `unauthorized`, and `unavailable`. Labels replace the status text.
+`bluetooth.tints` and `bluetooth.symbols` accept `on`, `off`,
+`connected`, `unauthorized`, and `unavailable`. Use a [device loop](../text-templates.md#vpn-services-and-bluetooth-devices)
+such as `{{#devices}}{{name}} linked{{#separator}}, {{/separator}}{{/devices}}{{^devices}}{{value}}{{/devices}}`
+for custom per-device labels. The old `bluetooth.labels` map is rejected.
 The default symbols are `antenna.radiowaves.left.and.right` for on and connected,
 `antenna.radiowaves.left.and.right.slash` for off, and `exclamationmark.triangle`
 for access errors or unavailable data. Custom symbols and font glyphs work as

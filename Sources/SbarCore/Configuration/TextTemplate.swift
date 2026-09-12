@@ -13,6 +13,8 @@ struct TextTemplate {
     var separator = false
   }
 
+  private static let collections: Set<String> = ["workspaces", "services", "devices"]
+
   static func fields(for type: ItemType) -> Set<String> {
     let common: Set<String> = ["value", "id"]
     let fields: [String]
@@ -33,8 +35,16 @@ struct TextTemplate {
     case .mail: fields = ["unreadCount", "status", "available"]
     case .throughput: fields = ["download", "upload", "available"]
     case .network: fields = ["status", "connected"]
-    case .vpn: fields = ["status", "names", "connected", "available"]
-    case .bluetooth: fields = ["status", "names", "count", "connected"]
+    case .vpn:
+      fields = [
+        "status", "names", "connected", "available", "services", "name", "serviceId", "index",
+        "total", "first", "last", "separator",
+      ]
+    case .bluetooth:
+      fields = [
+        "status", "names", "count", "connected", "devices", "name", "deviceId", "index", "total",
+        "first", "last", "separator",
+      ]
     case .audioDevice: fields = ["name", "status", "available"]
     case .frontApplication: fields = ["name"]
     case .command, .plugin: fields = ["status", "error"]
@@ -113,13 +123,13 @@ struct TextTemplate {
         guard fields.contains(name) else { throw fail("Unknown text template value '\(name)'.") }
         if name == "separator" {
           guard section, expected == nil, !tag.hasPrefix("^"), inCollection else {
-            throw fail("Use {{#separator}}...{{/separator}} inside a workspace loop.")
+            throw fail("Use {{#separator}}...{{/separator}} inside a collection loop.")
           }
         }
-        if name == "workspaces" {
+        if Self.collections.contains(name) {
           guard section, expected == nil, !inCollection else {
             throw fail(
-              "Use workspaces as a section without a comparison. Workspace sections cannot nest."
+              "Use collections as sections without a comparison. Collection sections cannot nest."
             )
           }
         }
@@ -140,7 +150,7 @@ struct TextTemplate {
               try parse(
                 closing: name,
                 depth: depth + 1,
-                inCollection: inCollection || name == "workspaces"
+                inCollection: inCollection || Self.collections.contains(name)
               )
             )
           )
@@ -186,7 +196,7 @@ struct TextTemplate {
             if let entry, entry < entries.count - 1 {
               render(children, values: values, entry: entry, separator: true)
             }
-          } else if name == "workspaces" {
+          } else if Self.collections.contains(name) {
             if inverted {
               if entries.isEmpty {
                 render(children, values: values, entry: entry, separator: separator)

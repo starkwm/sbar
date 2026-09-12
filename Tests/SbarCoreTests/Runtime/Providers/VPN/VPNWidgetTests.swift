@@ -71,7 +71,7 @@ struct VPNWidgetTests {
     var item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        ##"{"id":"vpn","type":"vpn","vpn":{"symbols":{"font":"Test","size":18,"connected":{"glyph":"V"}},"labels":{"connected":"on"},"tints":{"connected":"#00FF00"},"hideWhenDisconnected":true}}"##
+        ##"{"id":"vpn","type":"vpn","vpn":{"symbols":{"font":"Test","size":18,"connected":{"glyph":"V"}},"tints":{"connected":"#00FF00"},"hideWhenDisconnected":true}}"##
           .utf8
       )
     )
@@ -82,14 +82,14 @@ struct VPNWidgetTests {
       available: true
     )
     let presentation = state.presentation(for: item)
-    #expect(presentation.text == "Work VPN on")
-    #expect(presentation.accessibilityLabel == "Work VPN on")
+    #expect(presentation.text == "Work VPN connected")
+    #expect(presentation.accessibilityLabel == "Work VPN connected")
     #expect(presentation.symbol == .glyph("V", font: "Test", size: 18))
     #expect(presentation.tint == "#00FF00")
     #expect(!presentation.hidden)
 
-    #expect(state.presentation(for: item).text == "Work VPN on")
-    #expect(state.presentation(for: item).accessibilityLabel == "Work VPN on")
+    #expect(state.presentation(for: item).text == "Work VPN connected")
+    #expect(state.presentation(for: item).accessibilityLabel == "Work VPN connected")
     item.symbol = "star"
     #expect(state.presentation(for: item).symbol == "star")
     item.vpn?.showSymbol = false
@@ -110,7 +110,6 @@ struct VPNWidgetTests {
   @Test("invalid state keys, tints, symbols and mismatched settings are rejected")
   func validation() throws {
     for settings in [
-      ##"{"labels":{"conected":"On"}}"##,
       ##"{"tints":{"offline":"#FFFFFF"}}"##,
       ##"{"tints":{"connected":"green"}}"##,
       ##"{"symbols":{"online":"lock"}}"##,
@@ -142,10 +141,10 @@ struct VPNWidgetTests {
     let properties = try #require(vpn["properties"] as? [String: Any])
     #expect(
       Set(properties.keys) == [
-        "symbols", "labels", "tints", "showSymbol", "hideWhenDisconnected",
+        "symbols", "tints", "showSymbol", "hideWhenDisconnected",
       ]
     )
-    for field in ["labels", "tints"] {
+    for field in ["tints"] {
       let map = try #require(properties[field] as? [String: Any])
       let states = try #require(map["properties"] as? [String: Any])
       #expect(Set(states.keys) == Set(VPNStatus.allCases.map(\.rawValue)))

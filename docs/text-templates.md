@@ -84,8 +84,8 @@ power. Volume checks unavailable output first, then mute, then fixed volume with
 no percentage, then adjustable volume. Zero volume is still `available`.
 
 Status follows the same item snapshot and source selection as the other fields.
-Network status respects interface filtering. VPN status is the aggregate status;
-there is no iteration over individual services or devices yet.
+Network status respects interface filtering. VPN status is the aggregate status outside a service loop, and the individual
+service status inside it. Bluetooth status inside a device loop is `connected`.
 
 ## Workspace fields and lists
 
@@ -138,9 +138,68 @@ Scope selection and loops use the same captured snapshot as the provider's defau
 presentation. Reordering can change positional indexes; `workspaceId` identifies
 the source workspace instead.
 
+## VPN services and Bluetooth devices
+
+VPN supports `{{#services}}...{{/services}}` and Bluetooth supports
+`{{#devices}}...{{/devices}}`. Each loop exposes the entry's name and status,
+so state-specific labels no longer need provider `labels` maps.
+
+```json
+{
+  "id": "vpn",
+  "type": "vpn",
+  "text": "{{#services}}{{name}}: {{#status=connected}}Secure{{/status}}{{^status=connected}}{{status}}{{/status}}{{#separator}}, {{/separator}}{{/services}}{{^services}}{{value}}{{/services}}"
+}
+```
+
+```json
+{
+  "id": "bluetooth",
+  "type": "bluetooth",
+  "text": "{{#devices}}{{name}} linked{{#separator}}, {{/separator}}{{/devices}}{{^devices}}{{value}}{{/devices}}"
+}
+```
+
+`services` includes all monitored VPN services, including disconnected ones, when
+the service list is available. This differs from the default VPN `value`, which
+lists active services only. `devices` includes connected Bluetooth devices only.
+If Bluetooth is off, unauthorized, or unavailable, the device collection is empty.
+Unavailable VPN service lists are empty too; stale entries are not rendered.
+Inverse sections supply a fallback for an empty list.
+
+Entries sort by provider name, with their identifier breaking ties. Names collapse
+whitespace to one line; unnamed entries use `VPN` or `Unnamed device`. Values are
+inserted literally, without evaluating template syntax contained in a name.
+
+| Field | Meaning inside a loop |
+| --- | --- |
+| `name` | Service or device name |
+| `status` | Individual VPN service status, or `connected` for a Bluetooth device |
+| `connected` | Whether the entry is connected |
+| `available` | VPN service status is not `unavailable` |
+| `serviceId`, `deviceId` | Provider identifier, available for the corresponding collection |
+| `index` | One-based position in the sorted list |
+| `first`, `last` | Position flags for the source list |
+| `value` | Default entry label, such as `Work connected` |
+| `total` | Collection count, also available outside the loop |
+| `id` | The containing item ID |
+
+Outside a loop, `status`, `connected`, `available`, and `value` retain their
+existing aggregate meanings. Entry-only fields are empty outside a loop.
+`{{#separator}}...{{/separator}}` emits text between source entries, without a
+trailing separator. Separators follow source positions even when a condition
+hides an entry. Loops cannot nest or be compared, and each provider accepts only
+its own collection name. Unknown fields and invalid status comparisons fail
+configuration validation.
+
+VPN and Bluetooth loops produce plain text with the item's aggregate symbol and
+tint. Native accessibility descriptions and hide rules remain intact. They use
+the same captured provider state as other template fields, including manual and
+interval snapshots. They do not trigger extra device scans or service queries.
+
 ## Provider fields
 
-Every item with text supports `id` and `value`. `value` is the provider's default label. Retained VPN/Bluetooth label maps and throughput settings still affect their providers' defaults. For example, a clock can use `"text": "Time {{value}}"` alongside `"format": "HH:mm"`.
+Every item with text supports `id` and `value`. `value` is the provider's default label. Retained throughput settings still affect that provider's default. For example, a clock can use `"text": "Time {{value}}"` alongside `"format": "HH:mm"`.
 
 | Provider | Additional fields |
 | --- | --- |
@@ -153,8 +212,8 @@ Every item with text supports `id` and `value`. `value` is the provider's defaul
 | `mail` | `unreadCount`, `status`, `available` |
 | `throughput` | `download`, `upload`, `available` |
 | `network` | `status`, `connected` |
-| `vpn` | `status`, `names`, `connected`, `available` |
-| `bluetooth` | `status`, `names`, `count`, `connected` |
+| `vpn` | `status`, `names`, `connected`, `available`, plus [service fields](#vpn-services-and-bluetooth-devices) |
+| `bluetooth` | `status`, `names`, `count`, `connected`, plus [device fields](#vpn-services-and-bluetooth-devices) |
 | `audioDevice` | `name`, `status`, `available` |
 | `frontApplication` | `name` |
 | `command`, `plugin` | `status`, `error` |
@@ -194,10 +253,11 @@ Removed text settings now fail configuration loading with the full field path an
 | VPN/Bluetooth `showName: false` | `"text": "VPN {{status}}"` or `"text": "Bluetooth {{status}}"` |
 | Media `showTitle`, `showArtist`, `separator` | Choose title/artist fields and put the separator inside a conditional section |
 | Command/plugin `showValue: false` | `"text": ""` |
+| VPN/Bluetooth `labels` | State conditions inside `services`/`devices` loops; use conditions outside the loop for aggregate fallback labels |
 | Workspace `format: currentTotal` | `{{index}} / {{total}}` with an unavailable/fullscreen fallback |
 | Workspace `format: list` | `{{#workspaces}}{{name}}{{^last}} {{/last}}{{/workspaces}}` |
 | Workspace `showValue: false` | `"text": ""` |
 | Spaces/Aerospace `labels` | Conditions on `index` or `name`, inside the loop for lists |
 | Network/audio-device `labels` | Equality sections such as `{{#status=available}}Ready{{/status}}{{^status=available}}{{value}}{{/status}}` using that provider's states |
 
-Wrap readings in an `available` section when you need an unavailable fallback. Network and audio-device `labels` maps have been removed; use equality sections instead. Bluetooth and VPN maps remain supported because they can format each device or service separately. Workspace formats and label maps have been replaced by workspace fields and loops. Throughput display options, clock formatting, and command output format remain supported. Provider symbols, tints, hide rules, and data-selection settings are unchanged.
+Wrap readings in an `available` section when you need an unavailable fallback. Network and audio-device `labels` maps have been removed; use equality sections instead. Bluetooth and VPN `labels` maps have also been removed; use device/service loops with state conditions. Workspace formats and label maps have been replaced by workspace fields and loops. Throughput display options, clock formatting, and command output format remain supported. Provider symbols, tints, hide rules, and data-selection settings are unchanged.

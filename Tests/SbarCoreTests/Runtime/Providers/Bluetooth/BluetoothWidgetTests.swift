@@ -49,7 +49,7 @@ struct BluetoothWidgetTests {
     var item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        ##"{"id":"bt","type":"bluetooth","bluetooth":{"symbols":{"font":"Test","size":18,"connected":{"glyph":"B"}},"labels":{"connected":"linked"},"tints":{"connected":"#00FF00"},"hideWhenDisconnected":true}}"##
+        ##"{"id":"bt","type":"bluetooth","bluetooth":{"symbols":{"font":"Test","size":18,"connected":{"glyph":"B"}},"tints":{"connected":"#00FF00"},"hideWhenDisconnected":true}}"##
           .utf8
       )
     )
@@ -60,14 +60,14 @@ struct BluetoothWidgetTests {
       devices: [.init(id: "1", name: " Magic\n Keyboard ")]
     )
     let presentation = state.presentation(for: item)
-    #expect(presentation.text == "Magic Keyboard linked")
-    #expect(presentation.accessibilityLabel == "Magic Keyboard linked")
+    #expect(presentation.text == "Magic Keyboard connected")
+    #expect(presentation.accessibilityLabel == "Magic Keyboard connected")
     #expect(presentation.symbol == .glyph("B", font: "Test", size: 18))
     #expect(presentation.tint == "#00FF00")
     #expect(!presentation.hidden)
 
-    #expect(state.presentation(for: item).text == "Magic Keyboard linked")
-    #expect(state.presentation(for: item).accessibilityLabel == "Magic Keyboard linked")
+    #expect(state.presentation(for: item).text == "Magic Keyboard connected")
+    #expect(state.presentation(for: item).accessibilityLabel == "Magic Keyboard connected")
     item.symbol = "star"
     #expect(state.presentation(for: item).symbol == "star")
     item.bluetooth?.showSymbol = false
@@ -94,7 +94,6 @@ struct BluetoothWidgetTests {
   @Test("invalid state keys, colors, glyphs and mismatched item settings are rejected")
   func validation() {
     for settings in [
-      ##"{"labels":{"poweredOn":"On"}}"##,
       ##"{"tints":{"offline":"#FFFFFF"}}"##,
       ##"{"tints":{"connected":"blue"}}"##,
       ##"{"symbols":{"online":"star"}}"##,
@@ -126,10 +125,10 @@ struct BluetoothWidgetTests {
     let properties = try #require(settings["properties"] as? [String: Any])
     #expect(
       Set(properties.keys) == [
-        "symbols", "labels", "tints", "showSymbol", "hideWhenDisconnected",
+        "symbols", "tints", "showSymbol", "hideWhenDisconnected",
       ]
     )
-    for field in ["labels", "tints"] {
+    for field in ["tints"] {
       let map = try #require(properties[field] as? [String: Any])
       let states = try #require(map["properties"] as? [String: Any])
       #expect(Set(states.keys) == Set(BluetoothStatus.allCases.map(\.rawValue)))

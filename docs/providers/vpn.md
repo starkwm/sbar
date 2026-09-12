@@ -30,12 +30,15 @@ Use top-level `text: "VPN {{status}}"` for an aggregate status, include `{{names
 for service names, or use `text: ""` for an icon alone. `showSymbol` defaults to
 `true`. Accessibility retains service names and statuses.
 
-`vpn.labels`, `vpn.tints`, and `vpn.symbols` accept `connecting`, `connected`,
-`disconnecting`, `disconnected`, and `unavailable` keys. Labels replace the status
-word after each name. Symbols default to `lock.shield.fill` when connected,
+`vpn.tints` and `vpn.symbols` accept `connecting`, `connected`,
+`disconnecting`, `disconnected`, and `unavailable` keys. Use a [service loop](../text-templates.md#vpn-services-and-bluetooth-devices)
+with status conditions to replace per-service labels. The old `vpn.labels` map
+is rejected. Symbols default to `lock.shield.fill` when connected,
 `arrow.triangle.2.circlepath` during transitions, `lock.shield` when disconnected,
 and `exclamationmark.shield` when unavailable. Symbols support custom glyphs with
 shared `font` and `size`, and a top-level item `symbol` overrides them.
+
+A custom list can use `{{#services}}{{value}}{{#separator}}, {{/separator}}{{/services}}{{^services}}{{value}}{{/services}}`. Unlike the default label, this includes disconnected services too.
 
 With multiple services, the overall symbol and tint use the first present state
 in this order: unavailable, connected, connecting, disconnecting, disconnected.

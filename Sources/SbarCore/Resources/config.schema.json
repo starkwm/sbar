@@ -241,7 +241,7 @@
             "string",
             "null"
           ],
-          "description": "Label template. Supports {{value}}, provider fields, {{#field}} / {{^field}} sections, and equality conditions such as {{#status=connected}} / {{^status=connected}}, closed by {{/status}}. Workspace providers also support {{#workspaces}}...{{/workspaces}} lists with per-entry styling. Empty text hides the label."
+          "description": "Label template. Supports {{value}}, provider fields, {{#field}} / {{^field}} sections, and equality conditions such as {{#status=connected}} / {{^status=connected}}, closed by {{/status}}. Workspace providers also support {{#workspaces}}...{{/workspaces}} lists with per-entry styling. Empty text hides the label. VPN supports {{#services}} and Bluetooth supports {{#devices}}, with {{#separator}} between entries."
         },
         "symbol": {
           "$ref": "#/$defs/symbol"
@@ -2371,30 +2371,6 @@
         "symbols": {
           "$ref": "#/$defs/vpnSymbols"
         },
-        "labels": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "properties": {
-            "connecting": {
-              "type": "string"
-            },
-            "connected": {
-              "type": "string"
-            },
-            "disconnecting": {
-              "type": "string"
-            },
-            "disconnected": {
-              "type": "string"
-            },
-            "unavailable": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        },
         "tints": {
           "type": [
             "object",
@@ -2523,30 +2499,6 @@
       "properties": {
         "symbols": {
           "$ref": "#/$defs/bluetoothSymbols"
-        },
-        "labels": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "properties": {
-            "on": {
-              "type": "string"
-            },
-            "off": {
-              "type": "string"
-            },
-            "connected": {
-              "type": "string"
-            },
-            "unauthorized": {
-              "type": "string"
-            },
-            "unavailable": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
         },
         "tints": {
           "type": [

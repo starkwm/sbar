@@ -8,7 +8,7 @@ struct BluetoothState: Equatable, Sendable {
 
   func presentation(for item: Item) -> WidgetPresentation {
     let settings = item.bluetooth ?? BluetoothConfiguration()
-    let label = settings.labels?[status.rawValue] ?? status.label
+    let label = status.label
     let summary = "Bluetooth \(label)"
     let details =
       status == .connected && !devices.isEmpty

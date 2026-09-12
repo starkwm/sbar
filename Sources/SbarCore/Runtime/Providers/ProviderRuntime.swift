@@ -225,6 +225,7 @@ final class ProviderRuntime {
   func presentation(for item: Item, displayUUID: String? = nil) -> WidgetPresentation? {
     var presentation: WidgetPresentation?
     var values: [String: String] = [:]
+    var entries: [[String: String]] = []
     if item.type == .plugin {
       let state = pluginStates[item.id] ?? PluginState()
       presentation = state.presentation(for: item)
@@ -244,7 +245,11 @@ final class ProviderRuntime {
         state = item.refresh == nil ? widgetStates[item.type] : widgetSnapshots[item.id]
       }
       presentation = state?.presentation(for: item, displayUUID: displayUUID)
-      if item.text != nil { values = state?.textValues(for: item) ?? [:] }
+      if item.text != nil {
+        values = state?.textValues(for: item) ?? [:]
+        entries = state?.textEntries ?? []
+        if item.type == .vpn || item.type == .bluetooth { values["total"] = String(entries.count) }
+      }
     }
     if [.spaces, .aerospace, .yabai].contains(item.type), let presentation { return presentation }
     guard let source = item.text else { return presentation }
@@ -279,7 +284,7 @@ final class ProviderRuntime {
     else {
       return resolved
     }
-    resolved.text = template.render(values)
+    resolved.text = template.renderRuns(values, entries: entries).map(\.text).joined()
     if presentation == nil { resolved.accessibilityLabel = resolved.text }
     resolved.segments = []
     return resolved

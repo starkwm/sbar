@@ -1,6 +1,38 @@
 import Foundation
 
 extension WidgetState {
+  var textEntries: [[String: String]] {
+    switch self {
+    case .vpn(let state):
+      guard state.available else { return [] }
+      return state.services.sorted {
+        $0.name == $1.name ? $0.id < $1.id : $0.name < $1.name
+      }.enumerated().map { index, service in
+        let cleaned = service.name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        let name = cleaned.isEmpty ? "VPN" : cleaned
+        return [
+          "name": name, "serviceId": service.id, "status": service.status.rawValue,
+          "connected": String(service.status == .connected),
+          "available": String(service.status != .unavailable),
+          "index": String(index + 1), "value": "\(name) \(service.status.label)",
+        ]
+      }
+    case .bluetooth(let state):
+      guard state.status == .connected else { return [] }
+      return state.devices.sorted {
+        $0.name == $1.name ? $0.id < $1.id : $0.name < $1.name
+      }.enumerated().map { index, device in
+        let cleaned = device.name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        let name = cleaned.isEmpty ? "Unnamed device" : cleaned
+        return [
+          "name": name, "deviceId": device.id, "status": "connected", "connected": "true",
+          "index": String(index + 1), "value": "\(name) connected",
+        ]
+      }
+    default: return []
+    }
+  }
+
   func textValues(for item: Item) -> [String: String] {
     switch self {
     case .cpu(let state):
