@@ -38,10 +38,25 @@
         "type": "frontApplication",
         "priority": 80,
         "style": { "tint": "#C0CAF5", "fontWeight": "semibold" }
+      },
+      {
+        "id": "media",
+        "type": "media",
+        "priority": 10,
+        "media": { "separator": " · ", "hideWhenNotPlaying": true },
+        "style": { "tint": "#FF9E64" }
       }
     ],
     "center": [],
     "right": [
+      {
+        "id": "memory",
+        "type": "memory",
+        "priority": 20,
+        "memory": { "format": "percentage", "showLabel": false },
+        "style": { "tint": "#7AA2F7", "background": "#292E42" },
+        "primaryAction": { "kind": "application", "value": "com.apple.ActivityMonitor" }
+      },
       {
         "id": "cpu",
         "type": "cpu",
@@ -60,7 +75,7 @@
             "cpu": { "smoothingSamples": 3 }
           },
           {
-            "id": "memory",
+            "id": "memory-detail",
             "type": "memory",
             "memory": { "format": "usedTotal" }
           },
@@ -192,11 +207,6 @@
             "id": "input",
             "type": "audioDevice",
             "audioDevice": { "device": "input" }
-          },
-          {
-            "id": "media",
-            "type": "media",
-            "media": { "separator": " · ", "hideWhenStopped": true }
           },
           {
             "id": "sound-settings",

@@ -24,28 +24,30 @@ Stop your usual sbar instance first if it would overlap. This example has its ow
 | --- | --- |
 | Spaces | Shows the current Space for that display. Click to open Mission Control. |
 | Active app | Follows focus and shows the application's own icon. |
+| Media | Shows Music/Spotify playback after the active app in orange. Only visible while playing. |
 | Date | Opens Calendar. |
+| Memory | Shows used memory as a percentage. Click to open Activity Monitor. |
 | CPU | Shows smoothed usage. Click for CPU, memory, free disk space, and an Activity Monitor shortcut. |
 | Network | Follows the active connection. Click for connection type, VPN names and status, and download/upload rates. |
 | VPN | Shows a green shield when connected and a different color during transitions or read failures. Hides when disconnected. Click to open System Settings. |
-| Sound | Opens volume, mute controls, default output and microphone names, and Music/Spotify track information. |
+| Sound | Opens volume, mute controls, and default output and microphone names. |
 | Battery | Shows charge with low-battery and charging colors. Click to open System Settings. Desktops show AC power. |
 | Clock | Opens the full date and shortcuts to Calendar and Reminders. |
 
 The sound buttons adjust volume in steps of 10 percentage points, clamped to 0–100, or toggle mute. They use macOS's built-in AppleScript commands. Fixed-volume outputs still need their own hardware or application controls. Device names describe the current defaults; selecting a device happens in System Settings.
 
-Music and Spotify send track updates after playback starts or changes. Until the first notification, the sound popover shows `Waiting for playback`. Network status describes the active connection, not the Wi-Fi name or signal strength. Transfer rates total non-loopback interfaces, including tunnels. VPN status covers services registered with macOS. See the [provider references](../../docs/index.md#providers) for details.
+Music and Spotify send track updates after playback starts or changes. The media item stays hidden until a playing notification arrives, and hides again when playback pauses, stops, or becomes unavailable. Network status describes the active connection, not the Wi-Fi name or signal strength. Transfer rates total non-loopback interfaces, including tunnels. VPN status covers services registered with macOS. See the [provider references](../../docs/index.md#providers) for details.
 
 ## Customize
 
 Edit [config.json](config.json) while the bar is running; valid changes reload automatically. The example needs no extra fonts, window manager, scripts, or plugin installation.
 
-The palette uses blue for Spaces and the clock, purple for CPU, cyan for network, and teal for sound. Green marks connected VPN and charging states, amber marks warnings, orange marks a disconnecting VPN, and red marks errors or low battery. The bar uses Night's `#1A1B26` background with slight transparency, with `#292E42` backgrounds behind CPU and the clock.
+The palette uses blue for Spaces, memory, and the clock, purple for CPU, orange for media, cyan for network, and teal for sound. Green marks connected VPN and charging states, amber marks warnings, orange marks a disconnecting VPN, and red marks errors or low battery. The bar uses Night's `#1A1B26` background with slight transparency, with `#292E42` backgrounds behind memory, CPU, and the clock.
 
 - Set `bar.displays` to `main` for the primary display only.
 - Adjust `bar.margin` and `theme.cornerRadius` to match your window gaps.
 - Set `bar.shadow` to `false` for a flat appearance.
-- Move `media` from the sound popover into the empty `items.center` section to put track information in the middle.
+- Move `media` from `items.left` into the empty `items.center` section to put track information in the middle.
 - Change the clock's `format` to `h:mm a` for a 12-hour clock.
 - Set larger item priorities to keep them visible longer. The clock has the highest priority; lower-priority items move into overflow when space is tight.
 
