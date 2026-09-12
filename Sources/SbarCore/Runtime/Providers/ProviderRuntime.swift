@@ -62,7 +62,6 @@ final class ProviderRuntime {
   @ObservationIgnored private let spaces = SpacesProvider()
   @ObservationIgnored private var samplingTask: Task<Void, Never>?
 
-  @ObservationIgnored private var commandPublishedValues: [String: String] = [:]
   @ObservationIgnored private var commandTasks: [String: Task<Void, Never>] = [:]
 
   @ObservationIgnored private var pluginItems: [Item] = []
@@ -70,7 +69,6 @@ final class ProviderRuntime {
   @ObservationIgnored private var pluginInputs: [String: PluginMailbox] = [:]
   @ObservationIgnored private var pluginGenerations: [String: UUID] = [:]
   @ObservationIgnored private var pluginHadOutput: [String: Bool] = [:]
-  @ObservationIgnored private var pluginPublishedValues: [String: String] = [:]
 
   @ObservationIgnored private let yabai: YabaiProvider
   @ObservationIgnored private var yabaiCaptures = Set<String>()
@@ -219,24 +217,10 @@ final class ProviderRuntime {
 
   func presentation(for item: Item, displayUUID: String? = nil) -> WidgetPresentation? {
     if item.type == .plugin {
-      var result = (pluginStates[item.id] ?? PluginState()).presentation(for: item)
-      if item.plugin?.showValue != false, let value = itemValues[item.id],
-        value != pluginPublishedValues[item.id]
-      {
-        result.text = CommandState.displayText(value, limit: item.plugin?.maxLength ?? 4096)
-        result.accessibilityLabel = result.text
-      }
-      return result
+      return (pluginStates[item.id] ?? PluginState()).presentation(for: item)
     }
     if item.type == .command {
-      var result = (commandStates[item.id] ?? CommandState()).presentation(for: item)
-      if item.command?.showValue != false, let value = itemValues[item.id],
-        value != commandPublishedValues[item.id]
-      {
-        result.text = CommandState.displayText(value, limit: item.command?.maxLength ?? 256)
-        result.accessibilityLabel = result.text
-      }
-      return result
+      return (commandStates[item.id] ?? CommandState()).presentation(for: item)
     }
     if item.type == .disk {
       let state: WidgetState =
@@ -351,7 +335,6 @@ final class ProviderRuntime {
     pluginGenerations = [:]
     pluginStates = [:]
     pluginHadOutput = [:]
-    pluginPublishedValues = [:]
     for task in pluginTasks.values { task.cancel() }
     pluginTasks.removeAll()
     pluginInputs.removeAll()
@@ -360,7 +343,6 @@ final class ProviderRuntime {
     for task in commandTasks.values { task.cancel() }
     commandTasks.removeAll()
     commandStates = [:]
-    commandPublishedValues = [:]
     commandItems = []
 
     samplingTask?.cancel()
@@ -454,13 +436,11 @@ final class ProviderRuntime {
     pluginItems = items
     pluginStates = pluginStates.filter { ids.contains($0.key) }
     pluginHadOutput = pluginHadOutput.filter { ids.contains($0.key) }
-    pluginPublishedValues = pluginPublishedValues.filter { ids.contains($0.key) }
     for item in items where item.plugin?.sameExecution(as: previous[item.id]?.plugin) != true {
       pluginGenerations[item.id] = nil
       pluginInputs[item.id] = nil
       pluginTasks.removeValue(forKey: item.id)?.cancel()
       pluginStates[item.id] = nil
-      pluginPublishedValues[item.id] = nil
       itemValues[item.id] = nil
       startPlugin(item)
     }
@@ -472,7 +452,6 @@ final class ProviderRuntime {
     let retaining = state.status != .failure || current.plugin?.onError == .keepLast
     let text =
       retaining ? state.lastSuccess?.text ?? state.error ?? "…" : state.error ?? "Plugin failed"
-    pluginPublishedValues[item.id] = text
     updateItemValue(text, for: item.id)
   }
 
@@ -538,7 +517,6 @@ final class ProviderRuntime {
 
     commandItems = items
     commandStates = commandStates.filter { ids.contains($0.key) }
-    commandPublishedValues = commandPublishedValues.filter { ids.contains($0.key) }
     itemValues = itemValues.filter { key, _ in (items + pluginItems).contains { $0.id == key } }
 
     for item in items
@@ -547,7 +525,6 @@ final class ProviderRuntime {
       || previous[item.id]?.refresh != item.refresh
     {
       commandStates[item.id] = nil
-      commandPublishedValues[item.id] = nil
       itemValues[item.id] = nil
       startCommand(item)
     }
@@ -560,7 +537,6 @@ final class ProviderRuntime {
     let retaining = state.status != .failure || current.command?.onError == .keepLast
     let text =
       retaining ? state.lastSuccess?.text ?? state.error ?? "…" : state.error ?? "Command failed"
-    commandPublishedValues[item.id] = text
     updateItemValue(text, for: item.id)
   }
 
