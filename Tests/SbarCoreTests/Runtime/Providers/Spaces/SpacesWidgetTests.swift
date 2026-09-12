@@ -73,7 +73,7 @@ struct SpacesWidgetTests {
       spaces: SpacesConfiguration(
         format: .list,
         labels: ["1": "Code", "2": "Video"],
-        symbols: SpacesSymbols(font: "Shared", size: 18, available: .glyph("S")),
+        symbols: AvailabilitySymbols(font: "Shared", size: 18, available: .glyph("S")),
         tints: SpacesTints(active: "#00FF00", inactive: "#888888", unavailable: "#FF0000")
       )
     )

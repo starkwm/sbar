@@ -3,7 +3,7 @@ import Foundation
 struct DiskConfiguration: Codable, Equatable, Sendable {
   var path: String?
   var format: DiskFormat?
-  var symbols: DiskSymbols?
+  var symbols: AvailabilitySymbols?
   var tints: DiskTints?
   var showLabel: Bool?
   var showValue: Bool?
@@ -40,31 +40,6 @@ struct DiskConfiguration: Codable, Equatable, Sendable {
 
 enum DiskFormat: String, Codable, Sendable {
   case free, used, total, usedTotal, percentage
-}
-
-struct DiskSymbols: Codable, Equatable, Sendable {
-  var font: String?
-  var size: Double?
-  var available: WidgetSymbol?
-  var unavailable: WidgetSymbol?
-
-  func validate(path: String) throws {
-    if let font, font.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-      throw ConfigurationError.invalidValue(path: "\(path).font", reason: "Must not be blank.")
-    }
-    if let size, !(8...72).contains(size) {
-      throw ConfigurationError.invalidValue(
-        path: "\(path).size",
-        reason: "Must be between 8 and 72."
-      )
-    }
-    try available?.validate(font: font, path: "\(path).available")
-    try unavailable?.validate(font: font, path: "\(path).unavailable")
-  }
-
-  func resolve(_ symbol: WidgetSymbol?) -> ItemSymbol? {
-    symbol?.resolve(font: font, size: size)
-  }
 }
 
 struct DiskTints: Codable, Equatable, Sendable {

@@ -43,7 +43,7 @@ struct DiskWidgetTests {
       type: .disk,
       disk: DiskConfiguration(
         format: .percentage,
-        symbols: DiskSymbols(
+        symbols: AvailabilitySymbols(
           font: "Shared",
           size: 18,
           available: .glyph("D"),
