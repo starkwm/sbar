@@ -2,10 +2,10 @@
   "$schema": "../../Sources/SbarCore/Resources/config.schema.json",
   "schemaVersion": 1,
   "bar": {
-    "position": "bottom",
-    "height": 40,
+    "position": "top",
+    "height": 30,
     "displays": "all",
-    "margin": { "bottom": 10, "left": 12, "right": 12 },
+    "margin": { "top": 8, "bottom": 8, "left": 10, "right": 10 },
     "mousePassThrough": true
   },
   "theme": {
@@ -88,16 +88,7 @@
         "style": { "tint": "#E2E8F0", "fontWeight": "semibold" }
       }
     ],
-    "center": [
-      {
-        "id": "date",
-        "type": "datetime",
-        "format": "EEEE, d MMMM",
-        "priority": -10,
-        "style": { "tint": "#A5ADCB" },
-        "primaryAction": { "kind": "application", "value": "com.apple.iCal" }
-      }
-    ],
+    "center": [],
     "right": [
       {
         "id": "cpu",
@@ -308,6 +299,14 @@
             "primaryAction": { "kind": "application", "value": "com.apple.reminders" }
           }
         ]
+      },
+      {
+        "id": "date",
+        "type": "datetime",
+        "format": "EEEE, d MMMM",
+        "priority": -10,
+        "style": { "tint": "#A5ADCB" },
+        "primaryAction": { "kind": "application", "value": "com.apple.iCal" }
       }
     ]
   }
