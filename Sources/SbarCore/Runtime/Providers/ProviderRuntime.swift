@@ -114,50 +114,52 @@ final class ProviderRuntime {
     ])
     guard requested != activeTypes else { return }
 
-    stopNative()
+    let added = requested.subtracting(activeTypes)
+    let removed = activeTypes.subtracting(requested)
+    stopNative(removed)
     activeTypes = requested
 
-    if activeTypes.contains(.frontApplication) {
+    if added.contains(.frontApplication) {
       application.start { [weak self] in self?.updateFrontApplication($0) }
     }
 
-    if activeTypes.contains(.battery) {
+    if added.contains(.battery) {
       battery.start { [weak self] in self?.updateWidgetState($0, for: .battery) }
     }
 
-    if activeTypes.contains(.volume) {
+    if added.contains(.volume) {
       volume.start { [weak self] in self?.updateWidgetState($0, for: .volume) }
     }
 
-    if activeTypes.contains(.bluetooth) {
+    if added.contains(.bluetooth) {
       bluetooth.start { [weak self] in self?.updateWidgetState(.bluetooth($0), for: .bluetooth) }
     }
 
-    if activeTypes.contains(.audioDevice) {
+    if added.contains(.audioDevice) {
       audioDevice.start { [weak self] in
         self?.updateWidgetState(.audioDevice($0), for: .audioDevice)
       }
     }
 
-    if activeTypes.contains(.vpn) {
+    if added.contains(.vpn) {
       vpn.start { [weak self] in self?.updateWidgetState(.vpn($0), for: .vpn) }
     }
 
-    if activeTypes.contains(.network) {
+    if added.contains(.network) {
       network.start { [weak self] network in
         self?.updateWidgetState(network, for: .network)
       }
     }
 
-    if activeTypes.contains(.media) {
+    if added.contains(.media) {
       media.start { [weak self] in self?.updateWidgetState(.media($0), for: .media) }
     }
 
-    if activeTypes.contains(.spaces) {
+    if added.contains(.spaces) {
       spaces.start { [weak self] in self?.updateWidgetState(.spaces($0), for: .spaces) }
     }
 
-    if activeTypes.contains(.aerospace) {
+    if added.contains(.aerospace) {
       aerospace.start { [weak self] state in
         guard let self else { return }
         self.updateWidgetState(.aerospace(state), for: .aerospace)
@@ -168,7 +170,7 @@ final class ProviderRuntime {
       }
     }
 
-    if activeTypes.contains(.yabai) {
+    if added.contains(.yabai) {
       yabai.start { [weak self] state in
         guard let self else { return }
         self.updateWidgetState(.yabai(state), for: .yabai)
@@ -179,16 +181,21 @@ final class ProviderRuntime {
       }
     }
 
+    let samplingTypes: Set<ItemType> = [.cpu, .memory, .disk, .throughput, .datetime]
+    guard !added.union(removed).isDisjoint(with: samplingTypes) else { return }
+    samplingTask?.cancel()
+    samplingTask = nil
+
     let sampled = activeTypes.intersection([.cpu, .memory, .disk, .throughput])
     let needsClock = activeTypes.contains(.datetime)
-    if sampled.contains(.throughput) {
+    if added.contains(.throughput) {
       updateWidgetState(.throughput(ThroughputState()), for: .throughput)
     }
-    if sampled.contains(.memory) { updateWidgetState(.memory(MemoryState()), for: .memory) }
-    if sampled.contains(.cpu) { updateWidgetState(.cpu(CPUState()), for: .cpu) }
+    if added.contains(.memory) { updateWidgetState(.memory(MemoryState()), for: .memory) }
+    if added.contains(.cpu) { updateWidgetState(.cpu(CPUState()), for: .cpu) }
     if !sampled.isEmpty || needsClock {
       samplingTask = Task { [weak self, metrics] in
-        await metrics.resetBaselines()
+        await metrics.resetBaselines(for: added)
         var tick = 0
 
         while !Task.isCancelled {
@@ -357,7 +364,10 @@ final class ProviderRuntime {
     commandPublishedValues = [:]
     commandItems = []
 
-    stopNative()
+    samplingTask?.cancel()
+    samplingTask = nil
+    stopNative(activeTypes)
+    activeTypes = []
   }
 
   private func configureRefresh(_ items: [Item]) {
@@ -591,24 +601,23 @@ final class ProviderRuntime {
     }
   }
 
-  private func stopNative() {
-    samplingTask?.cancel()
-    samplingTask = nil
-
-    application.stop()
-    battery.stop()
-    volume.stop()
-    network.stop()
-    vpn.stop()
-    bluetooth.stop()
-    audioDevice.stop()
-    media.stop()
-    spaces.stop()
-    yabai.stop()
-    yabaiCaptures.removeAll()
-    aerospace.stop()
-    aerospaceCaptures.removeAll()
-
-    activeTypes = []
+  private func stopNative(_ types: Set<ItemType>) {
+    if types.contains(.frontApplication) { application.stop() }
+    if types.contains(.battery) { battery.stop() }
+    if types.contains(.volume) { volume.stop() }
+    if types.contains(.network) { network.stop() }
+    if types.contains(.vpn) { vpn.stop() }
+    if types.contains(.bluetooth) { bluetooth.stop() }
+    if types.contains(.audioDevice) { audioDevice.stop() }
+    if types.contains(.media) { media.stop() }
+    if types.contains(.spaces) { spaces.stop() }
+    if types.contains(.yabai) {
+      yabai.stop()
+      yabaiCaptures.removeAll()
+    }
+    if types.contains(.aerospace) {
+      aerospace.stop()
+      aerospaceCaptures.removeAll()
+    }
   }
 }

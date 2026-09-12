@@ -117,6 +117,30 @@ struct VPNProviderTests {
     runtime.configure(configuration)
     #expect(monitor.starts == 2)
   }
+
+  @Test("runtime preserves existing subscriptions when another provider is toggled")
+  func unrelatedProviderChanges() {
+    let monitor = TestVPNMonitor()
+    let runtime = ProviderRuntime(vpn: VPNProvider(monitor: monitor))
+    defer { runtime.stop() }
+    let vpn = Item(id: "vpn", type: .vpn)
+    var configuration = Configuration(bar: .init(), items: .init(right: [vpn]))
+    runtime.configure(configuration)
+    configuration.items.right.append(Item(id: "clock", type: .datetime))
+    runtime.configure(configuration)
+    configuration.items.right.removeLast()
+    runtime.configure(configuration)
+    #expect(monitor.starts == 1)
+    #expect(monitor.changed != nil)
+
+    configuration.items.right = [Item(id: "clock", type: .datetime)]
+    runtime.configure(configuration)
+    #expect(monitor.changed == nil)
+    configuration.items.right.append(vpn)
+    runtime.configure(configuration)
+    #expect(monitor.starts == 2)
+    #expect(monitor.changed != nil)
+  }
 }
 
 @MainActor

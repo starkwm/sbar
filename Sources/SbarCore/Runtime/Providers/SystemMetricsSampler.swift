@@ -5,9 +5,9 @@ actor SystemMetricsSampler {
   private var cpu = CPUProvider()
   private var throughput = ThroughputProvider()
 
-  func resetBaselines() {
-    cpu.reset()
-    throughput.reset()
+  func resetBaselines(for types: Set<ItemType>) {
+    if types.contains(.cpu) { cpu.reset() }
+    if types.contains(.throughput) { throughput.reset() }
   }
 
   func sample(_ types: Set<ItemType>, diskPaths: Set<String> = []) -> MetricsSnapshot {

@@ -8,6 +8,40 @@ import Testing
 @Suite("ProviderRuntime")
 @MainActor
 struct ProviderRuntimeTests {
+  @Test("adding and removing another provider preserves active playback and metric state")
+  func unrelatedProviderChanges() {
+    let media = Item(id: "media", type: .media)
+    let cpu = Item(id: "cpu", type: .cpu)
+    var configuration = Configuration(bar: .init(), items: .init(right: [media, cpu]))
+    let runtime = ProviderRuntime()
+    runtime.configure(configuration)
+    defer { runtime.stop() }
+    runtime.updateWidgetState(
+      .media(
+        MediaState(players: [
+          .music: MediaPlayerState(source: .music, status: .playing, title: "Playing track")
+        ])
+      ),
+      for: .media
+    )
+    runtime.updateWidgetState(.cpu(CPUState(samples: [10, 20])), for: .cpu)
+
+    configuration.items.right.append(Item(id: "clock", type: .datetime))
+    runtime.configure(configuration)
+    #expect(runtime.presentation(for: media)?.text == "Playing track")
+    #expect(runtime.widgetStates[.cpu] == .cpu(CPUState(samples: [10, 20])))
+
+    configuration.items.right.removeLast()
+    runtime.configure(configuration)
+    #expect(runtime.presentation(for: media)?.text == "Playing track")
+    #expect(runtime.widgetStates[.cpu] == .cpu(CPUState(samples: [10, 20])))
+
+    runtime.stop()
+    runtime.configure(configuration)
+    #expect(runtime.presentation(for: media)?.text == "Waiting for playback")
+    #expect(runtime.widgetStates[.cpu] == .cpu(CPUState()))
+  }
+
   @Test("unchanged shared values do not invalidate observation")
   func unchangedSharedValues() {
     let runtime = ProviderRuntime()
