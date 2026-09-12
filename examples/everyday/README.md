@@ -1,6 +1,6 @@
 # Everyday bar
 
-A dark, rounded bar for daily use, with a cyan launcher, a centered date, and compact system indicators. It floats 10 points above the bottom work area on every display, clearing a visible Dock. Popovers follow the system appearance so their text stays readable in light and dark mode.
+A dark bar for daily use, with compact system indicators. It sits at the top of every display with a soft shadow below it. Popovers follow the system appearance so their text stays readable in light and dark mode.
 
 ## Run
 
@@ -22,8 +22,7 @@ Stop your usual sbar instance first if it would overlap. This example has its ow
 
 | Item | What it does |
 | --- | --- |
-| Desktop | Opens Finder, Downloads, Terminal, Safari, or System Settings. |
-| Spaces | Shows the current Space and total for that display. Click to open Mission Control. |
+| Spaces | Shows the current Space for that display. Click to open Mission Control. |
 | Active app | Follows focus and shows the application's own icon. |
 | Date | Opens Calendar. |
 | CPU | Shows smoothed usage. Click for CPU, memory, free disk space, and an Activity Monitor shortcut. |
@@ -43,12 +42,12 @@ Edit [config.json](config.json) while the bar is running; valid changes reload a
 
 - Set `bar.displays` to `main` for the primary display only.
 - Adjust `bar.margin` and `theme.cornerRadius` to match your window gaps.
-- Change launcher application bundle IDs to use your preferred apps.
-- Move `media` from the sound popover into `items.center` to put track information in the middle instead of the date.
+- Set `bar.shadow` to `false` for a flat appearance.
+- Move `media` from the sound popover into the empty `items.center` section to put track information in the middle.
 - Change the clock's `format` to `h:mm a` for a 12-hour clock.
-- Set larger item priorities to keep them visible longer. The launcher and clock have the highest priority; lower-priority items move into overflow when space is tight.
+- Set larger item priorities to keep them visible longer. The clock has the highest priority; lower-priority items move into overflow when space is tight.
 
-The bottom bar does not reserve space for windows. Add a matching bottom gap in your window manager if you want windows to stop above it.
+The bar does not reserve space for windows or hide the system menu bar. Adjust your window manager's top gap and the bar's top margin to leave enough room for the menu bar or notch on your display.
 
 Inspect the example's diagnostics without targeting your normal bar:
 

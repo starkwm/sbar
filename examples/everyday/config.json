@@ -3,16 +3,17 @@
   "schemaVersion": 1,
   "bar": {
     "position": "top",
-    "height": 30,
+    "height": 38,
     "displays": "all",
-    "margin": { "top": 8, "bottom": 8, "left": 10, "right": 10 },
+    "margin": { "top": 0, "bottom": 8, "left": 0, "right": 0 },
+    "shadow": true,
     "mousePassThrough": true
   },
   "theme": {
     "background": "#151B26F5",
     "horizontalPadding": 10,
     "verticalPadding": 4,
-    "cornerRadius": 12,
+    "cornerRadius": 0,
     "itemSpacing": 6,
     "itemStyle": {
       "fontSize": 12,
@@ -25,58 +26,9 @@
   "items": {
     "left": [
       {
-        "id": "launcher",
-        "type": "popup",
-        "label": "Desktop",
-        "symbol": "square.grid.2x2.fill",
-        "priority": 100,
-        "style": {
-          "tint": "#91D7E3",
-          "background": "#91D7E31A",
-          "fontWeight": "semibold"
-        },
-        "children": [
-          {
-            "id": "finder",
-            "type": "text",
-            "label": "Finder",
-            "symbol": "folder",
-            "primaryAction": { "kind": "application", "value": "com.apple.finder" }
-          },
-          {
-            "id": "downloads",
-            "type": "text",
-            "label": "Downloads",
-            "symbol": "arrow.down.circle",
-            "primaryAction": { "kind": "command", "value": "/usr/bin/open \"$HOME/Downloads\"" }
-          },
-          {
-            "id": "terminal",
-            "type": "text",
-            "label": "Terminal",
-            "symbol": "terminal",
-            "primaryAction": { "kind": "application", "value": "com.apple.Terminal" }
-          },
-          {
-            "id": "safari",
-            "type": "text",
-            "label": "Safari",
-            "symbol": "safari",
-            "primaryAction": { "kind": "application", "value": "com.apple.Safari" }
-          },
-          {
-            "id": "settings",
-            "type": "text",
-            "label": "System Settings",
-            "symbol": "gearshape",
-            "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
-          }
-        ]
-      },
-      {
         "id": "spaces",
         "type": "spaces",
-        "spaces": { "scope": "display", "format": "currentTotal" },
+        "spaces": { "scope": "display", "format": "current" },
         "priority": 40,
         "style": { "tint": "#A5ADCB" },
         "primaryAction": { "kind": "application", "value": "com.apple.exposelauncher" }
@@ -126,6 +78,23 @@
         ]
       },
       {
+        "id": "vpn",
+        "type": "vpn",
+        "priority": 70,
+        "vpn": {
+          "showLabel": false,
+          "hideWhenDisconnected": true,
+          "tints": {
+            "connected": "#A6DA95",
+            "connecting": "#EED49F",
+            "disconnecting": "#EED49F",
+            "unavailable": "#ED8796"
+          }
+        },
+        "style": { "tint": "#A5ADCB" },
+        "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
+      },
+      {
         "id": "network",
         "type": "network",
         "priority": 60,
@@ -162,23 +131,6 @@
             "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
           }
         ]
-      },
-      {
-        "id": "vpn",
-        "type": "vpn",
-        "priority": 70,
-        "vpn": {
-          "showLabel": false,
-          "hideWhenDisconnected": true,
-          "tints": {
-            "connected": "#A6DA95",
-            "connecting": "#EED49F",
-            "disconnecting": "#EED49F",
-            "unavailable": "#ED8796"
-          }
-        },
-        "style": { "tint": "#A5ADCB" },
-        "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
       },
       {
         "id": "sound",
@@ -267,6 +219,14 @@
         "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
       },
       {
+        "id": "date",
+        "type": "datetime",
+        "format": "EEEE, d MMMM",
+        "priority": -10,
+        "style": { "tint": "#A5ADCB" },
+        "primaryAction": { "kind": "application", "value": "com.apple.iCal" }
+      },
+      {
         "id": "clock",
         "type": "datetime",
         "format": "HH:mm",
@@ -299,14 +259,6 @@
             "primaryAction": { "kind": "application", "value": "com.apple.reminders" }
           }
         ]
-      },
-      {
-        "id": "date",
-        "type": "datetime",
-        "format": "EEEE, d MMMM",
-        "priority": -10,
-        "style": { "tint": "#A5ADCB" },
-        "primaryAction": { "kind": "application", "value": "com.apple.iCal" }
       }
     ]
   }
