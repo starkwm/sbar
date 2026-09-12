@@ -12,6 +12,7 @@ final class BarCoordinator: NSObject {
   private var server: ControlServer?
 
   private let store: ConfigurationStore
+  private let barSpace = BarSpace()
   private var panels: [CGDirectDisplayID: BarPanel] = [:]
   private var isStarted = false
   private var sleeping = false
@@ -144,6 +145,7 @@ final class BarCoordinator: NSObject {
 
     for panel in panels.values { panel.close() }
     panels.removeAll()
+    barSpace.stop()
     isStarted = false
   }
 
@@ -229,6 +231,7 @@ final class BarCoordinator: NSObject {
       hostingView.safeAreaRegions = []
       panel.contentView = hostingView
       panel.orderFrontRegardless()
+      barSpace.addWindow(panel.windowNumber)
       panel.updateMousePassthrough()
       updated[identifier] = panel
     }
