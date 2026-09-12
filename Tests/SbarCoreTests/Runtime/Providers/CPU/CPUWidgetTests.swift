@@ -92,17 +92,13 @@ struct CPUWidgetTests {
     #expect(unavailable.symbol == "questionmark")
     #expect(unavailable.tint == "#888888")
     #expect(unavailable.accessibilityLabel == "CPU usage unavailable")
-    item.cpu?.showLabel = false
-    #expect(CPUState(samples: [12]).presentation(for: item).text == "12%")
-    item.cpu?.showPercentage = false
-    #expect(CPUState(samples: [12]).presentation(for: item).text.isEmpty)
+    #expect(CPUState(samples: [12]).presentation(for: item).text == "CPU 12%")
     item.symbol = "star"
     #expect(CPUState().presentation(for: item).symbol == "star")
     item.cpu?.showSymbol = false
     #expect(CPUState().presentation(for: item).symbol == nil)
     #expect(CPUState().presentation(for: item).accessibilityLabel == "CPU usage unavailable")
-    item.cpu?.showLabel = true
-    #expect(CPUState(samples: [12]).presentation(for: item).text == "CPU")
+
     for name in ["cpu", "questionmark"] {
       #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil)
     }
@@ -113,7 +109,7 @@ struct CPUWidgetTests {
     let item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        ##"{"id":"cpu","type":"cpu","cpu":{"symbols":{"font":"Shared","high":{"glyph":"H"}},"tints":{"high":"#FF0000"},"showLabel":false,"showPercentage":true,"showSymbol":true,"warningThreshold":50,"highThreshold":90,"smoothingSamples":3}}"##
+        ##"{"id":"cpu","type":"cpu","cpu":{"symbols":{"font":"Shared","high":{"glyph":"H"}},"tints":{"high":"#FF0000"},"showSymbol":true,"warningThreshold":50,"highThreshold":90,"smoothingSamples":3}}"##
           .utf8
       )
     )

@@ -70,19 +70,15 @@ struct MemoryWidgetTests {
     var item = Item(
       id: "ram",
       type: .memory,
-      memory: MemoryConfiguration(format: .percentage, showLabel: false)
+      memory: MemoryConfiguration()
     )
     let result = state.presentation(for: item)
-    #expect(result.text == "50%")
+    #expect(result.text == "RAM \(used)")
     #expect(result.symbol == "memorychip")
     #expect(result.accessibilityLabel.contains(used))
     #expect(result.accessibilityLabel.contains(total))
     #expect(result.accessibilityLabel.contains("50%"))
-    item.memory?.showValue = false
-    #expect(state.presentation(for: item).text.isEmpty)
-    #expect(state.presentation(for: item).accessibilityLabel == result.accessibilityLabel)
-    item.memory?.showLabel = true
-    #expect(state.presentation(for: item).text == "RAM")
+
     item.symbol = "star"
     #expect(state.presentation(for: item).symbol == "star")
     item.memory?.showSymbol = false
@@ -98,7 +94,7 @@ struct MemoryWidgetTests {
     let item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        #"{"id":"ram","type":"memory","memory":{"format":"usedTotal","showLabel":false,"showValue":true,"showSymbol":true,"symbols":{"font":"Shared","size":18,"available":{"glyph":"M"},"unavailable":{"glyph":"?","font":"Other","size":24}}}}"#
+        #"{"id":"ram","type":"memory","memory":{"showSymbol":true,"symbols":{"font":"Shared","size":18,"available":{"glyph":"M"},"unavailable":{"glyph":"?","font":"Other","size":24}}}}"#
           .utf8
       )
     )
@@ -112,7 +108,6 @@ struct MemoryWidgetTests {
         == state.presentation(for: Item(id: "ram", type: .memory, memory: MemoryConfiguration()))
     )
     for json in [
-      #"{"format":"invalid"}"#, #"{"showValue":"false"}"#,
       #"{"symbols":{"font":" "}}"#, #"{"symbols":{"size":73}}"#,
       #"{"symbols":{"available":{"glyph":"M"}}}"#,
       #"{"symbols":{"font":"Shared","unavailable":{"glyph":""}}}"#,
@@ -142,7 +137,7 @@ struct MemoryWidgetTests {
         Configuration.self,
         from: Data(
           """
-          {"schemaVersion":1,"bar":{},"items":{"right":[{"id":"ram","type":"memory","memory":{"format":"percentage"},"refresh":{"mode":"\(mode)"}}]}}
+          {"schemaVersion":1,"bar":{},"items":{"right":[{"id":"ram","type":"memory","text":"RAM {{#available}}{{percentage}}%{{/available}}{{^available}}—{{/available}}","refresh":{"mode":"\(mode)"}}]}}
           """.utf8
         )
       )

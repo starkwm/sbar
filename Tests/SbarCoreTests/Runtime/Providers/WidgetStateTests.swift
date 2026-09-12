@@ -92,14 +92,13 @@ struct WidgetStateTests {
       type: .battery,
       battery: BatteryConfiguration(
         tints: BatteryTints(low: "#ff0000", charging: "#00ff00", pluggedIn: "#0000ff"),
-        showPercentage: false,
         lowThreshold: 20
       )
     )
     let low = WidgetState.battery(percentage: 20, charging: false, pluggedIn: false).presentation(
       for: item
     )
-    #expect(low.text.isEmpty)
+    #expect(low.text == "20%")
     #expect(low.symbol == "battery.25percent")
     #expect(low.tint == "#ff0000")
     #expect(!low.accessibilityLabel.isEmpty)
@@ -127,23 +126,22 @@ struct WidgetStateTests {
       network: NetworkConfiguration(
         interface: .wifi,
         symbols: NetworkSymbols(wifi: .system("checkmark"), offline: .system("xmark")),
-        labels: ["wifi": "Online", "offline": "Offline"],
         tints: ["wifi": "#00ff00", "offline": "#ff0000"],
         hideWhenDisconnected: true
       )
     )
     let online = WidgetState.network(.wifi).presentation(for: item)
-    #expect(online.text == "Online")
+    #expect(online.text == "Wi-Fi connected")
     #expect(online.symbol == "checkmark")
     #expect(online.tint == "#00ff00")
     #expect(!online.hidden)
     let offline = WidgetState.network(.offline).presentation(for: item)
     #expect(offline.hidden)
-    #expect(offline.text == "Offline")
+    #expect(offline.text == "Wi-Fi disconnected")
     #expect(offline.symbol == "xmark")
     #expect(offline.tint == "#ff0000")
-    item.network?.showLabel = false
-    #expect(WidgetState.network(.wifi).presentation(for: item).text.isEmpty)
+
+    #expect(WidgetState.network(.wifi).presentation(for: item).text == "Wi-Fi connected")
     item.symbol = "star"
     #expect(WidgetState.network(.wifi).presentation(for: item).symbol == "star")
     item.network?.showSymbol = false
@@ -176,7 +174,7 @@ struct WidgetStateTests {
     let configuration = try JSONDecoder().decode(
       Configuration.self,
       from: Data(
-        #"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"wifi","type":"network","network":{"interface":"wifi",},"refresh":{"mode":"manual"}}]}}"#
+        #"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"wifi","type":"network","network":{"interface":"wifi"},"refresh":{"mode":"manual"}}]}}"#
           .utf8
       )
     )

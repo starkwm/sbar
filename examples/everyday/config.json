@@ -161,14 +161,7 @@
           {
             "id": "network-detail",
             "type": "network",
-            "network": {
-              "labels": {
-                "wifi": "Wi-Fi connected",
-                "ethernet": "Ethernet connected",
-                "cellular": "Cellular connected",
-                "other": "Network connected"
-              }
-            }
+            "text": "{{#status=wifi}}Wi-Fi connected{{/status}}{{#status=ethernet}}Ethernet connected{{/status}}{{#status=cellular}}Cellular connected{{/status}}{{#status=other}}Network connected{{/status}}{{#status=offline}}{{value}}{{/status}}"
           },
           {
             "id": "vpn-detail",

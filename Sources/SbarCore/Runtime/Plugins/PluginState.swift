@@ -18,7 +18,6 @@ struct PluginState: Equatable, Sendable {
       onError: settings?.onError,
       symbols: settings?.symbols,
       tints: settings?.tints,
-      showValue: settings?.showValue,
       showSymbol: settings?.showSymbol
     )
     return CommandState(status: status, lastSuccess: lastSuccess, error: error).presentation(

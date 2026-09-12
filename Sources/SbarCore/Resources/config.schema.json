@@ -237,14 +237,11 @@
           "default": true
         },
         "text": {
-          "type": ["string", "null"],
-          "description": "Label template. Supports {{value}} and provider fields, with {{#field}} and {{^field}} sections closed by {{/field}}. Empty text hides the label."
-        },
-        "label": {
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "description": "Label template. Supports {{value}}, provider fields, {{#field}} / {{^field}} sections, and equality conditions such as {{#status=connected}} / {{^status=connected}}, closed by {{/status}}. Empty text hides the label."
         },
         "symbol": {
           "$ref": "#/$defs/symbol"
@@ -351,13 +348,6 @@
               "maximum": 4096,
               "default": 256
             },
-            "showValue": {
-              "type": [
-                "boolean",
-                "null"
-              ],
-              "default": true
-            },
             "showSymbol": {
               "type": [
                 "boolean",
@@ -451,13 +441,6 @@
             },
             "tints": {
               "$ref": "#/$defs/commandTints"
-            },
-            "showValue": {
-              "type": [
-                "boolean",
-                "null"
-              ],
-              "default": true
             },
             "showSymbol": {
               "type": [
@@ -730,12 +713,6 @@
         "null"
       ],
       "properties": {
-        "showPercentage": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
         "showSymbol": {
           "type": [
             "boolean",
@@ -948,12 +925,6 @@
         "null"
       ],
       "properties": {
-        "showPercentage": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
         "showSymbol": {
           "type": [
             "boolean",
@@ -1175,30 +1146,6 @@
         "symbols": {
           "$ref": "#/$defs/networkSymbols"
         },
-        "labels": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "properties": {
-            "wifi": {
-              "type": "string"
-            },
-            "ethernet": {
-              "type": "string"
-            },
-            "cellular": {
-              "type": "string"
-            },
-            "other": {
-              "type": "string"
-            },
-            "offline": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        },
         "tints": {
           "type": [
             "object",
@@ -1228,13 +1175,6 @@
           },
           "additionalProperties": false
         },
-        "showLabel": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
-        },
         "showSymbol": {
           "type": [
             "boolean",
@@ -1258,20 +1198,6 @@
         "null"
       ],
       "properties": {
-        "showLabel": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
-        },
-        "showPercentage": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
-        },
         "showSymbol": {
           "type": [
             "boolean",
@@ -1427,31 +1353,8 @@
         "null"
       ],
       "properties": {
-        "format": {
-          "enum": [
-            "used",
-            "percentage",
-            "usedTotal",
-            null
-          ],
-          "default": "used"
-        },
         "symbols": {
           "$ref": "#/$defs/memorySymbols"
-        },
-        "showLabel": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
-        },
-        "showValue": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
         },
         "showSymbol": {
           "type": [
@@ -1533,36 +1436,11 @@
           "pattern": "^(~|/).*",
           "description": "Existing file or directory on the desired volume; defaults to the home directory."
         },
-        "format": {
-          "enum": [
-            "free",
-            "used",
-            "total",
-            "usedTotal",
-            "percentage",
-            null
-          ],
-          "default": "free"
-        },
         "symbols": {
           "$ref": "#/$defs/diskSymbols"
         },
         "tints": {
           "$ref": "#/$defs/diskTints"
-        },
-        "showLabel": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
-        },
-        "showValue": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
         },
         "showSymbol": {
           "type": [
@@ -1839,29 +1717,8 @@
           ],
           "default": "automatic"
         },
-        "separator": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": " \u2014 "
-        },
         "symbols": {
           "$ref": "#/$defs/mediaSymbols"
-        },
-        "showTitle": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
-        },
-        "showArtist": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
         },
         "showSymbol": {
           "type": [
@@ -2637,13 +2494,6 @@
           },
           "additionalProperties": false
         },
-        "showLabel": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
-        },
         "showSymbol": {
           "type": [
             "boolean",
@@ -2657,13 +2507,6 @@
             "null"
           ],
           "default": false
-        },
-        "showName": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
         }
       },
       "additionalProperties": false
@@ -2804,13 +2647,6 @@
           },
           "additionalProperties": false
         },
-        "showLabel": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
-        },
         "showSymbol": {
           "type": [
             "boolean",
@@ -2824,13 +2660,6 @@
             "null"
           ],
           "default": false
-        },
-        "showName": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
         }
       },
       "additionalProperties": false
@@ -2912,24 +2741,6 @@
         "symbols": {
           "$ref": "#/$defs/audioDeviceSymbols"
         },
-        "labels": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "properties": {
-            "available": {
-              "type": "string"
-            },
-            "disconnected": {
-              "type": "string"
-            },
-            "unavailable": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        },
         "tints": {
           "type": [
             "object",
@@ -2950,13 +2761,6 @@
             }
           },
           "additionalProperties": false
-        },
-        "showLabel": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
         },
         "showSymbol": {
           "type": [

@@ -18,7 +18,7 @@ struct AudioDeviceState: Equatable, Sendable {
     case .unavailable: label = "\(kind.label) unavailable"
     }
     return WidgetPresentation(
-      text: settings.showLabel == false ? "" : settings.labels?[endpoint.status.rawValue] ?? label,
+      text: label,
       symbol: settings.showSymbol == false
         ? nil
         : item.symbol ?? settings.symbols?.resolve(endpoint.status, device: kind)

@@ -32,13 +32,6 @@ struct DiskState: Equatable, Sendable {
 
   func presentation(for item: Item) -> WidgetPresentation {
     let settings = item.disk ?? DiskConfiguration()
-    let format = settings.format ?? .free
-    let label: String
-    switch format {
-    case .free: label = "free"
-    case .used, .usedTotal, .percentage: label = "used"
-    case .total: label = "total"
-    }
     let tint: String?
     if let free = freePercentage {
       tint =
@@ -49,12 +42,8 @@ struct DiskState: Equatable, Sendable {
     } else {
       tint = settings.tints?.unavailable
     }
-    let parts: [String?] = [
-      settings.showValue == false ? nil : value(format: format),
-      settings.showLabel == false ? nil : available ? label : "unavailable",
-    ]
     return WidgetPresentation(
-      text: parts.compactMap { $0 }.joined(separator: " "),
+      text: available ? "\(value(format: .free)) free" : "— unavailable",
       symbol: settings.showSymbol == false
         ? nil
         : item.symbol ?? settings.symbols?.resolve(
@@ -67,4 +56,8 @@ struct DiskState: Equatable, Sendable {
         : "Disk \(settings.resolvedPath) unavailable"
     )
   }
+}
+
+enum DiskFormat: Sendable {
+  case free, used, total, usedTotal, percentage
 }

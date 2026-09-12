@@ -11,7 +11,6 @@ nearest whole percent.
   "id": "cpu",
   "type": "cpu",
   "cpu": {
-    "showLabel": false,
     "smoothingSamples": 3,
     "warningThreshold": 60,
     "highThreshold": 85,
@@ -20,13 +19,14 @@ nearest whole percent.
       "high": "#BF616A",
       "unavailable": "#888888"
     }
-  }
+  },
+  "text": "{{#available}}{{percentage}}%{{/available}}{{^available}}—{{/available}}"
 }
 ```
 
-`showLabel`, `showPercentage`, and `showSymbol` default to `true`. Hide the label
-for an icon with `N%`; hide both label and percentage for an icon alone. Use
-`showSymbol: false` to display text only.
+Use top-level `text: "{{percentage}}%"` for the value alone, or `text: ""`
+for an icon alone. Use an `available` section to handle missing readings.
+`cpu.showSymbol: false` displays text only.
 
 `warningThreshold` (default 60) and `highThreshold` (default 85) accept integers
 from 0–100; warning must be below high. The rounded displayed percentage selects

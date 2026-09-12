@@ -84,9 +84,9 @@ The shadow does not change the bar's configured height, content position, or mou
 
 | Type | Content |
 | --- | --- |
-| `text` | Static text from `label` |
+| `text` | Static text from `text` |
 | [`datetime`](providers/datetime.md) | Current date and/or time; custom `format` or localized `dateStyle` and `timeStyle` |
-| [`frontApplication`](providers/front-application.md) | Application owning the menu bar, or a fixed `label` |
+| [`frontApplication`](providers/front-application.md) | Application owning the menu bar, or a fixed `text` |
 | [`battery`](providers/battery.md) | Battery charge and power state |
 | [`volume`](providers/volume.md) | Output volume and mute state |
 | [`audioDevice`](providers/audio-device.md) | Default audio output or input device name |
@@ -108,7 +108,7 @@ The shadow does not change the bar's configured height, content position, or mou
 | [`divider`](layout.md#dividers-and-spacers) | Vertical separator |
 | [`spacer`](layout.md#dividers-and-spacers) | Flexible empty space |
 
-Optional properties include `enabled`, `label`, [`text`](text-templates.md), [`symbol` and `symbolPosition`](symbols.md), `priority`, [`style`](styling.md), [`refresh`](#refresh-policies), [`primaryAction` and `secondaryAction`](actions.md), and [`popup` text](layout.md). `enabled` defaults to `true` and `priority` defaults to `0`.
+Optional properties include `enabled`, [`text`](text-templates.md), [`symbol` and `symbolPosition`](symbols.md), `priority`, [`style`](styling.md), [`refresh`](#refresh-policies), [`primaryAction` and `secondaryAction`](actions.md), and [`popup` text](layout.md). `enabled` defaults to `true` and `priority` defaults to `0`.
 
 Symbols accept SF Symbol names or font glyph objects and appear beside item content except for groups, dividers, and spacers. `symbolPosition` accepts `left` or `right` and defaults to `left`. It also controls provider state symbols and frontmost application icons. Follow the provider links in the table for type-specific settings.
 

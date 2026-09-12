@@ -84,20 +84,18 @@ struct BarItemView: View {
       Rectangle().frame(width: 1, height: 16).opacity(0.3).accessibilityHidden(true)
     case .frontApplication:
       Text(
-        configuration.label ?? providers.itemSnapshots[configuration.id] ?? providers.sharedValues[
+        providers.itemSnapshots[configuration.id] ?? providers.sharedValues[
           .frontApplication
         ] ?? ""
       ).lineLimit(1)
     case .spacer:
       Spacer(minLength: 8).accessibilityHidden(true)
     case .text:
-      Text(configuration.label ?? "")
+      Text("")
     case .command, .plugin:
       Text(providers.itemValues[configuration.id] ?? "…")
-    case .network where configuration.network?.showLabel == false:
-      EmptyView()
     case .group, .popup:
-      Text(configuration.label ?? configuration.id)
+      Text(configuration.id)
     default:
       Text(
         providers.itemSnapshots[configuration.id] ?? providers.sharedValues[configuration.type]

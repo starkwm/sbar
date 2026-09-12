@@ -8,9 +8,15 @@ Items accept `primaryAction` and `secondaryAction` objects with `kind` (`command
 {
   "id": "settings",
   "type": "text",
-  "label": "Settings",
-  "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" },
-  "secondaryAction": { "kind": "command", "value": "open -a 'Activity Monitor'" }
+  "primaryAction": {
+    "kind": "application",
+    "value": "com.apple.systempreferences"
+  },
+  "secondaryAction": {
+    "kind": "command",
+    "value": "open -a 'Activity Monitor'"
+  },
+  "text": "Settings"
 }
 ```
 

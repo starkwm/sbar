@@ -3,7 +3,6 @@ import Foundation
 struct BatteryConfiguration: Codable, Equatable, Sendable {
   var symbols: BatterySymbols?
   var tints: BatteryTints?
-  var showPercentage: Bool?
   var showSymbol: Bool?
   var lowThreshold: Int?
 
@@ -22,9 +21,7 @@ struct BatteryConfiguration: Codable, Equatable, Sendable {
 struct NetworkConfiguration: Codable, Equatable, Sendable {
   var interface: NetworkConnection?
   var symbols: NetworkSymbols?
-  var labels: [String: String]?
   var tints: [String: String]?
-  var showLabel: Bool?
   var showSymbol: Bool?
   var hideWhenDisconnected: Bool?
 
@@ -36,16 +33,14 @@ struct NetworkConfiguration: Codable, Equatable, Sendable {
       )
     }
     try symbols?.validate(path: "\(path).symbols")
-    for (field, values) in [("labels", labels), ("tints", tints)] {
-      for (key, value) in values ?? [:] {
-        guard NetworkConnection(rawValue: key) != nil else {
-          throw ConfigurationError.invalidValue(
-            path: "\(path).\(field).\(key)",
-            reason: "Unknown network connection type."
-          )
-        }
-        if field == "tints" { try ItemStyle.validateColor(value, path: "\(path).tints.\(key)") }
+    for (key, value) in tints ?? [:] {
+      guard NetworkConnection(rawValue: key) != nil else {
+        throw ConfigurationError.invalidValue(
+          path: "\(path).tints.\(key)",
+          reason: "Unknown network connection type."
+        )
       }
+      try ItemStyle.validateColor(value, path: "\(path).tints.\(key)")
     }
   }
 }
@@ -53,7 +48,6 @@ struct NetworkConfiguration: Codable, Equatable, Sendable {
 struct VolumeConfiguration: Codable, Equatable, Sendable {
   var symbols: VolumeSymbols?
   var tints: VolumeTints?
-  var showPercentage: Bool?
   var showSymbol: Bool?
 
   func validate(path: String) throws {

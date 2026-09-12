@@ -52,13 +52,15 @@ struct ProviderRuntimeTests {
     let first = Item(
       id: "first",
       type: .disk,
-      disk: DiskConfiguration(path: "/a", format: .percentage),
+      text: "{{percentage}}% used",
+      disk: DiskConfiguration(path: "/a"),
       refresh: .init(mode: .manual)
     )
     let second = Item(
       id: "second",
       type: .disk,
-      disk: DiskConfiguration(path: "/b", format: .percentage),
+      text: "{{percentage}}% used",
+      disk: DiskConfiguration(path: "/b"),
       refresh: .init(mode: .manual)
     )
     var configuration = Configuration(bar: .init(), items: .init(right: [first, second]))

@@ -84,12 +84,12 @@ enum WidgetState: Equatable, Sendable {
         settings.interface.map {
           "\($0 == .wifi ? "Wi-Fi" : $0.rawValue.capitalized) \(state == .offline ? "disconnected" : "connected")"
         } ?? state.text
-      let label = settings.labels?[state.rawValue] ?? defaultLabel
+      let label = defaultLabel
       let symbol =
         item.symbol ?? settings.symbols?.resolve(state)
         ?? (state == .offline && settings.interface == .wifi ? "wifi.slash" : state.defaultSymbol)
       return WidgetPresentation(
-        text: settings.showLabel == false ? "" : label,
+        text: label,
         symbol: settings.showSymbol == false ? nil : symbol,
         tint: settings.tints?[state.rawValue],
         hidden: state == .offline && settings.hideWhenDisconnected == true,
@@ -125,7 +125,7 @@ enum WidgetState: Equatable, Sendable {
           "\($0) percent, \(charging ? "charging" : pluggedIn ? "plugged in" : "on battery")"
         } ?? "AC power"
       return WidgetPresentation(
-        text: settings.showPercentage == false ? "" : percentage.map { "\($0)%" } ?? "AC power",
+        text: percentage.map { "\($0)%" } ?? "AC power",
         symbol: settings.showSymbol == false ? nil : item.symbol ?? symbol,
         tint: tint,
         accessibilityLabel: label
@@ -160,7 +160,7 @@ enum WidgetState: Equatable, Sendable {
         tint = settings.tints?.fixed
       }
       return WidgetPresentation(
-        text: settings.showPercentage == false ? "" : text,
+        text: text,
         symbol: settings.showSymbol == false ? nil : item.symbol ?? symbol,
         tint: tint,
         accessibilityLabel: text

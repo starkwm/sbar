@@ -2,11 +2,8 @@ import Foundation
 
 struct DiskConfiguration: Codable, Equatable, Sendable {
   var path: String?
-  var format: DiskFormat?
   var symbols: AvailabilitySymbols?
   var tints: DiskTints?
-  var showLabel: Bool?
-  var showValue: Bool?
   var showSymbol: Bool?
   var warningThreshold: Int?
   var criticalThreshold: Int?
@@ -36,10 +33,6 @@ struct DiskConfiguration: Codable, Equatable, Sendable {
     try symbols?.validate(path: "\(location).symbols")
     try tints?.validate(path: "\(location).tints")
   }
-}
-
-enum DiskFormat: String, Codable, Sendable {
-  case free, used, total, usedTotal, percentage
 }
 
 struct DiskTints: Codable, Equatable, Sendable {

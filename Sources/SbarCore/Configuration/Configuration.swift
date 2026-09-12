@@ -97,6 +97,7 @@ struct Configuration: Codable, Equatable, Sendable {
           _ = try TextTemplate(
             text,
             fields: TextTemplate.fields(for: item.type),
+            allowedValues: TextTemplate.allowedValues(for: item.type),
             path: "\(location).text"
           )
         }
@@ -268,7 +269,7 @@ struct ItemSections: Codable, Equatable, Sendable {
 
 struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
-    case enabled, format, dateStyle, timeStyle, id, label, text, priority, style, symbol,
+    case enabled, format, dateStyle, timeStyle, id, text, priority, style, symbol,
       symbolPosition,
       type,
       primaryAction, secondaryAction,
@@ -288,7 +289,6 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var type: ItemType
   var enabled: Bool = true
 
-  var label: String?
   var text: String?
   var symbol: ItemSymbol?
   var symbolPosition: ItemSymbolPosition = .left
@@ -330,7 +330,6 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     id: String,
     type: ItemType,
     enabled: Bool = true,
-    label: String? = nil,
     text: String? = nil,
     symbol: ItemSymbol? = nil,
     symbolPosition: ItemSymbolPosition = .left,
@@ -366,7 +365,6 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.type = type
     self.enabled = enabled
 
-    self.label = label
     self.text = text
     self.symbol = symbol
     self.symbolPosition = symbolPosition
@@ -402,13 +400,13 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   }
 
   init(from decoder: any Decoder) throws {
+    try RemovedTextSettings.validate(decoder)
     let container = try decoder.container(keyedBy: CodingKeys.self)
 
     id = try container.decode(String.self, forKey: .id)
     type = try container.decode(ItemType.self, forKey: .type)
     enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
 
-    label = try container.decodeIfPresent(String.self, forKey: .label)
     text = try container.decodeIfPresent(String.self, forKey: .text)
     symbol = try container.decodeIfPresent(ItemSymbol.self, forKey: .symbol)
     symbolPosition =

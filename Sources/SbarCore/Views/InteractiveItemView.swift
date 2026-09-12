@@ -88,7 +88,9 @@ struct InteractiveItemView: View {
       .frame(minWidth: 120, maxWidth: 480)
       .focusEffectDisabled()
     }
-    .help(item.label ?? item.id)
+    .help(
+      providers.presentation(for: item, displayUUID: barDisplayUUID)?.accessibilityLabel ?? item.id
+    )
   }
 
   @Environment(ActionRunner.self) private var actions

@@ -55,8 +55,8 @@ struct VolumeWidgetTests {
       #expect(result.tint == tint)
     }
     let muted = WidgetState.volume(percentage: 50, muted: true, available: true)
-    item.volume?.showPercentage = false
-    #expect(muted.presentation(for: item).text.isEmpty)
+
+    #expect(muted.presentation(for: item).text == "Muted")
     #expect(muted.presentation(for: item).accessibilityLabel == "Muted")
     item.symbol = "star"
     #expect(muted.presentation(for: item).symbol == "star")

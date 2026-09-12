@@ -71,7 +71,7 @@ struct VPNWidgetTests {
     var item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        ##"{"id":"vpn","type":"vpn","vpn":{"symbols":{"font":"Test","size":18,"connected":{"glyph":"V"}},"labels":{"connected":"on"},"tints":{"connected":"#00FF00"},"showLabel":false,"hideWhenDisconnected":true}}"##
+        ##"{"id":"vpn","type":"vpn","vpn":{"symbols":{"font":"Test","size":18,"connected":{"glyph":"V"}},"labels":{"connected":"on"},"tints":{"connected":"#00FF00"},"hideWhenDisconnected":true}}"##
           .utf8
       )
     )
@@ -82,14 +82,13 @@ struct VPNWidgetTests {
       available: true
     )
     let presentation = state.presentation(for: item)
-    #expect(presentation.text.isEmpty)
+    #expect(presentation.text == "Work VPN on")
     #expect(presentation.accessibilityLabel == "Work VPN on")
     #expect(presentation.symbol == .glyph("V", font: "Test", size: 18))
     #expect(presentation.tint == "#00FF00")
     #expect(!presentation.hidden)
-    item.vpn?.showLabel = true
-    item.vpn?.showName = false
-    #expect(state.presentation(for: item).text == "VPN on")
+
+    #expect(state.presentation(for: item).text == "Work VPN on")
     #expect(state.presentation(for: item).accessibilityLabel == "Work VPN on")
     item.symbol = "star"
     #expect(state.presentation(for: item).symbol == "star")
@@ -143,7 +142,7 @@ struct VPNWidgetTests {
     let properties = try #require(vpn["properties"] as? [String: Any])
     #expect(
       Set(properties.keys) == [
-        "symbols", "labels", "tints", "showName", "showLabel", "showSymbol", "hideWhenDisconnected",
+        "symbols", "labels", "tints", "showSymbol", "hideWhenDisconnected",
       ]
     )
     for field in ["labels", "tints"] {

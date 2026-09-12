@@ -12,11 +12,15 @@ extension WidgetState {
       return [
         "percentage": percentage.map(String.init) ?? "", "charging": String(charging),
         "pluggedIn": String(pluggedIn), "available": String(percentage != nil),
+        "status": percentage == nil
+          ? "noBattery" : charging ? "charging" : pluggedIn ? "pluggedIn" : "onBattery",
       ]
     case .volume(let percentage, let muted, let available):
       return [
         "percentage": percentage.map(String.init) ?? "", "muted": String(muted),
         "available": String(available),
+        "status": !available
+          ? "unavailable" : muted ? "muted" : percentage == nil ? "fixed" : "available",
       ]
     case .memory(let state):
       guard state.available, let used = state.usedBytes, let total = state.totalBytes else {

@@ -4,8 +4,6 @@ struct VPNConfiguration: Codable, Equatable, Sendable {
   var symbols: VPNSymbols?
   var labels: [String: String]?
   var tints: [String: String]?
-  var showName: Bool?
-  var showLabel: Bool?
   var showSymbol: Bool?
   var hideWhenDisconnected: Bool?
 

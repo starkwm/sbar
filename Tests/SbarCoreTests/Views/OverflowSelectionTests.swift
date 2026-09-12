@@ -90,7 +90,7 @@ struct OverflowSelectionTests {
       priority: 10,
       media: MediaConfiguration(hideWhenNotPlaying: true)
     )
-    let text = Item(id: "text", type: .text, label: "Visible item")
+    let text = Item(id: "text", type: .text, text: "Visible item")
     let disabled = Item(id: "disabled", type: .text, enabled: false, priority: 100)
     let items = [text, media, disabled]
     runtime.updateWidgetState(.media(MediaState()), for: .media)

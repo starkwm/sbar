@@ -2,10 +2,7 @@ import Foundation
 
 struct MediaConfiguration: Codable, Equatable, Sendable {
   var source: MediaSourceSelection?
-  var separator: String?
   var symbols: MediaSymbols?
-  var showTitle: Bool?
-  var showArtist: Bool?
   var showSymbol: Bool?
   var hideWhenPaused: Bool?
   var hideWhenStopped: Bool?

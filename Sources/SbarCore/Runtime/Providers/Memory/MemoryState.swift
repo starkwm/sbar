@@ -28,12 +28,8 @@ struct MemoryState: Equatable, Sendable {
   func presentation(for item: Item) -> WidgetPresentation {
     let settings = item.memory ?? MemoryConfiguration()
     let selected = available ? settings.symbols?.available : settings.symbols?.unavailable
-    let parts: [String?] = [
-      settings.showLabel == false ? nil : "RAM",
-      settings.showValue == false ? nil : value(format: settings.format ?? .used),
-    ]
     return WidgetPresentation(
-      text: parts.compactMap { $0 }.joined(separator: " "),
+      text: text,
       symbol: settings.showSymbol == false
         ? nil
         : item.symbol ?? settings.symbols?.resolve(selected)
@@ -43,4 +39,8 @@ struct MemoryState: Equatable, Sendable {
         : "Memory usage unavailable"
     )
   }
+}
+
+enum MemoryFormat: Sendable {
+  case used, percentage, usedTotal
 }

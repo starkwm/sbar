@@ -9,7 +9,6 @@ struct ShellCommand: Codable, Equatable, Sendable {
   var onError: CommandErrorBehavior?
   var symbols: CommandSymbols?
   var tints: CommandTints?
-  var showValue: Bool?
   var showSymbol: Bool?
 
   func validate(path: String) throws {

@@ -13,9 +13,6 @@ wins. A pause notification from one player cannot replace another playing source
   "type": "media",
   "media": {
     "source": "automatic",
-    "showTitle": true,
-    "showArtist": true,
-    "separator": " — ",
     "hideWhenNotPlaying": true
   }
 }
@@ -23,9 +20,10 @@ wins. A pause notification from one player cannot replace another playing source
 
 `source` accepts `automatic` (default), `music`, or `spotify`. Explicit selection
 ignores the other player for that item; different items may select different sources.
-`showTitle`, `showArtist`, and `showSymbol` default to `true`. The default separator
-is ` — ` and only appears between nonempty fields. Hide title and artist for an
-icon alone. Accessibility retains the source, playback state, and known metadata.
+The default label joins title and artist with ` — ` when both are present.
+Use a top-level [text template](../text-templates.md) to choose fields and separators,
+or `text: ""` for an icon alone. `showSymbol` defaults to `true`.
+Accessibility retains the source, playback state, and known metadata.
 
 Paused playback retains track details when the notification omits them. Stopped
 playback and app termination clear that player's track. A new title does not inherit

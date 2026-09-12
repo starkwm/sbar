@@ -28,13 +28,15 @@ or a glyph object. Install the font on your Mac first and use its font name:
   "type": "network",
   "network": {
     "interface": "wifi",
-    "showLabel": false,
     "symbols": {
       "font": "Symbols Nerd Font Mono",
-      "wifi": { "glyph": "\uf1eb" },
+      "wifi": {
+        "glyph": ""
+      },
       "offline": "wifi.slash"
     }
-  }
+  },
+  "text": ""
 }
 ```
 

@@ -42,7 +42,6 @@ struct DiskWidgetTests {
       id: "disk",
       type: .disk,
       disk: DiskConfiguration(
-        format: .percentage,
         symbols: AvailabilitySymbols(
           font: "Shared",
           size: 18,
@@ -63,13 +62,10 @@ struct DiskWidgetTests {
       let result = DiskState(freeBytes: Int64(free), totalBytes: 1000).presentation(for: item)
       #expect(result.tint == tint)
       #expect(result.symbol == .glyph("D", font: "Shared", size: 18))
-      #expect(result.text.hasSuffix(" used"))
+      #expect(result.text.hasSuffix(" free"))
     }
     #expect(DiskState().presentation(for: item).tint == "#888888")
-    item.disk?.showLabel = false
-    #expect(DiskState(freeBytes: 20, totalBytes: 100).presentation(for: item).text == "80%")
-    item.disk?.showValue = false
-    #expect(DiskState().presentation(for: item).text.isEmpty)
+    #expect(DiskState().presentation(for: item).text == "— unavailable")
     #expect(DiskState().presentation(for: item).accessibilityLabel.contains("unavailable"))
     item.symbol = "star"
     #expect(DiskState().presentation(for: item).symbol == "star")
@@ -155,7 +151,7 @@ struct DiskWidgetTests {
     let item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        ##"{"id":"disk","type":"disk","disk":{"path":"~/Downloads","format":"usedTotal","showLabel":false,"showValue":true,"showSymbol":true,"warningThreshold":25,"criticalThreshold":5,"tints":{"warning":"#FFFF00"},"symbols":{"font":"Shared","available":{"glyph":"D"}}}}"##
+        ##"{"id":"disk","type":"disk","disk":{"path":"~/Downloads","showSymbol":true,"warningThreshold":25,"criticalThreshold":5,"tints":{"warning":"#FFFF00"},"symbols":{"font":"Shared","available":{"glyph":"D"}}}}"##
           .utf8
       )
     )
@@ -163,7 +159,7 @@ struct DiskWidgetTests {
     #expect(item.disk?.resolvedPath == NSHomeDirectory() + "/Downloads")
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
     for json in [
-      #"{"path":""}"#, #"{"path":"relative"}"#, #"{"format":"invalid"}"#,
+      #"{"path":""}"#, #"{"path":"relative"}"#,
       #"{"warningThreshold":-1}"#, #"{"criticalThreshold":101}"#,
       #"{"warningThreshold":10}"#, #"{"criticalThreshold":20}"#,
       #"{"tints":{"warning":"red"}}"#, #"{"symbols":{"available":{"glyph":"D"}}}"#,
@@ -186,7 +182,7 @@ struct DiskWidgetTests {
     var configuration = try JSONDecoder().decode(
       Configuration.self,
       from: Data(
-        #"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"a","type":"disk","disk":{"path":"/a","format":"percentage"},"refresh":{"mode":"manual"}},{"id":"b","type":"disk","disk":{"path":"/b","format":"percentage"},"refresh":{"mode":"event"}}]}}"#
+        #"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"a","type":"disk","text":"{{percentage}}% used","disk":{"path":"/a"},"refresh":{"mode":"manual"}},{"id":"b","type":"disk","text":"{{percentage}}% used","disk":{"path":"/b"},"refresh":{"mode":"event"}}]}}"#
           .utf8
       )
     )

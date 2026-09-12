@@ -3,24 +3,20 @@ import Foundation
 struct AudioDeviceConfiguration: Codable, Equatable, Sendable {
   var device: AudioDeviceKind?
   var symbols: AudioDeviceSymbols?
-  var labels: [String: String]?
   var tints: [String: String]?
-  var showLabel: Bool?
   var showSymbol: Bool?
   var hideWhenDisconnected: Bool?
 
   func validate(path: String) throws {
     try symbols?.validate(path: "\(path).symbols")
-    for (field, values) in [("labels", labels), ("tints", tints)] {
-      for (key, value) in values ?? [:] {
-        guard AudioDeviceStatus(rawValue: key) != nil else {
-          throw ConfigurationError.invalidValue(
-            path: "\(path).\(field).\(key)",
-            reason: "Unknown audio device status."
-          )
-        }
-        if field == "tints" { try ItemStyle.validateColor(value, path: "\(path).tints.\(key)") }
+    for (key, value) in tints ?? [:] {
+      guard AudioDeviceStatus(rawValue: key) != nil else {
+        throw ConfigurationError.invalidValue(
+          path: "\(path).tints.\(key)",
+          reason: "Unknown audio device status."
+        )
       }
+      try ItemStyle.validateColor(value, path: "\(path).tints.\(key)")
     }
   }
 }

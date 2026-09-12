@@ -116,7 +116,6 @@ struct MediaWidgetTests {
       id: "media",
       type: .media,
       media: MediaConfiguration(
-        separator: " / ",
         symbols: MediaSymbols(
           font: "Shared",
           size: 18,
@@ -128,18 +127,15 @@ struct MediaWidgetTests {
       )
     )
     let playing = state.presentation(for: item)
-    #expect(playing.text == "Title / Artist")
+    #expect(playing.text == "Title — Artist")
     #expect(playing.symbol == .glyph("P", font: "Shared", size: 18))
     #expect(playing.accessibilityLabel == "Music, Playing, Title, Artist")
     #expect(!playing.hidden)
     state.players[.music]?.status = .paused
     #expect(state.presentation(for: item).hidden)
-    #expect(state.presentation(for: item).text == "Title / Artist")
+    #expect(state.presentation(for: item).text == "Title — Artist")
     #expect(state.presentation(for: item).symbol == "pause")
-    item.media?.showArtist = false
-    #expect(state.presentation(for: item).text == "Title")
-    item.media?.showTitle = false
-    #expect(state.presentation(for: item).text.isEmpty)
+
     #expect(state.presentation(for: item).accessibilityLabel.contains("Artist"))
     item.symbol = "star"
     #expect(state.presentation(for: item).symbol == "star")
@@ -289,7 +285,7 @@ struct MediaWidgetTests {
     let item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        #"{"id":"media","type":"media","media":{"source":"spotify","separator":" / ","showTitle":true,"showArtist":false,"showSymbol":true,"hideWhenPaused":true,"hideWhenStopped":true,"hideWhenNotPlaying":true,"symbols":{"font":"Shared","size":18,"playing":{"glyph":"P"}}}}"#
+        #"{"id":"media","type":"media","media":{"source":"spotify","showSymbol":true,"hideWhenPaused":true,"hideWhenStopped":true,"hideWhenNotPlaying":true,"symbols":{"font":"Shared","size":18,"playing":{"glyph":"P"}}}}"#
           .utf8
       )
     )
@@ -302,7 +298,7 @@ struct MediaWidgetTests {
       #expect(!MediaState().presentation(for: defaultItem).hidden)
     }
     for json in [
-      #"{"source":"invalid"}"#, #"{"showTitle":"false"}"#,
+      #"{"source":"invalid"}"#,
       #"{"hideWhenNotPlaying":"true"}"#,
       #"{"symbols":{"font":" "}}"#, #"{"symbols":{"size":73}}"#,
       #"{"symbols":{"playing":{"glyph":"P"}}}"#,

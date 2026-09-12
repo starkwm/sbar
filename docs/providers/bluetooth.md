@@ -24,11 +24,10 @@ With connected devices, the default text lists their names and status, such as
 `Bluetooth access denied`; missing hardware, read failures, or a resetting
 controller show `Bluetooth unavailable`.
 
-`showName`, `showLabel`, and `showSymbol` default to `true`. Set `showName:false`
-for a status-only label such as `Bluetooth connected`, or `showLabel:false` for
-an icon only. Accessibility labels retain connected device names. Set
-`hideWhenDisconnected:true` to hide the item when Bluetooth is off or on with
-no connected devices. Access errors remain visible. Hiding defaults to `false`.
+Use top-level `text: "Bluetooth {{status}}"` for a status label, include `{{names}}`
+for connected device names, or use `text: ""` for an icon alone. `showSymbol`
+defaults to `true`. Accessibility retains device names. Set `hideWhenDisconnected`
+to `true` to hide the item when Bluetooth is off or has no connected devices.
 
 `bluetooth.labels`, `bluetooth.tints`, and `bluetooth.symbols` accept `on`, `off`,
 `connected`, `unauthorized`, and `unavailable`. Labels replace the status text.

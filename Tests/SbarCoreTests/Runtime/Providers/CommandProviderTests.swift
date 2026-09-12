@@ -21,9 +21,9 @@ struct CommandProviderTests {
     item.symbol = "star"
     #expect(state.presentation(for: item).symbol == "star")
     item.command?.showSymbol = false
-    item.command?.showValue = false
+
     #expect(state.presentation(for: item).symbol == nil)
-    #expect(state.presentation(for: item).text.isEmpty)
+    #expect(state.presentation(for: item).text == "3 updates")
     let glyph = try CommandState.decode(
       #"{"text":"ok","symbol":{"glyph":"X","font":"Menlo","size":14}}"#,
       configuration: settings

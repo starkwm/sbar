@@ -67,7 +67,7 @@ struct ItemStyleModifierTests {
   func fixedWidths() throws {
     let style = ItemStyle(horizontalPadding: 8, minWidth: 200, width: 80)
     for label in ["9%", "100%", "A much longer application name that must truncate"] {
-      let item = Item(id: "item", type: .text, label: label, symbol: "star.fill", style: style)
+      let item = Item(id: "item", type: .text, text: label, symbol: "star.fill", style: style)
       let image = try render(item)
       #expect(image.pixelsWide == 80)
       #expect(image.pixelsHigh < 32)
@@ -79,14 +79,14 @@ struct ItemStyleModifierTests {
     var item = Item(
       id: "item",
       type: .text,
-      label: "9%",
+      text: "9%",
       symbol: "star.fill",
       style: ItemStyle(horizontalPadding: 8, minWidth: 100)
     )
     #expect(try render(item).pixelsWide == 100)
-    item.label = "100%"
+    item.text = "100%"
     #expect(try render(item).pixelsWide == 100)
-    item.label = "A much longer application name that needs more space"
+    item.text = "A much longer application name that needs more space"
     #expect(try render(item).pixelsWide > 100)
     item.style = nil
     let naturalWidth = try render(item).pixelsWide

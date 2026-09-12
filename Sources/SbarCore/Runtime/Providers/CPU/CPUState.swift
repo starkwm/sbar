@@ -31,12 +31,8 @@ struct CPUState: Equatable, Sendable {
       selected = settings.symbols?.unavailable
       tint = settings.tints?.unavailable
     }
-    let parts: [String?] = [
-      settings.showLabel == false ? nil : "CPU",
-      settings.showPercentage == false ? nil : percentage.map { "\($0)%" } ?? "—",
-    ]
     return WidgetPresentation(
-      text: parts.compactMap { $0 }.joined(separator: " "),
+      text: percentage.map { "CPU \($0)%" } ?? "CPU —",
       symbol: settings.showSymbol == false
         ? nil
         : item.symbol ?? settings.symbols?.resolve(selected)

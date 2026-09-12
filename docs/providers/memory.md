@@ -9,20 +9,14 @@ by default. Configure its value and appearance under `memory`:
 {
   "id": "memory",
   "type": "memory",
-  "memory": {
-    "format": "usedTotal",
-    "showLabel": false
-  }
+  "text": "{{#available}}{{used}} / {{total}}{{/available}}{{^available}}—{{/available}}"
 }
 ```
 
-`format` accepts `used` (default, such as `8 GB`), `percentage` (`50%`), or
-`usedTotal` (`8 GB / 16 GB`). Bytes use macOS memory formatting and percentages
-round to the nearest whole percent. Total is the installed physical RAM.
-
-`showLabel`, `showValue`, and `showSymbol` default to `true`. Hide the label
-for an icon with the value; hide both label and value for an icon alone.
-Set `showSymbol: false` to display text only.
+Use top-level `text` to choose `{{used}}`, `{{total}}`, or `{{percentage}}%`.
+Bytes use macOS memory formatting; percentages round to the nearest whole percent.
+Total is the installed physical RAM. `text: ""` displays an icon alone.
+Set `memory.showSymbol: false` to display text only.
 Customize `symbols.available` and `symbols.unavailable` (defaults `memorychip`
 and `questionmark`). Glyphs inherit `symbols.font` and optional `symbols.size`,
 with per-glyph overrides. An item-level `symbol` overrides both state symbols;

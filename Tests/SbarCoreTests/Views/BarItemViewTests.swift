@@ -51,7 +51,7 @@ struct BarItemViewTests {
   )
   func itemSymbols(position: ItemSymbolPosition?, symbol: ItemSymbol) throws {
     let runtime = ProviderRuntime()
-    var item = Item(id: "text", type: .text, label: "Status", symbol: symbol)
+    var item = Item(id: "text", type: .text, text: "Status", symbol: symbol)
     if let position { item.symbolPosition = position }
 
     try expectRendering(
@@ -89,7 +89,8 @@ struct BarItemViewTests {
 
     item.battery = BatteryConfiguration(showSymbol: false)
     try expectRendering(item, runtime: runtime, matches: Text("50%").monospacedDigit())
-    item.battery = BatteryConfiguration(showPercentage: false)
+    item.text = ""
+    item.battery?.showSymbol = true
     try expectRendering(
       item,
       runtime: runtime,

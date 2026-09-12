@@ -3,8 +3,6 @@ import Foundation
 struct CPUConfiguration: Codable, Equatable, Sendable {
   var symbols: CPUSymbols?
   var tints: CPUTints?
-  var showLabel: Bool?
-  var showPercentage: Bool?
   var showSymbol: Bool?
   var warningThreshold: Int?
   var highThreshold: Int?

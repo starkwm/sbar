@@ -26,9 +26,9 @@ are omitted from that list. With none active, the item shows `VPN disconnected`.
 state. Failed reads show `VPN unavailable`, or the affected service's name and
 `unavailable`, and remain visible.
 
-`showName`, `showLabel`, and `showSymbol` default to `true`. Set `showName:false`
-for an aggregate label such as `VPN connected`, or `showLabel:false` for an icon
-only. Accessibility labels retain the service names and statuses in both cases.
+Use top-level `text: "VPN {{status}}"` for an aggregate status, include `{{names}}`
+for service names, or use `text: ""` for an icon alone. `showSymbol` defaults to
+`true`. Accessibility retains service names and statuses.
 
 `vpn.labels`, `vpn.tints`, and `vpn.symbols` accept `connecting`, `connected`,
 `disconnecting`, `disconnected`, and `unavailable` keys. Labels replace the status

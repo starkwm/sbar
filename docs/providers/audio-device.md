@@ -22,10 +22,11 @@ show their names, such as `Studio Display Speakers` or `USB Microphone`. A missi
 device shows `No output` or `No input`; a failed read shows `Output unavailable`
 or `Input unavailable`. Blank names use `Unnamed device`.
 
-`audioDevice.labels` and `audioDevice.tints` accept `available`, `disconnected`,
-and `unavailable`. `labels.available` replaces the device name with a fixed label.
-`showLabel:false` displays an icon only, and `showSymbol:false` hides the icon.
-Both options default to `true`. Accessibility labels retain the device name and
+`audioDevice.tints` accepts `available`, `disconnected`, and `unavailable`.
+Use a top-level [text condition](../text-templates.md#state-specific-labels) to
+replace a state label, for example `{{#status=available}}Mic{{/status}}{{^status=available}}{{value}}{{/status}}`.
+The old `audioDevice.labels` map is no longer accepted.
+Top-level `text: ""` displays an icon only. `showSymbol:false` hides the icon; it defaults to `true`. Accessibility labels retain the device name and
 whether it is the input or output. `hideWhenDisconnected:true` hides a missing
 device while keeping read errors visible; it defaults to `false`.
 

@@ -4,8 +4,6 @@ struct BluetoothConfiguration: Codable, Equatable, Sendable {
   var symbols: BluetoothSymbols?
   var labels: [String: String]?
   var tints: [String: String]?
-  var showName: Bool?
-  var showLabel: Bool?
   var showSymbol: Bool?
   var hideWhenDisconnected: Bool?
 

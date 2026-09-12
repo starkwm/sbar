@@ -12,7 +12,6 @@ behaves the same as `{}`. Customize it using grouped symbols and tints:
   "id": "volume",
   "type": "volume",
   "volume": {
-    "showPercentage": false,
     "symbols": {
       "levels": [
         "speaker.fill",
@@ -22,8 +21,11 @@ behaves the same as `{}`. Customize it using grouped symbols and tints:
       ],
       "muted": "speaker.slash.fill"
     },
-    "tints": { "muted": "#FF6655" }
-  }
+    "tints": {
+      "muted": "#FF6655"
+    }
+  },
+  "text": ""
 }
 ```
 
@@ -37,9 +39,11 @@ Glyphs inherit `symbols.font` and optional `symbols.size`, with per-symbol overr
 as described in [Symbols](../symbols.md). `tints.muted`, `tints.fixed`, and `tints.unavailable` override
 the normal item/theme tint in their respective states.
 
-`showPercentage` and `showSymbol` default to `true`. Text is `Volume N%`, `Muted`,
-`Fixed volume`, or `No output`; `showPercentage: false` hides all of that text for an
-icon-only widget while retaining its accessibility label. An item-level `symbol` overrides
+`showSymbol` defaults to `true`. Default text is `Volume N%`, `Muted`,
+`Fixed volume`, or `No output`. Top-level `text: ""` hides the label while retaining
+its accessibility description. An item-level `symbol` overrides
 the automatic icon; `showSymbol: false` hides it.
+
+Volume templates expose `status` as `available`, `muted`, `fixed`, or `unavailable`. Use [state conditions](../text-templates.md#state-specific-labels) to customise their labels.
 
 See [common item settings](../configuration.md#items), [refresh policies](../configuration.md#refresh-policies), [styling](../styling.md), and [symbols](../symbols.md) for shared options.

@@ -11,7 +11,6 @@ Disk samples every two seconds and displays an `internaldrive` icon with
   "type": "disk",
   "disk": {
     "path": "/Volumes/External",
-    "format": "usedTotal",
     "warningThreshold": 20,
     "criticalThreshold": 10,
     "tints": {
@@ -19,7 +18,8 @@ Disk samples every two seconds and displays an `internaldrive` icon with
       "critical": "#BF616A",
       "unavailable": "#888888"
     }
-  }
+  },
+  "text": "{{#available}}{{used}} / {{total}} used{{/available}}{{^available}}—{{/available}}"
 }
 ```
 
@@ -35,13 +35,11 @@ so an unmounted drive cannot silently turn into a reading for its parent disk.
 Leftover directories under `/Volumes` are also rejected unless on that mounted
 volume. This tracks the volume at a path, not a persistent physical-drive identity.
 
-`format` accepts `free` (default), `used`, `total`, `usedTotal`, and `percentage`.
-Percentage means **used** space and rounds to the nearest whole percent. Labels
-are `free`, `used`, or `total` as appropriate. `showLabel`, `showValue`, and
-`showSymbol` default to `true`; hide label and value for an icon-only item.
-Set `showSymbol: false` to display text only.
-Icon-only items retain the path, free/total capacity, and used percentage in their
-accessibility label.
+Use top-level `text` with `{{free}}`, `{{used}}`, `{{total}}`, or `{{percentage}}%`.
+Percentage means used space and rounds to the nearest whole percent. Use an
+`available` section to handle missing readings. `text: ""` displays an icon alone;
+`disk.showSymbol: false` displays text only. Accessibility retains the path,
+free/total capacity, and used percentage.
 
 `warningThreshold` (default 20) and `criticalThreshold` (default 10) are percentages
 **free**, from 0–100; critical must be below warning. Tints apply at or below each

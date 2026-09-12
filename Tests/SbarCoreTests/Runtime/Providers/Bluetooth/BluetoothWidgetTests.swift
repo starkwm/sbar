@@ -49,7 +49,7 @@ struct BluetoothWidgetTests {
     var item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        ##"{"id":"bt","type":"bluetooth","bluetooth":{"symbols":{"font":"Test","size":18,"connected":{"glyph":"B"}},"labels":{"connected":"linked"},"tints":{"connected":"#00FF00"},"showLabel":false,"hideWhenDisconnected":true}}"##
+        ##"{"id":"bt","type":"bluetooth","bluetooth":{"symbols":{"font":"Test","size":18,"connected":{"glyph":"B"}},"labels":{"connected":"linked"},"tints":{"connected":"#00FF00"},"hideWhenDisconnected":true}}"##
           .utf8
       )
     )
@@ -60,14 +60,13 @@ struct BluetoothWidgetTests {
       devices: [.init(id: "1", name: " Magic\n Keyboard ")]
     )
     let presentation = state.presentation(for: item)
-    #expect(presentation.text.isEmpty)
+    #expect(presentation.text == "Magic Keyboard linked")
     #expect(presentation.accessibilityLabel == "Magic Keyboard linked")
     #expect(presentation.symbol == .glyph("B", font: "Test", size: 18))
     #expect(presentation.tint == "#00FF00")
     #expect(!presentation.hidden)
-    item.bluetooth?.showLabel = true
-    item.bluetooth?.showName = false
-    #expect(state.presentation(for: item).text == "Bluetooth linked")
+
+    #expect(state.presentation(for: item).text == "Magic Keyboard linked")
     #expect(state.presentation(for: item).accessibilityLabel == "Magic Keyboard linked")
     item.symbol = "star"
     #expect(state.presentation(for: item).symbol == "star")
@@ -127,7 +126,7 @@ struct BluetoothWidgetTests {
     let properties = try #require(settings["properties"] as? [String: Any])
     #expect(
       Set(properties.keys) == [
-        "symbols", "labels", "tints", "showName", "showLabel", "showSymbol", "hideWhenDisconnected",
+        "symbols", "labels", "tints", "showSymbol", "hideWhenDisconnected",
       ]
     )
     for field in ["labels", "tints"] {

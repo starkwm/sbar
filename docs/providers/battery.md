@@ -13,18 +13,20 @@ block to customize the appearance; use `showSymbol: false` for text only:
   "id": "battery",
   "type": "battery",
   "battery": {
-    "showPercentage": false,
     "lowThreshold": 20,
     "tints": {
       "low": "#FF6655",
       "charging": "#66CC88"
     },
-    "symbols": { "pluggedIn": "powerplug" }
-  }
+    "symbols": {
+      "pluggedIn": "powerplug"
+    }
+  },
+  "text": ""
 }
 ```
 
-Battery settings: `showPercentage` and `showSymbol` default to `true`. The icon follows charge
+Use top-level `text: ""` for an icon alone. Battery `showSymbol` defaults to `true`. The icon follows charge
 level in 25% steps, uses `symbols.charging` (default `battery.100percent.bolt`) while charging,
 and `symbols.pluggedIn` (default `powerplug`) on AC power without charging. `lowThreshold`
 defaults to 20 and accepts 0–100, inclusive. `tints.low` applies at or below that threshold
@@ -36,5 +38,7 @@ hides it. State colors override `style.tint` when supplied; otherwise the normal
 applies. Colors accept `#RRGGBB` or `#RRGGBBAA`. Icon-only widgets retain an accessibility label.
 Refresh policies capture text, symbols, colors, and visibility together. Edit these settings in
 the configuration file and reload; the `set` command does not accept the widget blocks.
+
+Battery templates expose `status` as `charging`, `pluggedIn`, `onBattery`, or `noBattery`. Use [state conditions](../text-templates.md#state-specific-labels) to customise their labels.
 
 See [common item settings](../configuration.md#items), [refresh policies](../configuration.md#refresh-policies), [styling](../styling.md), and [symbols](../symbols.md) for shared options.

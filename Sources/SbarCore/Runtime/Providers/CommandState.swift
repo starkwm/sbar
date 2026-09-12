@@ -48,7 +48,7 @@ struct CommandState: Equatable, Sendable {
     }
     let displayed = Self.displayText(text, limit: settings?.maxLength ?? 256)
     return WidgetPresentation(
-      text: settings?.showValue == false ? "" : displayed,
+      text: displayed,
       symbol: settings?.showSymbol == false
         ? nil : item.symbol ?? settings?.symbols?.resolve(symbol) ?? value?.symbol,
       tint: tint ?? value?.tint,

@@ -259,9 +259,9 @@ final class ProviderRuntime {
     case .frontApplication:
       let name = itemSnapshots[item.id] ?? sharedValues[.frontApplication] ?? ""
       values["name"] = name
-      fallback = item.label ?? name
-    case .text: fallback = item.label ?? ""
-    case .group, .popup: fallback = item.label ?? item.id
+      fallback = name
+    case .text: fallback = ""
+    case .group, .popup: fallback = item.id
     default: fallback = itemSnapshots[item.id] ?? sharedValues[item.type] ?? "—"
     }
     var resolved =
@@ -269,7 +269,12 @@ final class ProviderRuntime {
       ?? WidgetPresentation(text: fallback, symbol: item.symbol, accessibilityLabel: fallback)
     values["value"] = resolved.text
     values["id"] = item.id
-    guard let template = try? TextTemplate(source, fields: TextTemplate.fields(for: item.type))
+    guard
+      let template = try? TextTemplate(
+        source,
+        fields: TextTemplate.fields(for: item.type),
+        allowedValues: TextTemplate.allowedValues(for: item.type)
+      )
     else {
       return resolved
     }

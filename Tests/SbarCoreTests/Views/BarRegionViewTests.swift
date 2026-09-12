@@ -11,7 +11,7 @@ struct BarRegionViewTests {
   func hiddenMedia() throws {
     let runtime = ProviderRuntime()
     runtime.updateWidgetState(.media(MediaState()), for: .media)
-    let text = Item(id: "text", type: .text, label: "Hi")
+    let text = Item(id: "text", type: .text, text: "Hi")
     let media = Item(
       id: "media",
       type: .media,

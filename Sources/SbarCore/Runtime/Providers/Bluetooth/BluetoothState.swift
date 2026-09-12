@@ -18,7 +18,7 @@ struct BluetoothState: Equatable, Sendable {
       }.joined(separator: ", ")
       : summary
     return WidgetPresentation(
-      text: settings.showLabel == false ? "" : settings.showName == false ? summary : details,
+      text: details,
       symbol: settings.showSymbol == false
         ? nil : item.symbol ?? settings.symbols?.resolve(status) ?? status.defaultSymbol,
       tint: settings.tints?[status.rawValue],

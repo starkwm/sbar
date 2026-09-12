@@ -45,18 +45,12 @@ struct MediaState: Equatable, Sendable {
       selectedSymbol = settings.symbols?.unavailable
     }
     let metadata = [player?.title ?? "", player?.artist ?? ""].filter { !$0.isEmpty }
-    let visible = [
-      settings.showTitle == false ? "" : player?.title ?? "",
-      settings.showArtist == false ? "" : player?.artist ?? "",
-    ].filter { !$0.isEmpty }
-    let separator = settings.separator ?? " — "
     let label =
       ([player?.source.name ?? "", status == .unknown ? fallback : status.rawValue.capitalized]
       + metadata)
       .filter { !$0.isEmpty }.joined(separator: ", ")
     return WidgetPresentation(
-      text: settings.showTitle == false && settings.showArtist == false
-        ? "" : visible.isEmpty ? fallback : visible.joined(separator: separator),
+      text: metadata.isEmpty ? fallback : metadata.joined(separator: " — "),
       symbol: settings.showSymbol == false
         ? nil : item.symbol ?? settings.symbols?.resolve(selectedSymbol) ?? symbol,
       hidden: status == .paused && settings.hideWhenPaused == true

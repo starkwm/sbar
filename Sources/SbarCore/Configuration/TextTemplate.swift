@@ -4,7 +4,7 @@ struct TextTemplate {
   indirect enum Part {
     case literal(String)
     case value(String)
-    case section(String, inverted: Bool, [Part])
+    case section(String, equals: String?, inverted: Bool, [Part])
   }
 
   static func fields(for type: ItemType) -> Set<String> {
@@ -12,8 +12,8 @@ struct TextTemplate {
     let fields: [String]
     switch type {
     case .cpu: fields = ["percentage", "available"]
-    case .battery: fields = ["percentage", "charging", "pluggedIn", "available"]
-    case .volume: fields = ["percentage", "muted", "available"]
+    case .battery: fields = ["percentage", "charging", "pluggedIn", "available", "status"]
+    case .volume: fields = ["percentage", "muted", "available", "status"]
     case .memory: fields = ["used", "total", "percentage", "usedBytes", "totalBytes", "available"]
     case .disk:
       fields = ["used", "free", "total", "percentage", "freeBytes", "totalBytes", "available"]
@@ -31,9 +31,39 @@ struct TextTemplate {
     return common.union(fields)
   }
 
+  static func allowedValues(for type: ItemType) -> [String: Set<String>] {
+    let statuses: Set<String>
+    switch type {
+    case .battery: statuses = ["charging", "pluggedIn", "onBattery", "noBattery"]
+    case .volume: statuses = ["available", "muted", "fixed", "unavailable"]
+    case .network: statuses = Set(NetworkConnection.allCases.map(\.rawValue))
+    case .vpn: statuses = Set(VPNStatus.allCases.map(\.rawValue))
+    case .bluetooth: statuses = Set(BluetoothStatus.allCases.map(\.rawValue))
+    case .audioDevice: statuses = Set(AudioDeviceStatus.allCases.map(\.rawValue))
+    case .media: statuses = ["playing", "paused", "stopped", "unknown"]
+    case .mail: statuses = ["available", "closed", "unauthorized", "unavailable"]
+    case .command, .plugin: statuses = ["running", "success", "failure"]
+    default: statuses = []
+    }
+    var values: [String: Set<String>] = [:]
+    if !statuses.isEmpty { values["status"] = statuses }
+    for name in fields(for: type).intersection([
+      "available", "charging", "pluggedIn", "muted", "playing", "connected",
+    ]) {
+      values[name] = ["true", "false"]
+    }
+    if type == .media { values["source"] = ["Music", "Spotify"] }
+    return values
+  }
+
   private let parts: [Part]
 
-  init(_ source: String, fields: Set<String>, path: String = "text") throws {
+  init(
+    _ source: String,
+    fields: Set<String>,
+    allowedValues: [String: Set<String>] = [:],
+    path: String = "text"
+  ) throws {
     var remaining = source[...]
     func fail(_ reason: String) -> ConfigurationError {
       .invalidValue(path: path, reason: reason)
@@ -56,11 +86,33 @@ struct TextTemplate {
           return result
         }
         let section = tag.hasPrefix("#") || tag.hasPrefix("^")
-        let name = section ? String(tag.dropFirst()) : tag
+        let expression = section ? String(tag.dropFirst()) : tag
+        let components =
+          section
+          ? expression.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false).map(
+            String.init
+          ) : [expression]
+        let name = components[0].trimmingCharacters(in: .whitespacesAndNewlines)
+        let expected =
+          components.count == 2
+          ? components[1].trimmingCharacters(in: .whitespacesAndNewlines) : nil
         guard fields.contains(name) else { throw fail("Unknown text template value '\(name)'.") }
+        if let expected {
+          guard !expected.isEmpty else { throw fail("An equality condition needs a value.") }
+          if let allowed = allowedValues[name], !allowed.contains(expected) {
+            throw fail(
+              "Unknown value '\(expected)' for '\(name)'. Expected one of: \(allowed.sorted().joined(separator: ", "))."
+            )
+          }
+        }
         if section {
           result.append(
-            .section(name, inverted: tag.hasPrefix("^"), try parse(closing: name, depth: depth + 1))
+            .section(
+              name,
+              equals: expected,
+              inverted: tag.hasPrefix("^"),
+              try parse(closing: name, depth: depth + 1)
+            )
           )
         } else {
           result.append(.value(name))
@@ -80,9 +132,9 @@ struct TextTemplate {
         switch part {
         case .literal(let text): return text
         case .value(let name): return values[name] ?? ""
-        case .section(let name, let inverted, let children):
+        case .section(let name, let expected, let inverted, let children):
           let value = values[name] ?? ""
-          let present = !value.isEmpty && value != "false"
+          let present = expected.map { values[name] == $0 } ?? (!value.isEmpty && value != "false")
           return present != inverted ? render(children) : ""
         }
       }.joined()

@@ -8,11 +8,17 @@
 {
   "id": "system",
   "type": "popup",
-  "label": "System",
   "children": [
-    { "id": "cpu", "type": "cpu" },
-    { "id": "memory", "type": "memory" }
-  ]
+    {
+      "id": "cpu",
+      "type": "cpu"
+    },
+    {
+      "id": "memory",
+      "type": "memory"
+    }
+  ],
+  "text": "System"
 }
 ```
 
