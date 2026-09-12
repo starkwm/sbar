@@ -9,6 +9,8 @@ struct RemovedTextSettingsTests {
     "retired settings report their full nested item path, including null values",
     arguments: [
       ("battery", "showPercentage"),
+      ("throughput", "showDownload"), ("throughput", "showUpload"),
+      ("throughput", "showValue"), ("throughput", "showUnits"),
       ("volume", "showPercentage"),
       ("cpu", "showLabel"),
       ("cpu", "showPercentage"),

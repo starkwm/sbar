@@ -244,14 +244,17 @@ final class ProviderRuntime {
       } else {
         state = item.refresh == nil ? widgetStates[item.type] : widgetSnapshots[item.id]
       }
-      presentation = state?.presentation(for: item, displayUUID: displayUUID)
+      presentation = (state ?? (item.type == .throughput ? .throughput(ThroughputState()) : nil))?
+        .presentation(for: item, displayUUID: displayUUID)
       if item.text != nil {
         values = state?.textValues(for: item) ?? [:]
         entries = state?.textEntries ?? []
         if item.type == .vpn || item.type == .bluetooth { values["total"] = String(entries.count) }
       }
     }
-    if [.spaces, .aerospace, .yabai].contains(item.type), let presentation { return presentation }
+    if [.spaces, .aerospace, .yabai, .throughput].contains(item.type), let presentation {
+      return presentation
+    }
     guard let source = item.text else { return presentation }
     let fallback: String
     switch item.type {

@@ -150,10 +150,10 @@ struct ThroughputWidgetTests {
           size: 18,
           download: .glyph("D"),
           upload: .glyph("U", font: "Other")
-        ),
-        showUnits: false
+        )
       )
     )
+    item.text = "{{#transfers}}{{symbol}}{{number}}{{/transfers}}"
     let result = state.presentation(for: item)
     #expect(
       result.segments == [
@@ -162,9 +162,10 @@ struct ThroughputWidgetTests {
       ]
     )
     #expect(result.accessibilityLabel == "Download 1.5 KiB/s, Upload 512 B/s")
-    item.throughput?.showUpload = false
+    item.text =
+      "{{#transfers}}{{#direction=download}}{{symbol}}{{number}}{{/direction}}{{/transfers}}"
     #expect(state.presentation(for: item).segments.count == 1)
-    item.throughput?.showValue = false
+    item.text = "{{#transfers}}{{#direction=download}}{{symbol}}{{/direction}}{{/transfers}}"
     #expect(state.presentation(for: item).text.isEmpty)
     #expect(state.presentation(for: item).segments.first?.symbol != nil)
     item.symbol = "star"
@@ -172,7 +173,9 @@ struct ThroughputWidgetTests {
     #expect(state.presentation(for: item).segments.isEmpty)
     item.throughput?.showSymbol = false
     #expect(state.presentation(for: item).symbol == nil)
-    #expect(state.presentation(for: item).accessibilityLabel == "Download 1.5 KiB/s")
+    #expect(
+      state.presentation(for: item).accessibilityLabel == "Download 1.5 KiB/s, Upload 512 B/s"
+    )
     #expect(
       ThroughputState().presentation(for: item).accessibilityLabel
         == "Network throughput unavailable"
@@ -182,12 +185,39 @@ struct ThroughputWidgetTests {
     }
   }
 
+  @Test("templates keep scaled numbers and units aligned and handle missing readings")
+  func templates() throws {
+    let state = ThroughputState(histories: ["en0": [.init(download: 1023.99, upload: 0)]])
+    var item = Item(id: "net", type: .throughput)
+    item.text =
+      "{{#available}}{{download.value}}|{{download.unit}}|{{upload}}{{/available}}{{^available}}Offline{{/available}}"
+    #expect(state.presentation(for: item).text == "1|KiB/s|0 B/s")
+    #expect(ThroughputState().presentation(for: item).text == "Offline")
+    item.throughput = ThroughputConfiguration(unit: .bits)
+    item.text =
+      "{{#transfers}}{{index}}:{{direction}}={{number}} {{unit}}{{#separator}};{{/separator}}{{/transfers}}"
+    #expect(state.presentation(for: item).text == "1:download=8.2 kbit/s;2:upload=0 bit/s")
+    #expect(ThroughputState().presentation(for: item).text == "")
+    for source in [
+      "{{symbol}}", "{{#transfers}}{{#symbol}}x{{/symbol}}{{/transfers}}",
+      "{{#direction=sideways}}x{{/direction}}",
+    ] {
+      #expect(throws: ConfigurationError.self) {
+        try TextTemplate(
+          source,
+          fields: TextTemplate.fields(for: .throughput),
+          allowedValues: TextTemplate.allowedValues(for: .throughput)
+        )
+      }
+    }
+  }
+
   @Test("configuration round trips and rejects invalid selections and settings")
   func configuration() throws {
     let item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        #"{"id":"net","type":"throughput","throughput":{"interfaces":["en0"],"unit":"bits","smoothingSamples":3,"showDownload":true,"showUpload":false,"showValue":true,"showUnits":false,"showSymbol":true,"symbols":{"font":"Shared","download":{"glyph":"D"}}}}"#
+        #"{"id":"net","type":"throughput","throughput":{"interfaces":["en0"],"unit":"bits","smoothingSamples":3,"showSymbol":true,"symbols":{"font":"Shared","download":{"glyph":"D"}}}}"#
           .utf8
       )
     )

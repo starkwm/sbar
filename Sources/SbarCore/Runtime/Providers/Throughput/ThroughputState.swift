@@ -50,51 +50,62 @@ struct ThroughputState: Equatable, Sendable {
   func presentation(for item: Item) -> WidgetPresentation {
     let settings = item.throughput ?? ThroughputConfiguration()
     let showSymbol = settings.showSymbol != false
-    guard
-      let rate = rate(
-        interfaces: settings.interfaces,
-        smoothingSamples: settings.smoothingSamples ?? 1
-      )
-    else {
-      return WidgetPresentation(
-        text: settings.showValue == false ? "" : "—",
-        symbol: showSymbol
-          ? item.symbol ?? settings.symbols?.resolve(settings.symbols?.unavailable)
-            ?? "questionmark" : nil,
-        accessibilityLabel: "Network throughput unavailable"
-      )
+    let rate = rate(
+      interfaces: settings.interfaces,
+      smoothingSamples: settings.smoothingSamples ?? 1
+    )
+    let entries: [[String: String]] =
+      rate.map { rate in
+        [("download", rate.download), ("upload", rate.upload)].enumerated().map { index, transfer in
+          let formatted = Self.format(transfer.1, unit: settings.unit ?? .bytes)
+          let parts = formatted.split(separator: " ", maxSplits: 1).map(String.init)
+          return [
+            "direction": transfer.0, "value": formatted, "number": parts[0], "unit": parts[1],
+            "index": String(index + 1),
+          ]
+        }
+      } ?? []
+    var values = [
+      "id": item.id, "available": String(rate != nil), "total": String(entries.count),
+      "value": entries.isEmpty ? "—" : entries.map { $0["value"]! }.joined(separator: " "),
+    ]
+    for entry in entries {
+      let direction = entry["direction"]!
+      values[direction] = entry["value"]
+      values["\(direction).value"] = entry["number"]
+      values["\(direction).unit"] = entry["unit"]
     }
-    var segments: [WidgetSegment] = []
-    var labels: [String] = []
-    for (enabled, value, name, selected, fallback) in [
-      (
-        settings.showDownload != false, rate.download, "Download", settings.symbols?.download,
-        "arrow.down"
-      ),
-      (settings.showUpload != false, rate.upload, "Upload", settings.symbols?.upload, "arrow.up"),
-    ] where enabled {
-      let formatted = Self.format(value, unit: settings.unit ?? .bytes)
-      labels.append("\(name) \(formatted)")
-      segments.append(
-        WidgetSegment(
-          text: settings.showValue == false
-            ? ""
-            : Self.format(
-              value,
-              unit: settings.unit ?? .bytes,
-              showUnits: settings.showUnits != false
-            ),
-          symbol: showSymbol && item.symbol == nil
-            ? settings.symbols?.resolve(selected) ?? .system(fallback) : nil
-        )
+    let source =
+      item.text
+      ?? "{{#transfers}}{{symbol}}{{value}}{{/transfers}}{{^transfers}}{{value}}{{/transfers}}"
+    let template = try? TextTemplate(
+      source,
+      fields: TextTemplate.fields(for: .throughput),
+      allowedValues: TextTemplate.allowedValues(for: .throughput)
+    )
+    let runs = template?.renderRuns(values, entries: entries) ?? []
+    let segments = runs.map { run in
+      let download = run.entry == 0
+      return WidgetSegment(
+        text: run.text,
+        symbol: run.symbol && showSymbol && item.symbol == nil
+          ? settings.symbols?.resolve(
+            download ? settings.symbols?.download : settings.symbols?.upload
+          ) ?? .system(download ? "arrow.down" : "arrow.up") : nil
       )
-    }
-    segments = segments.filter { !$0.text.isEmpty || $0.symbol != nil }
+    }.filter { !$0.text.isEmpty || $0.symbol != nil }
     return WidgetPresentation(
-      text: segments.map(\.text).filter { !$0.isEmpty }.joined(separator: " "),
-      symbol: showSymbol ? item.symbol : nil,
-      segments: segments,
-      accessibilityLabel: labels.isEmpty ? "Network throughput" : labels.joined(separator: ", ")
+      text: runs.map(\.text).joined(separator: item.text == nil ? " " : ""),
+      symbol: showSymbol
+        ? item.symbol
+          ?? (rate == nil
+            ? settings.symbols?.resolve(settings.symbols?.unavailable) ?? "questionmark" : nil)
+        : nil,
+      segments: runs.contains { $0.entry != nil } ? segments : [],
+      accessibilityLabel: entries.isEmpty
+        ? "Network throughput unavailable"
+        : entries.map { "\($0["direction"]!.capitalized) \($0["value"]!)" }.joined(separator: ", "),
+      segmentSpacing: item.text == nil ? 4 : 0
     )
   }
 }

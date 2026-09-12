@@ -11,9 +11,10 @@ struct TextTemplate {
     var text: String
     var entry: Int?
     var separator = false
+    var symbol = false
   }
 
-  private static let collections: Set<String> = ["workspaces", "services", "devices"]
+  private static let collections: Set<String> = ["workspaces", "services", "devices", "transfers"]
 
   static func fields(for type: ItemType) -> Set<String> {
     let common: Set<String> = ["value", "id"]
@@ -33,7 +34,12 @@ struct TextTemplate {
       fields = ["used", "free", "total", "percentage", "freeBytes", "totalBytes", "available"]
     case .media: fields = ["title", "artist", "source", "status", "playing", "available"]
     case .mail: fields = ["unreadCount", "status", "available"]
-    case .throughput: fields = ["download", "upload", "available"]
+    case .throughput:
+      fields = [
+        "download", "upload", "download.value", "download.unit", "upload.value", "upload.unit",
+        "available", "transfers", "direction", "number", "unit", "symbol", "separator", "first",
+        "last", "index", "total",
+      ]
     case .network: fields = ["status", "connected"]
     case .vpn:
       fields = [
@@ -75,6 +81,7 @@ struct TextTemplate {
     ]) {
       values[name] = ["true", "false"]
     }
+    if type == .throughput { values["direction"] = ["download", "upload"] }
     if type == .media { values["source"] = ["Music", "Spotify"] }
     return values
   }
@@ -121,6 +128,9 @@ struct TextTemplate {
           components.count == 2
           ? components[1].trimmingCharacters(in: .whitespacesAndNewlines) : nil
         guard fields.contains(name) else { throw fail("Unknown text template value '\(name)'.") }
+        if name == "symbol", section || !inCollection {
+          throw fail("Use {{symbol}} inside a transfers loop.")
+        }
         if name == "separator" {
           guard section, expected == nil, !tag.hasPrefix("^"), inCollection else {
             throw fail("Use {{#separator}}...{{/separator}} inside a collection loop.")
@@ -172,13 +182,14 @@ struct TextTemplate {
 
   func renderRuns(_ values: [String: String], entries: [[String: String]] = []) -> [Run] {
     var runs: [Run] = []
-    func append(_ text: String, entry: Int?, separator: Bool) {
-      guard !text.isEmpty else { return }
+    func append(_ text: String, entry: Int?, separator: Bool, symbol: Bool = false) {
+      guard !text.isEmpty || symbol else { return }
       if let last = runs.indices.last, runs[last].entry == entry, runs[last].separator == separator
       {
         runs[last].text += text
+        runs[last].symbol = runs[last].symbol || symbol
       } else {
-        runs.append(Run(text: text, entry: entry, separator: separator))
+        runs.append(Run(text: text, entry: entry, separator: separator, symbol: symbol))
       }
     }
     func render(
@@ -190,7 +201,8 @@ struct TextTemplate {
       for part in parts {
         switch part {
         case .literal(let text): append(text, entry: entry, separator: separator)
-        case .value(let name): append(values[name] ?? "", entry: entry, separator: separator)
+        case .value(let name):
+          append(values[name] ?? "", entry: entry, separator: separator, symbol: name == "symbol")
         case .section(let name, let expected, let inverted, let children):
           if name == "separator" {
             if let entry, entry < entries.count - 1 {

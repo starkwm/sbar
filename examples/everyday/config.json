@@ -176,6 +176,7 @@
           {
             "id": "throughput",
             "type": "throughput",
+            "text": "{{#transfers}}{{symbol}}{{number}} {{unit}}{{#separator}} · {{/separator}}{{/transfers}}{{^transfers}}{{value}}{{/transfers}}",
             "throughput": { "smoothingSamples": 3 }
           }
         ]

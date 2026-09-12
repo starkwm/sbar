@@ -11,6 +11,7 @@ struct RemovedTextSettings {
   }
 
   private static let fields: [String: [String]] = [
+    "throughput": ["showDownload", "showUpload", "showValue", "showUnits"],
     "battery": ["showPercentage"],
     "volume": ["showPercentage"],
     "cpu": ["showLabel", "showPercentage"],

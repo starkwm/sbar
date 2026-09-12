@@ -4,10 +4,6 @@ struct ThroughputConfiguration: Codable, Equatable, Sendable {
   var interfaces: [String]?
   var unit: ThroughputUnit?
   var symbols: ThroughputSymbols?
-  var showDownload: Bool?
-  var showUpload: Bool?
-  var showValue: Bool?
-  var showUnits: Bool?
   var showSymbol: Bool?
   var smoothingSamples: Int?
 

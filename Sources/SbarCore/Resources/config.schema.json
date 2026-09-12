@@ -1602,34 +1602,6 @@
         "symbols": {
           "$ref": "#/$defs/throughputSymbols"
         },
-        "showDownload": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
-        },
-        "showUpload": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
-        },
-        "showValue": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
-        },
-        "showUnits": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
-        },
         "showSymbol": {
           "type": [
             "boolean",

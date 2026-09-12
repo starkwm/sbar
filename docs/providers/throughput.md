@@ -9,12 +9,11 @@ for each non-loopback interface, then combines the rates. Configure an item with
 {
   "id": "throughput",
   "type": "throughput",
+  "text": "{{#transfers}}{{symbol}}{{value}}{{#separator}} · {{/separator}}{{/transfers}}{{^transfers}}{{value}}{{/transfers}}",
   "throughput": {
     "interfaces": ["en0"],
     "unit": "bytes",
-    "smoothingSamples": 3,
-    "showDownload": true,
-    "showUpload": true
+    "smoothingSamples": 3
   }
 }
 ```
@@ -33,11 +32,34 @@ B/s, KiB/s, MiB/s, GiB/s for bytes, or bit/s, kbit/s, Mbit/s, Gbit/s for bits.
 Values round to at most one decimal place, retaining small rates such as
 `0.5 B/s`.
 
-`showDownload`, `showUpload`, `showValue`, `showUnits`, and `showSymbol` default
-to `true`. Hide either direction independently. Hide values for directional icons
-alone; hide symbols for values alone. `showUnits: false` hides suffixes but retains
-automatic scaling. Accessibility includes direction names and units even when
-their visible symbols or units are hidden.
+Use `text` to choose directions, values, and units. `download` and `upload` contain
+formatted rates; `download.value` / `upload.value` contain the scaled number, and
+`download.unit` / `upload.unit` contain its suffix. `available` is false until a
+reading exists. Unavailable rate fields are empty.
+
+The `transfers` loop contains download then upload. Each entry exposes `direction`
+(`download` or `upload`), `value` (formatted rate), `number`, `unit`, `index`,
+`first`, and `last`. `total` is two when available, otherwise zero.
+`{{symbol}}` requests the entry's native direction symbol, which follows the item's
+`symbolPosition`. It must be used inside the loop. Repeated symbol tags in the same
+text run produce one icon. Separate entries with `{{#separator}}...{{/separator}}`.
+
+Examples:
+
+- Numbers without units: `{{#transfers}}{{symbol}}{{number}}{{#separator}} · {{/separator}}{{/transfers}}`
+- Download only: `{{#transfers}}{{#direction=download}}{{symbol}}{{value}}{{/direction}}{{/transfers}}`
+- Direction icons only: `{{#transfers}}{{symbol}}{{#separator}} {{/separator}}{{/transfers}}`
+- Combined text: `Down {{download.value}} {{download.unit}} / Up {{upload.value}} {{upload.unit}}`
+
+Wrap scalar text in `{{#available}}...{{/available}}` and add
+`{{^available}}—{{/available}}` for unavailable readings. Omit `text` to keep the
+standard two-direction display. `text: ""` hides its text and directional icons;
+an item-level or unavailable icon still follows `showSymbol`.
+
+`showDownload`, `showUpload`, `showValue`, and `showUnits` have been removed;
+configurations using them report a migration error. `showSymbol` still defaults to
+`true`. Accessibility always includes both direction names and full units when
+rates are available, regardless of the visible template.
 
 Customize `symbols.download`, `symbols.upload`, and `symbols.unavailable`
 (defaults `arrow.down`, `arrow.up`, `questionmark`). Glyphs inherit `symbols.font`

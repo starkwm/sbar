@@ -199,7 +199,7 @@ interval snapshots. They do not trigger extra device scans or service queries.
 
 ## Provider fields
 
-Every item with text supports `id` and `value`. `value` is the provider's default label. Retained throughput settings still affect that provider's default. For example, a clock can use `"text": "Time {{value}}"` alongside `"format": "HH:mm"`.
+Every item with text supports `id` and `value`. `value` is the provider's default label. For example, a clock can use `"text": "Time {{value}}"` alongside `"format": "HH:mm"`.
 
 | Provider | Additional fields |
 | --- | --- |
@@ -210,7 +210,7 @@ Every item with text supports `id` and `value`. `value` is the provider's defaul
 | `disk` | `used`, `free`, `total`, `percentage`, `freeBytes`, `totalBytes`, `available` |
 | `media` | `title`, `artist`, `source`, `status`, `playing`, `available` |
 | `mail` | `unreadCount`, `status`, `available` |
-| `throughput` | `download`, `upload`, `available` |
+| `throughput` | `download`, `upload`, `download.value`, `download.unit`, `upload.value`, `upload.unit`, `available`, `transfers`, `direction`, `number`, `unit`, `symbol`, `index`, `total`, `first`, `last`, `separator` |
 | `network` | `status`, `connected` |
 | `vpn` | `status`, `names`, `connected`, `available`, plus [service fields](#vpn-services-and-bluetooth-devices) |
 | `bluetooth` | `status`, `names`, `count`, `connected`, plus [device fields](#vpn-services-and-bluetooth-devices) |
@@ -261,3 +261,5 @@ Removed text settings now fail configuration loading with the full field path an
 | Network/audio-device `labels` | Equality sections such as `{{#status=available}}Ready{{/status}}{{^status=available}}{{value}}{{/status}}` using that provider's states |
 
 Wrap readings in an `available` section when you need an unavailable fallback. Network and audio-device `labels` maps have been removed; use equality sections instead. Bluetooth and VPN `labels` maps have also been removed; use device/service loops with state conditions. Workspace formats and label maps have been replaced by workspace fields and loops. Throughput display options, clock formatting, and command output format remain supported. Provider symbols, tints, hide rules, and data-selection settings are unchanged.
+
+Throughput supports symbol-aware `transfers` loops. See [throughput](providers/throughput.md) for number/unit fields and replacements for the removed `showDownload`, `showUpload`, `showValue`, and `showUnits` settings.

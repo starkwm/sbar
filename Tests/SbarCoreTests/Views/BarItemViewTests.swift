@@ -137,6 +137,22 @@ struct BarItemViewTests {
       matches: expected.foregroundColor(nil).fontWeight(nil)
     )
 
+    item.text =
+      "{{#transfers}}{{#direction=download}}{{symbol}}{{value}}{{/direction}}{{/transfers}}"
+    try expectRendering(
+      item,
+      runtime: runtime,
+      matches: pair(position: position, symbol: Image(systemName: "arrow.down"), text: "1 KiB/s")
+        .foregroundColor(nil).fontWeight(nil)
+    )
+    item.text = "{{#transfers}}{{#direction=upload}}{{symbol}}{{/direction}}{{/transfers}}"
+    try expectRendering(
+      item,
+      runtime: runtime,
+      matches: Text("U").font(.custom("Menlo", size: 24)).foregroundColor(nil).fontWeight(nil)
+    )
+    item.text = nil
+
     // An item-level override sits beside all the rates, which retain their order.
     item.symbol = "star.fill"
     let rates = HStack(spacing: 4) {
