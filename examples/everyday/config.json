@@ -10,7 +10,7 @@
     "mousePassThrough": true
   },
   "theme": {
-    "background": "#151B26F5",
+    "background": "#1A1B26F5",
     "horizontalPadding": 10,
     "verticalPadding": 4,
     "cornerRadius": 0,
@@ -30,14 +30,14 @@
         "type": "spaces",
         "spaces": { "scope": "display", "format": "current" },
         "priority": 40,
-        "style": { "tint": "#A5ADCB" },
+        "style": { "tint": "#7AA2F7" },
         "primaryAction": { "kind": "application", "value": "com.apple.exposelauncher" }
       },
       {
         "id": "front-app",
         "type": "frontApplication",
         "priority": 80,
-        "style": { "tint": "#E2E8F0", "fontWeight": "semibold" }
+        "style": { "tint": "#C0CAF5", "fontWeight": "semibold" }
       }
     ],
     "center": [],
@@ -49,9 +49,9 @@
         "cpu": {
           "showLabel": false,
           "smoothingSamples": 3,
-          "tints": { "medium": "#EED49F", "high": "#ED8796" }
+          "tints": { "medium": "#E0AF68", "high": "#F7768E" }
         },
-        "style": { "tint": "#A5ADCB", "background": "#FFFFFF08" },
+        "style": { "tint": "#BB9AF7", "background": "#292E42" },
         "popup": "System",
         "children": [
           {
@@ -85,21 +85,21 @@
           "showLabel": false,
           "hideWhenDisconnected": true,
           "tints": {
-            "connected": "#A6DA95",
-            "connecting": "#EED49F",
-            "disconnecting": "#EED49F",
-            "unavailable": "#ED8796"
+            "connected": "#9ECE6A",
+            "connecting": "#E0AF68",
+            "disconnecting": "#FF9E64",
+            "unavailable": "#F7768E"
           }
         },
-        "style": { "tint": "#A5ADCB" },
+        "style": { "tint": "#A9B1D6" },
         "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
       },
       {
         "id": "network",
         "type": "network",
         "priority": 60,
-        "network": { "showLabel": false, "tints": { "offline": "#ED8796" } },
-        "style": { "tint": "#E2E8F0" },
+        "network": { "showLabel": false, "tints": { "offline": "#F7768E" } },
+        "style": { "tint": "#7DCFFF" },
         "popup": "Connections",
         "children": [
           {
@@ -136,8 +136,8 @@
         "id": "sound",
         "type": "volume",
         "priority": 50,
-        "volume": { "showPercentage": false, "tints": { "muted": "#EED49F" } },
-        "style": { "tint": "#E2E8F0" },
+        "volume": { "showPercentage": false, "tints": { "muted": "#E0AF68" } },
+        "style": { "tint": "#73DACA" },
         "popup": "Sound",
         "children": [
           {
@@ -154,7 +154,7 @@
                 "type": "text",
                 "label": "Lower",
                 "symbol": "minus",
-                "style": { "background": "#80808018" },
+                "style": { "background": "#737AA218" },
                 "primaryAction": {
                   "kind": "command",
                   "value": "/usr/bin/osascript -e 'set level to output volume of (get volume settings)' -e 'if level < 10 then set level to 10' -e 'set volume output volume (level - 10)'"
@@ -165,7 +165,7 @@
                 "type": "text",
                 "label": "Mute / unmute",
                 "symbol": "speaker.slash",
-                "style": { "background": "#80808018" },
+                "style": { "background": "#737AA218" },
                 "primaryAction": {
                   "kind": "command",
                   "value": "/usr/bin/osascript -e 'set volume output muted (not (output muted of (get volume settings)))'"
@@ -176,7 +176,7 @@
                 "type": "text",
                 "label": "Raise",
                 "symbol": "plus",
-                "style": { "background": "#80808018" },
+                "style": { "background": "#737AA218" },
                 "primaryAction": {
                   "kind": "command",
                   "value": "/usr/bin/osascript -e 'set level to output volume of (get volume settings)' -e 'if level > 90 then set level to 90' -e 'set volume output volume (level + 10)'"
@@ -213,9 +213,9 @@
         "priority": 80,
         "battery": {
           "lowThreshold": 20,
-          "tints": { "low": "#ED8796", "charging": "#A6DA95" }
+          "tints": { "low": "#F7768E", "charging": "#9ECE6A" }
         },
-        "style": { "tint": "#E2E8F0" },
+        "style": { "tint": "#C0CAF5" },
         "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
       },
       {
@@ -223,7 +223,7 @@
         "type": "datetime",
         "format": "EEEE, d MMMM",
         "priority": -10,
-        "style": { "tint": "#A5ADCB" },
+        "style": { "tint": "#A9B1D6" },
         "primaryAction": { "kind": "application", "value": "com.apple.iCal" }
       },
       {
@@ -232,8 +232,8 @@
         "format": "HH:mm",
         "priority": 100,
         "style": {
-          "tint": "#E2E8F0",
-          "background": "#FFFFFF0D",
+          "tint": "#7AA2F7",
+          "background": "#292E42",
           "fontWeight": "semibold",
           "horizontalPadding": 10
         },

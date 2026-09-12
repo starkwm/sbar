@@ -1,6 +1,6 @@
 # Everyday bar
 
-A dark bar for daily use, with compact system indicators. It sits at the top of every display with a soft shadow below it. Popovers follow the system appearance so their text stays readable in light and dark mode.
+A dark bar for daily use, with compact system indicators and the [Tokyo Night](https://github.com/folke/tokyonight.nvim) Night palette. It sits at the top of every display with a soft shadow below it. Popovers follow the system appearance so their text stays readable in light and dark mode.
 
 ## Run
 
@@ -39,6 +39,8 @@ Music and Spotify send track updates after playback starts or changes. Until the
 ## Customize
 
 Edit [config.json](config.json) while the bar is running; valid changes reload automatically. The example needs no extra fonts, window manager, scripts, or plugin installation.
+
+The palette uses blue for Spaces and the clock, purple for CPU, cyan for network, and teal for sound. Green marks connected VPN and charging states, amber marks warnings, orange marks a disconnecting VPN, and red marks errors or low battery. The bar uses Night's `#1A1B26` background with slight transparency, with `#292E42` backgrounds behind CPU and the clock.
 
 - Set `bar.displays` to `main` for the primary display only.
 - Adjust `bar.margin` and `theme.cornerRadius` to match your window gaps.
