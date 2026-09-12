@@ -242,6 +242,15 @@
         "symbol": {
           "$ref": "#/$defs/symbol"
         },
+        "symbolPosition": {
+          "enum": [
+            "left",
+            "right",
+            null
+          ],
+          "default": "left",
+          "description": "Side of the text for symbols and application icons. Each provider segment keeps its order and places its symbol on this side. Null uses the default."
+        },
         "format": {
           "type": [
             "string",

@@ -15,4 +15,7 @@ the configured symbol is used as a fallback. Its size follows the resolved item 
 The icon and application name follow the item's refresh policy together. A fixed `label`
 still overrides the name; use `"label": ""` for an icon-only item.
 
+Set the item's `"symbolPosition": "right"` to put the icon after the name. The default is
+`"left"`. This also controls the fallback symbol when no application icon is available.
+
 See [common item settings](../configuration.md#items), [refresh policies](../configuration.md#refresh-policies), [styling](../styling.md), and [symbols](../symbols.md) for shared options.

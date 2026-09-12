@@ -49,6 +49,7 @@ The palette uses blue for Spaces, memory, and the clock, purple for CPU, orange 
 - Set `bar.shadow` to `false` for a flat appearance.
 - Move `media` from `items.left` into the empty `items.center` section to put track information in the middle.
 - Change the clock's `format` to `h:mm a` for a 12-hour clock.
+- Set an item's `"symbolPosition": "right"` to put its symbol or application icon after its text. Omitted settings default to `"left"`. In the throughput item, each arrow moves after its own rate and download still precedes upload.
 - Set larger item priorities to keep them visible longer. The clock has the highest priority; lower-priority items move into overflow when space is tight.
 
 The bar does not reserve space for windows or hide the system menu bar. Adjust your window manager's top gap and the bar's top margin to leave enough room for the menu bar or notch on your display.

@@ -8,14 +8,15 @@ struct BarItemView: View {
 
   var body: some View {
     if let presentation = providers.presentation(for: configuration, displayUUID: barDisplayUUID) {
-      HStack(spacing: 4) {
+      SymbolContentView(position: configuration.symbolPosition) {
         if let symbol = presentation.symbol {
           ItemSymbolView(symbol: symbol, fontSize: symbolFontSize, fontWeight: symbolFontWeight)
         }
+      } content: {
         if !presentation.segments.isEmpty {
           ForEach(presentation.segments.indices, id: \.self) { index in
             let segment = presentation.segments[index]
-            HStack(spacing: 4) {
+            SymbolContentView(position: configuration.symbolPosition) {
               if let symbol = segment.symbol {
                 ItemSymbolView(
                   symbol: symbol,
@@ -23,6 +24,7 @@ struct BarItemView: View {
                   fontWeight: symbolFontWeight
                 )
               }
+            } content: {
               if !segment.text.isEmpty { Text(segment.text).monospacedDigit() }
             }
             .foregroundColor(segment.tint.flatMap { Color(hex: $0) })
@@ -35,21 +37,23 @@ struct BarItemView: View {
       .accessibilityElement(children: .ignore)
       .accessibilityLabel(presentation.accessibilityLabel)
     } else if let icon = providers.applicationIcon(for: configuration) {
-      HStack(spacing: 4) {
+      SymbolContentView(position: configuration.symbolPosition) {
         Image(nsImage: icon)
           .renderingMode(.original)
           .resizable()
           .scaledToFit()
           .frame(width: symbolFontSize, height: symbolFontSize)
           .accessibilityHidden(true)
+      } content: {
         content
       }
     } else if let symbol = configuration.symbol, configuration.type != .divider,
       configuration.type != .spacer
     {
-      HStack(spacing: 4) {
+      SymbolContentView(position: configuration.symbolPosition) {
         ItemSymbolView(symbol: symbol, fontSize: symbolFontSize, fontWeight: symbolFontWeight)
           .accessibilityHidden(true)
+      } content: {
         content
       }
     } else {
@@ -97,4 +101,18 @@ struct BarItemView: View {
   @Environment(\.barDisplayUUID) private var barDisplayUUID
 
   @Environment(ProviderRuntime.self) private var providers
+}
+
+private struct SymbolContentView<Symbol: View, Content: View>: View {
+  var position: ItemSymbolPosition
+  @ViewBuilder var symbol: Symbol
+  @ViewBuilder var content: Content
+
+  var body: some View {
+    HStack(spacing: 4) {
+      if position == .left { symbol }
+      content
+      if position == .right { symbol }
+    }
+  }
 }

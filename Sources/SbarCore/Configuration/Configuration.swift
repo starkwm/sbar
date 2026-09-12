@@ -255,7 +255,8 @@ struct ItemSections: Codable, Equatable, Sendable {
 
 struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
-    case enabled, format, dateStyle, timeStyle, id, label, priority, style, symbol, type,
+    case enabled, format, dateStyle, timeStyle, id, label, priority, style, symbol, symbolPosition,
+      type,
       primaryAction, secondaryAction,
       popup, command, children, plugin, refresh, yabai, aerospace, battery, cpu, disk, media,
       memory,
@@ -275,6 +276,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
 
   var label: String?
   var symbol: ItemSymbol?
+  var symbolPosition: ItemSymbolPosition = .left
   var format: String?
   var dateStyle: DateTimeStyle?
   var timeStyle: DateTimeStyle?
@@ -315,6 +317,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     enabled: Bool = true,
     label: String? = nil,
     symbol: ItemSymbol? = nil,
+    symbolPosition: ItemSymbolPosition = .left,
     format: String? = nil,
     dateStyle: DateTimeStyle? = nil,
     timeStyle: DateTimeStyle? = nil,
@@ -349,6 +352,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
 
     self.label = label
     self.symbol = symbol
+    self.symbolPosition = symbolPosition
     self.format = format
     self.dateStyle = dateStyle
     self.timeStyle = timeStyle
@@ -389,6 +393,9 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
 
     label = try container.decodeIfPresent(String.self, forKey: .label)
     symbol = try container.decodeIfPresent(ItemSymbol.self, forKey: .symbol)
+    symbolPosition =
+      try container.decodeIfPresent(ItemSymbolPosition.self, forKey: .symbolPosition)
+      ?? .left
     format = try container.decodeIfPresent(String.self, forKey: .format)
     dateStyle = try container.decodeIfPresent(DateTimeStyle.self, forKey: .dateStyle)
     timeStyle = try container.decodeIfPresent(DateTimeStyle.self, forKey: .timeStyle)
@@ -435,6 +442,8 @@ enum DisplaySelection: String, Codable, Sendable { case main, all, selected }
 enum BarWindowLevel: String, Codable, CaseIterable, Sendable {
   case floating, statusBar, screenSaver
 }
+
+enum ItemSymbolPosition: String, Codable, CaseIterable, Sendable { case left, right }
 
 enum ItemType: String, CaseIterable, Codable, Sendable {
   case datetime, divider, frontApplication, spacer, text, battery, volume, network, vpn, bluetooth,

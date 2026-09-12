@@ -2,6 +2,23 @@
 
 [Documentation index](index.md)
 
+Set an item's `symbolPosition` to `"left"` or `"right"` to place its symbol on that side of its text:
+
+```json
+{
+  "id": "battery",
+  "type": "battery",
+  "symbolPosition": "right"
+}
+```
+
+The default is `"left"`; omitting the setting or using `null` keeps that appearance.
+Placement applies to SF Symbols, custom font glyphs, provider state symbols, and
+[frontmost application icons](providers/front-application.md). For segmented providers such
+as throughput, each symbol moves beside its own text while the segments keep their order.
+Download still precedes upload when both symbols are on the right.
+Set placement on each item, including children inside groups and popovers; groups do not pass it to their children.
+
 Every `symbol`, including battery and network state symbols, accepts either an SF Symbol name
 or a glyph object. Install the font on your Mac first and use its font name:
 
