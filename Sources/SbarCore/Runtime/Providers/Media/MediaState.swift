@@ -60,7 +60,8 @@ struct MediaState: Equatable, Sendable {
       symbol: settings.showSymbol == false
         ? nil : item.symbol ?? settings.symbols?.resolve(selectedSymbol) ?? symbol,
       hidden: status == .paused && settings.hideWhenPaused == true
-        || status == .stopped && settings.hideWhenStopped == true,
+        || status == .stopped && settings.hideWhenStopped == true
+        || status != .playing && settings.hideWhenNotPlaying == true,
       accessibilityLabel: label
     )
   }

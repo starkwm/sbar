@@ -9,6 +9,7 @@ struct MediaConfiguration: Codable, Equatable, Sendable {
   var showSymbol: Bool?
   var hideWhenPaused: Bool?
   var hideWhenStopped: Bool?
+  var hideWhenNotPlaying: Bool?
 
   func validate(path: String) throws {
     try symbols?.validate(path: "\(path).symbols")

@@ -163,6 +163,45 @@ struct MediaWidgetTests {
     }
   }
 
+  @Test("hideWhenNotPlaying follows playback notifications and the selected source")
+  func playbackVisibility() {
+    let playback = NotificationCenter()
+    let provider = MediaProvider(playbackCenter: playback, workspaceCenter: NotificationCenter())
+    var state = MediaState()
+    provider.start { state = $0 }
+    defer { provider.stop() }
+    var item = Item(
+      id: "media",
+      type: .media,
+      media: MediaConfiguration(hideWhenNotPlaying: true)
+    )
+    #expect(state.presentation(for: item).hidden)
+    for status in ["Playing", "Paused", "Playing", "Stopped", "Unexpected"] {
+      playback.post(
+        name: MediaSource.music.notificationName,
+        object: nil,
+        userInfo: ["Player State": status]
+      )
+      #expect(state.presentation(for: item).hidden == (status != "Playing"))
+    }
+    playback.post(
+      name: MediaSource.music.notificationName,
+      object: nil,
+      userInfo: ["Player State": "Playing", "Name": "Music track"]
+    )
+    item.media?.source = .spotify
+    #expect(state.presentation(for: item).hidden)
+    playback.post(
+      name: MediaSource.spotify.notificationName,
+      object: nil,
+      userInfo: ["Player State": "Paused", "Name": "Spotify track"]
+    )
+    #expect(state.presentation(for: item).hidden)
+    item.media?.source = .automatic
+    #expect(!state.presentation(for: item).hidden)
+    #expect(state.presentation(for: item).text == "Music track")
+  }
+
   @Test("termination clears a player's track and restores the other source")
   func termination() {
     let playback = NotificationCenter()
@@ -250,14 +289,21 @@ struct MediaWidgetTests {
     let item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        #"{"id":"media","type":"media","media":{"source":"spotify","separator":" / ","showTitle":true,"showArtist":false,"showSymbol":true,"hideWhenPaused":true,"hideWhenStopped":true,"symbols":{"font":"Shared","size":18,"playing":{"glyph":"P"}}}}"#
+        #"{"id":"media","type":"media","media":{"source":"spotify","separator":" / ","showTitle":true,"showArtist":false,"showSymbol":true,"hideWhenPaused":true,"hideWhenStopped":true,"hideWhenNotPlaying":true,"symbols":{"font":"Shared","size":18,"playing":{"glyph":"P"}}}}"#
           .utf8
       )
     )
     try item.media?.validate(path: "media")
+    #expect(item.media?.hideWhenNotPlaying == true)
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+    for json in ["{}", #"{"hideWhenNotPlaying":null}"#, #"{"hideWhenNotPlaying":false}"#] {
+      let settings = try JSONDecoder().decode(MediaConfiguration.self, from: Data(json.utf8))
+      let defaultItem = Item(id: "media", type: .media, media: settings)
+      #expect(!MediaState().presentation(for: defaultItem).hidden)
+    }
     for json in [
       #"{"source":"invalid"}"#, #"{"showTitle":"false"}"#,
+      #"{"hideWhenNotPlaying":"true"}"#,
       #"{"symbols":{"font":" "}}"#, #"{"symbols":{"size":73}}"#,
       #"{"symbols":{"playing":{"glyph":"P"}}}"#,
     ] {

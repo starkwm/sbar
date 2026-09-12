@@ -16,8 +16,7 @@ wins. A pause notification from one player cannot replace another playing source
     "showTitle": true,
     "showArtist": true,
     "separator": " — ",
-    "hideWhenPaused": false,
-    "hideWhenStopped": true
+    "hideWhenNotPlaying": true
   }
 }
 ```
@@ -34,15 +33,21 @@ the previous artist when the artist is missing. Missing visible metadata falls
 back to `Playing` or `Paused`; stopped playback shows `Stopped`. Unknown or malformed
 playback state shows `Playback unavailable`, rather than being treated as paused.
 
-`hideWhenPaused` and `hideWhenStopped` default to `false` and apply to the selected
-source. Customize `symbols.playing`, `symbols.paused`, `symbols.stopped`, and
+Set `hideWhenNotPlaying` to `true` to show the item only while the selected source
+is playing. It hides paused, stopped, unknown, and initial waiting states.
+`hideWhenPaused` and `hideWhenStopped` can hide those individual states instead.
+All three options default to `false` and apply to the selected source; enabling
+any matching option hides the item.
+
+Customize `symbols.playing`, `symbols.paused`, `symbols.stopped`, and
 `symbols.unavailable` (defaults `play.fill`, `pause.fill`, `stop.fill`, `questionmark`).
 Glyphs inherit `symbols.font` and optional `symbols.size`, with per-glyph overrides.
 An item-level `symbol` overrides the state symbols; `showSymbol: false` hides it.
 
-Startup remains notification-based: `Waiting for playback` is shown until the
+Startup remains notification-based: by default, `Waiting for playback` is shown until the
 selected source sends an update, even if it was already playing when the bar
-started. Start or change a track to populate it. This integration does not query
+started. With `hideWhenNotPlaying: true`, the item stays hidden until a playing
+update arrives. Start or change a track to populate it. This integration does not query
 current playback, control players, or display artwork.
 
 Refresh policies snapshot both players' states together. Manual/interval items

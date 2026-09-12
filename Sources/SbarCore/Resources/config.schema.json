@@ -1824,6 +1824,14 @@
             "null"
           ],
           "default": false
+        },
+        "hideWhenNotPlaying": {
+          "description": "Hide unless the selected source is playing, including while waiting for playback or when playback is unavailable.",
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
         }
       },
       "additionalProperties": false
