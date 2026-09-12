@@ -22,17 +22,20 @@ Stop your usual sbar instance first if it would overlap. This example has its ow
 
 | Item | What it does |
 | --- | --- |
-| Spaces | Shows the current Space for that display. Click to open Mission Control. |
+| Spaces | Shows the current Space for that display. Hover for its position and count; click to open Mission Control. |
 | Active app | Follows focus and shows the application's own icon. |
-| Media | Shows Music/Spotify playback after the active app in orange. Only visible while playing. |
+| Media | Shows Music/Spotify playback after the active app in orange. Hover for the full track, artist, and player. Only visible while playing. |
 | Date | Opens Calendar. |
-| Memory | Shows used memory as a percentage. Click to open Activity Monitor. |
+| Memory | Shows used memory as a percentage. Hover for used and total memory; click to open Activity Monitor. |
 | CPU | Shows smoothed usage. Click for CPU, memory, free disk space, and an Activity Monitor shortcut. |
 | Network | Follows the active connection. Click for connection type, VPN names and status, and download/upload rates. |
-| VPN | Shows a green shield when connected and a different color during transitions or read failures. Hides when disconnected. Click to open System Settings. |
-| Sound | Opens volume, mute controls, and default output and microphone names. |
-| Battery | Shows charge with low-battery and charging colors. Click to open System Settings. Desktops show AC power. |
+| VPN | Shows a green shield when connected and a different color during transitions or read failures. Hover for service names and status. Hides when disconnected. |
+| Sound | Hover for volume and mute status. Click for volume controls and default output and microphone names. |
+| Battery | Shows charge with low-battery and charging colors. Hover for charge and power status. Desktops show AC power. |
 | Clock | Opens the full date and shortcuts to Calendar and Reminders. |
+
+Hover over an indicator for provider details. CPU, Network, Sound, and Clock open
+popups with additional readings or controls.
 
 The sound buttons adjust volume in steps of 10 percentage points, clamped to 0–100, or toggle mute. They use macOS's built-in AppleScript commands. Fixed-volume outputs still need their own hardware or application controls. Device names describe the current defaults; selecting a device happens in System Settings.
 
@@ -50,6 +53,7 @@ The palette uses blue for Spaces, memory, and the clock, purple for CPU, orange 
 - Move `media` from `items.left` into the empty `items.center` section to put track information in the middle.
 - Change the clock's `format` to `h:mm a` for a 12-hour clock.
 - Set an item's `"symbolPosition": "right"` to put its symbol or application icon after its text. Omitted settings default to `"left"`. In the throughput item, each arrow moves after its own rate and download still precedes upload.
+- Customize an item's `tooltip` with [provider tokens](../../docs/tooltips.md), or set it to `""` to disable the tooltip.
 - Set larger item priorities to keep them visible longer. The clock has the highest priority; lower-priority items move into overflow when space is tight.
 
 The bar does not reserve space for windows or hide the system menu bar. Adjust your window manager's top gap and the bar's top margin to leave enough room for the menu bar or notch on your display.

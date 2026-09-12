@@ -28,6 +28,7 @@
       {
         "id": "spaces",
         "type": "spaces",
+        "tooltip": "{summary}\nClick to open Mission Control",
         "spaces": { "scope": "display", "format": "current" },
         "priority": 40,
         "style": { "tint": "#7AA2F7" },
@@ -36,12 +37,14 @@
       {
         "id": "front-app",
         "type": "frontApplication",
+        "tooltip": "{name}",
         "priority": 80,
         "style": { "tint": "#C0CAF5", "fontWeight": "semibold" }
       },
       {
         "id": "media",
         "type": "media",
+        "tooltip": "{title}\n{artist}\n{source} · {status}",
         "priority": 10,
         "media": { "separator": " · ", "hideWhenNotPlaying": true },
         "style": { "tint": "#FF9E64" }
@@ -52,6 +55,7 @@
       {
         "id": "memory",
         "type": "memory",
+        "tooltip": "Memory: {used} / {total}\nUsage: {percentage}%\nClick to open Activity Monitor",
         "priority": 20,
         "memory": { "format": "percentage", "showLabel": false },
         "style": { "tint": "#7AA2F7", "background": "#292E42" },
@@ -60,6 +64,7 @@
       {
         "id": "cpu",
         "type": "cpu",
+        "tooltip": "CPU usage: {percentage}%\nClick for system details",
         "priority": 20,
         "cpu": {
           "showLabel": false,
@@ -72,16 +77,19 @@
           {
             "id": "cpu-detail",
             "type": "cpu",
+            "tooltip": "{summary}",
             "cpu": { "smoothingSamples": 3 }
           },
           {
             "id": "memory-detail",
             "type": "memory",
+            "tooltip": "Memory: {used} / {total}\nUsage: {percentage}%",
             "memory": { "format": "usedTotal" }
           },
           {
             "id": "disk",
-            "type": "disk"
+            "type": "disk",
+            "tooltip": "{path}\n{free} free / {total}\n{percentage}% used"
           },
           {
             "id": "activity-monitor",
@@ -95,6 +103,7 @@
       {
         "id": "vpn",
         "type": "vpn",
+        "tooltip": "{summary}",
         "priority": 70,
         "vpn": {
           "showLabel": false,
@@ -106,12 +115,12 @@
             "unavailable": "#F7768E"
           }
         },
-        "style": { "tint": "#A9B1D6" },
-        "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
+        "style": { "tint": "#A9B1D6" }
       },
       {
         "id": "network",
         "type": "network",
+        "tooltip": "{summary}\nClick for connection details",
         "priority": 60,
         "network": { "showLabel": false, "tints": { "offline": "#F7768E" } },
         "style": { "tint": "#7DCFFF" },
@@ -120,6 +129,7 @@
           {
             "id": "network-detail",
             "type": "network",
+            "tooltip": "{summary}",
             "network": {
               "labels": {
                 "wifi": "Wi-Fi connected",
@@ -131,25 +141,21 @@
           },
           {
             "id": "vpn-detail",
-            "type": "vpn"
+            "type": "vpn",
+            "tooltip": "{summary}"
           },
           {
             "id": "throughput",
             "type": "throughput",
+            "tooltip": "Download: {download}\nUpload: {upload}",
             "throughput": { "smoothingSamples": 3 }
-          },
-          {
-            "id": "network-settings",
-            "type": "text",
-            "label": "Open System Settings",
-            "symbol": "gearshape",
-            "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
           }
         ]
       },
       {
         "id": "sound",
         "type": "volume",
+        "tooltip": "{summary}\nClick for volume controls and audio devices",
         "priority": 50,
         "volume": { "showPercentage": false, "tints": { "muted": "#E0AF68" } },
         "style": { "tint": "#73DACA" },
@@ -157,17 +163,20 @@
         "children": [
           {
             "id": "volume",
-            "type": "volume"
+            "type": "volume",
+            "tooltip": "{summary}"
           },
           {
             "id": "volume-controls",
             "type": "group",
+            "tooltip": "",
             "style": { "horizontalPadding": 0, "verticalPadding": 0 },
             "children": [
               {
                 "id": "volume-down",
                 "type": "text",
                 "label": "Lower",
+                "tooltip": "Lower volume by 10 percentage points",
                 "symbol": "minus",
                 "style": { "background": "#737AA218" },
                 "primaryAction": {
@@ -179,6 +188,7 @@
                 "id": "volume-mute",
                 "type": "text",
                 "label": "Mute / unmute",
+                "tooltip": "Toggle mute",
                 "symbol": "speaker.slash",
                 "style": { "background": "#737AA218" },
                 "primaryAction": {
@@ -190,6 +200,7 @@
                 "id": "volume-up",
                 "type": "text",
                 "label": "Raise",
+                "tooltip": "Raise volume by 10 percentage points",
                 "symbol": "plus",
                 "style": { "background": "#737AA218" },
                 "primaryAction": {
@@ -201,36 +212,32 @@
           },
           {
             "id": "output",
-            "type": "audioDevice"
+            "type": "audioDevice",
+            "tooltip": "{summary}"
           },
           {
             "id": "input",
             "type": "audioDevice",
+            "tooltip": "{summary}",
             "audioDevice": { "device": "input" }
-          },
-          {
-            "id": "sound-settings",
-            "type": "text",
-            "label": "Open System Settings",
-            "symbol": "gearshape",
-            "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
           }
         ]
       },
       {
         "id": "battery",
         "type": "battery",
+        "tooltip": "{summary}",
         "priority": 80,
         "battery": {
           "lowThreshold": 20,
           "tints": { "low": "#F7768E", "charging": "#9ECE6A" }
         },
-        "style": { "tint": "#C0CAF5" },
-        "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
+        "style": { "tint": "#C0CAF5" }
       },
       {
         "id": "date",
         "type": "datetime",
+        "tooltip": "{text}\nClick to open Calendar",
         "format": "EEEE, d MMMM",
         "priority": -10,
         "style": { "tint": "#A9B1D6" },
@@ -239,6 +246,7 @@
       {
         "id": "clock",
         "type": "datetime",
+        "tooltip": "Click for the full date, Calendar, and Reminders",
         "format": "HH:mm",
         "priority": 100,
         "style": {
@@ -252,6 +260,7 @@
           {
             "id": "full-date",
             "type": "datetime",
+            "tooltip": "{text}",
             "dateStyle": "full"
           },
           {
