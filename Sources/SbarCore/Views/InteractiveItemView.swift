@@ -6,7 +6,7 @@ struct InteractiveItemView: View {
   var tracksHitRegion = true
 
   var body: some View {
-    if providers.presentation(for: item, displayUUID: barDisplayUUID)?.hidden != true {
+    if providers.isVisible(item, displayUUID: barDisplayUUID) {
       decoratedContent
     }
   }
@@ -27,7 +27,7 @@ struct InteractiveItemView: View {
     Group {
       if item.type == .group {
         HStack(spacing: 4) {
-          ForEach((item.children ?? []).filter(\.enabled)) { child in
+          ForEach(displayedChildren) { child in
             AnyView(
               InteractiveItemView(
                 item: child,
@@ -71,7 +71,7 @@ struct InteractiveItemView: View {
       VStack(alignment: .leading, spacing: 8) {
         if let popup = item.popup { Text(popup).textSelection(.enabled) }
 
-        ForEach((item.children ?? []).filter(\.enabled)) { child in
+        ForEach(displayedChildren) { child in
           AnyView(
             InteractiveItemView(
               item: child,
@@ -94,6 +94,10 @@ struct InteractiveItemView: View {
 
   @State private var hovering = false
   @State private var showingPopup = false
+
+  private var displayedChildren: [Item] {
+    (item.children ?? []).filter { providers.isVisible($0, displayUUID: barDisplayUUID) }
+  }
 
   private var interactive: Bool {
     item.primaryAction != nil || item.secondaryAction != nil || item.popup != nil

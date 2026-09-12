@@ -7,7 +7,9 @@ struct BarView: View {
 
   var body: some View {
     BarRegionLayout(
-      hasCenter: configuration.items.center.contains(where: \.enabled),
+      hasCenter: configuration.items.center.contains {
+        providers.isVisible($0, displayUUID: barDisplayUUID)
+      },
       notch: notch.map { $0.offsetBy(dx: -(configuration.theme?.horizontalPadding ?? 10), dy: 0) }
     ) {
       region(configuration.items.left, alignment: .leading)
@@ -31,6 +33,9 @@ struct BarView: View {
     }
     .clipShape(RoundedRectangle(cornerRadius: configuration.theme?.cornerRadius ?? 0))
   }
+
+  @Environment(\.barDisplayUUID) private var barDisplayUUID
+  @Environment(ProviderRuntime.self) private var providers
 
   private func region(_ items: [Item], alignment: Alignment) -> some View {
     BarRegionView(items: items, theme: configuration.theme, alignment: alignment)

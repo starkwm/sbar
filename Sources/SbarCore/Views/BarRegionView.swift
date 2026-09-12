@@ -6,24 +6,24 @@ struct BarRegionView: View {
   let alignment: Alignment
 
   var body: some View {
+    let displayed = items.filter { providers.isVisible($0, displayUUID: barDisplayUUID) }
     GeometryReader { geometry in
-      let enabled = items.filter(\.enabled)
       let spacing = theme?.itemSpacing ?? 10
       let visible = OverflowSelection.visibleItemIDs(
-        items: enabled,
+        items: displayed,
         widths: widths,
         available: geometry.size.width,
         spacing: spacing
       )
 
       HStack(spacing: spacing) {
-        ForEach(enabled.filter { visible.contains($0.id) }) { item in
+        ForEach(displayed.filter { visible.contains($0.id) }) { item in
           InteractiveItemView(item: item, defaultStyle: theme?.itemStyle)
             .lineLimit(1)
             .minimumScaleFactor(0.8)
         }
 
-        if visible.count < enabled.count {
+        if visible.count < displayed.count {
           Button {
             showingOverflow.toggle()
           } label: {
@@ -35,7 +35,7 @@ struct BarRegionView: View {
           .accessibilityLabel("More bar items")
           .popover(isPresented: $showingOverflow) {
             VStack(alignment: .leading, spacing: 8) {
-              ForEach(enabled.filter { !visible.contains($0.id) }) { item in
+              ForEach(displayed.filter { !visible.contains($0.id) }) { item in
                 InteractiveItemView(item: item, defaultStyle: theme?.itemStyle)
               }
             }
@@ -49,7 +49,7 @@ struct BarRegionView: View {
     }
     .background {
       HStack(spacing: 0) {
-        ForEach(items.filter(\.enabled)) { item in
+        ForEach(displayed) { item in
           InteractiveItemView(item: item, defaultStyle: theme?.itemStyle, tracksHitRegion: false)
             .fixedSize()
             .background(
@@ -67,6 +67,9 @@ struct BarRegionView: View {
     .onPreferenceChange(ItemWidthsKey.self) { widths = $0 }
     .clipped()
   }
+
+  @Environment(\.barDisplayUUID) private var barDisplayUUID
+  @Environment(ProviderRuntime.self) private var providers
 
   @State private var widths: [String: CGFloat] = [:]
   @State private var showingOverflow = false
