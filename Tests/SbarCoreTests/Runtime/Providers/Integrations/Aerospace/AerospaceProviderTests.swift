@@ -23,9 +23,9 @@ struct AerospaceProviderTests {
     var item = Item(
       id: "aero",
       type: .aerospace,
+      text:
+        "{{#workspaces}}{{#name=Code}}Dev{{/name}}{{^name=Code}}{{name}}{{/name}}{{/workspaces}}",
       aerospace: AerospaceConfiguration(
-        format: .list,
-        labels: ["Code": "Dev"],
         tints: AerospaceTints(focused: "#FFFFFF", visible: "#00FF00", inactive: "#888888")
       )
     )
@@ -34,10 +34,10 @@ struct AerospaceProviderTests {
     #expect(result.segments.map(\.emphasized) == [true, false, false])
     #expect(result.segments[2].tint == "#00FF00")
     item.aerospace?.scope = .display
-    item.aerospace?.format = .current
+    item.text = nil
     #expect(state.presentation(for: item, displayUUID: "b").text == "Chat")
     #expect(state.presentation(for: item, displayUUID: "missing").text == "Aerospace unavailable")
-    item.aerospace?.showValue = false
+    item.text = ""
     item.symbol = "star"
     #expect(state.presentation(for: item, displayUUID: "A").text.isEmpty)
     #expect(state.presentation(for: item, displayUUID: "A").symbol == "star")
@@ -68,12 +68,14 @@ struct AerospaceProviderTests {
     let item = Item(
       id: "aero",
       type: .aerospace,
-      aerospace: AerospaceConfiguration(scope: .display, format: .list, labels: ["Code": "Dev"])
+      text:
+        "{{#workspaces}}{{#name=Code}}Dev{{/name}}{{^name=Code}}{{name}}{{/name}}{{/workspaces}}",
+      aerospace: AerospaceConfiguration(scope: .display)
     )
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
     for json in [
-      #"{"scope":"bad"}"#, #"{"format":"currentTotal"}"#, #"{"labels":{" ":"bad"}}"#,
-      #"{"tints":{"focused":"red"}}"#, #"{"symbols":{"available":{"glyph":"A"}}}"#,
+      #"{"scope":"bad"}"#, #"{"tints":{"focused":"red"}}"#,
+      #"{"symbols":{"available":{"glyph":"A"}}}"#,
     ] {
       #expect(throws: (any Error).self) {
         try JSONDecoder().decode(AerospaceConfiguration.self, from: Data(json.utf8)).validate(

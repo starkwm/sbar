@@ -30,6 +30,7 @@
       {
         "id": "spaces",
         "type": "spaces",
+        "text": "{{#workspaces}}{{name}}{{#separator}} · {{/separator}}{{/workspaces}}{{^workspaces}}{{value}}{{/workspaces}}",
         "priority": 40,
         "style": {
           "tint": "#7AA2F7",
@@ -37,7 +38,11 @@
         },
         "spaces": {
           "scope": "display",
-          "format": "current"
+          "tints": {
+            "active": "#7AA2F7",
+            "inactive": "#565F89",
+            "unavailable": "#F7768E"
+          }
         }
       },
       {

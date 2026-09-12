@@ -33,42 +33,50 @@ struct AerospaceState: Equatable, Sendable {
       : workspaces
     let current = rows.first { settings.scope == .display ? $0.visible : $0.focused }
     guard unavailable == nil, let current else {
-      return WidgetPresentation(
-        text: settings.showValue == false ? "" : unavailable ?? "Aerospace unavailable",
-        symbol: settings.showSymbol == false
-          ? nil
-          : item.symbol ?? settings.symbols?.resolve(settings.symbols?.unavailable)
-            ?? "questionmark",
-        tint: settings.tints?.unavailable,
-        accessibilityLabel: unavailable ?? "Aerospace unavailable"
+      return WorkspaceText().apply(
+        to: WidgetPresentation(
+          text: unavailable ?? "Aerospace unavailable",
+          symbol: settings.showSymbol == false
+            ? nil
+            : item.symbol ?? settings.symbols?.resolve(settings.symbols?.unavailable)
+              ?? "questionmark",
+          tint: settings.tints?.unavailable,
+          accessibilityLabel: unavailable ?? "Aerospace unavailable"
+        ),
+        for: item
       )
     }
-    let label = settings.labels?[current.name] ?? current.name
-    let segments =
-      settings.format == .list && settings.showValue != false
-      ? rows.map { row in
-        WidgetSegment(
-          text: settings.labels?[row.name] ?? row.name,
-          symbol: nil,
-          tint: row.focused
-            ? settings.tints?.focused
-            : row.visible ? settings.tints?.visible : settings.tints?.inactive,
-          emphasized: row.focused
-        )
-      } : []
-    return WidgetPresentation(
-      text: settings.showValue == false ? "" : label,
-      symbol: settings.showSymbol == false
-        ? nil
-        : item.symbol ?? settings.symbols?.resolve(settings.symbols?.available)
-          ?? "rectangle.3.group",
-      tint: settings.format == .list
-        ? nil : current.focused ? settings.tints?.focused : settings.tints?.visible,
-      segments: segments,
-      accessibilityLabel: "Workspace \(label)\(current.focused ? ", focused" : ", visible"). "
-        + rows.map { "\($0.name)\($0.focused ? " focused" : $0.visible ? " visible" : "")" }.joined(
-          separator: ", "
-        )
+    let label = current.name
+    let selected = rows
+    func entry(_ row: AerospaceWorkspace) -> WorkspaceText.Entry {
+      WorkspaceText.Entry(
+        name: row.name,
+        index: rows.firstIndex(where: { $0.name == row.name }).map { $0 + 1 },
+        identifier: row.name,
+        active: row.name == current.name,
+        focused: row.focused,
+        visible: row.visible,
+        tint: row.focused
+          ? settings.tints?.focused
+          : row.visible ? settings.tints?.visible : settings.tints?.inactive,
+        emphasized: row.focused
+      )
+    }
+    return WorkspaceText(current: entry(current), entries: selected.map(entry)).apply(
+      to: WidgetPresentation(
+        text: label,
+        symbol: settings.showSymbol == false
+          ? nil
+          : item.symbol ?? settings.symbols?.resolve(settings.symbols?.available)
+            ?? "rectangle.3.group",
+        tint: current.focused ? settings.tints?.focused : settings.tints?.visible,
+        accessibilityLabel: "Workspace \(label)\(current.focused ? ", focused" : ", visible"). "
+          + rows.map { "\($0.name)\($0.focused ? " focused" : $0.visible ? " visible" : "")" }
+          .joined(
+            separator: ", "
+          )
+      ),
+      for: item
     )
   }
 }

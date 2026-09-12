@@ -32,6 +32,15 @@ struct RemovedTextSettingsTests {
       ("command", "showValue"),
       ("plugin", "showValue"),
       ("text", "label"),
+      ("spaces", "format"),
+      ("spaces", "showValue"),
+      ("spaces", "labels"),
+      ("aerospace", "format"),
+      ("aerospace", "showValue"),
+      ("aerospace", "labels"),
+      ("yabai", "format"),
+      ("yabai", "showValue"),
+
     ]
   )
   func migration(provider: String, field: String) throws {

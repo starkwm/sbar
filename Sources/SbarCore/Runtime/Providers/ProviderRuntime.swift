@@ -246,6 +246,7 @@ final class ProviderRuntime {
       presentation = state?.presentation(for: item, displayUUID: displayUUID)
       if item.text != nil { values = state?.textValues(for: item) ?? [:] }
     }
+    if [.spaces, .aerospace, .yabai].contains(item.type), let presentation { return presentation }
     guard let source = item.text else { return presentation }
     let fallback: String
     switch item.type {

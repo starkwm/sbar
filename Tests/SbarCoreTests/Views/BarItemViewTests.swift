@@ -28,8 +28,8 @@ struct BarItemViewTests {
     var item = Item(
       id: "spaces",
       type: .spaces,
+      text: "{{#workspaces}}{{name}}{{^last}} {{/last}}{{/workspaces}}",
       spaces: SpacesConfiguration(
-        format: .list,
         tints: SpacesTints(active: "#FF0000", inactive: "#00FF00"),
         showSymbol: false
       )

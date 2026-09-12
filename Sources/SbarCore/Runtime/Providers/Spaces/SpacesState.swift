@@ -60,45 +60,53 @@ struct SpacesState: Equatable, Sendable {
       active = focusedID
     }
     guard let active, let activeEntry = entries.first(where: { $0.id == active }) else {
-      return WidgetPresentation(
-        text: settings.showValue == false ? "" : "Spaces unavailable",
-        symbol: settings.showSymbol == false
-          ? nil
-          : item.symbol ?? settings.symbols?.resolve(settings.symbols?.unavailable)
-            ?? "questionmark",
-        tint: settings.tints?.unavailable,
-        accessibilityLabel: "Spaces unavailable"
+      return WorkspaceText().apply(
+        to: WidgetPresentation(
+          text: "Spaces unavailable",
+          symbol: settings.showSymbol == false
+            ? nil
+            : item.symbol ?? settings.symbols?.resolve(settings.symbols?.unavailable)
+              ?? "questionmark",
+          tint: settings.tints?.unavailable,
+          accessibilityLabel: "Spaces unavailable"
+        ),
+        for: item
       )
     }
     let visible = entries.filter { settings.includeFullscreen != false || !$0.fullscreen }
     let index = visible.firstIndex { $0.id == active }
-    let label = index.map { settings.labels?[String($0 + 1)] ?? String($0 + 1) } ?? "Fullscreen"
-    let value =
-      settings.format == .currentTotal && index != nil ? "\(label) / \(visible.count)" : label
-    let segments =
-      settings.format == .list && settings.showValue != false
-      ? visible.enumerated().map { offset, entry in
-        WidgetSegment(
-          text: settings.labels?[String(offset + 1)] ?? String(offset + 1),
-          symbol: nil,
-          tint: entry.id == active ? settings.tints?.active : settings.tints?.inactive,
-          emphasized: entry.id == active
-        )
-      } : []
+    let label = index.map { String($0 + 1) } ?? "Fullscreen"
+    func entry(_ space: SpaceEntry, index: Int?) -> WorkspaceText.Entry {
+      WorkspaceText.Entry(
+        name: index.map { String($0 + 1) } ?? "Fullscreen",
+        index: index.map { $0 + 1 },
+        identifier: String(space.id),
+        active: space.id == active,
+        focused: space.id == focusedID,
+        visible: displays.contains { $0.activeID == space.id },
+        fullscreen: space.fullscreen,
+        tint: space.id == active ? settings.tints?.active : settings.tints?.inactive,
+        emphasized: space.id == active
+      )
+    }
+    let workspaceText = WorkspaceText(
+      current: entry(activeEntry, index: index),
+      entries: visible.enumerated().map { entry($0.element, index: $0.offset) }
+    )
     let accessible =
       index.map { "Space \(label), \($0 + 1) of \(visible.count)" }
       ?? (activeEntry.fullscreen ? "Fullscreen Space active" : "Spaces unavailable")
-    return WidgetPresentation(
-      text: settings.showValue == false ? "" : value,
-      symbol: settings.showSymbol == false
-        ? nil
-        : item.symbol ?? settings.symbols?.resolve(settings.symbols?.available)
-          ?? "rectangle.3.group",
-      tint: settings.format == .list ? nil : settings.tints?.active,
-      segments: segments,
-      accessibilityLabel: segments.isEmpty
-        ? accessible
-        : "Spaces \(segments.map(\.text).joined(separator: ", ")). \(accessible)"
+    return workspaceText.apply(
+      to: WidgetPresentation(
+        text: label,
+        symbol: settings.showSymbol == false
+          ? nil
+          : item.symbol ?? settings.symbols?.resolve(settings.symbols?.available)
+            ?? "rectangle.3.group",
+        tint: settings.tints?.active,
+        accessibilityLabel: accessible
+      ),
+      for: item
     )
   }
 }

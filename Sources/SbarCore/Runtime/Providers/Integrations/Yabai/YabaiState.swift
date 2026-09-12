@@ -46,43 +46,52 @@ struct YabaiState: Equatable, Sendable {
       : workspaces
     let current = rows.first { settings.scope == .display ? $0.visible : $0.focused }
     guard unavailable == nil, let current else {
-      return WidgetPresentation(
-        text: settings.showValue == false ? "" : unavailable ?? "Yabai unavailable",
-        symbol: settings.showSymbol == false
-          ? nil
-          : item.symbol ?? settings.symbols?.resolve(settings.symbols?.unavailable)
-            ?? "questionmark",
-        tint: settings.tints?.unavailable,
-        accessibilityLabel: unavailable ?? "Yabai unavailable"
+      return WorkspaceText().apply(
+        to: WidgetPresentation(
+          text: unavailable ?? "Yabai unavailable",
+          symbol: settings.showSymbol == false
+            ? nil
+            : item.symbol ?? settings.symbols?.resolve(settings.symbols?.unavailable)
+              ?? "questionmark",
+          tint: settings.tints?.unavailable,
+          accessibilityLabel: unavailable ?? "Yabai unavailable"
+        ),
+        for: item
       )
     }
     let label =
       settings.includeFullscreen == false && current.fullscreen ? "Fullscreen" : current.name
-    let segments =
-      settings.format == .list && settings.showValue != false
-      ? rows.filter { settings.includeFullscreen != false || !$0.fullscreen }.map { row in
-        WidgetSegment(
-          text: row.name,
-          symbol: nil,
-          tint: row.focused
-            ? settings.tints?.focused
-            : row.visible ? settings.tints?.visible : settings.tints?.inactive,
-          emphasized: row.focused
-        )
-      } : []
-    return WidgetPresentation(
-      text: settings.showValue == false ? "" : label,
-      symbol: settings.showSymbol == false
-        ? nil
-        : item.symbol ?? settings.symbols?.resolve(settings.symbols?.available)
-          ?? "rectangle.3.group",
-      tint: settings.format == .list
-        ? nil : current.focused ? settings.tints?.focused : settings.tints?.visible,
-      segments: segments,
-      accessibilityLabel: "Workspace \(label)\(current.focused ? ", focused" : ", visible"). "
-        + rows.map { "\($0.name)\($0.focused ? " focused" : $0.visible ? " visible" : "")" }.joined(
-          separator: ", "
-        )
+    let selected = rows.filter { settings.includeFullscreen != false || !$0.fullscreen }
+    func entry(_ row: YabaiWorkspace) -> WorkspaceText.Entry {
+      WorkspaceText.Entry(
+        name: row.name,
+        index: row.index,
+        identifier: String(row.id),
+        active: row.id == current.id,
+        focused: row.focused,
+        visible: row.visible,
+        fullscreen: row.fullscreen,
+        tint: row.focused
+          ? settings.tints?.focused
+          : row.visible ? settings.tints?.visible : settings.tints?.inactive,
+        emphasized: row.focused
+      )
+    }
+    return WorkspaceText(current: entry(current), entries: selected.map(entry)).apply(
+      to: WidgetPresentation(
+        text: label,
+        symbol: settings.showSymbol == false
+          ? nil
+          : item.symbol ?? settings.symbols?.resolve(settings.symbols?.available)
+            ?? "rectangle.3.group",
+        tint: current.focused ? settings.tints?.focused : settings.tints?.visible,
+        accessibilityLabel: "Workspace \(label)\(current.focused ? ", focused" : ", visible"). "
+          + rows.map { "\($0.name)\($0.focused ? " focused" : $0.visible ? " visible" : "")" }
+          .joined(
+            separator: ", "
+          )
+      ),
+      for: item
     )
   }
 }

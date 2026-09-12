@@ -28,7 +28,9 @@ struct SpacesWidgetTests {
     let focused = Item(
       id: "spaces",
       type: .spaces,
-      spaces: SpacesConfiguration(format: .currentTotal)
+      text:
+        "{{#available}}{{index}} / {{total}}{{/available}}{{^available}}{{value}}{{/available}}",
+      spaces: SpacesConfiguration()
     )
     #expect(snapshot.complete)
     #expect(snapshot.presentation(for: focused).text == "2 / 4")
@@ -51,17 +53,18 @@ struct SpacesWidgetTests {
     var item = Item(
       id: "spaces",
       type: .spaces,
-      spaces: SpacesConfiguration(format: .currentTotal, includeFullscreen: false)
+      text: "{{#index}}{{index}} / {{total}}{{/index}}{{^index}}{{value}}{{/index}}",
+      spaces: SpacesConfiguration(includeFullscreen: false)
     )
     #expect(snapshot.presentation(for: item).text == "Fullscreen")
-    item.spaces?.format = .list
+    item.text = "{{#workspaces}}{{name}}{{/workspaces}}"
     let result = snapshot.presentation(for: item)
     #expect(result.segments.map(\.text) == ["1", "2", "3"])
     #expect(result.segments.allSatisfy { !$0.emphasized })
     #expect(result.accessibilityLabel.contains("Fullscreen Space active"))
     var state = snapshot
     state.focusedID = 40
-    item.spaces?.format = .currentTotal
+    item.text = "{{#index}}{{index}} / {{total}}{{/index}}{{^index}}{{value}}{{/index}}"
     #expect(state.presentation(for: item).text == "3 / 3")
   }
 
@@ -70,9 +73,9 @@ struct SpacesWidgetTests {
     var item = Item(
       id: "spaces",
       type: .spaces,
+      text:
+        "{{#workspaces}}{{#index=1}}Code{{/index}}{{#index=2}}Video{{/index}}{{^index=1}}{{^index=2}}{{name}}{{/index}}{{/index}}{{/workspaces}}",
       spaces: SpacesConfiguration(
-        format: .list,
-        labels: ["1": "Code", "2": "Video"],
         symbols: AvailabilitySymbols(font: "Shared", size: 18, available: .glyph("S")),
         tints: SpacesTints(active: "#00FF00", inactive: "#888888", unavailable: "#FF0000")
       )
@@ -83,10 +86,10 @@ struct SpacesWidgetTests {
     #expect(result.segments[1].emphasized)
     #expect(result.segments[1].tint == "#00FF00")
     #expect(result.segments[0].tint == "#888888")
-    item.spaces?.showValue = false
+    item.text = ""
     #expect(snapshot.presentation(for: item).text.isEmpty)
     #expect(snapshot.presentation(for: item).segments.isEmpty)
-    #expect(snapshot.presentation(for: item).accessibilityLabel.contains("Video"))
+    #expect(snapshot.presentation(for: item).accessibilityLabel.contains("Space 2"))
     item.symbol = "star"
     #expect(snapshot.presentation(for: item).symbol == "star")
     item.spaces?.showSymbol = false
@@ -123,15 +126,14 @@ struct SpacesWidgetTests {
     let item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        ##"{"id":"spaces","type":"spaces","spaces":{"scope":"display","format":"list","labels":{"1":"Code"},"includeFullscreen":false,"showValue":true,"showSymbol":true,"symbols":{"font":"Shared","available":{"glyph":"S"}},"tints":{"active":"#00FF00"}}}"##
+        ##"{"id":"spaces","type":"spaces","spaces":{"scope":"display","includeFullscreen":false,"showSymbol":true,"symbols":{"font":"Shared","available":{"glyph":"S"}},"tints":{"active":"#00FF00"}}}"##
           .utf8
       )
     )
     try item.spaces?.validate(path: "spaces")
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
     for json in [
-      #"{"scope":"invalid"}"#, #"{"format":"invalid"}"#, #"{"labels":{"0":"Bad"}}"#,
-      #"{"labels":{"01":"Bad"}}"#, #"{"tints":{"active":"red"}}"#,
+      #"{"scope":"invalid"}"#, #"{"tints":{"active":"red"}}"#,
       #"{"symbols":{"available":{"glyph":"S"}}}"#,
     ] {
       #expect(throws: (any Error).self) {
@@ -195,7 +197,7 @@ struct SpacesWidgetTests {
     let configuration = try JSONDecoder().decode(
       Configuration.self,
       from: Data(
-        #"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"spaces","type":"spaces","spaces":{"scope":"display","format":"currentTotal"},"refresh":{"mode":"manual"}}]}}"#
+        #"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"spaces","type":"spaces","text":"{{#available}}{{index}} / {{total}}{{/available}}{{^available}}{{value}}{{/available}}","spaces":{"scope":"display"},"refresh":{"mode":"manual"}}]}}"#
           .utf8
       )
     )

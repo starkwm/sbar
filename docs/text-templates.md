@@ -87,9 +87,60 @@ Status follows the same item snapshot and source selection as the other fields.
 Network status respects interface filtering. VPN status is the aggregate status;
 there is no iteration over individual services or devices yet.
 
+## Workspace fields and lists
+
+Spaces, Aerospace, and Yabai support the same workspace fields. Outside a loop,
+they describe the current workspace selected by the provider's `scope`. Inside
+`{{#workspaces}}...{{/workspaces}}`, they describe each workspace in order.
+
+```json
+{
+  "id": "spaces",
+  "type": "spaces",
+  "text": "{{#workspaces}}{{#index=1}}Code{{/index}}{{^index=1}}{{name}}{{/index}}{{#separator}} · {{/separator}}{{/workspaces}}{{^workspaces}}{{value}}{{/workspaces}}",
+  "spaces": { "scope": "display", "includeFullscreen": false }
+}
+```
+
+The example renames the first Space to Code and retains per-Space highlighting.
+Use `{{#separator}} · {{/separator}}` inside the loop for a separator between entries. It uses the provider's inactive tint and is never bold. Without an inactive tint it inherits the item colour. Ordinary literal text inside the loop still inherits that entry's styling. No extra spacing is inserted between template runs.
+`{{^workspaces}}` supplies a fallback when the list is empty or unavailable.
+Workspace loops cannot nest and cannot be compared or inserted as a scalar value.
+
+| Field | Meaning |
+| --- | --- |
+| `name` | Native display name; Spaces uses its one-based position, Yabai falls back to its Mission Control index |
+| `index` | Spaces position after scope/fullscreen filtering; Aerospace position in the scoped query order; Yabai's original Mission Control index |
+| `workspaceId` | Native Space/Yabai ID, or Aerospace workspace name |
+| `total` | Number of entries after scope/fullscreen filtering |
+| `active` | The current workspace for this item's scope |
+| `focused` | The globally focused workspace |
+| `visible` | Currently visible on a display |
+| `fullscreen` | Native fullscreen Space; always false for Aerospace |
+| `available` | Whether the current workspace is available |
+| `first`, `last` | First/last entry in the source list, available inside a loop |
+| `value` | Default current label outside a loop; entry name inside it |
+| `id` | Item ID, including inside a loop |
+
+Spaces highlights the active entry. Aerospace and Yabai emphasise the globally
+focused entry and retain their focused/visible/inactive tints. Hover tint still
+overrides all entry colours. Templates do not add per-workspace click actions.
+
+`includeFullscreen: false` excludes fullscreen entries from loops. A current
+fullscreen Space still has `fullscreen: true`; its default `value` is `Fullscreen`.
+Native Spaces has no filtered index for that excluded entry. Yabai retains its
+native index and name. `available` can be true with an empty filtered list.
+Unavailable snapshots have no current fields, `available: false`, and `total: 0`.
+
+For current/total labels with a fullscreen or unavailable fallback, use
+`{{#index}}{{index}} / {{total}}{{/index}}{{^index}}{{value}}{{/index}}`.
+Scope selection and loops use the same captured snapshot as the provider's default
+presentation. Reordering can change positional indexes; `workspaceId` identifies
+the source workspace instead.
+
 ## Provider fields
 
-Every item with text supports `id` and `value`. `value` is the provider's default label. Retained state label maps, workspace formats, and throughput settings still affect their providers' defaults. For example, a clock can use `"text": "Time {{value}}"` alongside `"format": "HH:mm"`.
+Every item with text supports `id` and `value`. `value` is the provider's default label. Retained VPN/Bluetooth label maps and throughput settings still affect their providers' defaults. For example, a clock can use `"text": "Time {{value}}"` alongside `"format": "HH:mm"`.
 
 | Provider | Additional fields |
 | --- | --- |
@@ -107,6 +158,7 @@ Every item with text supports `id` and `value`. `value` is the provider's defaul
 | `audioDevice` | `name`, `status`, `available` |
 | `frontApplication` | `name` |
 | `command`, `plugin` | `status`, `error` |
+| `spaces`, `aerospace`, `yabai` | See [workspace fields](#workspace-fields-and-lists) |
 
 Percentages are rounded whole numbers without `%`. Memory and disk sizes include units. Throughput rates include units and respect the configured bits/bytes setting. Boolean values render as `true` or `false`. Status fields use the provider's status names; command and plugin statuses are `running`, `success`, and `failure`. Media `source` is `Music` or `Spotify`.
 
@@ -116,9 +168,9 @@ Fields respect the selected media source, audio endpoint, disk path, network int
 
 ## First-pass limits
 
-An explicit `text` replaces the whole textual presentation, including separate segments. A Spaces list loses per-Space highlighting, and throughput loses its per-direction symbols. A top-level item symbol remains available. Existing symbol, colour, and hide rules still apply. Native provider accessibility descriptions remain intact; static and clock labels use the rendered text.
+Workspace loops preserve each entry's colour and emphasis. Throughput templates still replace its separate direction symbols with a single textual presentation. A top-level item symbol remains available. Existing symbol, colour, and hide rules still apply. Native provider accessibility descriptions remain intact; static and clock labels use the rendered text.
 
-Spaces, Aerospace, and Yabai currently expose only `value` and `id`; `value` follows the configured display scope. There is no per-entry template, custom number formatter, arbitrary command JSON field lookup, or literal `{{` escape yet. Date formatting still uses the clock's `format`, `dateStyle`, and `timeStyle` fields. Command and plugin `value` retains the existing truncation and error policy. Templates affect presentation only; CLI values and subscription events retain their existing output.
+There is no custom number formatter, arbitrary command JSON field lookup, or literal `{{` escape yet. Date formatting still uses the clock's `format`, `dateStyle`, and `timeStyle` fields. Command and plugin `value` retains the existing truncation and error policy. Templates affect presentation only; CLI values and subscription events retain their existing output.
 
 Try the [Everyday bar](../examples/everyday/config.json), which uses templates for its labels:
 
@@ -142,6 +194,10 @@ Removed text settings now fail configuration loading with the full field path an
 | VPN/Bluetooth `showName: false` | `"text": "VPN {{status}}"` or `"text": "Bluetooth {{status}}"` |
 | Media `showTitle`, `showArtist`, `separator` | Choose title/artist fields and put the separator inside a conditional section |
 | Command/plugin `showValue: false` | `"text": ""` |
+| Workspace `format: currentTotal` | `{{index}} / {{total}}` with an unavailable/fullscreen fallback |
+| Workspace `format: list` | `{{#workspaces}}{{name}}{{^last}} {{/last}}{{/workspaces}}` |
+| Workspace `showValue: false` | `"text": ""` |
+| Spaces/Aerospace `labels` | Conditions on `index` or `name`, inside the loop for lists |
 | Network/audio-device `labels` | Equality sections such as `{{#status=available}}Ready{{/status}}{{^status=available}}{{value}}{{/status}}` using that provider's states |
 
-Wrap readings in an `available` section when you need an unavailable fallback. Network and audio-device `labels` maps have been removed; use equality sections instead. Bluetooth and VPN maps remain supported because they can format each device or service separately. Workspace formats and label maps, throughput display options, clock formatting, and command output format remain supported. Provider symbols, tints, hide rules, and data-selection settings are unchanged.
+Wrap readings in an `available` section when you need an unavailable fallback. Network and audio-device `labels` maps have been removed; use equality sections instead. Bluetooth and VPN maps remain supported because they can format each device or service separately. Workspace formats and label maps have been replaced by workspace fields and loops. Throughput display options, clock formatting, and command output format remain supported. Provider symbols, tints, hide rules, and data-selection settings are unchanged.

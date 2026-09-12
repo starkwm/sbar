@@ -7,10 +7,22 @@ struct TextTemplate {
     case section(String, equals: String?, inverted: Bool, [Part])
   }
 
+  struct Run {
+    var text: String
+    var entry: Int?
+    var separator = false
+  }
+
   static func fields(for type: ItemType) -> Set<String> {
     let common: Set<String> = ["value", "id"]
     let fields: [String]
     switch type {
+    case .spaces, .aerospace, .yabai:
+      fields = [
+        "workspaces", "separator", "name", "index", "workspaceId", "total", "active", "focused",
+        "visible",
+        "fullscreen", "available", "first", "last",
+      ]
     case .cpu: fields = ["percentage", "available"]
     case .battery: fields = ["percentage", "charging", "pluggedIn", "available", "status"]
     case .volume: fields = ["percentage", "muted", "available", "status"]
@@ -49,6 +61,7 @@ struct TextTemplate {
     if !statuses.isEmpty { values["status"] = statuses }
     for name in fields(for: type).intersection([
       "available", "charging", "pluggedIn", "muted", "playing", "connected",
+      "active", "focused", "visible", "fullscreen", "first", "last",
     ]) {
       values[name] = ["true", "false"]
     }
@@ -68,7 +81,8 @@ struct TextTemplate {
     func fail(_ reason: String) -> ConfigurationError {
       .invalidValue(path: path, reason: reason)
     }
-    func parse(closing: String? = nil, depth: Int = 0) throws -> [Part] {
+    func parse(closing: String? = nil, depth: Int = 0, inCollection: Bool = false) throws -> [Part]
+    {
       guard depth <= 8 else { throw fail("Text sections may nest at most eight levels.") }
       var result: [Part] = []
       while let start = remaining.range(of: "{{") {
@@ -97,6 +111,18 @@ struct TextTemplate {
           components.count == 2
           ? components[1].trimmingCharacters(in: .whitespacesAndNewlines) : nil
         guard fields.contains(name) else { throw fail("Unknown text template value '\(name)'.") }
+        if name == "separator" {
+          guard section, expected == nil, !tag.hasPrefix("^"), inCollection else {
+            throw fail("Use {{#separator}}...{{/separator}} inside a workspace loop.")
+          }
+        }
+        if name == "workspaces" {
+          guard section, expected == nil, !inCollection else {
+            throw fail(
+              "Use workspaces as a section without a comparison. Workspace sections cannot nest."
+            )
+          }
+        }
         if let expected {
           guard !expected.isEmpty else { throw fail("An equality condition needs a value.") }
           if let allowed = allowedValues[name], !allowed.contains(expected) {
@@ -111,7 +137,11 @@ struct TextTemplate {
               name,
               equals: expected,
               inverted: tag.hasPrefix("^"),
-              try parse(closing: name, depth: depth + 1)
+              try parse(
+                closing: name,
+                depth: depth + 1,
+                inCollection: inCollection || name == "workspaces"
+              )
             )
           )
         } else {
@@ -127,18 +157,60 @@ struct TextTemplate {
   }
 
   func render(_ values: [String: String]) -> String {
-    func render(_ parts: [Part]) -> String {
-      parts.map { part in
-        switch part {
-        case .literal(let text): return text
-        case .value(let name): return values[name] ?? ""
-        case .section(let name, let expected, let inverted, let children):
-          let value = values[name] ?? ""
-          let present = expected.map { values[name] == $0 } ?? (!value.isEmpty && value != "false")
-          return present != inverted ? render(children) : ""
-        }
-      }.joined()
+    renderRuns(values).map(\.text).joined()
+  }
+
+  func renderRuns(_ values: [String: String], entries: [[String: String]] = []) -> [Run] {
+    var runs: [Run] = []
+    func append(_ text: String, entry: Int?, separator: Bool) {
+      guard !text.isEmpty else { return }
+      if let last = runs.indices.last, runs[last].entry == entry, runs[last].separator == separator
+      {
+        runs[last].text += text
+      } else {
+        runs.append(Run(text: text, entry: entry, separator: separator))
+      }
     }
-    return render(parts)
+    func render(
+      _ parts: [Part],
+      values: [String: String],
+      entry: Int? = nil,
+      separator: Bool = false
+    ) {
+      for part in parts {
+        switch part {
+        case .literal(let text): append(text, entry: entry, separator: separator)
+        case .value(let name): append(values[name] ?? "", entry: entry, separator: separator)
+        case .section(let name, let expected, let inverted, let children):
+          if name == "separator" {
+            if let entry, entry < entries.count - 1 {
+              render(children, values: values, entry: entry, separator: true)
+            }
+          } else if name == "workspaces" {
+            if inverted {
+              if entries.isEmpty {
+                render(children, values: values, entry: entry, separator: separator)
+              }
+            } else {
+              for (index, fields) in entries.enumerated() {
+                var local = values.merging(fields) { _, value in value }
+                local["first"] = String(index == 0)
+                local["last"] = String(index == entries.count - 1)
+                render(children, values: local, entry: index)
+              }
+            }
+          } else {
+            let value = values[name] ?? ""
+            let present =
+              expected.map { values[name] == $0 } ?? (!value.isEmpty && value != "false")
+            if present != inverted {
+              render(children, values: values, entry: entry, separator: separator)
+            }
+          }
+        }
+      }
+    }
+    render(parts, values: values)
+    return runs
   }
 }

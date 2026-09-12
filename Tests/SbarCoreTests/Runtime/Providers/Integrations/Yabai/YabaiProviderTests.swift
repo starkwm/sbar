@@ -47,8 +47,8 @@ struct YabaiProviderTests {
     var item = Item(
       id: "yabai",
       type: .yabai,
+      text: "{{#workspaces}}{{name}}{{/workspaces}}",
       yabai: YabaiConfiguration(
-        format: .list,
         includeFullscreen: false,
         tints: YabaiTints(focused: "#FFFFFF", visible: "#00FF00", inactive: "#888888")
       )
@@ -58,7 +58,7 @@ struct YabaiProviderTests {
     #expect(result.segments[0].emphasized)
     #expect(result.segments[1].tint == "#00FF00")
     item.yabai?.scope = .display
-    item.yabai?.format = .current
+    item.text = nil
     #expect(state.presentation(for: item, displayUUID: "b").text == "3")
     #expect(state.presentation(for: item, displayUUID: "missing").text == "Yabai unavailable")
     var fullscreen = state
@@ -67,12 +67,12 @@ struct YabaiProviderTests {
     fullscreen.workspaces[1].focused = true
     fullscreen.workspaces[1].visible = true
     #expect(fullscreen.presentation(for: item, displayUUID: "A").text == "Fullscreen")
-    item.yabai?.format = .list
+    item.text = "{{#workspaces}}{{name}}{{/workspaces}}"
     #expect(fullscreen.presentation(for: item, displayUUID: "A").segments.map(\.text) == ["Code"])
     #expect(
       fullscreen.presentation(for: item, displayUUID: "A").segments.allSatisfy { !$0.emphasized }
     )
-    item.yabai?.showValue = false
+    item.text = ""
     item.symbol = "star"
     #expect(state.presentation(for: item, displayUUID: "A").text.isEmpty)
     #expect(state.presentation(for: item, displayUUID: "A").segments.isEmpty)
@@ -113,11 +113,12 @@ struct YabaiProviderTests {
     let item = Item(
       id: "yabai",
       type: .yabai,
-      yabai: YabaiConfiguration(scope: .display, format: .list, includeFullscreen: false)
+      text: "{{#workspaces}}{{name}}{{/workspaces}}",
+      yabai: YabaiConfiguration(scope: .display, includeFullscreen: false)
     )
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
     for json in [
-      #"{"scope":"bad"}"#, #"{"format":"bad"}"#, #"{"tints":{"focused":"red"}}"#,
+      #"{"scope":"bad"}"#, #"{"tints":{"focused":"red"}}"#,
       #"{"symbols":{"available":{"glyph":"Y"}}}"#,
     ] {
       #expect(throws: (any Error).self) {

@@ -22,21 +22,23 @@ struct BarItemView: View {
         }
       } content: {
         if !presentation.segments.isEmpty {
-          ForEach(presentation.segments.indices, id: \.self) { index in
-            let segment = presentation.segments[index]
-            SymbolContentView(position: configuration.symbolPosition) {
-              if let symbol = segment.symbol {
-                ItemSymbolView(
-                  symbol: symbol,
-                  fontSize: symbolFontSize,
-                  fontWeight: symbolFontWeight
-                )
+          HStack(spacing: presentation.segmentSpacing) {
+            ForEach(presentation.segments.indices, id: \.self) { index in
+              let segment = presentation.segments[index]
+              SymbolContentView(position: configuration.symbolPosition) {
+                if let symbol = segment.symbol {
+                  ItemSymbolView(
+                    symbol: symbol,
+                    fontSize: symbolFontSize,
+                    fontWeight: symbolFontWeight
+                  )
+                }
+              } content: {
+                if !segment.text.isEmpty { Text(segment.text).monospacedDigit() }
               }
-            } content: {
-              if !segment.text.isEmpty { Text(segment.text).monospacedDigit() }
+              .foregroundColor(Color(hex: tintOverride ?? segment.tint))
+              .fontWeight(segment.emphasized ? .bold : nil)
             }
-            .foregroundColor(Color(hex: tintOverride ?? segment.tint))
-            .fontWeight(segment.emphasized ? .bold : nil)
           }
         } else if !presentation.text.isEmpty {
           Text(presentation.text).monospacedDigit()

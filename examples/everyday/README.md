@@ -22,7 +22,7 @@ Stop your usual sbar instance first if it would overlap. This example has its ow
 
 | Item | What it does |
 | --- | --- |
-| Spaces | Shows the current Space for that display. Click to open Mission Control. |
+| Spaces | Lists Spaces on each display, with the active Space bold and blue and inactive Spaces muted. |
 | Active app | Follows focus and shows the application's own icon. |
 | Media | Shows Music/Spotify playback after the active app in orange. Only visible while playing. |
 | Date | Opens Calendar. |

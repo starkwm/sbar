@@ -23,6 +23,9 @@ struct RemovedTextSettings {
     "audioDevice": ["showLabel", "labels"],
     "command": ["showValue"],
     "plugin": ["showValue"],
+    "spaces": ["format", "labels", "showValue"],
+    "aerospace": ["format", "labels", "showValue"],
+    "yabai": ["format", "showValue"],
   ]
 
   static func validate(_ decoder: any Decoder) throws {

@@ -2,11 +2,9 @@ import Foundation
 
 struct YabaiConfiguration: Codable, Equatable, Sendable {
   var scope: YabaiScope?
-  var format: YabaiFormat?
   var includeFullscreen: Bool?
   var symbols: AvailabilitySymbols?
   var tints: YabaiTints?
-  var showValue: Bool?
   var showSymbol: Bool?
 
   func validate(path: String) throws {
@@ -17,10 +15,6 @@ struct YabaiConfiguration: Codable, Equatable, Sendable {
 
 enum YabaiScope: String, Codable, Sendable {
   case focused, display
-}
-
-enum YabaiFormat: String, Codable, Sendable {
-  case current, list
 }
 
 struct YabaiTints: Codable, Equatable, Sendable {

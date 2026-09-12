@@ -176,6 +176,7 @@ struct WidgetPresentation: Equatable {
   var hidden = false
   var segments: [WidgetSegment] = []
   var accessibilityLabel: String
+  var segmentSpacing: Double = 4
 }
 
 struct WidgetSegment: Equatable {

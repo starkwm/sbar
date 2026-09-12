@@ -241,7 +241,7 @@
             "string",
             "null"
           ],
-          "description": "Label template. Supports {{value}}, provider fields, {{#field}} / {{^field}} sections, and equality conditions such as {{#status=connected}} / {{^status=connected}}, closed by {{/status}}. Empty text hides the label."
+          "description": "Label template. Supports {{value}}, provider fields, {{#field}} / {{^field}} sections, and equality conditions such as {{#status=connected}} / {{^status=connected}}, closed by {{/status}}. Workspace providers also support {{#workspaces}}...{{/workspaces}} lists with per-entry styling. Empty text hides the label."
         },
         "symbol": {
           "$ref": "#/$defs/symbol"
@@ -1834,27 +1834,6 @@
           ],
           "default": "focused"
         },
-        "format": {
-          "enum": [
-            "current",
-            "currentTotal",
-            "list",
-            null
-          ],
-          "default": "current"
-        },
-        "labels": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "propertyNames": {
-            "pattern": "^[1-9][0-9]*$"
-          },
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
         "symbols": {
           "$ref": "#/$defs/spacesSymbols"
         },
@@ -1862,13 +1841,6 @@
           "$ref": "#/$defs/spacesTints"
         },
         "includeFullscreen": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
-        },
-        "showValue": {
           "type": [
             "boolean",
             "null"
@@ -1985,38 +1957,11 @@
           ],
           "default": "focused"
         },
-        "format": {
-          "enum": [
-            "current",
-            "list",
-            null
-          ],
-          "default": "current"
-        },
-        "labels": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "propertyNames": {
-            "pattern": "\\S"
-          },
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
         "symbols": {
           "$ref": "#/$defs/aerospaceSymbols"
         },
         "tints": {
           "$ref": "#/$defs/aerospaceTints"
-        },
-        "showValue": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
         },
         "showSymbol": {
           "type": [
@@ -2135,26 +2080,11 @@
           ],
           "default": "focused"
         },
-        "format": {
-          "enum": [
-            "current",
-            "list",
-            null
-          ],
-          "default": "current"
-        },
         "symbols": {
           "$ref": "#/$defs/yabaiSymbols"
         },
         "tints": {
           "$ref": "#/$defs/yabaiTints"
-        },
-        "showValue": {
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": true
         },
         "showSymbol": {
           "type": [
