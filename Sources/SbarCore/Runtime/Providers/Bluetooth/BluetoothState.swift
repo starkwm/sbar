@@ -23,7 +23,19 @@ struct BluetoothState: Equatable, Sendable {
         ? nil : item.symbol ?? settings.symbols?.resolve(status) ?? status.defaultSymbol,
       tint: settings.tints?[status.rawValue],
       hidden: (status == .off || status == .on) && settings.hideWhenDisconnected == true,
-      accessibilityLabel: details
+      accessibilityLabel: details,
+      tooltipValues: [
+        "names": status == .connected
+          ? devices.sorted { $0.name == $1.name ? $0.id < $1.id : $0.name < $1.name }.map {
+            device in
+            let name = device.name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+            return name.isEmpty ? "Unnamed device" : name
+          }.joined(separator: ", ") : "",
+        "count": status == .connected
+          ? String(devices.count)
+          : status == .on || status == .off ? "0" : "",
+        "status": label,
+      ]
     )
   }
 }

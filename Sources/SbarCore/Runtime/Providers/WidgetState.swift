@@ -88,7 +88,11 @@ enum WidgetState: Equatable, Sendable {
         symbol: settings.showSymbol == false ? nil : symbol,
         tint: settings.tints?[state.rawValue],
         hidden: state == .offline && settings.hideWhenDisconnected == true,
-        accessibilityLabel: label
+        accessibilityLabel: label,
+        tooltipValues: [
+          "interface": (settings.interface ?? connection).rawValue,
+          "status": state == .offline ? "disconnected" : "connected",
+        ]
       )
     case .battery(let percentage, let charging, let pluggedIn):
       let settings = item.battery ?? BatteryConfiguration()
@@ -123,7 +127,13 @@ enum WidgetState: Equatable, Sendable {
         text: settings.showPercentage == false ? "" : percentage.map { "\($0)%" } ?? "AC power",
         symbol: settings.showSymbol == false ? nil : item.symbol ?? symbol,
         tint: tint,
-        accessibilityLabel: label
+        accessibilityLabel: label,
+        tooltipValues: [
+          "percentage": percentage.map(String.init) ?? "",
+          "status": percentage == nil
+            ? "AC power"
+            : charging ? "charging" : pluggedIn ? "plugged in" : "on battery",
+        ]
       )
     case .volume(let percentage, let muted, let available):
       let settings = item.volume ?? VolumeConfiguration()
@@ -158,7 +168,15 @@ enum WidgetState: Equatable, Sendable {
         text: settings.showPercentage == false ? "" : text,
         symbol: settings.showSymbol == false ? nil : item.symbol ?? symbol,
         tint: tint,
-        accessibilityLabel: text
+        accessibilityLabel: text,
+        tooltipValues: [
+          "percentage": available ? percentage.map(String.init) ?? "" : "",
+          "status": !available
+            ? "unavailable"
+            : muted
+              ? "muted"
+              : percentage == nil ? "fixed" : "available",
+        ]
       )
     }
   }
@@ -171,6 +189,7 @@ struct WidgetPresentation: Equatable {
   var hidden = false
   var segments: [WidgetSegment] = []
   var accessibilityLabel: String
+  var tooltipValues: [String: String] = [:]
 }
 
 struct WidgetSegment: Equatable {

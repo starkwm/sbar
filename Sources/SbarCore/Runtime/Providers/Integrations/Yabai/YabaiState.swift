@@ -82,7 +82,15 @@ struct YabaiState: Equatable, Sendable {
       accessibilityLabel: "Workspace \(label)\(current.focused ? ", focused" : ", visible"). "
         + rows.map { "\($0.name)\($0.focused ? " focused" : $0.visible ? " visible" : "")" }.joined(
           separator: ", "
-        )
+        ),
+      tooltipValues: [
+        "workspace": label, "index": String(current.index),
+        "workspaces": rows.filter { settings.includeFullscreen != false || !$0.fullscreen }
+          .map(\.name).joined(separator: ", "),
+        "count": String(
+          rows.filter { settings.includeFullscreen != false || !$0.fullscreen }.count
+        ),
+      ]
     )
   }
 }

@@ -135,6 +135,9 @@ struct Configuration: Codable, Equatable, Sendable {
           )
         }
         try item.style?.validate(path: "\(location).style")
+        if let tooltip = item.tooltip {
+          _ = try TooltipTemplate(tooltip, type: item.type, path: "\(location).tooltip")
+        }
 
         guard !item.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
           throw ConfigurationError.invalidItemIdentifier(
@@ -255,7 +258,8 @@ struct ItemSections: Codable, Equatable, Sendable {
 
 struct Item: Codable, Equatable, Identifiable, Sendable {
   private enum CodingKeys: String, CodingKey {
-    case enabled, format, dateStyle, timeStyle, id, label, priority, style, symbol, symbolPosition,
+    case enabled, format, dateStyle, timeStyle, id, label, tooltip, priority, style, symbol,
+      symbolPosition,
       type,
       primaryAction, secondaryAction,
       popup, command, children, plugin, refresh, yabai, aerospace, battery, cpu, disk, media,
@@ -275,6 +279,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var enabled: Bool = true
 
   var label: String?
+  var tooltip: String?
   var symbol: ItemSymbol?
   var symbolPosition: ItemSymbolPosition = .left
   var format: String?
@@ -316,6 +321,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     type: ItemType,
     enabled: Bool = true,
     label: String? = nil,
+    tooltip: String? = nil,
     symbol: ItemSymbol? = nil,
     symbolPosition: ItemSymbolPosition = .left,
     format: String? = nil,
@@ -351,6 +357,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.enabled = enabled
 
     self.label = label
+    self.tooltip = tooltip
     self.symbol = symbol
     self.symbolPosition = symbolPosition
     self.format = format
@@ -392,6 +399,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
 
     label = try container.decodeIfPresent(String.self, forKey: .label)
+    tooltip = try container.decodeIfPresent(String.self, forKey: .tooltip)
     symbol = try container.decodeIfPresent(ItemSymbol.self, forKey: .symbol)
     symbolPosition =
       try container.decodeIfPresent(ItemSymbolPosition.self, forKey: .symbolPosition)

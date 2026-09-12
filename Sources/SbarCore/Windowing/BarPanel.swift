@@ -27,6 +27,7 @@ final class BarPanel: NSPanel {
     isReleasedWhenClosed = false
     isRestorable = false
     acceptsMouseMovedEvents = true
+    allowsToolTipsWhenApplicationIsInactive = true
     level = .statusBar
   }
 

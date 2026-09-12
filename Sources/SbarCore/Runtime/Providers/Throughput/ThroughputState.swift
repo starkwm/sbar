@@ -61,7 +61,8 @@ struct ThroughputState: Equatable, Sendable {
         symbol: showSymbol
           ? item.symbol ?? settings.symbols?.resolve(settings.symbols?.unavailable)
             ?? "questionmark" : nil,
-        accessibilityLabel: "Network throughput unavailable"
+        accessibilityLabel: "Network throughput unavailable",
+        tooltipValues: ["status": "unavailable"]
       )
     }
     var segments: [WidgetSegment] = []
@@ -94,7 +95,12 @@ struct ThroughputState: Equatable, Sendable {
       text: segments.map(\.text).filter { !$0.isEmpty }.joined(separator: " "),
       symbol: showSymbol ? item.symbol : nil,
       segments: segments,
-      accessibilityLabel: labels.isEmpty ? "Network throughput" : labels.joined(separator: ", ")
+      accessibilityLabel: labels.isEmpty ? "Network throughput" : labels.joined(separator: ", "),
+      tooltipValues: [
+        "download": Self.format(rate.download, unit: settings.unit ?? .bytes),
+        "upload": Self.format(rate.upload, unit: settings.unit ?? .bytes),
+        "status": "available",
+      ]
     )
   }
 }

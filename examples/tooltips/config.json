@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "bar": {
+    "position": "bottom",
+    "displays": "main",
+    "mousePassThrough": true,
+    "margin": {"bottom": 12, "left": 24, "right": 24}
+  },
+  "items": {
+    "left": [
+      {
+        "id": "tooltip-demo",
+        "type": "text",
+        "label": "Hover over an item",
+        "tooltip": "Tooltips support multiple lines.\nBraces can be escaped: {{example}}",
+        "popup": "Click actions and tooltips work on the same item."
+      },
+      {
+        "id": "silent",
+        "type": "text",
+        "label": "No tooltip",
+        "tooltip": ""
+      }
+    ],
+    "right": [
+      {
+        "id": "cpu",
+        "type": "cpu",
+        "cpu": {"showLabel": false, "smoothingSamples": 3},
+        "tooltip": "CPU usage: {percentage}%\n{status}"
+      },
+      {
+        "id": "memory",
+        "type": "memory",
+        "memory": {"format": "percentage", "showLabel": false},
+        "tooltip": "Memory: {used} / {total}\nUsage: {percentage}%"
+      },
+      {
+        "id": "disk",
+        "type": "disk",
+        "disk": {"path": "/", "showLabel": false, "showValue": false},
+        "tooltip": "{path}\n{free} free / {total}\n{percentage}% used"
+      },
+      {
+        "id": "battery",
+        "type": "battery",
+        "battery": {"showPercentage": false},
+        "tooltip": "{summary}"
+      }
+    ]
+  }
+}

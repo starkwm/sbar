@@ -64,7 +64,13 @@ struct DiskState: Equatable, Sendable {
       tint: tint,
       accessibilityLabel: available
         ? "Disk \(settings.resolvedPath), \(value(format: .free)) free, \(value(format: .total)) total, \(value(format: .percentage)) used"
-        : "Disk \(settings.resolvedPath) unavailable"
+        : "Disk \(settings.resolvedPath) unavailable",
+      tooltipValues: [
+        "free": value(format: .free), "used": value(format: .used), "total": value(format: .total),
+        "percentage": available ? String(value(format: .percentage).dropLast()) : "",
+        "path": settings.resolvedPath,
+        "status": available ? "available" : "unavailable",
+      ]
     )
   }
 }

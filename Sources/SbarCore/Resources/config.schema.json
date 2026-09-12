@@ -239,6 +239,13 @@
             "null"
           ]
         },
+        "tooltip": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Native tooltip text with provider-specific {tokens}. Common tokens: {id}, {label}, {text}, {summary}. Use {{ and }} for literal braces. Missing readings display an em dash. Empty or whitespace-only text disables the tooltip; omitted or null uses label or id. Token names are checked by sbar validate. See docs/tooltips.md for provider tokens."
+        },
         "symbol": {
           "$ref": "#/$defs/symbol"
         },

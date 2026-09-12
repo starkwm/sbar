@@ -40,7 +40,15 @@ struct MemoryState: Equatable, Sendable {
           ?? (available ? "memorychip" : "questionmark"),
       accessibilityLabel: available
         ? "Memory usage \(value(format: .usedTotal)), \(value(format: .percentage))"
-        : "Memory usage unavailable"
+        : "Memory usage unavailable",
+      tooltipValues: [
+        "used": value(format: .used),
+        "total": available
+          ? ByteCountFormatter.string(fromByteCount: Int64(totalBytes ?? 0), countStyle: .memory)
+          : "",
+        "percentage": available ? String(value(format: .percentage).dropLast()) : "",
+        "status": available ? "available" : "unavailable",
+      ]
     )
   }
 }

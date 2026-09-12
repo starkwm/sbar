@@ -25,7 +25,11 @@ struct AudioDeviceState: Equatable, Sendable {
           ?? endpoint.status.defaultSymbol(for: kind),
       tint: settings.tints?[endpoint.status.rawValue],
       hidden: endpoint.status == .disconnected && settings.hideWhenDisconnected == true,
-      accessibilityLabel: endpoint.status == .available ? "\(kind.label): \(label)" : label
+      accessibilityLabel: endpoint.status == .available ? "\(kind.label): \(label)" : label,
+      tooltipValues: [
+        "name": endpoint.status == .available ? (name.isEmpty ? "Unnamed device" : name) : "",
+        "device": kind.rawValue, "status": endpoint.status.rawValue,
+      ]
     )
   }
 }

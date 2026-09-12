@@ -62,7 +62,11 @@ struct MediaState: Equatable, Sendable {
       hidden: status == .paused && settings.hideWhenPaused == true
         || status == .stopped && settings.hideWhenStopped == true
         || status != .playing && settings.hideWhenNotPlaying == true,
-      accessibilityLabel: label
+      accessibilityLabel: label,
+      tooltipValues: [
+        "title": player?.title ?? "", "artist": player?.artist ?? "",
+        "source": player?.source.name ?? "", "status": status.rawValue,
+      ]
     )
   }
 }

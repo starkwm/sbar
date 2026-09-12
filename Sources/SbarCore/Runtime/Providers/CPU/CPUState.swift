@@ -42,7 +42,11 @@ struct CPUState: Equatable, Sendable {
         : item.symbol ?? settings.symbols?.resolve(selected)
           ?? (percentage == nil ? "questionmark" : "cpu"),
       tint: tint,
-      accessibilityLabel: percentage.map { "CPU usage \($0) percent" } ?? "CPU usage unavailable"
+      accessibilityLabel: percentage.map { "CPU usage \($0) percent" } ?? "CPU usage unavailable",
+      tooltipValues: [
+        "percentage": percentage.map(String.init) ?? "",
+        "status": percentage == nil ? "unavailable" : "available",
+      ]
     )
   }
 }

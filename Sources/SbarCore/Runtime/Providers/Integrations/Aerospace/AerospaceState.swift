@@ -68,7 +68,12 @@ struct AerospaceState: Equatable, Sendable {
       accessibilityLabel: "Workspace \(label)\(current.focused ? ", focused" : ", visible"). "
         + rows.map { "\($0.name)\($0.focused ? " focused" : $0.visible ? " visible" : "")" }.joined(
           separator: ", "
-        )
+        ),
+      tooltipValues: [
+        "workspace": label,
+        "workspaces": rows.map { settings.labels?[$0.name] ?? $0.name }.joined(separator: ", "),
+        "count": String(rows.count),
+      ]
     )
   }
 }

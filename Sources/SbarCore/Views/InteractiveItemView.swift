@@ -87,7 +87,9 @@ struct InteractiveItemView: View {
       .frame(minWidth: 120, maxWidth: 480)
       .focusEffectDisabled()
     }
-    .help(item.label ?? item.id)
+    .modifier(
+      ItemTooltipModifier(text: providers.tooltip(for: item, displayUUID: barDisplayUUID))
+    )
   }
 
   @Environment(ActionRunner.self) private var actions

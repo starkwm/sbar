@@ -1,7 +1,7 @@
 import Foundation
 
 struct CommandState: Equatable, Sendable {
-  enum Status: Sendable { case running, success, failure }
+  enum Status: String, Sendable { case running, success, failure }
 
   static func decode(_ output: String, configuration: ShellCommand) throws -> CommandValue {
     guard configuration.format == .json else { return CommandValue(text: output) }
@@ -53,7 +53,8 @@ struct CommandState: Equatable, Sendable {
         ? nil : item.symbol ?? settings?.symbols?.resolve(symbol) ?? value?.symbol,
       tint: tint ?? value?.tint,
       hidden: (status == .failure && settings?.onError == .hide) || value?.hidden == true,
-      accessibilityLabel: displayed
+      accessibilityLabel: displayed,
+      tooltipValues: ["output": value?.text ?? "", "status": status.rawValue, "error": error ?? ""]
     )
   }
 }

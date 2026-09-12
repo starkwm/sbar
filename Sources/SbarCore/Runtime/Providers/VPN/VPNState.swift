@@ -34,7 +34,16 @@ struct VPNState: Equatable, Sendable {
         ? nil : item.symbol ?? settings.symbols?.resolve(status) ?? status.defaultSymbol,
       tint: settings.tints?[status.rawValue],
       hidden: status == .disconnected && settings.hideWhenDisconnected == true,
-      accessibilityLabel: details
+      accessibilityLabel: details,
+      tooltipValues: [
+        "names": available
+          ? active.map { service in
+            let name = service.name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+            return name.isEmpty ? "VPN" : name
+          }.joined(separator: ", ") : "",
+        "count": available ? String(active.count) : "",
+        "status": label,
+      ]
     )
   }
 }
