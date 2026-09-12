@@ -107,8 +107,7 @@ the last successful output in the tooltip; other error behaviors discard it.
 Output is subject to the provider's existing capture limits. This version does
 not add custom JSON fields or expressions to templates.
 
-## Try it
+## Native behavior
 
-See the [tooltip example](../examples/tooltips/README.md) for a runnable config.
 Native macOS tooltips control appearance and hover timing. Item actions and
 click-to-open popups continue to work independently of tooltip text.

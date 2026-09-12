@@ -33,5 +33,4 @@ Each page covers the provider's configuration, defaults, refresh behavior, and l
 
 - [Everyday bar](../examples/everyday/README.md)
 - [Floating bar](../examples/floating/README.md)
-- [Tooltip templates](../examples/tooltips/README.md)
 - [Configuration JSON Schema](../Sources/SbarCore/Resources/config.schema.json)
