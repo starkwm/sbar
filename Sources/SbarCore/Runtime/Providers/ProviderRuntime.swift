@@ -98,11 +98,6 @@ final class ProviderRuntime {
         ($0.id, ($0.disk ?? DiskConfiguration()).resolvedPath)
       }
     )
-    for (id, path) in disks where diskItems[id] != path {
-      widgetSnapshots.removeValue(forKey: id)
-      itemSnapshots.removeValue(forKey: id)
-      lastRefresh.removeValue(forKey: id)
-    }
     diskItems = disks
     diskStates = diskStates.filter { disks.values.contains($0.key) }
     configureRefresh(configuration.items.active)
@@ -372,29 +367,35 @@ final class ProviderRuntime {
 
   private func configureRefresh(_ items: [Item]) {
     let requested = items.filter { $0.refresh != nil && $0.type != .command && $0.type != .plugin }
-    let same =
-      requested.count == refreshItems.count
-      && requested.allSatisfy { item in
-        refreshItems.contains {
-          $0.id == item.id && $0.type == item.type && $0.refresh == item.refresh
-            && $0.disk?.path == item.disk?.path
-        }
-      }
-    guard !same else {
+    let previous = Dictionary(uniqueKeysWithValues: refreshItems.map { ($0.id, $0) })
+    let unchanged = Set(
+      requested.filter { item in
+        guard let old = previous[item.id] else { return false }
+        return old.type == item.type && old.refresh == item.refresh
+          && old.disk?.path == item.disk?.path
+      }.map(\.id)
+    )
+    if unchanged.count == requested.count && requested.count == refreshItems.count {
       refreshItems = requested
       return
     }
 
-    refreshTask?.cancel()
     refreshItems = requested
-    itemSnapshots = [:]
-    widgetSnapshots = [:]
-    applicationSnapshots = [:]
-    itemDates = [:]
-    lastRefresh = [:]
-    for item in requested { capture(item) }
+    itemSnapshots = itemSnapshots.filter { unchanged.contains($0.key) }
+    widgetSnapshots = widgetSnapshots.filter { unchanged.contains($0.key) }
+    applicationSnapshots = applicationSnapshots.filter { unchanged.contains($0.key) }
+    itemDates = itemDates.filter { unchanged.contains($0.key) }
+    lastRefresh = lastRefresh.filter { unchanged.contains($0.key) }
+    aerospaceCaptures.formIntersection(unchanged)
+    yabaiCaptures.formIntersection(unchanged)
+    for item in requested where !unchanged.contains(item.id) { capture(item) }
 
-    guard requested.contains(where: { $0.refresh?.mode == .interval }) else { return }
+    guard requested.contains(where: { $0.refresh?.mode == .interval }) else {
+      refreshTask?.cancel()
+      refreshTask = nil
+      return
+    }
+    guard refreshTask == nil else { return }
 
     refreshTask = Task { [weak self] in
       while !Task.isCancelled {
