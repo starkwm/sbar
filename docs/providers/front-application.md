@@ -2,7 +2,7 @@
 
 [Documentation index](../index.md#providers)
 
-A `frontApplication` item shows the active application's name and follows native change notifications.
+A `frontApplication` item shows the name of the application that owns the native menu bar and observes changes to that ownership. Temporary launchers such as Conjuror keep the underlying application's name and icon, including when a launcher hides its window without giving up keyboard focus.
 
 Set `frontApplication.showIcon` to show the active application's native colour icon:
 

@@ -2,25 +2,38 @@ import AppKit
 
 @MainActor
 final class FrontApplicationProvider {
-  private var observer: NSObjectProtocol?
+  typealias ObserveApplication =
+    @MainActor (@escaping @MainActor (NSRunningApplication?) -> Void) -> NSKeyValueObservation
+
+  private let observeApplication: ObserveApplication
+  private var observation: NSKeyValueObservation?
+
+  init(
+    observeApplication: @escaping ObserveApplication = { update in
+      // Accessory launchers can remain frontmost after dismissing their windows.
+      // Menu ownership continues to identify the underlying application.
+      NSWorkspace.shared.observe(
+        \.menuBarOwningApplication,
+        options: [.initial, .new]
+      ) { _, change in
+        let application = change.newValue ?? nil
+        MainActor.assumeIsolated { update(application) }
+      }
+    }
+  ) {
+    self.observeApplication = observeApplication
+  }
 
   func start(update: @escaping @MainActor (FrontApplicationState) -> Void) {
     stop()
-    update(FrontApplicationState(application: NSWorkspace.shared.frontmostApplication))
-    observer = NSWorkspace.shared.notificationCenter.addObserver(
-      forName: NSWorkspace.didActivateApplicationNotification,
-      object: nil,
-      queue: .main
-    ) { _ in
-      MainActor.assumeIsolated {
-        update(FrontApplicationState(application: NSWorkspace.shared.frontmostApplication))
-      }
+    observation = observeApplication { application in
+      update(FrontApplicationState(application: application))
     }
   }
 
   func stop() {
-    if let observer { NSWorkspace.shared.notificationCenter.removeObserver(observer) }
-    observer = nil
+    observation?.invalidate()
+    observation = nil
   }
 }
 

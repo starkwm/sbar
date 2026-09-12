@@ -6,6 +6,27 @@ import Testing
 @Suite("FrontApplicationProvider")
 @MainActor
 struct FrontApplicationProviderTests {
+  @Test("menu ownership publishes the initial application and subsequent changes")
+  func applicationChanges() {
+    let source = TestApplicationSource()
+    source.application = .current
+    let provider = FrontApplicationProvider(observeApplication: source.observeApplication)
+    defer { provider.stop() }
+    var updates: [FrontApplicationState] = []
+    provider.start { updates.append($0) }
+    #expect(updates.count == 1)
+    #expect(updates.last?.name == NSRunningApplication.current.localizedName ?? "")
+
+    source.application = nil
+    #expect(updates.count == 2)
+    #expect(updates.last?.name == "")
+    #expect(updates.last?.icon == nil)
+
+    source.application = .current
+    #expect(updates.count == 3)
+    #expect(updates.last?.name == NSRunningApplication.current.localizedName ?? "")
+  }
+
   @Test("application icons respect opt-in and manual refresh, including same-name switches")
   func iconRefresh() throws {
     let runtime = ProviderRuntime()
@@ -45,17 +66,15 @@ struct FrontApplicationProviderTests {
 
   @Test("start: replaces the previous observer when restarted")
   func startReplacesPreviousObserver() {
-    let provider = FrontApplicationProvider()
+    let source = TestApplicationSource()
+    let provider = FrontApplicationProvider(observeApplication: source.observeApplication)
     defer { provider.stop() }
     var previousUpdates = 0
     var currentUpdates = 0
 
     provider.start { _ in previousUpdates += 1 }
     provider.start { _ in currentUpdates += 1 }
-    NSWorkspace.shared.notificationCenter.post(
-      name: NSWorkspace.didActivateApplicationNotification,
-      object: nil
-    )
+    source.application = .current
 
     #expect(previousUpdates == 1)
     #expect(currentUpdates == 2)
@@ -63,25 +82,47 @@ struct FrontApplicationProviderTests {
 
   @Test("stop: removes the observer and allows a later restart")
   func stopRemovesObserverAndAllowsRestart() {
-    let provider = FrontApplicationProvider()
+    let source = TestApplicationSource()
+    let provider = FrontApplicationProvider(observeApplication: source.observeApplication)
     defer { provider.stop() }
     var updates = 0
 
     provider.start { _ in updates += 1 }
     provider.stop()
-    NSWorkspace.shared.notificationCenter.post(
-      name: NSWorkspace.didActivateApplicationNotification,
-      object: nil
-    )
+    source.application = .current
 
     #expect(updates == 1)
 
     provider.start { _ in updates += 1 }
-    NSWorkspace.shared.notificationCenter.post(
-      name: NSWorkspace.didActivateApplicationNotification,
-      object: nil
-    )
+    source.application = nil
 
     #expect(updates == 3)
+  }
+
+  @Test("deallocation removes the observation")
+  func deallocationRemovesObservation() {
+    let source = TestApplicationSource()
+    var provider: FrontApplicationProvider? = FrontApplicationProvider(
+      observeApplication: source.observeApplication
+    )
+    var updates = 0
+    provider?.start { _ in updates += 1 }
+    provider = nil
+    source.application = .current
+    #expect(updates == 1)
+  }
+}
+
+@MainActor
+private final class TestApplicationSource: NSObject {
+  @objc dynamic var application: NSRunningApplication?
+
+  func observeApplication(_ update: @escaping @MainActor (NSRunningApplication?) -> Void)
+    -> NSKeyValueObservation
+  {
+    observe(\.application, options: [.initial, .new]) { _, change in
+      let application = change.newValue ?? nil
+      MainActor.assumeIsolated { update(application) }
+    }
   }
 }

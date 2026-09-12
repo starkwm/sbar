@@ -84,7 +84,7 @@ The shadow does not change the bar's configured height, content position, or mou
 | --- | --- |
 | `text` | Static text from `label` |
 | [`datetime`](providers/datetime.md) | Current date and/or time; custom `format` or localized `dateStyle` and `timeStyle` |
-| [`frontApplication`](providers/front-application.md) | Active application's name, or a fixed `label` |
+| [`frontApplication`](providers/front-application.md) | Application owning the menu bar, or a fixed `label` |
 | [`battery`](providers/battery.md) | Battery charge and power state |
 | [`volume`](providers/volume.md) | Output volume and mute state |
 | [`audioDevice`](providers/audio-device.md) | Default audio output or input device name |
