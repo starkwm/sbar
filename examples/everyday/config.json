@@ -1,0 +1,314 @@
+{
+  "$schema": "../../Sources/SbarCore/Resources/config.schema.json",
+  "schemaVersion": 1,
+  "bar": {
+    "position": "bottom",
+    "height": 40,
+    "displays": "all",
+    "margin": { "bottom": 10, "left": 12, "right": 12 },
+    "mousePassThrough": true
+  },
+  "theme": {
+    "background": "#151B26F5",
+    "horizontalPadding": 10,
+    "verticalPadding": 4,
+    "cornerRadius": 12,
+    "itemSpacing": 6,
+    "itemStyle": {
+      "fontSize": 12,
+      "fontWeight": "medium",
+      "horizontalPadding": 8,
+      "verticalPadding": 4,
+      "cornerRadius": 7
+    }
+  },
+  "items": {
+    "left": [
+      {
+        "id": "launcher",
+        "type": "popup",
+        "label": "Desktop",
+        "symbol": "square.grid.2x2.fill",
+        "priority": 100,
+        "style": {
+          "tint": "#91D7E3",
+          "background": "#91D7E31A",
+          "fontWeight": "semibold"
+        },
+        "children": [
+          {
+            "id": "finder",
+            "type": "text",
+            "label": "Finder",
+            "symbol": "folder",
+            "primaryAction": { "kind": "application", "value": "com.apple.finder" }
+          },
+          {
+            "id": "downloads",
+            "type": "text",
+            "label": "Downloads",
+            "symbol": "arrow.down.circle",
+            "primaryAction": { "kind": "command", "value": "/usr/bin/open \"$HOME/Downloads\"" }
+          },
+          {
+            "id": "terminal",
+            "type": "text",
+            "label": "Terminal",
+            "symbol": "terminal",
+            "primaryAction": { "kind": "application", "value": "com.apple.Terminal" }
+          },
+          {
+            "id": "safari",
+            "type": "text",
+            "label": "Safari",
+            "symbol": "safari",
+            "primaryAction": { "kind": "application", "value": "com.apple.Safari" }
+          },
+          {
+            "id": "settings",
+            "type": "text",
+            "label": "System Settings",
+            "symbol": "gearshape",
+            "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
+          }
+        ]
+      },
+      {
+        "id": "spaces",
+        "type": "spaces",
+        "spaces": { "scope": "display", "format": "currentTotal" },
+        "priority": 40,
+        "style": { "tint": "#A5ADCB" },
+        "primaryAction": { "kind": "application", "value": "com.apple.exposelauncher" }
+      },
+      {
+        "id": "front-app",
+        "type": "frontApplication",
+        "priority": 80,
+        "style": { "tint": "#E2E8F0", "fontWeight": "semibold" }
+      }
+    ],
+    "center": [
+      {
+        "id": "date",
+        "type": "datetime",
+        "format": "EEEE, d MMMM",
+        "priority": -10,
+        "style": { "tint": "#A5ADCB" },
+        "primaryAction": { "kind": "application", "value": "com.apple.iCal" }
+      }
+    ],
+    "right": [
+      {
+        "id": "cpu",
+        "type": "cpu",
+        "priority": 20,
+        "cpu": {
+          "showLabel": false,
+          "smoothingSamples": 3,
+          "tints": { "medium": "#EED49F", "high": "#ED8796" }
+        },
+        "style": { "tint": "#A5ADCB", "background": "#FFFFFF08" },
+        "popup": "System",
+        "children": [
+          {
+            "id": "cpu-detail",
+            "type": "cpu",
+            "cpu": { "smoothingSamples": 3 }
+          },
+          {
+            "id": "memory",
+            "type": "memory",
+            "memory": { "format": "usedTotal" }
+          },
+          {
+            "id": "disk",
+            "type": "disk"
+          },
+          {
+            "id": "activity-monitor",
+            "type": "text",
+            "label": "Open Activity Monitor",
+            "symbol": "chart.xyaxis.line",
+            "primaryAction": { "kind": "application", "value": "com.apple.ActivityMonitor" }
+          }
+        ]
+      },
+      {
+        "id": "network",
+        "type": "network",
+        "priority": 60,
+        "network": { "showLabel": false, "tints": { "offline": "#ED8796" } },
+        "style": { "tint": "#E2E8F0" },
+        "popup": "Connections",
+        "children": [
+          {
+            "id": "network-detail",
+            "type": "network",
+            "network": {
+              "labels": {
+                "wifi": "Wi-Fi connected",
+                "ethernet": "Ethernet connected",
+                "cellular": "Cellular connected",
+                "other": "Network connected"
+              }
+            }
+          },
+          {
+            "id": "vpn-detail",
+            "type": "vpn"
+          },
+          {
+            "id": "throughput",
+            "type": "throughput",
+            "throughput": { "smoothingSamples": 3 }
+          },
+          {
+            "id": "network-settings",
+            "type": "text",
+            "label": "Open System Settings",
+            "symbol": "gearshape",
+            "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
+          }
+        ]
+      },
+      {
+        "id": "vpn",
+        "type": "vpn",
+        "priority": 70,
+        "vpn": {
+          "showLabel": false,
+          "hideWhenDisconnected": true,
+          "tints": {
+            "connected": "#A6DA95",
+            "connecting": "#EED49F",
+            "disconnecting": "#EED49F",
+            "unavailable": "#ED8796"
+          }
+        },
+        "style": { "tint": "#A5ADCB" },
+        "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
+      },
+      {
+        "id": "sound",
+        "type": "volume",
+        "priority": 50,
+        "volume": { "showPercentage": false, "tints": { "muted": "#EED49F" } },
+        "style": { "tint": "#E2E8F0" },
+        "popup": "Sound",
+        "children": [
+          {
+            "id": "volume",
+            "type": "volume"
+          },
+          {
+            "id": "volume-controls",
+            "type": "group",
+            "style": { "horizontalPadding": 0, "verticalPadding": 0 },
+            "children": [
+              {
+                "id": "volume-down",
+                "type": "text",
+                "label": "Lower",
+                "symbol": "minus",
+                "style": { "background": "#80808018" },
+                "primaryAction": {
+                  "kind": "command",
+                  "value": "/usr/bin/osascript -e 'set level to output volume of (get volume settings)' -e 'if level < 10 then set level to 10' -e 'set volume output volume (level - 10)'"
+                }
+              },
+              {
+                "id": "volume-mute",
+                "type": "text",
+                "label": "Mute / unmute",
+                "symbol": "speaker.slash",
+                "style": { "background": "#80808018" },
+                "primaryAction": {
+                  "kind": "command",
+                  "value": "/usr/bin/osascript -e 'set volume output muted (not (output muted of (get volume settings)))'"
+                }
+              },
+              {
+                "id": "volume-up",
+                "type": "text",
+                "label": "Raise",
+                "symbol": "plus",
+                "style": { "background": "#80808018" },
+                "primaryAction": {
+                  "kind": "command",
+                  "value": "/usr/bin/osascript -e 'set level to output volume of (get volume settings)' -e 'if level > 90 then set level to 90' -e 'set volume output volume (level + 10)'"
+                }
+              }
+            ]
+          },
+          {
+            "id": "output",
+            "type": "audioDevice"
+          },
+          {
+            "id": "input",
+            "type": "audioDevice",
+            "audioDevice": { "device": "input" }
+          },
+          {
+            "id": "media",
+            "type": "media",
+            "media": { "separator": " · ", "hideWhenStopped": true }
+          },
+          {
+            "id": "sound-settings",
+            "type": "text",
+            "label": "Open System Settings",
+            "symbol": "gearshape",
+            "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
+          }
+        ]
+      },
+      {
+        "id": "battery",
+        "type": "battery",
+        "priority": 80,
+        "battery": {
+          "lowThreshold": 20,
+          "tints": { "low": "#ED8796", "charging": "#A6DA95" }
+        },
+        "style": { "tint": "#E2E8F0" },
+        "primaryAction": { "kind": "application", "value": "com.apple.systempreferences" }
+      },
+      {
+        "id": "clock",
+        "type": "datetime",
+        "format": "HH:mm",
+        "priority": 100,
+        "style": {
+          "tint": "#E2E8F0",
+          "background": "#FFFFFF0D",
+          "fontWeight": "semibold",
+          "horizontalPadding": 10
+        },
+        "popup": "Today",
+        "children": [
+          {
+            "id": "full-date",
+            "type": "datetime",
+            "dateStyle": "full"
+          },
+          {
+            "id": "calendar",
+            "type": "text",
+            "label": "Open Calendar",
+            "symbol": "calendar",
+            "primaryAction": { "kind": "application", "value": "com.apple.iCal" }
+          },
+          {
+            "id": "reminders",
+            "type": "text",
+            "label": "Open Reminders",
+            "symbol": "checklist",
+            "primaryAction": { "kind": "application", "value": "com.apple.reminders" }
+          }
+        ]
+      }
+    ]
+  }
+}

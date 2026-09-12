@@ -30,6 +30,6 @@ Each page covers the provider's configuration, defaults, refresh behavior, and l
 
 ## Examples and schema
 
-- [Demo configuration](../examples/demo/README.md)
+- [Everyday bar](../examples/everyday/README.md)
 - [Floating bar](../examples/floating/README.md)
 - [Configuration JSON Schema](../Sources/SbarCore/Resources/config.schema.json)

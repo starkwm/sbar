@@ -30,5 +30,5 @@ The [documentation index](docs/index.md) links to all guides and provider refere
 
 ## Examples
 
-- [Demo configuration](examples/demo/README.md) with native metrics, popups, actions, commands, and a streaming plugin.
+- [Everyday bar](examples/everyday/README.md) with app shortcuts, system status popovers, and volume controls.
 - [Floating bar](examples/floating/README.md) with inset edges and rounded corners.
