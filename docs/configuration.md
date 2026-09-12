@@ -39,13 +39,15 @@ Only `schemaVersion: 1` is supported.
 | `margin` | Object with `top`, `bottom`, `left`, `right` offsets (0–4096 points each) | All `0` |
 | `displays` | `main`, `all`, or `selected` | `all` |
 | `displayIDs` | Display IDs, required when `displays` is `selected` | None |
-| `windowLevel` | `floating`, `statusBar`, or `screenSaver` | `statusBar` |
+| `windowLevel` | `floating`, `statusBar`, or `screenSaver` | `floating` |
 | `shadow` | Draw a shadow outside the bar | `false` |
 | `mousePassThrough` | Pass mouse events through empty regions | `false` |
 
 `main` selects the primary display. Use `sbar query --displays` to find connected display IDs and names.
 
 Top placement uses the physical screen edge, sharing the system menu-bar area. Bottom placement respects the Dock's visible work area. On notched displays, items avoid the cutout and the center section sits immediately to its right.
+
+The default `floating` window level keeps the bar above ordinary windows and below system notifications and the revealed menu bar. Omitting `windowLevel` or setting it to `null` uses this default. Explicit `statusBar` and `screenSaver` levels can cover notifications, especially when the menu bar auto-hides and banners overlap the bar.
 
 For a floating bar, inset the panel, round its background, and enable its shadow:
 

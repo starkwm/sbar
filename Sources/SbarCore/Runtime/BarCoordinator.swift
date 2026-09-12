@@ -210,7 +210,7 @@ final class BarCoordinator: NSObject {
       let panel = remaining.removeValue(forKey: identifier) ?? BarPanel(contentRect: layout.frame)
       panel.barLayout = layout
       panel.setFrame(layout.frame, display: true)
-      switch configuration.bar.windowLevel ?? .statusBar {
+      switch configuration.bar.windowLevel ?? .floating {
       case .floating: panel.level = .floating
       case .statusBar: panel.level = .statusBar
       case .screenSaver: panel.level = .screenSaver

@@ -27,7 +27,7 @@ final class BarPanel: NSPanel {
     isReleasedWhenClosed = false
     isRestorable = false
     acceptsMouseMovedEvents = true
-    level = .statusBar
+    level = .floating
   }
 
   override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {

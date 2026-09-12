@@ -62,7 +62,9 @@
             "statusBar",
             "screenSaver",
             null
-          ]
+          ],
+          "default": "floating",
+          "description": "Floating keeps the bar above ordinary windows and below system notifications. Higher levels can cover notifications."
         },
         "shadow": {
           "type": [
