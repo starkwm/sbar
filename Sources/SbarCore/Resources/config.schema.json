@@ -64,6 +64,14 @@
             null
           ]
         },
+        "shadow": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false,
+          "description": "Draw a native window shadow, or a soft edge shadow for square bars spanning the display width."
+        },
         "mousePassThrough": {
           "type": [
             "boolean",

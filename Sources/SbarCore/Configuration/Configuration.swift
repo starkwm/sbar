@@ -164,7 +164,7 @@ struct Configuration: Codable, Equatable, Sendable {
 
 struct BarSettings: Codable, Equatable, Sendable {
   private enum CodingKeys: String, CodingKey {
-    case position, height, margin, displays, displayIDs, windowLevel, mousePassThrough
+    case position, height, margin, displays, displayIDs, windowLevel, shadow, mousePassThrough
   }
 
   var position: BarPosition = .top
@@ -175,6 +175,7 @@ struct BarSettings: Codable, Equatable, Sendable {
   var displayIDs: [UInt32]?
 
   var windowLevel: BarWindowLevel?
+  var shadow: Bool?
   var mousePassThrough: Bool?
 
   init(
@@ -184,6 +185,7 @@ struct BarSettings: Codable, Equatable, Sendable {
     displays: DisplaySelection = .all,
     displayIDs: [UInt32]? = nil,
     windowLevel: BarWindowLevel? = nil,
+    shadow: Bool? = nil,
     mousePassThrough: Bool? = nil
   ) {
     self.position = position
@@ -194,6 +196,7 @@ struct BarSettings: Codable, Equatable, Sendable {
     self.displayIDs = displayIDs
 
     self.windowLevel = windowLevel
+    self.shadow = shadow
     self.mousePassThrough = mousePassThrough
   }
 
@@ -208,6 +211,7 @@ struct BarSettings: Codable, Equatable, Sendable {
     displayIDs = try container.decodeIfPresent([UInt32].self, forKey: .displayIDs)
 
     windowLevel = try container.decodeIfPresent(BarWindowLevel.self, forKey: .windowLevel)
+    shadow = try container.decodeIfPresent(Bool.self, forKey: .shadow)
     mousePassThrough = try container.decodeIfPresent(Bool.self, forKey: .mousePassThrough)
   }
 }

@@ -40,19 +40,21 @@ Only `schemaVersion: 1` is supported.
 | `displays` | `main`, `all`, or `selected` | `all` |
 | `displayIDs` | Display IDs, required when `displays` is `selected` | None |
 | `windowLevel` | `floating`, `statusBar`, or `screenSaver` | `statusBar` |
+| `shadow` | Draw a shadow outside the bar | `false` |
 | `mousePassThrough` | Pass mouse events through empty regions | `false` |
 
 `main` selects the primary display. Use `sbar query --displays` to find connected display IDs and names.
 
 Top placement uses the physical screen edge, sharing the system menu-bar area. Bottom placement respects the Dock's visible work area. On notched displays, items avoid the cutout and the center section sits immediately to its right.
 
-For a floating bar, inset the panel and round its background:
+For a floating bar, inset the panel, round its background, and enable its shadow:
 
 ```json
 {
   "schemaVersion": 1,
   "bar": {
     "height": 40,
+    "shadow": true,
     "margin": { "top": 44, "left": 12, "right": 12 }
   },
   "theme": {
@@ -67,6 +69,10 @@ For a floating bar, inset the panel and round its background:
 Margins inset the placement area: top bars anchor to its top edge, bottom bars to its bottom edge. Left and right margins control width independently. Excessive margins clamp to leave at least one point of available area; height shrinks to fit. A top margin is measured from the physical screen edge, so choose enough clearance for your display's notch/menu bar. Notch avoidance stops once the panel is below the cutout. These settings reload automatically when the configuration file changes.
 
 The theme's `verticalPadding` and `cornerRadius` accept 0–48 points and default to zero. Padding sits inside `bar.height`; the rounded shape clips both material/custom backgrounds and content.
+
+Set `bar.shadow` to `true` for a raised appearance. It defaults to `false`; `null` also uses that default. Inset or rounded bars use the native macOS window shadow, whose color, blur, and offset are controlled by the system. Square bars spanning the display's full width use a soft 16-point fade below a top bar or above a bottom bar, avoiding the native window's thin outline. The fade shortens if it reaches the screen edge.
+
+The shadow does not change the bar's configured height, content position, or mouse hit regions. The edge fade uses extra transparent window space that always passes clicks through. Shadow changes reload automatically, including after edits to the margins, background, or corner radius.
 
 ## Items
 

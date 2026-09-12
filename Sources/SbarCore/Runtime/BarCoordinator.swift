@@ -200,8 +200,16 @@ final class BarCoordinator: NSObject {
         settings: configuration.bar
       )
 
-      let panel = remaining.removeValue(forKey: identifier) ?? BarPanel(contentRect: frame)
-      panel.setFrame(frame, display: true)
+      let layout = BarWindowLayout(
+        screenFrame: screen.frame,
+        barFrame: frame,
+        position: configuration.bar.position,
+        shadow: configuration.bar.shadow ?? false,
+        cornerRadius: configuration.theme?.cornerRadius ?? 0
+      )
+      let panel = remaining.removeValue(forKey: identifier) ?? BarPanel(contentRect: layout.frame)
+      panel.barLayout = layout
+      panel.setFrame(layout.frame, display: true)
       switch configuration.bar.windowLevel ?? .statusBar {
       case .floating: panel.level = .floating
       case .statusBar: panel.level = .statusBar
@@ -219,8 +227,9 @@ final class BarCoordinator: NSObject {
         CFUUIDCreateString(nil, $0.takeRetainedValue()) as String
       }
       let hostingView = NSHostingView(
-        rootView: BarView(
+        rootView: BarWindowView(
           configuration: configuration,
+          layout: layout,
           notch: notch,
           hitRegionsChanged: { [weak panel] regions in
             panel?.hitRegions = regions
@@ -230,7 +239,13 @@ final class BarCoordinator: NSObject {
       )
       hostingView.safeAreaRegions = []
       panel.contentView = hostingView
+      panel.hasShadow = layout.hasNativeShadow
       panel.orderFrontRegardless()
+      if panel.hasShadow {
+        // Recompute the native shadow after rendering a new background or corner radius.
+        panel.displayIfNeeded()
+        panel.invalidateShadow()
+      }
       barSpace.addWindow(panel.windowNumber)
       panel.updateMousePassthrough()
       updated[identifier] = panel

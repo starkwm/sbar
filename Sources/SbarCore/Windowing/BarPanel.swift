@@ -3,6 +3,7 @@ import AppKit
 final class BarPanel: NSPanel {
   var hitRegions: [CGRect] = []
   var passesThroughEmptyRegions = false
+  var barLayout: BarWindowLayout?
 
   override var canBecomeKey: Bool { false }
   override var canBecomeMain: Bool { false }
@@ -37,6 +38,11 @@ final class BarPanel: NSPanel {
     let local = convertPoint(fromScreen: NSEvent.mouseLocation)
     let point = CGPoint(x: local.x, y: frame.height - local.y)
 
-    ignoresMouseEvents = passesThroughEmptyRegions && !hitRegions.contains { $0.contains(point) }
+    ignoresMouseEvents =
+      barLayout?.ignoresMouse(
+        at: point,
+        passingThroughEmptyRegions: passesThroughEmptyRegions,
+        hitRegions: hitRegions
+      ) ?? (passesThroughEmptyRegions && !hitRegions.contains { $0.contains(point) })
   }
 }

@@ -62,6 +62,38 @@ struct ConfigurationTests {
     )
   }
 
+  @Test("init: preserves native window shadow settings", arguments: [true, false])
+  func initPreservesShadow(enabled: Bool) throws {
+    let json = "{\"schemaVersion\":1,\"bar\":{\"shadow\":\(enabled)},\"items\":{}}"
+    let configuration = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
+    try configuration.validate()
+
+    #expect(configuration.bar.shadow == enabled)
+    #expect(configuration.bar == BarSettings(shadow: enabled))
+    #expect(
+      try JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(configuration))
+        == configuration
+    )
+  }
+
+  @Test(
+    "init: omitted and null shadows preserve the default appearance",
+    arguments: ["{}", "{\"shadow\":null}"]
+  )
+  func initDefaultsShadow(bar: String) throws {
+    let json = "{\"schemaVersion\":1,\"bar\":\(bar),\"items\":{}}"
+    let configuration = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
+    #expect(configuration.bar.shadow == nil)
+  }
+
+  @Test("init: rejects nonboolean shadows", arguments: ["\"true\"", "1", "{}"])
+  func initRejectsNonbooleanShadow(value: String) {
+    let json = "{\"schemaVersion\":1,\"bar\":{\"shadow\":\(value)},\"items\":{}}"
+    #expect(throws: DecodingError.self) {
+      try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
+    }
+  }
+
   @Test(
     "validate: rejects invalid floating bar dimensions",
     arguments: [-1.0, 4097.0, Double.infinity, Double.nan]
