@@ -39,6 +39,7 @@ struct VPNState: Equatable, Sendable {
         "names": available
           ? active.map { service in
             let name = service.name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+
             return name.isEmpty ? "VPN" : name
           }.joined(separator: ", ") : "",
         "count": available ? String(active.count) : "",

@@ -135,6 +135,7 @@ struct Configuration: Codable, Equatable, Sendable {
           )
         }
         try item.style?.validate(path: "\(location).style")
+
         if let tooltip = item.tooltip {
           _ = try TooltipTemplate(tooltip, type: item.type, path: "\(location).tooltip")
         }
