@@ -13,7 +13,8 @@ struct BarRegionView: View {
         items: displayed,
         widths: widths,
         available: geometry.size.width,
-        spacing: spacing
+        spacing: spacing,
+        defaultStyle: theme?.itemStyle
       )
 
       HStack(spacing: spacing) {
@@ -80,13 +81,19 @@ struct OverflowSelection {
     items: [Item],
     widths: [String: CGFloat],
     available: CGFloat,
-    spacing: CGFloat
+    spacing: CGFloat,
+    defaultStyle: ItemStyle? = nil
   ) -> Set<String> {
     var selected = items
     let flexible: Set<ItemType> = [.text, .frontApplication, .media, .command, .plugin]
 
     func width() -> CGFloat {
-      selected.reduce(0) { $0 + (widths[$1.id] ?? 40) * (flexible.contains($1.type) ? 0.8 : 1) }
+      selected.reduce(0) { total, item in
+        let style = (item.style ?? ItemStyle()).resolved(over: defaultStyle)
+        if let width = style.width { return total + width }
+        let measured = (widths[item.id] ?? 40) * (flexible.contains(item.type) ? 0.8 : 1)
+        return total + max(style.minWidth ?? 0, measured)
+      }
         + CGFloat(max(0, selected.count - 1)) * spacing
     }
 

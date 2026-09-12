@@ -45,6 +45,10 @@ struct ItemStyle: Codable, Equatable, Sendable {
   var verticalPadding: Double?
   var cornerRadius: Double?
 
+  var minWidth: Double?
+  var width: Double?
+  var alignment: ItemAlignment?
+
   func resolved(over theme: ItemStyle?) -> ItemStyle {
     ItemStyle(
       tint: tint ?? theme?.tint,
@@ -54,7 +58,10 @@ struct ItemStyle: Codable, Equatable, Sendable {
       symbolFontWeight: symbolFontWeight ?? theme?.symbolFontWeight,
       horizontalPadding: horizontalPadding ?? theme?.horizontalPadding ?? 0,
       verticalPadding: verticalPadding ?? theme?.verticalPadding ?? 0,
-      cornerRadius: cornerRadius ?? theme?.cornerRadius ?? 0
+      cornerRadius: cornerRadius ?? theme?.cornerRadius ?? 0,
+      minWidth: minWidth ?? theme?.minWidth,
+      width: width ?? theme?.width,
+      alignment: alignment ?? theme?.alignment ?? .center
     )
   }
 
@@ -66,11 +73,17 @@ struct ItemStyle: Codable, Equatable, Sendable {
     try Self.validateNumber(horizontalPadding, range: 0...96, path: "\(path).horizontalPadding")
     try Self.validateNumber(verticalPadding, range: 0...48, path: "\(path).verticalPadding")
     try Self.validateNumber(cornerRadius, range: 0...48, path: "\(path).cornerRadius")
+    try Self.validateNumber(minWidth, range: 0...4096, path: "\(path).minWidth")
+    try Self.validateNumber(width, range: 0...4096, path: "\(path).width")
   }
 }
 
 enum ItemFontWeight: String, Codable, CaseIterable, Sendable {
   case regular, medium, semibold, bold
+}
+
+enum ItemAlignment: String, Codable, CaseIterable, Sendable {
+  case leading, center, trailing
 }
 
 struct RGBA: Equatable, Sendable {

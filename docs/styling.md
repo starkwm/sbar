@@ -40,3 +40,33 @@ Colors use `#RRGGBB` or `#RRGGBBAA` (alpha last). An omitted bar background uses
 Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeight` (`regular`, `medium`, `semibold`, `bold`), `horizontalPadding` (0–96), `verticalPadding` (0–48), and `cornerRadius` (0–48). Use `symbolFontWeight` (the same weight values) to override SF Symbol weight independently of text, either in `theme.itemStyle` or an item's `style`. For example, `"style": {"symbolFontWeight": "bold"}`. Item values override the theme; when neither sets it, symbols inherit the resolved text weight. This also applies to battery and network state symbols; font glyphs keep their custom font. Defaults are 13-point regular text with no item padding or corner radius. The theme's bar `horizontalPadding` and `itemSpacing` default to 10 points and accept 0–96. Oversized content stays clipped to its bar region; styling does not increase bar height.
 
 Set `bar.shadow` to `true` for a raised appearance. Inset or rounded bars use the native window shadow; square bars spanning the display width use a soft edge shadow without an outline. See [bar settings](configuration.md#bar-settings) for height, margins, placement, and shadow behavior, and [symbols](symbols.md) for SF Symbols and custom fonts.
+
+## Item widths
+
+Use `style.minWidth` to reserve space for changing labels, such as percentages or transfer rates:
+
+```json
+{
+  "id": "battery",
+  "type": "battery",
+  "style": { "minWidth": 80, "alignment": "trailing" }
+}
+```
+
+The item stays at least 80 points wide. Labels that need more space can grow, so choose a minimum that fits the longest expected label to avoid shifting nearby items.
+
+Use `style.width` when an item must keep the same width even for longer labels:
+
+```json
+{
+  "id": "app",
+  "type": "frontApplication",
+  "style": { "width": 160, "alignment": "leading" }
+}
+```
+
+Fixed-width labels stay on one line and truncate at the end. Content that cannot fit, such as a large symbol or group, is clipped to the item bounds. `width` takes precedence over `minWidth`, including inherited values.
+
+Both widths accept 0–4096 points and include the symbol, label, and padding. `alignment` accepts `leading`, `center`, or `trailing` and defaults to `center`. The background and hover area cover the reserved width. Overflow selection respects the reserved space and moves items to the overflow menu when needed.
+
+These fields also work in `theme.itemStyle`. Each field inherits independently when omitted or null. An explicit `minWidth` of `0` clears an inherited minimum; an explicit `width` of `0` reserves no width. Without either width setting, items size to their content as before.

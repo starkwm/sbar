@@ -639,6 +639,33 @@
           ],
           "minimum": 0,
           "maximum": 48
+        },
+        "minWidth": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 4096,
+          "description": "Minimum item width in points, including the symbol, label, and padding. Longer content can grow. Ignored when width is set."
+        },
+        "width": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 4096,
+          "description": "Fixed item width in points, including the symbol, label, and padding. Takes precedence over minWidth. Long labels truncate."
+        },
+        "alignment": {
+          "enum": [
+            "leading",
+            "center",
+            "trailing",
+            null
+          ],
+          "description": "Content alignment within the item width. Inherits from theme.itemStyle and defaults to center."
         }
       }
     },

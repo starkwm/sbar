@@ -6,6 +6,78 @@ import Testing
 @Suite("OverflowSelection")
 struct OverflowSelectionTests {
   @Test(
+    "reserved widths are respected before and after measurement, including theme defaults",
+    arguments: [ItemStyle(minWidth: 100), ItemStyle(width: 100)],
+    [nil, 100] as [CGFloat?]
+  )
+  func reservedWidths(style: ItemStyle, measuredWidth: CGFloat?) {
+    var item = Item(id: "item", type: .text, style: style)
+    let widths = measuredWidth.map { [item.id: $0] } ?? [:]
+    #expect(
+      OverflowSelection.visibleItemIDs(
+        items: [item],
+        widths: widths,
+        available: 90,
+        spacing: 0
+      ).isEmpty
+    )
+    #expect(
+      OverflowSelection.visibleItemIDs(
+        items: [item],
+        widths: widths,
+        available: 100,
+        spacing: 0
+      ) == [item.id]
+    )
+    item.style = nil
+    #expect(
+      OverflowSelection.visibleItemIDs(
+        items: [item],
+        widths: widths,
+        available: 90,
+        spacing: 0,
+        defaultStyle: style
+      ).isEmpty
+    )
+  }
+
+  @Test("fixed widths override inherited minimums and stale measurements")
+  func fixedWidthOverrides() {
+    let item = Item(id: "item", type: .text, style: ItemStyle(width: 60))
+    #expect(
+      OverflowSelection.visibleItemIDs(
+        items: [item],
+        widths: [item.id: 300],
+        available: 60,
+        spacing: 0,
+        defaultStyle: ItemStyle(minWidth: 100, width: 120)
+      ) == [item.id]
+    )
+  }
+
+  @Test("minimum widths allow larger labels and preserve overflow priorities")
+  func minimumWidthGrowth() {
+    let item = Item(id: "item", type: .text, style: ItemStyle(minWidth: 100))
+    #expect(
+      OverflowSelection.visibleItemIDs(
+        items: [item],
+        widths: [item.id: 200],
+        available: 120,
+        spacing: 0
+      ).isEmpty
+    )
+    let other = Item(id: "other", type: .text, priority: 10, style: ItemStyle(width: 60))
+    #expect(
+      OverflowSelection.visibleItemIDs(
+        items: [item, other],
+        widths: [item.id: 100, other.id: 60],
+        available: 150,
+        spacing: 10
+      ) == [other.id]
+    )
+  }
+
+  @Test(
     "hidden items consume no overflow space, including stale measured widths",
     arguments: [0, 200]
   )

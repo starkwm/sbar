@@ -45,6 +45,62 @@ struct ThemeTests {
     #expect(style.tint == nil)
     #expect(style.background == nil)
     #expect(style.horizontalPadding == 0)
+    #expect(style.minWidth == nil)
+    #expect(style.width == nil)
+    #expect(style.alignment == .center)
+  }
+
+  @Test("Item widths and alignment inherit independently and round trip")
+  func itemSizing() throws {
+    let json = """
+      {"schemaVersion":1,"bar":{},
+       "theme":{"itemStyle":{"minWidth":80,"width":120,"alignment":"trailing"}},
+       "items":{"right":[{"id":"clock","type":"datetime",
+         "style":{"minWidth":0,"width":null,"alignment":"leading"}}]}}
+      """
+    let config = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
+    try config.validate()
+    let theme = try #require(config.theme?.itemStyle)
+    let inherited = ItemStyle().resolved(over: theme)
+    #expect(inherited.minWidth == 80)
+    #expect(inherited.width == 120)
+    #expect(inherited.alignment == .trailing)
+    let style = try #require(config.items.right[0].style).resolved(over: theme)
+    #expect(style.minWidth == 0)
+    #expect(style.width == 120)
+    #expect(style.alignment == .leading)
+    #expect(ItemStyle(width: 0).resolved(over: theme).width == 0)
+    #expect(
+      try JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(config)) == config
+    )
+    #expect(throws: (any Error).self) {
+      try JSONDecoder().decode(ItemStyle.self, from: Data(#"{"alignment":"left"}"#.utf8))
+    }
+  }
+
+  @Test(
+    "Configuration.validate: rejects invalid item widths at their exact locations",
+    arguments: [-1.0, 4097, Double.infinity, -Double.infinity, Double.nan],
+    ["minWidth", "width"]
+  )
+  func invalidItemWidths(value: Double, field: String) {
+    let style = field == "minWidth" ? ItemStyle(minWidth: value) : ItemStyle(width: value)
+    var config = Configuration.default
+    config.items.right[1].style = style
+    #expect(
+      throws: ConfigurationError.invalidValue(
+        path: "items.right[1].style.\(field)",
+        reason: "Must be between 0.0 and 4096.0."
+      )
+    ) { try config.validate() }
+    config.items.right[1].style = nil
+    config.theme = Theme(itemStyle: style)
+    #expect(
+      throws: ConfigurationError.invalidValue(
+        path: "theme.itemStyle.\(field)",
+        reason: "Must be between 0.0 and 4096.0."
+      )
+    ) { try config.validate() }
   }
 
   @Test(

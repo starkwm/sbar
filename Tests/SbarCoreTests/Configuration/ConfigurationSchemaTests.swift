@@ -5,6 +5,40 @@ import Testing
 
 @Suite("ConfigurationSchema")
 struct ConfigurationSchemaTests {
+  @Test("item sizing schema matches the accepted width bounds and alignments")
+  func itemSizing() throws {
+    let schema = try #require(
+      JSONSerialization.jsonObject(with: ConfigurationSchema.data()) as? [String: Any]
+    )
+    let definitions = try #require(schema["$defs"] as? [String: Any])
+    let style = try #require(definitions["itemStyle"] as? [String: Any])
+    let properties = try #require(style["properties"] as? [String: Any])
+    for key in ["minWidth", "width"] {
+      let field = try #require(properties[key] as? [String: Any])
+      #expect(field["type"] as? [String] == ["number", "null"])
+      let lower = try #require(field["minimum"] as? Double)
+      let upper = try #require(field["maximum"] as? Double)
+      for value in [lower, upper] {
+        let decoded = try JSONDecoder().decode(
+          ItemStyle.self,
+          from: JSONSerialization.data(withJSONObject: [key: value])
+        )
+        try decoded.validate(path: "style")
+      }
+      for value in [lower - 1, upper + 1] {
+        let decoded = try JSONDecoder().decode(
+          ItemStyle.self,
+          from: JSONSerialization.data(withJSONObject: [key: value])
+        )
+        #expect(throws: (any Error).self) { try decoded.validate(path: "style") }
+      }
+    }
+    let alignment = try #require(properties["alignment"] as? [String: Any])
+    let values = try #require(alignment["enum"] as? [Any])
+    #expect(Set(values.compactMap { $0 as? String }) == Set(ItemAlignment.allCases.map(\.rawValue)))
+    #expect(values.contains { $0 is NSNull })
+  }
+
   @Test("data: matches the supported schema version and item types")
   func dataMatchesSupportedVersionAndItemTypes() throws {
     let schema = try #require(
