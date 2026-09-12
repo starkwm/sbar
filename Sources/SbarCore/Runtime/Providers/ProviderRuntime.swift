@@ -223,21 +223,60 @@ final class ProviderRuntime {
   }
 
   func presentation(for item: Item, displayUUID: String? = nil) -> WidgetPresentation? {
+    var presentation: WidgetPresentation?
+    var values: [String: String] = [:]
     if item.type == .plugin {
-      return (pluginStates[item.id] ?? PluginState()).presentation(for: item)
+      let state = pluginStates[item.id] ?? PluginState()
+      presentation = state.presentation(for: item)
+      values = ["status": String(describing: state.status), "error": state.error ?? ""]
+    } else if item.type == .command {
+      let state = commandStates[item.id] ?? CommandState()
+      presentation = state.presentation(for: item)
+      values = ["status": String(describing: state.status), "error": state.error ?? ""]
+    } else {
+      let state: WidgetState?
+      if item.type == .disk {
+        state =
+          item.refresh == nil
+          ? .disk(diskStates[(item.disk ?? DiskConfiguration()).resolvedPath] ?? DiskState())
+          : widgetSnapshots[item.id] ?? .disk(DiskState())
+      } else {
+        state = item.refresh == nil ? widgetStates[item.type] : widgetSnapshots[item.id]
+      }
+      presentation = state?.presentation(for: item, displayUUID: displayUUID)
+      if item.text != nil { values = state?.textValues(for: item) ?? [:] }
     }
-    if item.type == .command {
-      return (commandStates[item.id] ?? CommandState()).presentation(for: item)
+    guard let source = item.text else { return presentation }
+    let fallback: String
+    switch item.type {
+    case .datetime:
+      fallback = DateTimeFormatter.string(
+        itemDates[item.id] ?? currentDate,
+        format: item.format,
+        dateStyle: item.dateStyle,
+        timeStyle: item.timeStyle
+      )
+    case .frontApplication:
+      let name = itemSnapshots[item.id] ?? sharedValues[.frontApplication] ?? ""
+      values["name"] = name
+      fallback = item.label ?? name
+    case .text: fallback = item.label ?? ""
+    case .group, .popup: fallback = item.label ?? item.id
+    default: fallback = itemSnapshots[item.id] ?? sharedValues[item.type] ?? "—"
     }
-    if item.type == .disk {
-      let state: WidgetState =
-        item.refresh == nil
-        ? .disk(diskStates[(item.disk ?? DiskConfiguration()).resolvedPath] ?? DiskState())
-        : widgetSnapshots[item.id] ?? .disk(DiskState())
-      return state.presentation(for: item)
+    var resolved =
+      presentation
+      ?? WidgetPresentation(text: fallback, symbol: item.symbol, accessibilityLabel: fallback)
+    values["value"] = resolved.text
+    values["id"] = item.id
+    guard let template = try? TextTemplate(source, fields: TextTemplate.fields(for: item.type))
+    else {
+      return resolved
     }
-    let state = item.refresh == nil ? widgetStates[item.type] : widgetSnapshots[item.id]
-    return state?.presentation(for: item, displayUUID: displayUUID)
+    resolved.text = template.render(values)
+    if presentation == nil { resolved.accessibilityLabel = resolved.text }
+    resolved.segments = []
+    return resolved
   }
 
   func isVisible(_ item: Item, displayUUID: String? = nil) -> Bool {

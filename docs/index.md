@@ -8,6 +8,7 @@ Start with [getting started](getting-started.md), then use the guides and provid
 
 - [Configuration](configuration.md): config files, bar settings, items, and refresh policies.
 - [Themes and item styling](styling.md): colors, fonts, padding, and backgrounds.
+- [Text templates](text-templates.md): provider values and conditional labels.
 - [Symbols](symbols.md): SF Symbols, font glyphs, and state icons.
 - [Actions](actions.md): commands, URLs, and applications opened from items.
 - [Groups, popups, and overflow](layout.md): child items and limited space.

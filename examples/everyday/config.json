@@ -43,6 +43,7 @@
       {
         "id": "front-app",
         "type": "frontApplication",
+        "text": "{{name}}",
         "priority": 80,
         "style": {
           "tint": "#C0CAF5",
@@ -55,12 +56,12 @@
       {
         "id": "media",
         "type": "media",
+        "text": "{{#title}}{{title}}{{#artist}} · {{/artist}}{{/title}}{{artist}}{{^title}}{{^artist}}{{value}}{{/artist}}{{/title}}",
         "priority": 10,
         "style": {
           "tint": "#FF9E64"
         },
         "media": {
-          "separator": " · ",
           "hideWhenNotPlaying": true
         }
       }
@@ -69,6 +70,7 @@
       {
         "id": "cpu",
         "type": "cpu",
+        "text": "{{#available}}{{percentage}}%{{/available}}{{^available}}—{{/available}}",
         "priority": 20,
         "symbolPosition": "right",
         "style": {
@@ -77,7 +79,6 @@
           "minWidth": 65
         },
         "cpu": {
-          "showLabel": false,
           "smoothingSamples": 3,
           "tints": {
             "medium": "#E0AF68",
@@ -92,6 +93,7 @@
       {
         "id": "memory",
         "type": "memory",
+        "text": "{{#available}}{{percentage}}%{{/available}}{{^available}}—{{/available}}",
         "priority": 20,
         "symbolPosition": "right",
         "style": {
@@ -99,10 +101,6 @@
           "background": "#292E42",
           "minWidth": 65,
           "alignment": "center"
-        },
-        "memory": {
-          "format": "percentage",
-          "showLabel": false
         },
         "primaryAction": {
           "kind": "application",
@@ -112,6 +110,7 @@
       {
         "id": "mail",
         "type": "mail",
+        "text": "{{#available}}{{unreadCount}} unread{{/available}}{{^available}}{{value}}{{/available}}",
         "symbolPosition": "right",
         "priority": 70,
         "style": {
@@ -125,9 +124,9 @@
       {
         "id": "vpn",
         "type": "vpn",
+        "text": "",
         "priority": 70,
         "vpn": {
-          "showLabel": false,
           "hideWhenDisconnected": false,
           "tints": {
             "connected": "#9ECE6A",
@@ -147,12 +146,12 @@
       {
         "id": "network",
         "type": "network",
+        "text": "",
         "priority": 60,
         "style": {
           "tint": "#7DCFFF"
         },
         "network": {
-          "showLabel": false,
           "tints": {
             "offline": "#F7768E"
           }
@@ -185,12 +184,12 @@
       {
         "id": "sound",
         "type": "volume",
+        "text": "",
         "priority": 50,
         "style": {
           "tint": "#73DACA"
         },
         "volume": {
-          "showPercentage": false,
           "tints": {
             "muted": "#E0AF68"
           }
@@ -215,6 +214,7 @@
       {
         "id": "battery",
         "type": "battery",
+        "text": "{{#available}}{{percentage}}%{{/available}}{{^available}}AC power{{/available}}",
         "priority": 80,
         "symbolPosition": "right",
         "style": {
@@ -231,6 +231,7 @@
       {
         "id": "date",
         "type": "datetime",
+        "text": "{{value}}",
         "format": "EE, d MMM",
         "priority": -10,
         "style": { "tint": "#A9B1D6" }
@@ -238,6 +239,7 @@
       {
         "id": "clock",
         "type": "datetime",
+        "text": "{{value}}",
         "format": "HH:mm",
         "priority": 100,
         "style": {

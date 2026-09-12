@@ -48,6 +48,7 @@ The palette uses blue for Spaces, memory, and the clock, purple for CPU, orange 
 - Adjust `bar.margin` and `theme.cornerRadius` to match your window gaps.
 - Set `bar.shadow` to `false` for a flat appearance.
 - Move `media` from `items.left` into the empty `items.center` section to put track information in the middle.
+- Edit an item's [`text` template](../../docs/text-templates.md) to change its label. CPU and memory use percentage values, media adds a separator only when both title and artist are present, and `"text": ""` keeps VPN, network, and sound icon-only.
 - Change the clock's `format` to `h:mm a` for a 12-hour clock.
 - Set an item's `"symbolPosition": "right"` to put its symbol or application icon after its text. Omitted settings default to `"left"`. In the throughput item, each arrow moves after its own rate and download still precedes upload.
 - Set larger item priorities to keep them visible longer. The clock has the highest priority; lower-priority items move into overflow when space is tight.

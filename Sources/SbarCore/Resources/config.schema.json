@@ -236,6 +236,10 @@
           ],
           "default": true
         },
+        "text": {
+          "type": ["string", "null"],
+          "description": "Label template. Supports {{value}} and provider fields, with {{#field}} and {{^field}} sections closed by {{/field}}. Empty text hides the label."
+        },
         "label": {
           "type": [
             "string",

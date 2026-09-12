@@ -10,7 +10,14 @@ struct BarItemView: View {
   var body: some View {
     if let presentation = providers.presentation(for: configuration, displayUUID: barDisplayUUID) {
       SymbolContentView(position: configuration.symbolPosition) {
-        if let symbol = presentation.symbol {
+        if let icon = providers.applicationIcon(for: configuration) {
+          Image(nsImage: icon)
+            .renderingMode(.original)
+            .resizable()
+            .scaledToFit()
+            .frame(width: symbolFontSize, height: symbolFontSize)
+            .accessibilityHidden(true)
+        } else if let symbol = presentation.symbol {
           ItemSymbolView(symbol: symbol, fontSize: symbolFontSize, fontWeight: symbolFontWeight)
         }
       } content: {

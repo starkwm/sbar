@@ -30,6 +30,8 @@ Create `~/.config/starkbar/config.json` with a configuration such as:
 
 Only `schemaVersion: 1` is supported.
 
+Use the common [`text` field](text-templates.md) to customise labels with provider values and conditional sections.
+
 ## Bar settings
 
 | Property | Values | Default |
@@ -106,7 +108,7 @@ The shadow does not change the bar's configured height, content position, or mou
 | [`divider`](layout.md#dividers-and-spacers) | Vertical separator |
 | [`spacer`](layout.md#dividers-and-spacers) | Flexible empty space |
 
-Optional properties include `enabled`, `label`, [`symbol` and `symbolPosition`](symbols.md), `priority`, [`style`](styling.md), [`refresh`](#refresh-policies), [`primaryAction` and `secondaryAction`](actions.md), and [`popup` text](layout.md). `enabled` defaults to `true` and `priority` defaults to `0`.
+Optional properties include `enabled`, `label`, [`text`](text-templates.md), [`symbol` and `symbolPosition`](symbols.md), `priority`, [`style`](styling.md), [`refresh`](#refresh-policies), [`primaryAction` and `secondaryAction`](actions.md), and [`popup` text](layout.md). `enabled` defaults to `true` and `priority` defaults to `0`.
 
 Symbols accept SF Symbol names or font glyph objects and appear beside item content except for groups, dividers, and spacers. `symbolPosition` accepts `left` or `right` and defaults to `left`. It also controls provider state symbols and frontmost application icons. Follow the provider links in the table for type-specific settings.
 

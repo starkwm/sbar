@@ -182,6 +182,14 @@ struct BarItemViewTests {
       matches: pair(position: position, symbol: image, text: "Example")
     )
 
+    var templated = item
+    templated.text = "App: {{name}}"
+    try expectRendering(
+      templated,
+      runtime: runtime,
+      matches: pair(position: position, symbol: image, text: "App: Example")
+    )
+
     runtime.updateFrontApplication(.init(name: "Example", icon: nil))
     try expectRendering(
       item,
