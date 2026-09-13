@@ -214,12 +214,24 @@ struct TextTemplate {
                 render(children, values: values, entry: entry, separator: separator)
               }
             } else {
+              let preceding = runs
+              runs = []
+              var rendered: [[Run]] = []
               for (index, fields) in entries.enumerated() {
                 var local = values.merging(fields) { _, value in value }
                 local["first"] = String(index == 0)
                 local["last"] = String(index == entries.count - 1)
                 render(children, values: local, entry: index)
+                if runs.contains(where: { !$0.separator && (!$0.text.isEmpty || $0.symbol) }) {
+                  rendered.append(runs)
+                }
+                runs = []
               }
+              runs =
+                preceding
+                + rendered.enumerated().flatMap { index, entryRuns in
+                  entryRuns.filter { !$0.separator || index < rendered.count - 1 }
+                }
             }
           } else {
             let value = values[name] ?? ""
