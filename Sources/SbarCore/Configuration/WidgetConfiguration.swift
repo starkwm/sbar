@@ -60,6 +60,7 @@ struct BatterySymbols: Codable, Equatable, Sendable {
   var font: String?
   var size: Double?
   var levels: [WidgetSymbol]?
+  var chargingLevels: [WidgetSymbol]?
   var charging: WidgetSymbol?
   var pluggedIn: WidgetSymbol?
 
@@ -73,14 +74,16 @@ struct BatterySymbols: Codable, Equatable, Sendable {
         reason: "Must be between 8 and 72."
       )
     }
-    if let levels, levels.count != 5 {
-      throw ConfigurationError.invalidValue(
-        path: "\(path).levels",
-        reason: "Provide five symbols for 0, 25, 50, 75, and 100 percent."
-      )
-    }
-    for (index, symbol) in (levels ?? []).enumerated() {
-      try symbol.validate(font: font, path: "\(path).levels[\(index)]")
+    for (name, values) in [("levels", levels), ("chargingLevels", chargingLevels)] {
+      if let values, values.count != 5 {
+        throw ConfigurationError.invalidValue(
+          path: "\(path).\(name)",
+          reason: "Provide five symbols for 0, 25, 50, 75, and 100 percent."
+        )
+      }
+      for (index, symbol) in (values ?? []).enumerated() {
+        try symbol.validate(font: font, path: "\(path).\(name)[\(index)]")
+      }
     }
     try charging?.validate(font: font, path: "\(path).charging")
     try pluggedIn?.validate(font: font, path: "\(path).pluggedIn")

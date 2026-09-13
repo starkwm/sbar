@@ -107,9 +107,15 @@ enum WidgetState: Equatable, Sendable {
       } else {
         batterySymbol = .system("battery.\(index * 25)percent")
       }
+      let chargingSymbol: ItemSymbol?
+      if let symbols = settings.symbols, let levels = symbols.chargingLevels, levels.count == 5 {
+        chargingSymbol = symbols.resolve(levels[index])
+      } else {
+        chargingSymbol = nil
+      }
       let symbol =
         charging
-        ? (settings.symbols?.resolve(settings.symbols?.charging)
+        ? (chargingSymbol ?? settings.symbols?.resolve(settings.symbols?.charging)
           ?? "battery.100percent.bolt")
         : pluggedIn
           ? (settings.symbols?.resolve(settings.symbols?.pluggedIn)

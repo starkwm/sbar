@@ -46,7 +46,7 @@ font size. Only the symbol uses the custom font; item text retains its normal fo
 fonts or glyphs use macOS font fallback, which may display a missing-character box.
 SF Symbol strings continue to work, and can be mixed with glyph objects.
 
-Battery `symbols.levels` accepts exactly five symbols, ordered 0%, 25%, 50%, 75%, 100%:
+Battery `symbols.levels` and optional `symbols.chargingLevels` each accept exactly five symbols, ordered 0%, 25%, 50%, 75%, 100%:
 
 ```json
 {

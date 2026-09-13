@@ -844,6 +844,26 @@
             ]
           }
         },
+        "chargingLevels": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/widgetSymbol"
+              },
+              {
+                "not": {
+                  "type": "null"
+                }
+              }
+            ]
+          }
+        },
         "charging": {
           "$ref": "#/$defs/widgetSymbol"
         },
@@ -869,6 +889,11 @@
           "then": {
             "properties": {
               "levels": {
+                "items": {
+                  "$ref": "#/$defs/symbol"
+                }
+              },
+              "chargingLevels": {
                 "items": {
                   "$ref": "#/$defs/symbol"
                 }

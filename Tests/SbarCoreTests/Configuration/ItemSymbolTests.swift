@@ -63,6 +63,49 @@ struct ItemSymbolTests {
     #expect(throws: ConfigurationError.self) { try item.battery?.validate(path: "battery") }
   }
 
+  @Test("charging levels select the nearest level and inherit glyph defaults")
+  func chargingLevels() throws {
+    let json = #"""
+      {"symbols":{"font":"Shared","size":18,
+        "chargingLevels":["zero",{"glyph":"one"},"two","three","four"],
+        "charging":"bolt"}}
+      """#
+    let settings = try JSONDecoder().decode(BatteryConfiguration.self, from: Data(json.utf8))
+    try settings.validate(path: "battery")
+    #expect(
+      try JSONDecoder().decode(BatteryConfiguration.self, from: JSONEncoder().encode(settings))
+        == settings
+    )
+    var item = Item(id: "battery", type: .battery, battery: settings)
+    for (percentage, expected) in [
+      (0, ItemSymbol.system("zero")), (12, .system("zero")),
+      (13, .glyph("one", font: "Shared", size: 18)),
+      (37, .glyph("one", font: "Shared", size: 18)), (38, .system("two")),
+      (62, .system("two")), (63, .system("three")), (87, .system("three")),
+      (88, .system("four")), (100, .system("four")),
+    ] {
+      #expect(
+        WidgetState.battery(percentage: percentage, charging: true, pluggedIn: true)
+          .presentation(for: item).symbol == expected
+      )
+    }
+    #expect(
+      WidgetState.battery(percentage: 50, charging: false, pluggedIn: false)
+        .presentation(for: item).symbol == "battery.50percent"
+    )
+    item.battery?.symbols?.chargingLevels = nil
+    #expect(
+      WidgetState.battery(percentage: 50, charging: true, pluggedIn: true)
+        .presentation(for: item).symbol == "bolt"
+    )
+    for levels: [WidgetSymbol] in [
+      [], [.system("one")], Array(repeating: .glyph(" ", font: "Shared"), count: 5),
+    ] {
+      item.battery?.symbols?.chargingLevels = levels
+      #expect(throws: ConfigurationError.self) { try item.battery?.validate(path: "battery") }
+    }
+  }
+
   @Test("grouped battery symbols inherit defaults and preserve overrides on round trip")
   func groupedBatterySymbols() throws {
     let json = #"""

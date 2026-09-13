@@ -27,7 +27,7 @@ block to customize the appearance; use `showSymbol: false` for text only:
 ```
 
 Use top-level `text: ""` for an icon alone. Battery `showSymbol` defaults to `true`. The icon follows charge
-level in 25% steps, uses `symbols.charging` (default `battery.100percent.bolt`) while charging,
+level rounded to the nearest 25%, uses `symbols.charging` (default `battery.100percent.bolt`) while charging,
 and `symbols.pluggedIn` (default `powerplug`) on AC power without charging. `lowThreshold`
 defaults to 20 and accepts 0–100, inclusive. `tints.low` applies at or below that threshold
 while running on battery; `tints.charging` and `tints.pluggedIn` apply to their respective power
@@ -42,3 +42,9 @@ the configuration file and reload; the `set` command does not accept the widget 
 Battery templates expose `status` as `charging`, `pluggedIn`, `onBattery`, or `noBattery`. Use [state conditions](../text-templates.md#state-specific-labels) to customise their labels.
 
 See [common item settings](../configuration.md#items), [refresh policies](../configuration.md#refresh-policies), [styling](../styling.md), and [symbols](../symbols.md) for shared options.
+
+Set `symbols.chargingLevels` to five symbols ordered 0%, 25%, 50%, 75%, and 100%
+to show charge level while charging. The nearest level takes precedence over
+`symbols.charging`. Omit it or use `null` to keep the single charging icon.
+Like `symbols.levels`, entries accept SF Symbol names or glyph objects and inherit
+`symbols.font` and `symbols.size`.
