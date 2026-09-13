@@ -3,8 +3,9 @@ import Foundation
 
 @MainActor
 final class MailProvider {
+  private(set) var interval: Duration
+
   private let read: @MainActor @Sendable () async -> MailState
-  private let interval: Duration
   private var task: Task<Void, Never>?
 
   init(
@@ -15,10 +16,11 @@ final class MailProvider {
     self.read = read
   }
 
-  func start(update: @escaping @MainActor (MailState) -> Void) {
+  func start(interval: Duration? = nil, update: @escaping @MainActor (MailState) -> Void) {
     stop()
+    if let interval { self.interval = interval }
     let read = read
-    let interval = interval
+    let interval = self.interval
     task = Task {
       while !Task.isCancelled {
         let state = await read()

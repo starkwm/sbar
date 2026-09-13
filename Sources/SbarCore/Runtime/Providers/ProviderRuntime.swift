@@ -108,6 +108,18 @@ final class ProviderRuntime {
     let requested = Set(configuration.items.active.map(\.type)).subtracting([
       .command, .plugin, .text, .spacer, .divider, .group, .popup,
     ])
+    let mailInterval = configuration.items.active
+      .filter { $0.type == .mail }
+      .map { ($0.mail ?? MailConfiguration()).resolvedPollInterval }
+      .min()
+    if let mailInterval {
+      let interval = Duration.seconds(mailInterval)
+      if !activeTypes.contains(.mail) || mail.interval != interval {
+        mail.start(interval: interval) { [weak self] in
+          self?.updateWidgetState(.mail($0), for: .mail)
+        }
+      }
+    }
     guard requested != activeTypes else { return }
 
     let added = requested.subtracting(activeTypes)
@@ -135,10 +147,6 @@ final class ProviderRuntime {
       audioDevice.start { [weak self] in
         self?.updateWidgetState(.audioDevice($0), for: .audioDevice)
       }
-    }
-
-    if added.contains(.mail) {
-      mail.start { [weak self] in self?.updateWidgetState(.mail($0), for: .mail) }
     }
 
     if added.contains(.vpn) {

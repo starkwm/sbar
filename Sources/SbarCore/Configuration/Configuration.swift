@@ -120,6 +120,7 @@ struct Configuration: Codable, Equatable, Sendable {
         try item.memory?.validate(path: "\(location).memory")
         try item.cpu?.validate(path: "\(location).cpu")
         try item.network?.validate(path: "\(location).network")
+        try item.mail?.validate(path: "\(location).mail")
         try item.vpn?.validate(path: "\(location).vpn")
         try item.bluetooth?.validate(path: "\(location).bluetooth")
         try item.audioDevice?.validate(path: "\(location).audioDevice")
@@ -137,6 +138,7 @@ struct Configuration: Codable, Equatable, Sendable {
           || (item.memory != nil && item.type != .memory)
           || (item.cpu != nil && item.type != .cpu)
           || (item.network != nil && item.type != .network)
+          || (item.mail != nil && item.type != .mail)
           || (item.vpn != nil && item.type != .vpn)
           || (item.bluetooth != nil && item.type != .bluetooth)
           || (item.audioDevice != nil && item.type != .audioDevice)
@@ -279,7 +281,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
       throughput,
       volume,
       network,
-      vpn,
+      mail, vpn,
       bluetooth,
       audioDevice,
       frontApplication
@@ -317,6 +319,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var battery: BatteryConfiguration?
   var bluetooth: BluetoothConfiguration?
   var audioDevice: AudioDeviceConfiguration?
+  var mail: MailConfiguration?
   var vpn: VPNConfiguration?
   var network: NetworkConfiguration?
   var volume: VolumeConfiguration?
@@ -356,6 +359,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     battery: BatteryConfiguration? = nil,
     bluetooth: BluetoothConfiguration? = nil,
     audioDevice: AudioDeviceConfiguration? = nil,
+    mail: MailConfiguration? = nil,
     vpn: VPNConfiguration? = nil,
     network: NetworkConfiguration? = nil,
     volume: VolumeConfiguration? = nil,
@@ -393,6 +397,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.battery = battery
     self.bluetooth = bluetooth
     self.audioDevice = audioDevice
+    self.mail = mail
     self.vpn = vpn
     self.network = network
     self.volume = volume
@@ -440,6 +445,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     battery = try container.decodeIfPresent(BatteryConfiguration.self, forKey: .battery)
     bluetooth = try container.decodeIfPresent(BluetoothConfiguration.self, forKey: .bluetooth)
     audioDevice = try container.decodeIfPresent(AudioDeviceConfiguration.self, forKey: .audioDevice)
+    mail = try container.decodeIfPresent(MailConfiguration.self, forKey: .mail)
     vpn = try container.decodeIfPresent(VPNConfiguration.self, forKey: .vpn)
     network = try container.decodeIfPresent(NetworkConfiguration.self, forKey: .network)
     volume = try container.decodeIfPresent(VolumeConfiguration.self, forKey: .volume)

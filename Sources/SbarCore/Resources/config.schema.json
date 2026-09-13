@@ -555,6 +555,9 @@
         "bluetooth": {
           "$ref": "#/$defs/bluetooth"
         },
+        "mail": {
+          "$ref": "#/$defs/mail"
+        },
         "audioDevice": {
           "$ref": "#/$defs/audioDevice"
         }
@@ -2585,6 +2588,18 @@
           }
         }
       ]
+    },
+    "mail": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pollInterval": {
+          "type": "number",
+          "minimum": 5,
+          "default": 30,
+          "description": "Seconds between Mail queries. Enabled Mail items share the shortest interval."
+        }
+      }
     },
     "audioDevice": {
       "type": [
