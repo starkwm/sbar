@@ -21,7 +21,7 @@ enum ItemSymbol: Codable, Equatable, Sendable, ExpressibleByStringLiteral {
     let size = try container.decodeIfPresent(Double.self, forKey: .size)
     guard !glyph.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
       !font.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-      size.map { (8...72).contains($0) } ?? true
+      size.map({ (8...72).contains($0) }) ?? true
     else {
       throw DecodingError.dataCorrupted(
         .init(
