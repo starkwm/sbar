@@ -185,6 +185,27 @@
           "type": "number",
           "minimum": 0,
           "maximum": 48
+        },
+        "regionStyle": {
+          "$ref": "#/$defs/regionStyle"
+        },
+        "regions": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "left": {
+              "$ref": "#/$defs/regionStyle"
+            },
+            "center": {
+              "$ref": "#/$defs/regionStyle"
+            },
+            "right": {
+              "$ref": "#/$defs/regionStyle"
+            }
+          }
         }
       }
     }
@@ -2684,6 +2705,69 @@
         }
       },
       "additionalProperties": false
+    },
+    "regionStyle": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "background": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+        },
+        "borderColor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$"
+        },
+        "cornerRadius": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 48
+        },
+        "horizontalPadding": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 96
+        },
+        "verticalPadding": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 48
+        },
+        "borderWidth": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 48
+        },
+        "itemSpacing": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 96
+        }
+      }
     }
   }
 }
