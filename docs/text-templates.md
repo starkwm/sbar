@@ -262,6 +262,27 @@ Try the [Everyday bar](../examples/everyday/config.json), which uses templates f
 .build/debug/sbar start --config "$PWD/examples/everyday/config.json"
 ```
 
+## Trying state changes
+
+Use the Everyday configuration for a live check after building the current code.
+
+- Open the network popup and transfer a file. Check direction icons, units, and
+  separators as rates rise and return to zero. A zero rate is an available reading.
+- Connect and disconnect a VPN service. With a connected-only service template,
+  check that hidden services leave no leading, doubled, or trailing separator.
+- Turn Bluetooth off and on, then reconnect a device. Check that old device names
+  disappear while the device list is unavailable or empty.
+- Switch Spaces. Confirm the active entry changes colour and separator dots keep
+  the inactive colour. Try filtering entries with a conditional section.
+- Try `{{symbol}}` alone and conditional symbol tags with `symbolPosition` set to
+  `left` and `right`. For throughput, use `{{#transfers}}{{symbol}}{{#separator}} {{/separator}}{{/transfers}}`.
+- For an item using manual refresh, change its underlying state and confirm that
+  its label stays unchanged until you trigger refresh.
+
+Automated tests exercise unavailable recovery, connection changes, refresh
+snapshots, and native symbol rendering. Physical connection changes and live Space
+switching still need a check on the machine running the bar.
+
 ## Migrating older configurations
 
 Removed text settings now fail configuration loading with the full field path and a reminder to use top-level `text`. A failed reload keeps the last valid configuration.
