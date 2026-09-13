@@ -4,49 +4,71 @@ struct BarRegionView: View {
   let items: [Item]
   let theme: Theme?
   let alignment: Alignment
+  var style: RegionStyle?
 
   var body: some View {
     let displayed = items.filter { providers.isVisible($0, displayUUID: barDisplayUUID) }
     GeometryReader { geometry in
-      let spacing = theme?.itemSpacing ?? 10
+      let resolved = (style ?? RegionStyle()).resolved(over: theme?.regionStyle)
+      let horizontalPadding = min(resolved.horizontalPadding ?? 0, geometry.size.width / 2)
+      let verticalPadding = min(resolved.verticalPadding ?? 0, geometry.size.height / 2)
+      let spacing = resolved.itemSpacing ?? theme?.itemSpacing ?? 10
       let visible = OverflowSelection.visibleItemIDs(
         items: displayed,
         widths: widths,
-        available: geometry.size.width,
+        available: max(0, geometry.size.width - horizontalPadding * 2),
         spacing: spacing,
         defaultStyle: theme?.itemStyle
       )
 
-      HStack(spacing: spacing) {
-        ForEach(displayed.filter { visible.contains($0.id) }) { item in
-          InteractiveItemView(item: item, defaultStyle: theme?.itemStyle)
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
-        }
+      if !displayed.isEmpty {
+        HStack(spacing: spacing) {
+          ForEach(displayed.filter { visible.contains($0.id) }) { item in
+            InteractiveItemView(item: item, defaultStyle: theme?.itemStyle)
+              .lineLimit(1)
+              .minimumScaleFactor(0.8)
+          }
 
-        if visible.count < displayed.count {
-          Button {
-            showingOverflow.toggle()
-          } label: {
-            Image(systemName: "ellipsis")
-          }
-          .buttonStyle(.plain)
-          .frame(width: 28)
-          .modifier(HitRegionModifier())
-          .accessibilityLabel("More bar items")
-          .popover(isPresented: $showingOverflow) {
-            VStack(alignment: .leading, spacing: 8) {
-              ForEach(displayed.filter { !visible.contains($0.id) }) { item in
-                InteractiveItemView(item: item, defaultStyle: theme?.itemStyle)
-              }
+          if visible.count < displayed.count {
+            Button {
+              showingOverflow.toggle()
+            } label: {
+              Image(systemName: "ellipsis")
             }
-            .padding()
-            .frame(maxWidth: 480)
-            .focusEffectDisabled()
+            .buttonStyle(.plain)
+            .frame(width: 28)
+            .modifier(HitRegionModifier())
+            .accessibilityLabel("More bar items")
+            .popover(isPresented: $showingOverflow) {
+              VStack(alignment: .leading, spacing: 8) {
+                ForEach(displayed.filter { !visible.contains($0.id) }) { item in
+                  InteractiveItemView(item: item, defaultStyle: theme?.itemStyle)
+                }
+              }
+              .padding()
+              .frame(maxWidth: 480)
+              .focusEffectDisabled()
+            }
           }
         }
+        .frame(height: max(0, geometry.size.height - verticalPadding * 2))
+        .padding(.horizontal, horizontalPadding)
+        .padding(.vertical, verticalPadding)
+        .background {
+          RoundedRectangle(cornerRadius: resolved.cornerRadius ?? 0)
+            .fill(Color(hex: resolved.background) ?? .clear)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: resolved.cornerRadius ?? 0))
+        .overlay {
+          RoundedRectangle(cornerRadius: resolved.cornerRadius ?? 0)
+            .strokeBorder(
+              Color(hex: resolved.borderColor) ?? .clear,
+              lineWidth: resolved.borderWidth ?? 0
+            )
+            .allowsHitTesting(false)
+        }
+        .frame(width: geometry.size.width, height: geometry.size.height, alignment: alignment)
       }
-      .frame(width: geometry.size.width, height: geometry.size.height, alignment: alignment)
     }
     .background {
       HStack(spacing: 0) {
