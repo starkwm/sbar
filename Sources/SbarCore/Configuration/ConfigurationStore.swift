@@ -75,8 +75,7 @@ final class ConfigurationStore {
     do {
       let decoded: Configuration
       do {
-        decoded = try JSONDecoder().decode(
-          Configuration.self,
+        decoded = try ConfigurationDecoder.decode(
           from: Data(contentsOf: configurationURL)
         )
       } catch CocoaError.fileReadNoSuchFile {

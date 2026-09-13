@@ -155,6 +155,37 @@ struct ConfigurationStoreTests {
     try await wait { store.configuration.bar.height == 56 }
   }
 
+  @Test(
+    "JSONC loads, validates, and retains the last valid configuration",
+    arguments: ["json", "jsonc"]
+  )
+  func loadsJSONC(extension suffix: String) throws {
+    let directory = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let url = directory.appending(path: "config.\(suffix)")
+    let original = Data(
+      "{ // Settings\n \"schemaVersion\":1,\"bar\":{\"height\":48,},\"items\":{},}".utf8
+    )
+    try original.write(to: url)
+    let store = ConfigurationStore(configurationURL: url)
+    store.load()
+    #expect(store.configuration.bar.height == 48)
+    #expect(store.errorMessage == nil)
+    try ConfigurationValidator.validate(url: url)
+    #expect(try Data(contentsOf: url) == original)
+
+    try Data("/* unfinished".utf8).write(to: url)
+    store.load()
+    #expect(store.configuration.bar.height == 48)
+    #expect(store.errorMessage?.contains("Unterminated block comment") == true)
+    #expect(throws: (any Error).self) { try ConfigurationValidator.validate(url: url) }
+
+    try Data("{\"schemaVersion\":1,\"bar\":{\"height\":52,},\"items\":{},}".utf8).write(to: url)
+    store.load()
+    #expect(store.configuration.bar.height == 52)
+    #expect(store.errorMessage == nil)
+  }
+
   private func temporaryDirectory() throws -> URL {
     let url = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)

@@ -6,6 +6,24 @@ Edit `~/.config/sbar/config.json` in your preferred editor. sbar reloads it when
 
 Run `sbar validate` (or `sbar validate --config /path/to/config.json`) to check a file without starting the bar. Invalid or missing files produce an error and a nonzero exit status. Validation never writes the file. Use `sbar start --config /path/to/config.json` to run with another configuration.
 
+Configuration files accept JSONC comments (`//` to the end of a line and `/* ... */` blocks) and trailing commas in objects and arrays. sbar strips these in memory before decoding; your file keeps its comments and formatting. Comment markers inside strings are preserved. Block comments cannot be nested.
+
+Both `.json` and `.jsonc` files support this syntax. The default path remains `~/.config/sbar/config.json`. To use a `.jsonc` filename, pass `--config /path/to/config.jsonc` to `sbar start` and `sbar validate`.
+
+```jsonc
+{
+  "schemaVersion": 1,
+  // Leave room for the menu bar.
+  "bar": { "margin": { "top": 40, }, },
+  "items": {
+    "right": [
+      /* Use a 24-hour clock. */
+      { "id": "clock", "type": "datetime", "format": "HH:mm", },
+    ],
+  },
+}
+```
+
 The config file is the only persistent configuration source. sbar never saves, rewrites, or backs it up. For editor completion, copy [config.schema.json](../Sources/SbarCore/Resources/config.schema.json) beside your configuration and add `"$schema": "config.schema.json"` to the root object.
 
 For a daily-use bar with app shortcuts, system status popovers, and volume controls, see the [Everyday bar](../examples/everyday/README.md). For a minimal top bar with inset edges and rounded corners, see the [floating bar](../examples/floating/README.md).

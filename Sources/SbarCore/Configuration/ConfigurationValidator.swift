@@ -3,8 +3,7 @@ import Foundation
 public enum ConfigurationValidator {
   public static func validate(url: URL) throws {
     do {
-      let configuration = try JSONDecoder().decode(
-        Configuration.self,
+      let configuration = try ConfigurationDecoder.decode(
         from: Data(contentsOf: url)
       )
       try configuration.validate()
