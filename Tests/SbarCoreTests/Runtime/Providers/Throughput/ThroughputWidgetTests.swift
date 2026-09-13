@@ -199,7 +199,7 @@ struct ThroughputWidgetTests {
     #expect(state.presentation(for: item).text == "1:download=8.2 kbit/s;2:upload=0 bit/s")
     #expect(ThroughputState().presentation(for: item).text == "")
     for source in [
-      "{{symbol}}", "{{#transfers}}{{#symbol}}x{{/symbol}}{{/transfers}}",
+      "{{#transfers}}{{#symbol}}x{{/symbol}}{{/transfers}}",
       "{{#direction=sideways}}x{{/direction}}",
     ] {
       #expect(throws: ConfigurationError.self) {

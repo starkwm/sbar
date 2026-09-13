@@ -38,6 +38,7 @@ struct WorkspaceText {
     let runs = template.renderRuns(values, entries: entries.map(\.values))
     var result = presentation
     result.text = runs.map(\.text).joined()
+    if template.containsSymbol && !runs.contains(where: \.symbol) { result.symbol = nil }
     if runs.contains(where: { $0.entry != nil }) {
       result.tint = nil
       result.segmentSpacing = 0

@@ -287,7 +287,9 @@ final class ProviderRuntime {
     else {
       return resolved
     }
-    resolved.text = template.renderRuns(values, entries: entries).map(\.text).joined()
+    let runs = template.renderRuns(values, entries: entries)
+    resolved.text = runs.map(\.text).joined()
+    if template.containsSymbol && !runs.contains(where: \.symbol) { resolved.symbol = nil }
     if presentation == nil { resolved.accessibilityLabel = resolved.text }
     resolved.segments = []
     return resolved
@@ -300,6 +302,15 @@ final class ProviderRuntime {
   func applicationIcon(for item: Item) -> NSImage? {
     guard item.type == .frontApplication, item.frontApplication?.showIcon == true else {
       return nil
+    }
+    if let source = item.text,
+      let template = try? TextTemplate(source, fields: TextTemplate.fields(for: item.type)),
+      template.containsSymbol
+    {
+      let name = itemSnapshots[item.id] ?? sharedValues[.frontApplication] ?? ""
+      guard
+        template.renderRuns(["id": item.id, "name": name, "value": name]).contains(where: \.symbol)
+      else { return nil }
     }
     return (item.refresh == nil ? frontApplication : applicationSnapshots[item.id])?.icon
   }

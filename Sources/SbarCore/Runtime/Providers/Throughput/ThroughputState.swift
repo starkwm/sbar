@@ -88,7 +88,7 @@ struct ThroughputState: Equatable, Sendable {
       let download = run.entry == 0
       return WidgetSegment(
         text: run.text,
-        symbol: run.symbol && showSymbol && item.symbol == nil
+        symbol: run.symbol && run.entry != nil && showSymbol && item.symbol == nil
           ? settings.symbols?.resolve(
             download ? settings.symbols?.download : settings.symbols?.upload
           ) ?? .system(download ? "arrow.down" : "arrow.up") : nil
@@ -97,6 +97,7 @@ struct ThroughputState: Equatable, Sendable {
     return WidgetPresentation(
       text: runs.map(\.text).joined(separator: item.text == nil ? " " : ""),
       symbol: showSymbol
+        && (template?.containsSymbol != true || runs.contains(where: \.symbol) || item.text == nil)
         ? item.symbol
           ?? (rate == nil
             ? settings.symbols?.resolve(settings.symbols?.unavailable) ?? "questionmark" : nil)

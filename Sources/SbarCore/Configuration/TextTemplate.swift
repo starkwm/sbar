@@ -17,7 +17,7 @@ struct TextTemplate {
   private static let collections: Set<String> = ["workspaces", "services", "devices", "transfers"]
 
   static func fields(for type: ItemType) -> Set<String> {
-    let common: Set<String> = ["value", "id"]
+    let common: Set<String> = ["value", "id", "symbol"]
     let fields: [String]
     switch type {
     case .spaces, .aerospace, .yabai:
@@ -86,6 +86,19 @@ struct TextTemplate {
     return values
   }
 
+  var containsSymbol: Bool {
+    func contains(_ parts: [Part]) -> Bool {
+      parts.contains { part in
+        switch part {
+        case .value(let name): return name == "symbol"
+        case .section(_, _, _, let children): return contains(children)
+        case .literal: return false
+        }
+      }
+    }
+    return contains(parts)
+  }
+
   private let parts: [Part]
 
   init(
@@ -128,8 +141,8 @@ struct TextTemplate {
           components.count == 2
           ? components[1].trimmingCharacters(in: .whitespacesAndNewlines) : nil
         guard fields.contains(name) else { throw fail("Unknown text template value '\(name)'.") }
-        if name == "symbol", section || !inCollection {
-          throw fail("Use {{symbol}} inside a transfers loop.")
+        if name == "symbol", section {
+          throw fail("Use {{symbol}} as a value, not a section.")
         }
         if name == "separator" {
           guard section, expected == nil, !tag.hasPrefix("^"), inCollection else {
