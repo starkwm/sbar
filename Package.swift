@@ -28,7 +28,7 @@ let package = Package(
     ),
     .target(
       name: "SbarCore",
-      resources: [.copy("Resources/config.schema.json")]
+      exclude: ["Resources"]
     ),
     .testTarget(name: "SbarTests", dependencies: ["Sbar"]),
     .testTarget(name: "SbarCoreTests", dependencies: ["SbarCore"]),

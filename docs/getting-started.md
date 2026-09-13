@@ -23,7 +23,7 @@ The development binary is written to `.build/debug/sbar`. Run it to start the ba
 .build/debug/sbar
 ```
 
-Use `make release` for an optimized build in `.build/release`. Keep the generated `sbar_SbarCore.bundle` alongside the executable when copying build outputs. Add the executable's directory to your `PATH` to use the [CLI commands](cli.md).
+Use `make release` for an optimized build in `.build/release`. The `sbar` executable is self-contained; copy it to a directory on your `PATH` to use the [CLI commands](cli.md).
 
 A source build is not installed as a background service automatically. To run at login, create a Launch Agent that starts the executable using its absolute path.
 
