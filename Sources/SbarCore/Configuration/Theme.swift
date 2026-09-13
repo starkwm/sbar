@@ -7,6 +7,8 @@ struct Theme: Codable, Equatable, Sendable {
   var cornerRadius: Double?
   var itemSpacing: Double?
   var itemStyle: ItemStyle?
+  var regionStyle: RegionStyle?
+  var regions: RegionStyles?
 
   func validate() throws {
     try ItemStyle.validateColor(background, path: "theme.background")
@@ -15,6 +17,8 @@ struct Theme: Codable, Equatable, Sendable {
     try ItemStyle.validateNumber(cornerRadius, range: 0...48, path: "theme.cornerRadius")
     try ItemStyle.validateNumber(itemSpacing, range: 0...96, path: "theme.itemSpacing")
     try itemStyle?.validate(path: "theme.itemStyle")
+    try regionStyle?.validate(path: "theme.regionStyle")
+    try regions?.validate()
   }
 }
 
