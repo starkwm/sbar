@@ -12,9 +12,21 @@ struct BarView: View {
       },
       notch: notch.map { $0.offsetBy(dx: -(configuration.theme?.horizontalPadding ?? 10), dy: 0) }
     ) {
-      region(configuration.items.left, alignment: .leading)
-      region(configuration.items.center, alignment: notch == nil ? .center : .leading)
-      region(configuration.items.right, alignment: .trailing)
+      region(
+        configuration.items.left,
+        style: configuration.theme?.regions?.left,
+        alignment: .leading
+      )
+      region(
+        configuration.items.center,
+        style: configuration.theme?.regions?.center,
+        alignment: notch == nil ? .center : .leading
+      )
+      region(
+        configuration.items.right,
+        style: configuration.theme?.regions?.right,
+        alignment: .trailing
+      )
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .padding(.horizontal, configuration.theme?.horizontalPadding ?? 10)
@@ -37,7 +49,7 @@ struct BarView: View {
   @Environment(\.barDisplayUUID) private var barDisplayUUID
   @Environment(ProviderRuntime.self) private var providers
 
-  private func region(_ items: [Item], alignment: Alignment) -> some View {
-    BarRegionView(items: items, theme: configuration.theme, alignment: alignment)
+  private func region(_ items: [Item], style: RegionStyle?, alignment: Alignment) -> some View {
+    BarRegionView(items: items, theme: configuration.theme, alignment: alignment, style: style)
   }
 }
