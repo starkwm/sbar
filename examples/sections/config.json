@@ -1,0 +1,80 @@
+{
+  "$schema": "../../Sources/SbarCore/Resources/config.schema.json",
+  "schemaVersion": 1,
+  "bar": {
+    "position": "top",
+    "height": 36,
+    "displays": "main",
+    "margin": {
+      "top": 6,
+      "left": 6,
+      "right": 6
+    },
+    "mousePassThrough": true,
+    "shadow": false
+  },
+  "theme": {
+    "background": "#00000000",
+    "horizontalPadding": 4,
+    "verticalPadding": 3,
+    "itemSpacing": 10,
+    "itemStyle": {
+      "tint": "#C0CAF5"
+    },
+    "regionStyle": {
+      "background": "#1A1B26",
+      "cornerRadius": 8,
+      "horizontalPadding": 10,
+      "verticalPadding": 2,
+      "borderColor": "#414868",
+      "borderWidth": 1
+    },
+    "regions": {
+      "center": {
+        "background": "#24283B"
+      },
+      "right": {
+        "cornerRadius": 12
+      }
+    }
+  },
+  "items": {
+    "left": [
+      {
+        "id": "front-app",
+        "type": "frontApplication",
+        "priority": 100
+      },
+      {
+        "id": "spaces",
+        "type": "spaces",
+        "symbol": "rectangle.3.group"
+      }
+    ],
+    "center": [
+      {
+        "id": "clock",
+        "type": "datetime",
+        "format": "EEE d MMM  HH:mm",
+        "priority": 100
+      }
+    ],
+    "right": [
+      {
+        "id": "battery",
+        "type": "battery"
+      },
+      {
+        "id": "wifi",
+        "type": "network",
+        "network": {
+          "interface": "wifi"
+        }
+      },
+      {
+        "id": "vpn",
+        "type": "vpn"
+      }
+    ]
+  }
+}
