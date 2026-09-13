@@ -44,7 +44,7 @@ final class ConfigurationStore {
 
   init(
     configurationURL: URL = FileManager.default.homeDirectoryForCurrentUser.appending(
-      path: ".config/starkbar/config.json"
+      path: ".config/sbar/config.json"
     )
   ) {
     self.configurationURL = configurationURL

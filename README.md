@@ -1,6 +1,6 @@
 # sbar
 
-Stark Bar for macOS.
+sbar for macOS.
 
 `sbar` is a configurable status bar with native system information, shell commands, and process plugins. Arrange items across the left, center, and right of each display, and control the running bar from the command line.
 
@@ -15,7 +15,7 @@ make build
 .build/debug/sbar
 ```
 
-Without a configuration file, sbar shows the active application, a divider, and a clock. Create `~/.config/starkbar/config.json` to choose your own items. Changes reload automatically.
+Without a configuration file, sbar shows the active application, a divider, and a clock. Create `~/.config/sbar/config.json` to choose your own items. Changes reload automatically.
 
 See [getting started](docs/getting-started.md) for release builds and setup, or the [configuration guide](docs/configuration.md) for a minimal config.
 

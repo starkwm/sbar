@@ -15,7 +15,7 @@ final class ControlServer: @unchecked Sendable {
   private let path: String
   private let handler: @Sendable (ControlRequest) async -> ControlResponse
 
-  private let queue = DispatchQueue(label: "starkbar.control")
+  private let queue = DispatchQueue(label: "sbar.control")
 
   private var listener: (any DispatchSourceRead)?
   private var connections: [Int32: Connection] = [:]

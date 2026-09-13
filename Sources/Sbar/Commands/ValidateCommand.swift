@@ -9,7 +9,7 @@ struct ValidateCommand: ParsableCommand {
   )
 
   @Option(name: .long, help: "Configuration file path.", completion: .file())
-  var config = "~/.config/starkbar/config.json"
+  var config = "~/.config/sbar/config.json"
 
   mutating func validate() throws {
     if config.isEmpty { throw ValidationError("Configuration path must not be empty.") }

@@ -2,7 +2,7 @@
 
 [Documentation index](index.md)
 
-Edit `~/.config/starkbar/config.json` in your preferred editor. sbar reloads it when the file changes. Missing files use built-in defaults (the active application, a divider, and a clock); invalid edits retain the last valid configuration. Inspect errors with `sbar query --diagnostics`.
+Edit `~/.config/sbar/config.json` in your preferred editor. sbar reloads it when the file changes. Missing files use built-in defaults (the active application, a divider, and a clock); invalid edits retain the last valid configuration. Inspect errors with `sbar query --diagnostics`.
 
 Run `sbar validate` (or `sbar validate --config /path/to/config.json`) to check a file without starting the bar. Invalid or missing files produce an error and a nonzero exit status. Validation never writes the file. Use `sbar start --config /path/to/config.json` to run with another configuration.
 
@@ -10,7 +10,7 @@ The config file is the only persistent configuration source. sbar never saves, r
 
 For a daily-use bar with app shortcuts, system status popovers, and volume controls, see the [Everyday bar](../examples/everyday/README.md). For a minimal top bar with inset edges and rounded corners, see the [floating bar](../examples/floating/README.md).
 
-Create `~/.config/starkbar/config.json` with a configuration such as:
+Create `~/.config/sbar/config.json` with a configuration such as:
 
 ```json
 {

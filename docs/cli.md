@@ -12,7 +12,7 @@ sbar [start] [--config <path>]
 
 Other invocations send commands to the running process. `validate` checks a configuration file independently. Commands return a nonzero exit status on failure. Run `sbar --help` or `sbar <command> --help` for help.
 
-Client commands connect to `~/.config/starkbar/control.sock`. An instance started with `--config` creates `control.sock` beside that file. Pass `--socket <path>` after the client subcommand to target it:
+Client commands connect to `~/.config/sbar/control.sock`. An instance started with `--config` creates `control.sock` beside that file. Pass `--socket <path>` after the client subcommand to target it:
 
 ```sh
 sbar start --config /path/to/config.json
@@ -28,7 +28,7 @@ Only one instance can own a given socket, and clients must run as the same user.
 sbar validate [--config <path>]
 ```
 
-Check a configuration file without starting the bar. The default path is `~/.config/starkbar/config.json`. Invalid or missing files produce an error and a nonzero exit status. Validation never writes the file. See [configuration](configuration.md) for the file format.
+Check a configuration file without starting the bar. The default path is `~/.config/sbar/config.json`. Invalid or missing files produce an error and a nonzero exit status. Validation never writes the file. See [configuration](configuration.md) for the file format.
 
 ## Query state
 

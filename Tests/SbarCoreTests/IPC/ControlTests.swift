@@ -8,7 +8,7 @@ import Testing
 struct ControlTests {
   @Test("ControlServer.start: handles fragmented requests and excludes a second server")
   func startHandlesFragmentedRequestsAndExcludesSecondServer() throws {
-    let path = "/tmp/starkbar-\(UUID().uuidString).sock"
+    let path = "/tmp/sbar-\(UUID().uuidString).sock"
     defer { try? FileManager.default.removeItem(atPath: path + ".lock") }
 
     let server = ControlServer(path: path) { request in

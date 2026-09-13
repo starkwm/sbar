@@ -21,7 +21,7 @@ final class NetworkProvider {
 
       Task { @MainActor in update(network) }
     }
-    monitor.start(queue: DispatchQueue(label: "starkbar.network"))
+    monitor.start(queue: DispatchQueue(label: "sbar.network"))
     self.monitor = monitor
   }
 

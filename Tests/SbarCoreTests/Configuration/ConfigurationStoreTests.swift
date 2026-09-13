@@ -120,7 +120,7 @@ struct ConfigurationStoreTests {
   func startObservingFindsFilesInNewDirectories() async throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
-    let parent = directory.appending(path: "nested/starkbar")
+    let parent = directory.appending(path: "nested/sbar")
     let url = parent.appending(path: "config.json")
     let store = ConfigurationStore(configurationURL: url)
     store.startObserving()

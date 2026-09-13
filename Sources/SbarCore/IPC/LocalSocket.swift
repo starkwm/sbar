@@ -2,7 +2,7 @@ import Darwin
 import Foundation
 
 public enum LocalSocket {
-  public static var defaultPath: String { NSHomeDirectory() + "/.config/starkbar/control.sock" }
+  public static var defaultPath: String { NSHomeDirectory() + "/.config/sbar/control.sock" }
 
   public static func address<T>(
     _ path: String,

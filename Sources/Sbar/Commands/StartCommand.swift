@@ -14,7 +14,7 @@ struct StartCommand: ParsableCommand {
   var configurationURL: URL {
     config.map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath).standardizedFileURL }
       ?? FileManager.default.homeDirectoryForCurrentUser.appending(
-        path: ".config/starkbar/config.json"
+        path: ".config/sbar/config.json"
       )
   }
 

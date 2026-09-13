@@ -29,7 +29,7 @@ A source build is not installed as a background service automatically. To run at
 
 ## Configure the bar
 
-Without a configuration file, sbar shows the active application, a divider, and a clock. Create `~/.config/starkbar/config.json` to choose your own items. Changes reload automatically; invalid edits retain the last valid configuration.
+Without a configuration file, sbar shows the active application, a divider, and a clock. Create `~/.config/sbar/config.json` to choose your own items. Changes reload automatically; invalid edits retain the last valid configuration.
 
 Follow the [configuration guide](configuration.md) for a minimal example and validation, then choose your [providers](index.md#providers). The [Everyday bar](../examples/everyday/README.md) includes app shortcuts, system status popovers, and volume controls. The [floating bar](../examples/floating/README.md) uses inset edges and rounded corners.
 
