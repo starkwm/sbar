@@ -16,7 +16,9 @@ A `command` item requires a nonblank `command.script`. Scripts run through `/bin
 
 `command.timeout` accepts 0.1–60 seconds and defaults to five seconds. Captured output is limited to 64 KB, and the process group is terminated on timeout, cancellation, or completion. Rapid triggers coalesce for 50 milliseconds and replace a running command. Interval delays begin after completion; a trigger restarts that schedule. Changes to scripts, execution options, or refresh settings rerun the command; appearance changes do not.
 
-`command.format` is `"text"` (default) or `"json"`. Text mode captures combined stdout/stderr by default; set `command.output:"stdout"` to exclude diagnostics. JSON mode always uses stdout and rejects an explicit `output:"combined"`. Excluded stderr is discarded. Display text collapses whitespace and line breaks into spaces, and is truncated with an ellipsis to `command.maxLength` characters (default 256, range 1–4096). Empty successful text is allowed.
+`command.format` is `"text"` (default) or `"json"`. Text mode captures combined stdout/stderr by default; set `command.output:"stdout"` to exclude diagnostics. JSON mode always uses stdout and rejects an explicit `output:"combined"`. Excluded stderr is discarded. Display text collapses whitespace and line breaks into spaces, and is truncated with an ellipsis to `command.maxLength` characters (default 256, range 1–4096). Empty successful text is allowed. This limit applies to `{{value}}` before the item's [text template](../text-templates.md) renders, so added template text is not included in the limit.
+
+The item's top-level `text` can format output, for example `"text": "Updates: {{value}}"`. The JSON result's `text` supplies provider data; it is not evaluated as a template. Templates also expose `status` and `error`.
 
 JSON commands emit one object with required string `text` and optional `symbol`, `tint`, and `hidden` fields:
 

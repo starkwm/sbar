@@ -68,13 +68,12 @@ Battery `symbols.levels` accepts exactly five symbols, ordered 0%, 25%, 50%, 75%
 }
 ```
 
-Within `battery.symbols`, `cpu.symbols`, `disk.symbols`, `media.symbols`, `memory.symbols`, `network.symbols`, `throughput.symbols`, `volume.symbols`, `vpn.symbols`, `bluetooth.symbols`, and `audioDevice.symbols`, glyphs inherit `font` and optional `size` (8–72 points).
+Every provider `symbols` block supports shared `font` and optional `size` (8–72 points), including workspace, command, and plugin symbols.
 Each glyph can override either value. A font must be provided locally or inherited;
 without either size, the resolved item/theme font size is used. Strings remain SF Symbol
 names and do not inherit glyph font settings. Omitted state symbols use the built-in defaults.
 
-An item-level `symbol` overrides all state symbols;
-`showSymbol: false` hides the symbol regardless of these settings.
+An item-level `symbol` overrides provider state symbols. Set `showSymbol: false` inside the provider block to hide them. Frontmost application icons have their own [`showIcon` setting](providers/front-application.md) and take precedence over the item symbol.
 
 The transient [`set` command](cli.md#update-items) also accepts a glyph object for the item-level `symbol`.
 

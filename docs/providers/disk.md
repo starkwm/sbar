@@ -58,7 +58,7 @@ size formatting. This preserves the existing free-space measurement and does not
 add an estimate of reclaimable storage.
 
 Disk value events use each **item ID**, with free-space text regardless of
-display mode. Refresh policies capture each item's full capacity state; manual
+the text template. Refresh policies capture each item's full capacity state; manual
 items hold their snapshot until triggered. Changing an item's path clears its old
 snapshot immediately.
 

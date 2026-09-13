@@ -249,7 +249,21 @@ VPN, and Bluetooth loops use the aggregate icon; they do not gain per-entry icon
 `{{#symbol}}` conditions are not supported. Use provider state conditions around
 `{{symbol}}` instead.
 
-## First-pass limits
+## Formatting and output settings
+
+The following settings still apply before `text` renders:
+
+| Provider | Settings | Effect |
+| --- | --- | --- |
+| `datetime` | `format`, `dateStyle`, `timeStyle` | Format the clock value inserted by `{{value}}`. |
+| `throughput` | `throughput.unit` | Choose bits or bytes for rate values and units. |
+| `command`, `plugin` | `maxLength` in the provider block | Collapse whitespace and truncate the provider value before template rendering. Text added by the template is outside this limit. |
+| `command`, `plugin` | `onError` in the provider block | Show an error, retain the last successful result, or hide the item. |
+| `command` | `command.format`, `command.output` | Choose text/JSON parsing and stdout/combined capture. |
+
+Command and plugin result `text` is input data exposed through `{{value}}`, not another template. Use [item widths](styling.md#item-widths) to constrain the final displayed content. Provider hide rules still hide the whole item even when a template supplies fallback text.
+
+## Template limits
 
 Workspace loops preserve each entry's colour and emphasis. Throughput loops preserve native direction symbols through `{{symbol}}`. Other providers retain one aggregate item symbol. Existing symbol, colour, and hide rules still apply. Native provider accessibility descriptions remain intact; static and clock labels use the rendered text.
 
@@ -300,7 +314,7 @@ Removed text settings now fail configuration loading with the full field path an
 | Command/plugin `showValue: false` | `"text": ""` |
 | VPN/Bluetooth `labels` | State conditions inside `services`/`devices` loops; use conditions outside the loop for aggregate fallback labels |
 | Workspace `format: currentTotal` | `{{index}} / {{total}}` with an unavailable/fullscreen fallback |
-| Workspace `format: list` | `{{#workspaces}}{{name}}{{^last}} {{/last}}{{/workspaces}}` |
+| Workspace `format: list` | `{{#workspaces}}{{name}}{{#separator}} {{/separator}}{{/workspaces}}` |
 | Throughput `showDownload`, `showUpload`, `showValue`, `showUnits` | Choose directions and number/unit fields inside `transfers` loops |
 | Workspace `showValue: false` | `"text": ""` |
 | Spaces/Aerospace `labels` | Conditions on `index` or `name`, inside the loop for lists |

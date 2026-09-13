@@ -59,7 +59,9 @@ sbar set clock enabled false
 sbar set clock style '{"tint":"#88C0D0"}'
 ```
 
-`set` changes in-memory configuration only. Supported properties are `label`, `symbol`, `enabled`, `priority`, `format`, `dateStyle`, `timeStyle`, `style`, and `popup`. Edit the config file to make changes persistent. Reload or restart discards transient changes.
+`set` changes in-memory configuration only. Supported properties are `symbol`, `enabled`, `priority`, `format`, `dateStyle`, `timeStyle`, `style`, and `popup`. Edit the config file to make changes persistent. Reload or restart discards transient changes.
+
+`text` and `symbolPosition` currently require a configuration-file edit. The old `label` property fails with a removed-setting error; it is not an alias for `text`.
 
 ## Trigger events
 

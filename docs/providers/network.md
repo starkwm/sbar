@@ -4,7 +4,7 @@
 
 A `network` item follows native connection change notifications. It reports connection state without reading the location-protected Wi-Fi SSID.
 
-Configure connection symbols and label visibility under `network`:
+Configure connection symbols under `network` and label visibility with top-level `text`:
 
 ```json
 {
@@ -32,7 +32,7 @@ hides the icon, including an override.
 Set top-level `text` to an empty string to show only the symbol while retaining
 the connection status for accessibility.
 
-The text remains `Wi-Fi`, `Connected` (Ethernet, cellular, or other), or `Offline`.
+The default text is `Wi-Fi`, `Connected` (Ethernet, cellular, or other), or `Offline`.
 An unsatisfied path is offline; otherwise Wi-Fi takes precedence over Ethernet,
 then cellular, then other when macOS reports multiple interface types.
 This describes the active path, not all connected adapters, and does not identify VPNs.
