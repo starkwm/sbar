@@ -41,8 +41,8 @@ The `transfers` loop contains download then upload. Each entry exposes `directio
 (`download` or `upload`), `value` (formatted rate), `number`, `unit`, `index`,
 `first`, and `last`. `total` is two when available, otherwise zero.
 `{{symbol}}` requests the entry's native direction symbol, which follows the item's
-`symbolPosition`. It must be used inside the loop. Repeated symbol tags in the same
-text run produce one icon. Separate entries with `{{#separator}}...{{/separator}}`.
+`symbolPosition`. Outside the loop, it requests the item-level or unavailable symbol. Repeated symbol tags in the same
+text run produce one icon. A symbol tag inside a false condition suppresses that icon. Separate entries with `{{#separator}}...{{/separator}}`.
 
 Examples:
 

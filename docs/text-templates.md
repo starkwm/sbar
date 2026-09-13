@@ -2,7 +2,7 @@
 
 [Documentation index](index.md)
 
-Set an item's `text` to control its label. Omit it to keep the existing provider presentation. An empty string hides the text while retaining the item's symbol. Groups, dividers, and spacers have no label and do not accept `text`.
+Set an item's `text` to control its label. Omit it to keep the existing provider presentation. An empty string hides the text while retaining the item's symbol. For throughput it also removes the directional icons. Groups, dividers, and spacers have no label and do not accept `text`.
 
 ```json
 { "id": "cpu", "type": "cpu", "text": "CPU {{percentage}}%" }
@@ -187,8 +187,7 @@ inserted literally, without evaluating template syntax contained in a name.
 Outside a loop, `status`, `connected`, `available`, and `value` retain their
 existing aggregate meanings. Entry-only fields are empty outside a loop.
 `{{#separator}}...{{/separator}}` emits text between source entries, without a
-trailing separator. Separators follow source positions even when a condition
-hides an entry. Loops cannot nest or be compared, and each provider accepts only
+trailing separator. Separators follow rendered entries, so conditions hiding entries do not leave stray punctuation. Entries containing only a separator are omitted. Whitespace and symbol tags count as content. `first`, `last`, `index`, and `total` still describe the source list; inverse collection sections test whether the source list is empty. Loops cannot nest or be compared, and each provider accepts only
 its own collection name. Unknown fields and invalid status comparisons fail
 configuration validation.
 
@@ -199,7 +198,7 @@ interval snapshots. They do not trigger extra device scans or service queries.
 
 ## Provider fields
 
-Every item with text supports `id` and `value`. `value` is the provider's default label. For example, a clock can use `"text": "Time {{value}}"` alongside `"format": "HH:mm"`.
+Every item with text supports `id`, `value`, and `symbol`. `value` is the provider's default label. For example, a clock can use `"text": "Time {{value}}"` alongside `"format": "HH:mm"`.
 
 | Provider | Additional fields |
 | --- | --- |
@@ -225,9 +224,34 @@ VPN `names` contains active service names. Bluetooth `names` contains connected 
 
 Fields respect the selected media source, audio endpoint, disk path, network interface, CPU/throughput smoothing, and item refresh snapshots. Use the template to choose which fields appear; `text: ""` hides the label.
 
+## Symbols
+
+`{{symbol}}` requests the provider's native symbol or the item's explicit symbol.
+It does not insert a symbol name as text. The icon follows `symbolPosition`,
+regardless of where the tag appears within the text. Repeated tags retain one
+aggregate icon, except that throughput loops have one icon per direction run.
+
+Templates without a symbol tag preserve the provider's existing icon behavior.
+When a template contains the tag, the icon appears only if a branch containing
+that tag renders. For example, this shows the battery icon only while charging:
+
+```json
+{
+  "id": "battery",
+  "type": "battery",
+  "text": "{{#charging}}{{symbol}}{{/charging}}{{percentage}}%"
+}
+```
+
+`showSymbol: false` still hides symbols. Native application icons follow the same
+template conditions and still require `frontApplication.showIcon`. Workspace,
+VPN, and Bluetooth loops use the aggregate icon; they do not gain per-entry icons.
+`{{#symbol}}` conditions are not supported. Use provider state conditions around
+`{{symbol}}` instead.
+
 ## First-pass limits
 
-Workspace loops preserve each entry's colour and emphasis. Throughput templates still replace its separate direction symbols with a single textual presentation. A top-level item symbol remains available. Existing symbol, colour, and hide rules still apply. Native provider accessibility descriptions remain intact; static and clock labels use the rendered text.
+Workspace loops preserve each entry's colour and emphasis. Throughput loops preserve native direction symbols through `{{symbol}}`. Other providers retain one aggregate item symbol. Existing symbol, colour, and hide rules still apply. Native provider accessibility descriptions remain intact; static and clock labels use the rendered text.
 
 There is no custom number formatter, arbitrary command JSON field lookup, or literal `{{` escape yet. Date formatting still uses the clock's `format`, `dateStyle`, and `timeStyle` fields. Command and plugin `value` retains the existing truncation and error policy. Templates affect presentation only; CLI values and subscription events retain their existing output.
 
@@ -256,10 +280,11 @@ Removed text settings now fail configuration loading with the full field path an
 | VPN/Bluetooth `labels` | State conditions inside `services`/`devices` loops; use conditions outside the loop for aggregate fallback labels |
 | Workspace `format: currentTotal` | `{{index}} / {{total}}` with an unavailable/fullscreen fallback |
 | Workspace `format: list` | `{{#workspaces}}{{name}}{{^last}} {{/last}}{{/workspaces}}` |
+| Throughput `showDownload`, `showUpload`, `showValue`, `showUnits` | Choose directions and number/unit fields inside `transfers` loops |
 | Workspace `showValue: false` | `"text": ""` |
 | Spaces/Aerospace `labels` | Conditions on `index` or `name`, inside the loop for lists |
 | Network/audio-device `labels` | Equality sections such as `{{#status=available}}Ready{{/status}}{{^status=available}}{{value}}{{/status}}` using that provider's states |
 
-Wrap readings in an `available` section when you need an unavailable fallback. Network and audio-device `labels` maps have been removed; use equality sections instead. Bluetooth and VPN `labels` maps have also been removed; use device/service loops with state conditions. Workspace formats and label maps have been replaced by workspace fields and loops. Throughput display options, clock formatting, and command output format remain supported. Provider symbols, tints, hide rules, and data-selection settings are unchanged.
+Wrap readings in an `available` section when you need an unavailable fallback. Network and audio-device `labels` maps have been removed; use equality sections instead. Bluetooth and VPN `labels` maps have also been removed; use device/service loops with state conditions. Workspace formats and label maps have been replaced by workspace fields and loops. Clock formatting and command output format remain supported. Provider symbols, tints, hide rules, and data-selection settings are unchanged.
 
 Throughput supports symbol-aware `transfers` loops. See [throughput](providers/throughput.md) for number/unit fields and replacements for the removed `showDownload`, `showUpload`, `showValue`, and `showUnits` settings.
