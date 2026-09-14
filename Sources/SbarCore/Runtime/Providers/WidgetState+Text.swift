@@ -83,6 +83,8 @@ extension WidgetState {
         "status": player?.status.rawValue ?? "unknown",
         "playing": String(player?.status == .playing),
       ]
+    case .weather(let state):
+      return state.textValues(settings: item.weather)
     case .mail(let state):
       return [
         "unreadCount": state.status == .available ? state.unreadCount.map(String.init) ?? "" : "",

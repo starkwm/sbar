@@ -35,6 +35,7 @@ final class ProviderRuntime {
   }
 
   private(set) var itemSnapshots: [String: String] = [:]
+  private(set) var weatherStates: [WeatherLocation: WeatherState] = [:]
   private(set) var diskStates: [String: DiskState] = [:]
   private(set) var pluginStates: [String: PluginState] = [:]
   private(set) var commandStates: [String: CommandState] = [:]
@@ -44,6 +45,8 @@ final class ProviderRuntime {
   private(set) var applicationSnapshots: [String: FrontApplicationState] = [:]
   private(set) var itemDates: [String: Date] = [:]
 
+  @ObservationIgnored private var weatherItems: [Item] = []
+  @ObservationIgnored private let weather: WeatherProvider
   @ObservationIgnored private var diskItems: [String: String] = [:]
   @ObservationIgnored private var refreshItems: [Item] = []
   @ObservationIgnored private var refreshTask: Task<Void, Never>?
@@ -81,6 +84,7 @@ final class ProviderRuntime {
     aerospace: AerospaceProvider = AerospaceProvider(),
     yabai: YabaiProvider = YabaiProvider(),
     mail: MailProvider = MailProvider(),
+    weather: WeatherProvider = WeatherProvider(),
     vpn: VPNProvider = VPNProvider(),
     bluetooth: BluetoothProvider = BluetoothProvider(),
     audioDevice: AudioDeviceProvider = AudioDeviceProvider()
@@ -88,6 +92,7 @@ final class ProviderRuntime {
     self.aerospace = aerospace
     self.yabai = yabai
     self.mail = mail
+    self.weather = weather
     self.vpn = vpn
     self.bluetooth = bluetooth
     self.audioDevice = audioDevice
@@ -101,6 +106,7 @@ final class ProviderRuntime {
     )
     diskItems = disks
     diskStates = diskStates.filter { disks.values.contains($0.key) }
+    configureWeather(configuration.items.active.filter { $0.type == .weather })
     configureRefresh(configuration.items.active)
     configurePlugins(configuration.items.active.filter { $0.type == .plugin })
     configureCommands(configuration.items.active.filter { $0.enabled && $0.type == .command })
@@ -244,7 +250,11 @@ final class ProviderRuntime {
       values = ["status": String(describing: state.status), "error": state.error ?? ""]
     } else {
       let state: WidgetState?
-      if item.type == .disk {
+      if item.type == .weather {
+        let current = item.weather.flatMap { weatherStates[$0.location] } ?? WeatherState()
+        state =
+          item.refresh == nil ? .weather(current) : widgetSnapshots[item.id] ?? .weather(current)
+      } else if item.type == .disk {
         state =
           item.refresh == nil
           ? .disk(diskStates[(item.disk ?? DiskConfiguration()).resolvedPath] ?? DiskState())
@@ -407,6 +417,9 @@ final class ProviderRuntime {
 
     frontApplication = nil
     sharedValues = [:]
+    weather.stop()
+    weatherStates = [:]
+    weatherItems = []
     diskStates = [:]
     diskItems = [:]
     widgetStates = [:]
@@ -436,6 +449,30 @@ final class ProviderRuntime {
     activeTypes = []
   }
 
+  private func configureWeather(_ items: [Item]) {
+    weatherItems = items
+    var intervals: [WeatherLocation: Double] = [:]
+    for item in items {
+      guard let settings = item.weather else { continue }
+      intervals[settings.location] = min(
+        intervals[settings.location] ?? settings.resolvedPollInterval,
+        settings.resolvedPollInterval
+      )
+    }
+    weatherStates = weatherStates.filter { intervals[$0.key] != nil }
+    weather.configure(intervals) { [weak self] location, state in
+      guard let self else { return }
+      let previous = self.weatherStates[location]
+      self.weatherStates[location] = state
+      for item in self.weatherItems where item.weather?.location == location {
+        if previous != state { self.onValueChange?(item.id, state.text) }
+        if item.refresh != nil && (item.refresh?.mode == .event || previous?.reading == nil) {
+          self.capture(item)
+        }
+      }
+    }
+  }
+
   private func configureRefresh(_ items: [Item]) {
     let requested = items.filter { $0.refresh != nil && $0.type != .command && $0.type != .plugin }
     let previous = Dictionary(uniqueKeysWithValues: refreshItems.map { ($0.id, $0) })
@@ -444,6 +481,7 @@ final class ProviderRuntime {
         guard let old = previous[item.id] else { return false }
         return old.type == item.type && old.refresh == item.refresh
           && old.disk?.path == item.disk?.path
+          && old.weather?.location == item.weather?.location
       }.map(\.id)
     )
     if unchanged.count == requested.count && requested.count == refreshItems.count {
@@ -488,6 +526,13 @@ final class ProviderRuntime {
   }
 
   private func capture(_ item: Item) {
+    if item.type == .weather {
+      let state = item.weather.flatMap { weatherStates[$0.location] } ?? WeatherState()
+      widgetSnapshots[item.id] = .weather(state)
+      itemSnapshots[item.id] = state.text
+      lastRefresh[item.id] = Date()
+      return
+    }
     if item.type == .disk {
       let state = diskStates[(item.disk ?? DiskConfiguration()).resolvedPath] ?? DiskState()
       widgetSnapshots[item.id] = .disk(state)

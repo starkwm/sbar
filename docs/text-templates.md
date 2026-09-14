@@ -75,6 +75,7 @@ Allowed status values are validated for each provider. For example,
 | `bluetooth` | `on`, `off`, `connected`, `unauthorized`, `unavailable` |
 | `audioDevice` | `available`, `disconnected`, `unavailable` |
 | `media` | `playing`, `paused`, `stopped`, `unknown` |
+| `weather` | `available`, `stale`, `unavailable` |
 | `mail` | `available`, `closed`, `unauthorized`, `unavailable` |
 | `command`, `plugin` | `running`, `success`, `failure` |
 
@@ -223,6 +224,9 @@ Percentages are rounded whole numbers without `%`. Memory and disk sizes include
 VPN `names` contains active service names. Bluetooth `names` contains connected device names, and `count` is the device count. Both name lists are sorted and comma-separated.
 
 Fields respect the selected media source, audio endpoint, disk path, network interface, CPU/throughput smoothing, and item refresh snapshots. Use the template to choose which fields appear; `text: ""` hides the label.
+
+Weather fields include temperature, conditions, humidity, wind, and stale status.
+See [weather](providers/weather.md) for the complete field list and units.
 
 ## Symbols
 
