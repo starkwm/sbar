@@ -229,6 +229,24 @@
         }
       },
       {
+        "id": "weather",
+        "type": "weather",
+        "symbolPosition": "right",
+        "weather": {
+          "latitude": 53.4808,
+          "longitude": -2.2426,
+          "temperatureUnit": "celsius",
+          "pollInterval": 900,
+          "symbols": {
+            "clearDay": "sun.max.fill",
+            "clearNight": "moon.stars.fill",
+            "rain": "cloud.rain.fill",
+            "rainShowers": "cloud.rain.fill",
+            "snow": "cloud.snow.fill"
+          }
+        }
+      },
+      {
         "id": "date",
         "type": "datetime",
         "text": "{{value}}",

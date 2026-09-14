@@ -2858,8 +2858,157 @@
             "null"
           ],
           "default": true
+        },
+        "symbols": {
+          "$ref": "#/$defs/weatherSymbols"
         }
       }
+    },
+    "weatherSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "clearDay": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "clearNight": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "partlyCloudyDay": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "partlyCloudyNight": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "overcast": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "fog": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "drizzle": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "freezingDrizzle": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "rain": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "freezingRain": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "snow": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "rainShowers": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "snowShowers": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "thunderstorm": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "thunderstormHail": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unknown": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unavailable": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "clearDay": {
+                "$ref": "#/$defs/symbol"
+              },
+              "clearNight": {
+                "$ref": "#/$defs/symbol"
+              },
+              "partlyCloudyDay": {
+                "$ref": "#/$defs/symbol"
+              },
+              "partlyCloudyNight": {
+                "$ref": "#/$defs/symbol"
+              },
+              "overcast": {
+                "$ref": "#/$defs/symbol"
+              },
+              "fog": {
+                "$ref": "#/$defs/symbol"
+              },
+              "drizzle": {
+                "$ref": "#/$defs/symbol"
+              },
+              "freezingDrizzle": {
+                "$ref": "#/$defs/symbol"
+              },
+              "rain": {
+                "$ref": "#/$defs/symbol"
+              },
+              "freezingRain": {
+                "$ref": "#/$defs/symbol"
+              },
+              "snow": {
+                "$ref": "#/$defs/symbol"
+              },
+              "rainShowers": {
+                "$ref": "#/$defs/symbol"
+              },
+              "snowShowers": {
+                "$ref": "#/$defs/symbol"
+              },
+              "thunderstorm": {
+                "$ref": "#/$defs/symbol"
+              },
+              "thunderstormHail": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unknown": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unavailable": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

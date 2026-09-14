@@ -15,11 +15,13 @@ struct WeatherConfiguration: Codable, Equatable, Sendable {
   var windSpeedUnit: WindSpeedUnit?
   var pollInterval: Double?
   var showSymbol: Bool?
+  var symbols: WeatherSymbols?
 
   var location: WeatherLocation { WeatherLocation(latitude: latitude, longitude: longitude) }
   var resolvedPollInterval: Double { pollInterval ?? 900 }
 
   func validate(path: String) throws {
+    try symbols?.validate(path: "\(path).symbols")
     try ItemStyle.validateNumber(latitude, range: -90...90, path: "\(path).latitude")
     try ItemStyle.validateNumber(longitude, range: -180...180, path: "\(path).longitude")
     try ItemStyle.validateNumber(pollInterval, range: 60...86400, path: "\(path).pollInterval")

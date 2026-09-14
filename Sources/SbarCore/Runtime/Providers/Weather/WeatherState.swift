@@ -50,7 +50,10 @@ struct WeatherState: Equatable, Sendable {
     return WidgetPresentation(
       text: text,
       symbol: item.weather?.showSymbol == false
-        ? nil : item.symbol ?? .system(reading?.symbol ?? "questionmark"),
+        ? nil
+        : item.symbol
+          ?? item.weather?.symbols?.resolve(reading?.symbolCondition ?? .unavailable)
+          ?? .system(reading?.symbol ?? "questionmark"),
       accessibilityLabel: reading.map {
         "\($0.condition), \(text)\(stale ? ", stale" : ""), weather data by Open-Meteo"
       } ?? text
@@ -84,6 +87,25 @@ struct WeatherReading: Equatable, Sendable {
     case 95: "Thunderstorm"
     case 96, 99: "Thunderstorm with hail"
     default: "Unknown conditions"
+    }
+  }
+
+  var symbolCondition: WeatherSymbolCondition {
+    switch weatherCode {
+    case 0, 1: isDay ? .clearDay : .clearNight
+    case 2: isDay ? .partlyCloudyDay : .partlyCloudyNight
+    case 3: .overcast
+    case 45, 48: .fog
+    case 51, 53, 55: .drizzle
+    case 56, 57: .freezingDrizzle
+    case 61, 63, 65: .rain
+    case 66, 67: .freezingRain
+    case 71, 73, 75, 77: .snow
+    case 80, 81, 82: .rainShowers
+    case 85, 86: .snowShowers
+    case 95: .thunderstorm
+    case 96, 99: .thunderstormHail
+    default: .unknown
     }
   }
 

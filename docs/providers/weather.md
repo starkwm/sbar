@@ -70,6 +70,43 @@ sleet, and storm icons; unknown codes use `questionmark`. A top-level `symbol`
 overrides the condition icon. Set `weather.showSymbol: false` for text only, or
 `text: ""` for an icon alone.
 
+Override individual conditions with `weather.symbols`. Strings are SF Symbol names;
+glyph objects use a locally specified font or inherit `font` and `size` from the
+symbols block:
+
+```json
+{
+  "id": "weather",
+  "type": "weather",
+  "symbolPosition": "right",
+  "weather": {
+    "latitude": 53.4808,
+    "longitude": -2.2426,
+    "symbols": {
+      "font": "Symbols Nerd Font Mono",
+      "size": 16,
+      "clearDay": "sun.max.fill",
+      "clearNight": "moon.stars.fill",
+      "rain": { "glyph": "\uf0e9" },
+      "rainShowers": { "glyph": "\uf0e9" }
+    }
+  }
+}
+```
+
+Supported keys are `clearDay`, `clearNight`, `partlyCloudyDay`,
+`partlyCloudyNight`, `overcast`, `fog`, `drizzle`, `freezingDrizzle`, `rain`,
+`freezingRain`, `snow`, `rainShowers`, `snowShowers`, `thunderstorm`,
+`thunderstormHail`, `unknown`, and `unavailable`. Clear keys cover both clear and
+mainly clear conditions. `unknown` covers unrecognised weather codes;
+`unavailable` applies before a reading exists. Stale readings retain their
+condition symbol.
+
+Omitted or null entries keep the built-in symbols. A top-level `symbol` overrides
+these settings; `weather.showSymbol: false` hides the symbol regardless of overrides.
+Glyphs can override the shared font and size individually. See [symbols](../symbols.md)
+for font requirements and the accepted size range.
+
 Refresh policies control presentation snapshots separately from network polling.
 Manual items receive their first successful reading, then retain it until triggered.
 Changing coordinates clears the previous location's snapshot. Changing units formats
