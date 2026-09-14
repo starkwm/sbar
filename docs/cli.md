@@ -2,6 +2,14 @@
 
 [Documentation index](index.md)
 
+## Show the version
+
+```sh
+sbar --version
+```
+
+Print the embedded version, such as `sbar version v0.0.0`, without starting the bar.
+
 ## Start the bar
 
 Run `sbar` without a subcommand to start the bar. `sbar start` is the explicit equivalent:

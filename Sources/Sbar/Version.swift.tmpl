@@ -1,0 +1,8 @@
+/// Build version embedded in the sbar executable.
+struct Version {
+  /// Current generated version.
+  static let current = Self(value: "__VERSION__")
+
+  /// Version string printed by `sbar --version`.
+  let value: String
+}
