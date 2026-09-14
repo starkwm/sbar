@@ -247,7 +247,8 @@
             "plugin",
             "aerospace",
             "yabai",
-            "spaces"
+            "spaces",
+            "weather"
           ]
         },
         "enabled": {
@@ -581,8 +582,42 @@
         },
         "audioDevice": {
           "$ref": "#/$defs/audioDevice"
+        },
+        "weather": {
+          "$ref": "#/$defs/weather"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "weather"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "weather"
+            ],
+            "properties": {
+              "weather": {
+                "type": "object"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "weather": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
     },
     "itemStyle": {
       "type": [
@@ -2766,6 +2801,63 @@
           ],
           "minimum": 0,
           "maximum": 96
+        }
+      }
+    },
+    "weather": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "latitude",
+        "longitude"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "latitude": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "longitude": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "temperatureUnit": {
+          "enum": [
+            "celsius",
+            "fahrenheit",
+            null
+          ],
+          "default": "celsius"
+        },
+        "windSpeedUnit": {
+          "enum": [
+            "kmh",
+            "mph",
+            "ms",
+            "kn",
+            null
+          ],
+          "default": "kmh"
+        },
+        "pollInterval": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 60,
+          "maximum": 86400,
+          "default": 900
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
         }
       }
     }

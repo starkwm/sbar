@@ -33,6 +33,11 @@ struct TextTemplate {
     case .disk:
       fields = ["used", "free", "total", "percentage", "freeBytes", "totalBytes", "available"]
     case .media: fields = ["title", "artist", "source", "status", "playing", "available"]
+    case .weather:
+      fields = [
+        "temperature", "temperatureUnit", "feelsLike", "humidity", "windSpeed", "windSpeedUnit",
+        "condition", "weatherCode", "isDay", "updatedAt", "available", "stale", "status",
+      ]
     case .mail: fields = ["unreadCount", "status", "available"]
     case .throughput:
       fields = [
@@ -69,6 +74,7 @@ struct TextTemplate {
     case .bluetooth: statuses = Set(BluetoothStatus.allCases.map(\.rawValue))
     case .audioDevice: statuses = Set(AudioDeviceStatus.allCases.map(\.rawValue))
     case .media: statuses = ["playing", "paused", "stopped", "unknown"]
+    case .weather: statuses = ["available", "stale", "unavailable"]
     case .mail: statuses = ["available", "closed", "unauthorized", "unavailable"]
     case .command, .plugin: statuses = ["running", "success", "failure"]
     default: statuses = []
@@ -77,7 +83,7 @@ struct TextTemplate {
     if !statuses.isEmpty { values["status"] = statuses }
     for name in fields(for: type).intersection([
       "available", "charging", "pluggedIn", "muted", "playing", "connected",
-      "active", "focused", "visible", "fullscreen", "first", "last",
+      "active", "focused", "visible", "fullscreen", "first", "last", "stale", "isDay",
     ]) {
       values[name] = ["true", "false"]
     }
