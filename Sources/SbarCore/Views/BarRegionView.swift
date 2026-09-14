@@ -12,6 +12,7 @@ struct BarRegionView: View {
       let resolved = (style ?? RegionStyle()).resolved(over: theme?.regionStyle)
       let horizontalPadding = min(resolved.horizontalPadding ?? 0, geometry.size.width / 2)
       let verticalPadding = min(resolved.verticalPadding ?? 0, geometry.size.height / 2)
+      let shape = RoundedRectangle(cornerRadius: resolved.cornerRadius ?? 0)
       let spacing = resolved.itemSpacing ?? theme?.itemSpacing ?? 10
       let visible = OverflowSelection.visibleItemIDs(
         items: displayed,
@@ -55,12 +56,12 @@ struct BarRegionView: View {
         .padding(.horizontal, horizontalPadding)
         .padding(.vertical, verticalPadding)
         .background {
-          RoundedRectangle(cornerRadius: resolved.cornerRadius ?? 0)
+          shape
             .fill(Color(hex: resolved.background) ?? .clear)
         }
-        .clipShape(RoundedRectangle(cornerRadius: resolved.cornerRadius ?? 0))
+        .clipShape(shape)
         .overlay {
-          RoundedRectangle(cornerRadius: resolved.cornerRadius ?? 0)
+          shape
             .strokeBorder(
               Color(hex: resolved.borderColor) ?? .clear,
               lineWidth: resolved.borderWidth ?? 0
