@@ -309,4 +309,76 @@ struct WeatherProviderTests {
     #expect(runtime.presentation(for: manual)?.text == snapshot)
   }
 
+  @Test("weather symbols inherit glyph settings and preserve precedence and defaults")
+  func customSymbols() throws {
+    let json =
+      #"{"latitude":0,"longitude":0,"symbols":{"font":"Symbols Nerd Font Mono","size":16,"clearDay":"sun.max","clearNight":{"glyph":"☾"},"rain":{"glyph":"R","font":"Other Font","size":20},"unavailable":"wifi.slash","unknown":"questionmark.circle"}}"#
+    let settings = try JSONDecoder().decode(WeatherConfiguration.self, from: Data(json.utf8))
+    try settings.validate(path: "weather")
+    #expect(
+      try JSONDecoder().decode(WeatherConfiguration.self, from: JSONEncoder().encode(settings))
+        == settings
+    )
+    var item = Item(id: "weather", type: .weather, weather: settings)
+    var state = WeatherState(reading: Self.reading())
+    #expect(state.presentation(for: item).symbol == .system("cloud.sun.fill"))
+    state.reading?.weatherCode = 0
+    #expect(state.presentation(for: item).symbol == .system("sun.max"))
+    state.reading?.isDay = false
+    #expect(
+      state.presentation(for: item).symbol == .glyph("☾", font: "Symbols Nerd Font Mono", size: 16)
+    )
+    state.reading?.weatherCode = 65
+    state.stale = true
+    #expect(state.presentation(for: item).symbol == .glyph("R", font: "Other Font", size: 20))
+    state.reading?.weatherCode = 999
+    #expect(state.presentation(for: item).symbol == .system("questionmark.circle"))
+    state.reading = nil
+    #expect(state.presentation(for: item).symbol == .system("wifi.slash"))
+    item.symbol = .system("star")
+    #expect(state.presentation(for: item).symbol == .system("star"))
+    item.weather?.showSymbol = false
+    #expect(state.presentation(for: item).symbol == nil)
+  }
+
+  @Test("weather symbol validation rejects unknown keys and incomplete glyph settings")
+  func invalidSymbols() throws {
+    for symbols in [
+      #"{"rani":"cloud.rain"}"#,
+      #"{"rain":{"glyph":"R"}}"#,
+      #"{"font":" ","rain":{"glyph":"R"}}"#,
+      #"{"size":73}"#,
+      #"{"rain":{"glyph":"","font":"Example"}}"#,
+    ] {
+      #expect(throws: (any Error).self) {
+        let settings = try JSONDecoder().decode(WeatherSymbols.self, from: Data(symbols.utf8))
+        try settings.validate(path: "weather.symbols")
+      }
+    }
+  }
+
+  @Test("every weather code selects the documented symbol key")
+  func symbolConditions() {
+    let groups: [(WeatherSymbolCondition, [Int])] = [
+      (.clearDay, [0, 1]), (.partlyCloudyDay, [2]), (.overcast, [3]),
+      (.fog, [45, 48]), (.drizzle, [51, 53, 55]), (.freezingDrizzle, [56, 57]),
+      (.rain, [61, 63, 65]), (.freezingRain, [66, 67]), (.snow, [71, 73, 75, 77]),
+      (.rainShowers, [80, 81, 82]), (.snowShowers, [85, 86]),
+      (.thunderstorm, [95]), (.thunderstormHail, [96, 99]), (.unknown, [999]),
+    ]
+    for (condition, codes) in groups {
+      for code in codes {
+        var reading = Self.reading()
+        reading.weatherCode = code
+        #expect(reading.symbolCondition == condition)
+        reading.isDay = false
+        let night =
+          condition == .clearDay
+          ? WeatherSymbolCondition.clearNight
+          : condition == .partlyCloudyDay ? .partlyCloudyNight : condition
+        #expect(reading.symbolCondition == night)
+      }
+    }
+  }
+
 }
