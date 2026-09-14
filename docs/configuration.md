@@ -2,13 +2,13 @@
 
 [Documentation index](index.md)
 
-Edit `~/.config/sbar/config.json` in your preferred editor. sbar reloads it when the file changes. Missing files use built-in defaults (the active application, a divider, and a clock); invalid edits retain the last valid configuration. Inspect errors with `sbar query --diagnostics`.
+By default, sbar looks for `~/.config/sbar/config.jsonc`, then `~/.config/sbar/config.json`. Edit either file in your preferred editor. sbar reloads it when the file changes. Missing files use built-in defaults (the active application, a divider, and a clock); invalid edits retain the last valid configuration. Inspect errors with `sbar query --diagnostics`.
 
 Run `sbar validate` (or `sbar validate --config /path/to/config.json`) to check a file without starting the bar. Invalid or missing files produce an error and a nonzero exit status. Validation never writes the file. Use `sbar start --config /path/to/config.json` to run with another configuration.
 
 Configuration files accept JSONC comments (`//` to the end of a line and `/* ... */` blocks) and trailing commas in objects and arrays. sbar strips these in memory before decoding; your file keeps its comments and formatting. Comment markers inside strings are preserved. Block comments cannot be nested.
 
-Both `.json` and `.jsonc` files support this syntax. The default path remains `~/.config/sbar/config.json`. To use a `.jsonc` filename, pass `--config /path/to/config.jsonc` to `sbar start` and `sbar validate`.
+Both `.json` and `.jsonc` files support this syntax. Both `sbar start` and `sbar validate` prefer `config.jsonc` when both default files exist. An invalid `config.jsonc` reports an error instead of falling back to `config.json`. Pass `--config /path/to/config.jsonc` to select a file explicitly.
 
 ```jsonc
 {
