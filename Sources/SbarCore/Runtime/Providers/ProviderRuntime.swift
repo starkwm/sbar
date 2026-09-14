@@ -304,7 +304,13 @@ final class ProviderRuntime {
   }
 
   func isVisible(_ item: Item, displayUUID: String? = nil) -> Bool {
-    item.enabled && presentation(for: item, displayUUID: displayUUID)?.hidden != true
+    guard item.enabled, presentation(for: item, displayUUID: displayUUID)?.hidden != true else {
+      return false
+    }
+    if item.type == .group {
+      return (item.children ?? []).contains { isVisible($0, displayUUID: displayUUID) }
+    }
+    return true
   }
 
   func applicationIcon(for item: Item) -> NSImage? {

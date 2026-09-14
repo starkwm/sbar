@@ -123,6 +123,41 @@ struct BarRegionViewTests {
     #expect(edge.greenComponent > 0.8 && edge.redComponent < 0.3)
   }
 
+  @Test("groups with only hidden children draw no section decoration")
+  func hiddenGroups() throws {
+    let runtime = ProviderRuntime()
+    runtime.updateWidgetState(.media(MediaState()), for: .media)
+    let media = Item(id: "media", type: .media, media: MediaConfiguration(hideWhenNotPlaying: true))
+    let disabled = Item(id: "disabled", type: .text, enabled: false, text: "Hidden")
+    let group = Item(id: "group", type: .group, children: [media, disabled])
+    let nested = Item(id: "nested", type: .group, children: [group])
+    let empty = Item(id: "empty", type: .group)
+    let theme = Theme(regionStyle: RegionStyle(background: "#FF0000", horizontalPadding: 10))
+    for item in [group, nested, empty] {
+      #expect(!runtime.isVisible(item))
+      #expect(
+        try render([item], runtime: runtime, theme: theme)
+          == render([], runtime: runtime, theme: theme)
+      )
+    }
+  }
+
+  @Test("groups remain visible when a nested child is visible")
+  func visibleGroups() throws {
+    let runtime = ProviderRuntime()
+    let text = Item(id: "text", type: .text, text: "Hi")
+    let group = Item(id: "group", type: .group, children: [text])
+    let nested = Item(id: "nested", type: .group, children: [group])
+    let popup = Item(id: "popup", type: .popup)
+    let theme = Theme(regionStyle: RegionStyle(background: "#FF0000", horizontalPadding: 10))
+    #expect(runtime.isVisible(nested))
+    #expect(runtime.isVisible(popup))
+    #expect(
+      try render([nested], runtime: runtime, theme: theme)
+        != render([], runtime: runtime, theme: theme)
+    )
+  }
+
   private func render(
     _ items: [Item],
     runtime: ProviderRuntime,
