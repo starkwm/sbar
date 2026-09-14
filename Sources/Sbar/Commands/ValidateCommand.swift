@@ -9,15 +9,19 @@ struct ValidateCommand: ParsableCommand {
   )
 
   @Option(name: .long, help: "Configuration file path.", completion: .file())
-  var config = "~/.config/sbar/config.json"
+  var config: String?
+
+  var configurationURL: URL {
+    config.map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath).standardizedFileURL }
+      ?? ConfigurationPath.defaultURL()
+  }
 
   mutating func validate() throws {
-    if config.isEmpty { throw ValidationError("Configuration path must not be empty.") }
+    if config?.isEmpty == true { throw ValidationError("Configuration path must not be empty.") }
   }
 
   mutating func run() throws {
-    let url = URL(fileURLWithPath: (config as NSString).expandingTildeInPath)
-    try ConfigurationValidator.validate(url: url)
+    try ConfigurationValidator.validate(url: configurationURL)
 
     print("Configuration is valid.")
   }

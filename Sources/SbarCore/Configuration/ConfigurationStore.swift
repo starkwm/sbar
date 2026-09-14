@@ -43,9 +43,7 @@ final class ConfigurationStore {
   @ObservationIgnored private var watcher: ConfigurationWatcher?
 
   init(
-    configurationURL: URL = FileManager.default.homeDirectoryForCurrentUser.appending(
-      path: ".config/sbar/config.json"
-    )
+    configurationURL: URL = ConfigurationPath.defaultURL()
   ) {
     self.configurationURL = configurationURL
   }

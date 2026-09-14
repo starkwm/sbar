@@ -32,6 +32,7 @@ struct SbarCommandTests {
       SbarCommand.parseAsRoot(["validate", "--config", "/tmp/check.json"]) as? ValidateCommand
     )
     #expect(validation.config == "/tmp/check.json")
+    #expect(validation.configurationURL.path == "/tmp/check.json")
 
     #expect(throws: (any Error).self) {
       try SbarCommand.parseAsRoot(["query", "--diagnostics", "--displays"])
