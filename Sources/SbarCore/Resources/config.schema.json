@@ -2935,6 +2935,12 @@
         },
         "unavailable": {
           "$ref": "#/$defs/widgetSymbol"
+        },
+        "overcastDay": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "overcastNight": {
+          "$ref": "#/$defs/widgetSymbol"
         }
       },
       "additionalProperties": false,
@@ -3003,6 +3009,12 @@
                 "$ref": "#/$defs/symbol"
               },
               "unavailable": {
+                "$ref": "#/$defs/symbol"
+              },
+              "overcastDay": {
+                "$ref": "#/$defs/symbol"
+              },
+              "overcastNight": {
                 "$ref": "#/$defs/symbol"
               }
             }

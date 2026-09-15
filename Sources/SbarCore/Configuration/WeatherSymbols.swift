@@ -2,7 +2,8 @@ import Foundation
 
 struct WeatherSymbols: Codable, Equatable, Sendable {
   private enum CodingKeys: String, CodingKey, CaseIterable {
-    case font, size, clearDay, clearNight, partlyCloudyDay, partlyCloudyNight, overcast, fog,
+    case font, size, clearDay, clearNight, partlyCloudyDay, partlyCloudyNight, overcast,
+      overcastDay, overcastNight, fog,
       drizzle, freezingDrizzle, rain, freezingRain, snow, rainShowers, snowShowers, thunderstorm,
       thunderstormHail, unknown, unavailable
   }
@@ -14,6 +15,8 @@ struct WeatherSymbols: Codable, Equatable, Sendable {
   var partlyCloudyDay: WidgetSymbol?
   var partlyCloudyNight: WidgetSymbol?
   var overcast: WidgetSymbol?
+  var overcastDay: WidgetSymbol?
+  var overcastNight: WidgetSymbol?
   var fog: WidgetSymbol?
   var drizzle: WidgetSymbol?
   var freezingDrizzle: WidgetSymbol?
@@ -43,7 +46,10 @@ struct WeatherSymbols: Codable, Equatable, Sendable {
   }
 
   func resolve(_ status: WeatherSymbolCondition) -> ItemSymbol? {
-    symbol(for: status)?.resolve(font: font, size: size)
+    let selected =
+      symbol(for: status)
+      ?? (status == .overcastDay || status == .overcastNight ? overcast : nil)
+    return selected?.resolve(font: font, size: size)
   }
 
   private func symbol(for status: WeatherSymbolCondition) -> WidgetSymbol? {
@@ -53,6 +59,8 @@ struct WeatherSymbols: Codable, Equatable, Sendable {
     case .partlyCloudyDay: partlyCloudyDay
     case .partlyCloudyNight: partlyCloudyNight
     case .overcast: overcast
+    case .overcastDay: overcastDay
+    case .overcastNight: overcastNight
     case .fog: fog
     case .drizzle: drizzle
     case .freezingDrizzle: freezingDrizzle
@@ -85,6 +93,8 @@ extension WeatherSymbols {
     partlyCloudyDay = try container.decodeIfPresent(WidgetSymbol.self, forKey: .partlyCloudyDay)
     partlyCloudyNight = try container.decodeIfPresent(WidgetSymbol.self, forKey: .partlyCloudyNight)
     overcast = try container.decodeIfPresent(WidgetSymbol.self, forKey: .overcast)
+    overcastDay = try container.decodeIfPresent(WidgetSymbol.self, forKey: .overcastDay)
+    overcastNight = try container.decodeIfPresent(WidgetSymbol.self, forKey: .overcastNight)
     fog = try container.decodeIfPresent(WidgetSymbol.self, forKey: .fog)
     drizzle = try container.decodeIfPresent(WidgetSymbol.self, forKey: .drizzle)
     freezingDrizzle = try container.decodeIfPresent(WidgetSymbol.self, forKey: .freezingDrizzle)
@@ -101,7 +111,8 @@ extension WeatherSymbols {
 }
 
 enum WeatherSymbolCondition: String, CaseIterable, Sendable {
-  case clearDay, clearNight, partlyCloudyDay, partlyCloudyNight, overcast, fog, drizzle,
+  case clearDay, clearNight, partlyCloudyDay, partlyCloudyNight, overcast, overcastDay,
+    overcastNight, fog, drizzle,
     freezingDrizzle, rain, freezingRain, snow, rainShowers, snowShowers, thunderstorm,
     thunderstormHail, unknown, unavailable
 }

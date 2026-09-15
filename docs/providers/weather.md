@@ -87,6 +87,8 @@ symbols block:
       "size": 16,
       "clearDay": "sun.max.fill",
       "clearNight": "moon.stars.fill",
+      "overcastDay": "cloud.sun.fill",
+      "overcastNight": "cloud.moon.fill",
       "rain": { "glyph": "\uf0e9" },
       "rainShowers": { "glyph": "\uf0e9" }
     }
@@ -95,14 +97,18 @@ symbols block:
 ```
 
 Supported keys are `clearDay`, `clearNight`, `partlyCloudyDay`,
-`partlyCloudyNight`, `overcast`, `fog`, `drizzle`, `freezingDrizzle`, `rain`,
+`partlyCloudyNight`, `overcast`, `overcastDay`, `overcastNight`, `fog`, `drizzle`, `freezingDrizzle`, `rain`,
 `freezingRain`, `snow`, `rainShowers`, `snowShowers`, `thunderstorm`,
 `thunderstormHail`, `unknown`, and `unavailable`. Clear keys cover both clear and
 mainly clear conditions. `unknown` covers unrecognised weather codes;
 `unavailable` applies before a reading exists. Stale readings retain their
 condition symbol.
 
-Omitted or null entries keep the built-in symbols. A top-level `symbol` overrides
+For overcast conditions, `overcastDay` or `overcastNight` takes precedence over
+`overcast`, based on the location's daylight flag. Omitted or null day/night entries
+fall back to `overcast`, then the built-in cloud icon.
+
+Other omitted or null entries keep the built-in symbols. A top-level `symbol` overrides
 these settings; `weather.showSymbol: false` hides the symbol regardless of overrides.
 Glyphs can override the shared font and size individually. See [symbols](../symbols.md)
 for font requirements and the accepted size range.
