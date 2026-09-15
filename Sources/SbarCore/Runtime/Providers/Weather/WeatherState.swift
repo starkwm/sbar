@@ -94,7 +94,7 @@ struct WeatherReading: Equatable, Sendable {
     switch weatherCode {
     case 0, 1: isDay ? .clearDay : .clearNight
     case 2: isDay ? .partlyCloudyDay : .partlyCloudyNight
-    case 3: .overcast
+    case 3: isDay ? .overcastDay : .overcastNight
     case 45, 48: .fog
     case 51, 53, 55: .drizzle
     case 56, 57: .freezingDrizzle

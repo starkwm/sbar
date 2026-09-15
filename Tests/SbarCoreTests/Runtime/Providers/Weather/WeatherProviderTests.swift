@@ -360,7 +360,7 @@ struct WeatherProviderTests {
   @Test("every weather code selects the documented symbol key")
   func symbolConditions() {
     let groups: [(WeatherSymbolCondition, [Int])] = [
-      (.clearDay, [0, 1]), (.partlyCloudyDay, [2]), (.overcast, [3]),
+      (.clearDay, [0, 1]), (.partlyCloudyDay, [2]), (.overcastDay, [3]),
       (.fog, [45, 48]), (.drizzle, [51, 53, 55]), (.freezingDrizzle, [56, 57]),
       (.rain, [61, 63, 65]), (.freezingRain, [66, 67]), (.snow, [71, 73, 75, 77]),
       (.rainShowers, [80, 81, 82]), (.snowShowers, [85, 86]),
@@ -375,8 +375,47 @@ struct WeatherProviderTests {
         let night =
           condition == .clearDay
           ? WeatherSymbolCondition.clearNight
-          : condition == .partlyCloudyDay ? .partlyCloudyNight : condition
+          : condition == .partlyCloudyDay
+            ? .partlyCloudyNight
+            : condition == .overcastDay ? .overcastNight : condition
         #expect(reading.symbolCondition == night)
+      }
+    }
+  }
+
+  @Test("overcast day and night symbols override the shared fallback")
+  func overcastSymbols() throws {
+    let json =
+      #"{"font":"Example Font","overcast":"cloud","overcastDay":"cloud.sun","overcastNight":{"glyph":"N"}}"#
+    var symbols = try JSONDecoder().decode(WeatherSymbols.self, from: Data(json.utf8))
+    try symbols.validate(path: "weather.symbols")
+    #expect(
+      try JSONDecoder().decode(WeatherSymbols.self, from: JSONEncoder().encode(symbols)) == symbols
+    )
+    var state = WeatherState(reading: Self.reading())
+    state.reading?.weatherCode = 3
+    var item = Item(
+      id: "weather",
+      type: .weather,
+      weather: .init(latitude: 0, longitude: 0, symbols: symbols)
+    )
+    #expect(state.presentation(for: item).symbol == .system("cloud.sun"))
+    state.reading?.isDay = false
+    #expect(state.presentation(for: item).symbol == .glyph("N", font: "Example Font"))
+    symbols.overcastNight = nil
+    item.weather?.symbols = symbols
+    #expect(state.presentation(for: item).symbol == .system("cloud"))
+    symbols.overcastDay = nil
+    item.weather?.symbols = symbols
+    state.reading?.isDay = true
+    #expect(state.presentation(for: item).symbol == .system("cloud"))
+    item.weather?.symbols = nil
+    #expect(state.presentation(for: item).symbol == .system("cloud.fill"))
+    for key in ["overcastDay", "overcastNight"] {
+      let invalid = "{\"\(key)\":{\"glyph\":\"N\"}}"
+      #expect(throws: (any Error).self) {
+        let decoded = try JSONDecoder().decode(WeatherSymbols.self, from: Data(invalid.utf8))
+        try decoded.validate(path: "weather.symbols")
       }
     }
   }
