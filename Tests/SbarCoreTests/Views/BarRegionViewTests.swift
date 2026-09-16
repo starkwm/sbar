@@ -123,8 +123,11 @@ struct BarRegionViewTests {
     #expect(edge.greenComponent > 0.8 && edge.redComponent < 0.3)
   }
 
-  @Test("groups with only hidden children draw no section decoration")
-  func hiddenGroups() throws {
+  @Test(
+    "groups with only hidden children draw no section decoration",
+    arguments: [BarPosition.top, .left, .right]
+  )
+  func hiddenGroups(position: BarPosition) throws {
     let runtime = ProviderRuntime()
     runtime.updateWidgetState(.media(MediaState()), for: .media)
     let media = Item(id: "media", type: .media, media: MediaConfiguration(hideWhenNotPlaying: true))
@@ -136,8 +139,8 @@ struct BarRegionViewTests {
     for item in [group, nested, empty] {
       #expect(!runtime.isVisible(item))
       #expect(
-        try render([item], runtime: runtime, theme: theme)
-          == render([], runtime: runtime, theme: theme)
+        try render([item], runtime: runtime, theme: theme, position: position)
+          == render([], runtime: runtime, theme: theme, position: position)
       )
     }
   }
@@ -163,11 +166,13 @@ struct BarRegionViewTests {
     runtime: ProviderRuntime,
     theme: Theme? = nil,
     style: RegionStyle? = nil,
-    alignment: Alignment = .leading
+    alignment: Alignment = .leading,
+    position: BarPosition = .top
   ) throws -> Data {
     let renderer = ImageRenderer(
       content: BarRegionView(items: items, theme: theme, alignment: alignment, style: style)
         .frame(width: 40, height: 32)
+        .environment(\.barPosition, position)
         .environment(runtime)
         .environment(ActionRunner())
         .environment(\.colorScheme, .light)

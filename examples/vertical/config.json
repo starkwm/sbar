@@ -1,0 +1,96 @@
+{
+  "$schema": "../../Sources/SbarCore/Resources/config.schema.json",
+  "schemaVersion": 1,
+  "bar": {
+    "position": "left",
+    "width": 64,
+    "extendToTopEdge": true,
+    "displays": "main",
+    "margin": { "top": 0, "bottom": 8, "left": 8, "right": 8 },
+    "shadow": true,
+    "mousePassThrough": true
+  },
+  "theme": {
+    "background": "#1A1B26EE",
+    "horizontalPadding": 4,
+    "verticalPadding": 8,
+    "cornerRadius": 12,
+    "itemSpacing": 12,
+    "itemStyle": {
+      "tint": "#C0CAF5",
+      "fontSize": 12,
+      "horizontalPadding": 4,
+      "verticalPadding": 4,
+      "cornerRadius": 6,
+      "hoverBackground": "#414868"
+    }
+  },
+  "items": {
+    "left": [
+      {
+        "id": "launchers",
+        "type": "group",
+        "itemSpacing": 8,
+        "children": [
+          {
+            "id": "finder",
+            "type": "text",
+            "text": "",
+            "symbol": "folder",
+            "primaryAction": { "kind": "application", "value": "com.apple.finder" }
+          },
+          {
+            "id": "terminal",
+            "type": "text",
+            "text": "",
+            "symbol": "terminal",
+            "primaryAction": { "kind": "application", "value": "com.apple.Terminal" }
+          }
+        ]
+      },
+      { "id": "separator", "type": "divider" },
+      {
+        "id": "spaces",
+        "type": "spaces",
+        "text": "{{#workspaces}}{{name}}{{/workspaces}}",
+        "spaces": { "showSymbol": false },
+        "style": { "tint": "#7AA2F7" }
+      }
+    ],
+    "center": [
+      {
+        "id": "system",
+        "type": "popup",
+        "text": "",
+        "symbol": "gauge.with.dots.needle.50percent",
+        "style": { "tint": "#BB9AF7" },
+        "children": [
+          { "id": "cpu", "type": "cpu" },
+          { "id": "memory", "type": "memory" },
+          { "id": "disk", "type": "disk" }
+        ]
+      }
+    ],
+    "right": [
+      {
+        "id": "status",
+        "type": "group",
+        "itemSpacing": 8,
+        "children": [
+          { "id": "network", "type": "network", "text": "" },
+          { "id": "volume", "type": "volume", "text": "" },
+          { "id": "battery", "type": "battery", "text": "" }
+        ]
+      },
+      {
+        "id": "clock",
+        "type": "datetime",
+        "format": "HH:mm",
+        "priority": 100,
+        "style": { "tint": "#7AA2F7" },
+        "children": [{ "id": "date", "type": "datetime", "format": "EEEE, d MMMM yyyy" }],
+        "popup": "Today"
+      }
+    ]
+  }
+}

@@ -2,7 +2,7 @@
 
 [Documentation index](index.md)
 
-`group` items render `children` inline. `popup` items show `children` when clicked; any item can also have a `popup` text string. Groups nest up to eight levels. Disabling a group disables its child providers.
+`group` items show their children in a row in horizontal bars and a column in side bars. `popup` items show their children when clicked. Any item can also show a `popup` text string. Groups nest up to eight levels. Disabling a group disables its child providers.
 
 ```json
 {
@@ -60,10 +60,12 @@ Use the group's `style.horizontalPadding` to add space around the whole group. I
 
 ## Overflow
 
-Each region measures its items, allows flexible text to compress, and moves low-priority items into an overflow popover when space runs out. Larger `priority` values remain visible longer; equal priorities hide from the end. On displays without a notch, the center reserves one third of the bar when populated. Beside a notch, the center and right sections share the usable right-hand area. Bar content stays clipped within its own region.
+When a section runs out of space, sbar moves its lowest-priority items into an overflow popover. Larger `priority` values stay visible longer. Equal priorities hide from the end of the section. Horizontal bars measure item widths and allow flexible text to shrink. Side bars measure item heights.
+
+A nonempty center section gets one third of the bar's length. Beside a notch, the center and right sections instead share the space to the right of the cutout. Each section clips content that exceeds its bounds. Items inside popovers keep their horizontal layout.
 
 ## Dividers and spacers
 
-A `divider` item draws a vertical separator. A `spacer` item adds flexible empty space. Both require an `id` and `type`, like other items.
+A `divider` draws a line across the bar. A `spacer` adds flexible empty space along it. Both require an `id` and `type`, like other items.
 
 See [bar settings](configuration.md#bar-settings) for placement and [common item settings](configuration.md#items) for sections, IDs, and priority.

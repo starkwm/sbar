@@ -44,6 +44,14 @@ struct SpacesState: Equatable, Sendable {
 
   var text: String { presentation(for: Item(id: "spaces", type: .spaces)).text }
 
+  func isFullscreen(displayUUID: String?) -> Bool {
+    let display =
+      displays.first { $0.identifier == displayUUID?.lowercased() }
+      ?? displays.first { $0.identifier == "main" }
+    guard let display, let activeID = display.activeID else { return false }
+    return display.spaces.first { $0.id == activeID }?.fullscreen ?? false
+  }
+
   func presentation(for item: Item, displayUUID: String? = nil) -> WidgetPresentation {
     let settings = item.spaces ?? SpacesConfiguration()
     let entries: [SpaceEntry]

@@ -13,6 +13,8 @@ final class BarCoordinator: NSObject {
 
   private let store: ConfigurationStore
   private let barSpace = BarSpace()
+  private let spacesProvider = SpacesProvider()
+  private var spacesState = SpacesState()
   private var panels: [CGDirectDisplayID: BarPanel] = [:]
   private var isStarted = false
   private var sleeping = false
@@ -120,6 +122,11 @@ final class BarCoordinator: NSObject {
       )
     }
 
+    spacesProvider.start { [weak self] state in
+      guard let self, self.spacesState != state else { return }
+      self.spacesState = state
+      self.updatePanels()
+    }
     updatePanels()
   }
 
@@ -139,6 +146,7 @@ final class BarCoordinator: NSObject {
     actions.stop()
     providers.onValueChange = nil
     providers.stop()
+    spacesProvider.stop()
 
     store.stopObserving()
     store.configurationDidChange = nil
@@ -194,6 +202,12 @@ final class BarCoordinator: NSObject {
       else { continue }
 
       let identifier = number.uint32Value
+      let displayUUID = CGDisplayCreateUUIDFromDisplayID(identifier).map {
+        CFUUIDCreateString(nil, $0.takeRetainedValue()) as String
+      }
+      // The persistent bar Space can overlay fullscreen apps despite AppKit's collection behavior.
+      guard !spacesState.isFullscreen(displayUUID: displayUUID) else { continue }
+
       let frame = BarPlacement.frame(
         screenFrame: screen.frame,
         visibleFrame: screen.visibleFrame,
@@ -223,9 +237,6 @@ final class BarCoordinator: NSObject {
         rightArea: screen.auxiliaryTopRightArea,
         panelFrame: frame
       )
-      let displayUUID = CGDisplayCreateUUIDFromDisplayID(identifier).map {
-        CFUUIDCreateString(nil, $0.takeRetainedValue()) as String
-      }
       let hostingView = NSHostingView(
         rootView: BarWindowView(
           configuration: configuration,

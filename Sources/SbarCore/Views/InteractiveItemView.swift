@@ -11,6 +11,7 @@ struct InteractiveItemView: View {
     }
   }
 
+  @Environment(\.barPosition) private var barPosition
   @Environment(\.barDisplayUUID) private var barDisplayUUID
 
   @Environment(ProviderRuntime.self) private var providers
@@ -26,7 +27,8 @@ struct InteractiveItemView: View {
   private var decoratedContent: some View {
     Group {
       if item.type == .group {
-        HStack(spacing: item.itemSpacing ?? 4) {
+        let layout = barPosition.stack(spacing: item.itemSpacing ?? 4)
+        layout {
           ForEach(displayedChildren) { child in
             AnyView(
               InteractiveItemView(
@@ -49,7 +51,7 @@ struct InteractiveItemView: View {
             tintOverride: hovering && interactive ? resolvedStyle.hoverTint : nil
           )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ItemButtonStyle())
       } else {
         BarItemView(
           configuration: item,
@@ -68,7 +70,7 @@ struct InteractiveItemView: View {
         Button("Run secondary action") { actions.run(action) }
       }
     }
-    .popover(isPresented: $showingPopup) {
+    .popover(isPresented: $showingPopup, arrowEdge: barPosition.popoverEdge) {
       VStack(alignment: .leading, spacing: 8) {
         if let popup = item.popup { Text(popup).textSelection(.enabled) }
 
@@ -87,6 +89,7 @@ struct InteractiveItemView: View {
       .padding()
       .frame(minWidth: 120, maxWidth: 480)
       .focusEffectDisabled()
+      .environment(\.barPosition, .top)
     }
     .help(
       providers.presentation(for: item, displayUUID: barDisplayUUID)?.accessibilityLabel ?? item.id
@@ -105,5 +108,11 @@ struct InteractiveItemView: View {
   private var interactive: Bool {
     item.primaryAction != nil || item.secondaryAction != nil || item.popup != nil
       || item.type == .popup
+  }
+}
+
+private struct ItemButtonStyle: ButtonStyle {
+  func makeBody(configuration: ButtonStyleConfiguration) -> some View {
+    configuration.label.opacity(configuration.isPressed ? 0.8 : 1)
   }
 }

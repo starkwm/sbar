@@ -41,6 +41,8 @@ struct Configuration: Codable, Equatable, Sendable {
       throw ConfigurationError.invalidBarHeight(bar.height)
     }
 
+    try ItemStyle.validateNumber(bar.width, range: 20...96, path: "bar.width")
+
     if bar.displays == .selected && (bar.displayIDs ?? []).isEmpty {
       throw ConfigurationError.invalidValue(
         path: "bar.displayIDs",
@@ -208,11 +210,14 @@ struct Configuration: Codable, Equatable, Sendable {
 
 struct BarSettings: Codable, Equatable, Sendable {
   private enum CodingKeys: String, CodingKey {
-    case position, height, margin, displays, displayIDs, windowLevel, shadow, mousePassThrough
+    case position, height, width, extendToTopEdge, margin, displays, displayIDs, windowLevel,
+      shadow, mousePassThrough
   }
 
   var position: BarPosition = .top
   var height: Double = 32
+  var width: Double = 32
+  var extendToTopEdge: Bool = false
   var margin: BarMargin?
 
   var displays: DisplaySelection = .all
@@ -225,6 +230,8 @@ struct BarSettings: Codable, Equatable, Sendable {
   init(
     position: BarPosition = .top,
     height: Double = 32,
+    width: Double = 32,
+    extendToTopEdge: Bool = false,
     margin: BarMargin? = nil,
     displays: DisplaySelection = .all,
     displayIDs: [UInt32]? = nil,
@@ -234,6 +241,8 @@ struct BarSettings: Codable, Equatable, Sendable {
   ) {
     self.position = position
     self.height = height
+    self.width = width
+    self.extendToTopEdge = extendToTopEdge
     self.margin = margin
 
     self.displays = displays
@@ -249,6 +258,8 @@ struct BarSettings: Codable, Equatable, Sendable {
 
     position = try container.decodeIfPresent(BarPosition.self, forKey: .position) ?? .top
     height = try container.decodeIfPresent(Double.self, forKey: .height) ?? 32
+    width = try container.decodeIfPresent(Double.self, forKey: .width) ?? 32
+    extendToTopEdge = try container.decodeIfPresent(Bool.self, forKey: .extendToTopEdge) ?? false
     margin = try container.decodeIfPresent(BarMargin.self, forKey: .margin)
 
     displays = try container.decodeIfPresent(DisplaySelection.self, forKey: .displays) ?? .all
@@ -499,7 +510,11 @@ struct FrontApplicationConfiguration: Codable, Equatable, Sendable {
   var showIcon: Bool?
 }
 
-enum BarPosition: String, Codable, Sendable { case top, bottom }
+enum BarPosition: String, Codable, Sendable {
+  case top, bottom, left, right
+
+  var isVertical: Bool { self == .left || self == .right }
+}
 
 enum DisplaySelection: String, Codable, Sendable { case main, all, selected }
 

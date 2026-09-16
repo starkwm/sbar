@@ -38,7 +38,9 @@ The optional top-level `theme` sets bar appearance and default item styling. Eac
 
 Colors use `#RRGGBB` or `#RRGGBBAA` (alpha last). An omitted bar background uses the system material. An omitted item tint uses the system primary color; item backgrounds default to transparent. Use `#00000000` to clear an inherited background.
 
-Set `fontFamily` in `theme.itemStyle` to choose the default text font, or in an item's `style` to override it, for example `"style": {"fontFamily": "Helvetica Neue"}`. Use an installed font family or font name. Omitted or null values inherit the theme font; without a theme font, text uses the system font. `fontSize` and `fontWeight` still apply. Custom glyph symbols keep their own font.
+Set `theme.itemStyle.fontFamily` to choose the text font for the bar. Override it on an item with `"style": {"fontFamily": "Helvetica Neue"}`. Use an installed font family or font name.
+
+Omitted or null values inherit the theme font, or the system font if the theme sets none. `fontSize` and `fontWeight` still apply. Custom glyph symbols keep their own font.
 
 Item styles support `tint`, `background`, `fontSize` (8–72 points), `fontWeight` (`regular`, `medium`, `semibold`, `bold`), `horizontalPadding` (0–96), `verticalPadding` (0–48), and `cornerRadius` (0–48). Use `symbolFontWeight` (the same weight values) to override SF Symbol weight independently of text, either in `theme.itemStyle` or an item's `style`. For example, `"style": {"symbolFontWeight": "bold"}`. Item values override the theme; when neither sets it, symbols inherit the resolved text weight. This also applies to battery and network state symbols; font glyphs keep their custom font. Defaults are 13-point regular text with no item padding or corner radius. The theme's bar `horizontalPadding` and `itemSpacing` default to 10 points and accept 0–96. Oversized content stays clipped to its bar region; styling does not increase bar height.
 
@@ -159,3 +161,11 @@ Fixed-width labels stay on one line and truncate at the end. Content that cannot
 Both widths accept 0–4096 points and include the symbol, label, and padding. `alignment` accepts `leading`, `center`, or `trailing` and defaults to `center`. The background and hover area cover the reserved width. Overflow selection respects the reserved space and moves items to the overflow menu when needed.
 
 These fields also work in `theme.itemStyle`. Each field inherits independently when omitted or null. An explicit `minWidth` of `0` clears an inherited minimum; an explicit `width` of `0` reserves no width. Without either width setting, items size to their content as before.
+
+## Vertical bar styling
+
+In side bars, `theme.regions.left`, `center` and `right` style the top, middle and bottom sections. Each section fills the inner bar width and grows vertically to fit its visible items. Empty sections draw nothing.
+
+Vertical padding leaves less height for items before they move into overflow. Horizontal padding leaves less width for each label.
+
+Item `width`, `minWidth` and `alignment` still control horizontal sizing. Allow for bar and section padding when setting an item width. Content wider than its section is clipped. See the [vertical example](../examples/vertical/README.md).

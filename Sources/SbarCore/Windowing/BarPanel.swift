@@ -17,7 +17,7 @@ final class BarPanel: NSPanel {
     )
 
     backgroundColor = .clear
-    collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
+    collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenNone, .ignoresCycle]
     hasShadow = false
     hidesOnDeactivate = false
     isExcludedFromWindowsMenu = true
