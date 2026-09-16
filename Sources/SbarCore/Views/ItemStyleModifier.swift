@@ -4,12 +4,19 @@ struct ItemStyleModifier: ViewModifier {
   let style: ItemStyle
   var hovering = false
 
+  private var font: Font {
+    let size = style.fontSize ?? 13
+    let weight = (style.fontWeight ?? .regular).swiftUIWeight
+    if let family = style.fontFamily {
+      return .custom(family, size: size).weight(weight)
+    }
+    return .system(size: size, weight: weight)
+  }
+
   func body(content: Content) -> some View {
     sizedContent(
       content
-        .font(
-          .system(size: style.fontSize ?? 13, weight: (style.fontWeight ?? .regular).swiftUIWeight)
-        )
+        .font(font)
         .foregroundStyle(
           Color(hex: hovering ? style.hoverTint ?? style.tint : style.tint) ?? .primary
         )
