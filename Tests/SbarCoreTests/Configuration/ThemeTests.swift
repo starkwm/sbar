@@ -40,6 +40,7 @@ struct ThemeTests {
 
     let style = ItemStyle().resolved(over: config.theme?.itemStyle)
 
+    #expect(style.fontFamily == nil)
     #expect(style.fontSize == 13)
     #expect(style.fontWeight == .regular)
     #expect(style.tint == nil)
@@ -48,6 +49,32 @@ struct ThemeTests {
     #expect(style.minWidth == nil)
     #expect(style.width == nil)
     #expect(style.alignment == .center)
+  }
+
+  @Test("Font families inherit, override and round trip")
+  func fontFamilies() throws {
+    let json = """
+      {"schemaVersion":1,"bar":{},
+       "theme":{"itemStyle":{"fontFamily":"Menlo","fontSize":18,"fontWeight":"bold"}},
+       "items":{"right":[{"id":"clock","type":"datetime",
+         "style":{"fontFamily":"Helvetica Neue"}}]}}
+      """
+    let config = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
+    try config.validate()
+    let theme = try #require(config.theme?.itemStyle)
+    #expect(ItemStyle().resolved(over: theme).fontFamily == "Menlo")
+    let style = try #require(config.items.right[0].style).resolved(over: theme)
+    #expect(style.fontFamily == "Helvetica Neue")
+    #expect(style.fontSize == 18)
+    #expect(style.fontWeight == .bold)
+    let inherited = try JSONDecoder().decode(
+      ItemStyle.self,
+      from: Data(#"{"fontFamily":null}"#.utf8)
+    )
+    #expect(inherited.resolved(over: theme).fontFamily == "Menlo")
+    #expect(
+      try JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(config)) == config
+    )
   }
 
   @Test("Item widths and alignment inherit independently and round trip")

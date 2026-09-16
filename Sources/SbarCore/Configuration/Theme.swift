@@ -43,6 +43,7 @@ struct ItemStyle: Codable, Equatable, Sendable {
   var hoverTint: String?
   var hoverBackground: String?
 
+  var fontFamily: String?
   var fontSize: Double?
   var fontWeight: ItemFontWeight?
   var symbolFontWeight: ItemFontWeight?
@@ -61,6 +62,7 @@ struct ItemStyle: Codable, Equatable, Sendable {
       background: background ?? theme?.background,
       hoverTint: hoverTint ?? theme?.hoverTint,
       hoverBackground: hoverBackground ?? theme?.hoverBackground,
+      fontFamily: fontFamily ?? theme?.fontFamily,
       fontSize: fontSize ?? theme?.fontSize ?? 13,
       fontWeight: fontWeight ?? theme?.fontWeight ?? .regular,
       symbolFontWeight: symbolFontWeight ?? theme?.symbolFontWeight,

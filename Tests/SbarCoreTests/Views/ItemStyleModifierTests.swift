@@ -7,6 +7,24 @@ import Testing
 @Suite("ItemStyleModifier")
 @MainActor
 struct ItemStyleModifierTests {
+  @Test("Global and per-item font families render with the resolved size and weight")
+  func fontFamilies() throws {
+    let theme = ItemStyle(fontFamily: "Menlo", fontSize: 24, fontWeight: .bold)
+    var item = Item(id: "text", type: .text, text: "iiiiiiii")
+    let inherited = try render(item, defaultStyle: theme)
+    let expected = try render(Text("iiiiiiii").font(.custom("Menlo", size: 24).weight(.bold)))
+    #expect(inherited.pixelsWide == expected.pixelsWide)
+    #expect(inherited.pixelsHigh == expected.pixelsHigh)
+    item.style = ItemStyle(fontFamily: "Helvetica Neue")
+    let overridden = try render(item, defaultStyle: theme)
+    let expectedOverride = try render(
+      Text("iiiiiiii").font(.custom("Helvetica Neue", size: 24).weight(.bold))
+    )
+    #expect(overridden.pixelsWide == expectedOverride.pixelsWide)
+    #expect(overridden.pixelsHigh == expectedOverride.pixelsHigh)
+    #expect(overridden.pixelsWide != inherited.pixelsWide)
+  }
+
   @Test("the default hover highlight remains visible over an opaque rounded background")
   func defaultHover() throws {
     let style = ItemStyle(background: "#0000FF", cornerRadius: 8)

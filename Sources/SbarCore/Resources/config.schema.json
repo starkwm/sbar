@@ -655,6 +655,13 @@
           "pattern": "^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$",
           "description": "Replacement background while an interactive item is hovered. Inherits from theme.itemStyle and otherwise adds a subtle highlight over the normal background."
         },
+        "fontFamily": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Font family or font name for item text. Inherits from theme.itemStyle; defaults to the system font. Custom glyph symbols keep their own font."
+        },
         "fontSize": {
           "type": [
             "number",
