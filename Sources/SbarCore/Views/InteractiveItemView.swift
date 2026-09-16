@@ -26,12 +26,12 @@ struct InteractiveItemView: View {
   private var decoratedContent: some View {
     Group {
       if item.type == .group {
-        HStack(spacing: 4) {
+        HStack(spacing: item.itemSpacing ?? 4) {
           ForEach(displayedChildren) { child in
             AnyView(
               InteractiveItemView(
                 item: child,
-                defaultStyle: defaultStyle,
+                defaultStyle: item.childStyle?.resolved(over: defaultStyle) ?? defaultStyle,
                 tracksHitRegion: tracksHitRegion
               )
             )

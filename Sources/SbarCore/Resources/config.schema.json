@@ -307,6 +307,15 @@
             "null"
           ]
         },
+        "itemSpacing": {
+          "description": "Gap between group children in points. Defaults to 4; child padding is additional.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 96
+        },
         "children": {
           "type": [
             "array",
@@ -585,9 +594,35 @@
         },
         "weather": {
           "$ref": "#/$defs/weather"
+        },
+        "childStyle": {
+          "$ref": "#/$defs/itemStyle",
+          "description": "Default style for group children, overriding the theme. Each child can override these values with its own style."
         }
       },
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "group"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "else": {
+            "properties": {
+              "itemSpacing": {
+                "type": "null"
+              },
+              "childStyle": {
+                "type": "null"
+              }
+            }
+          }
+        },
         {
           "if": {
             "required": [

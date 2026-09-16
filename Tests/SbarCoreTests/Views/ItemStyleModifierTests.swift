@@ -7,6 +7,29 @@ import Testing
 @Suite("ItemStyleModifier")
 @MainActor
 struct ItemStyleModifierTests {
+  @Test("group child styles override theme padding while preserving child overrides")
+  func groupChildStyles() throws {
+    let theme = ItemStyle(fontSize: 20, horizontalPadding: 8)
+    var group = Item(
+      id: "group",
+      type: .group,
+      children: (0..<3).map { Item(id: "symbol-\($0)", type: .text, symbol: "star.fill") },
+      itemSpacing: 2
+    )
+    let original = try render(group, defaultStyle: theme)
+    group.childStyle = ItemStyle(horizontalPadding: 0)
+    let compact = try render(group, defaultStyle: theme)
+    #expect(original.pixelsWide - compact.pixelsWide == 48)
+    #expect(original.pixelsHigh == compact.pixelsHigh)
+    group.children?[0].style = ItemStyle(horizontalPadding: 3)
+    #expect(try render(group, defaultStyle: theme).pixelsWide == compact.pixelsWide + 6)
+    group.childStyle = nil
+    for index in 0..<3 {
+      group.children?[index].style = ItemStyle(horizontalPadding: 0)
+    }
+    #expect(try render(group, defaultStyle: theme).pixelsWide == compact.pixelsWide)
+  }
+
   @Test("Global and per-item font families render with the resolved size and weight")
   func fontFamilies() throws {
     let theme = ItemStyle(fontFamily: "Menlo", fontSize: 24, fontWeight: .bold)

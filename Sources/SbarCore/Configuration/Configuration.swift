@@ -148,6 +148,24 @@ struct Configuration: Codable, Equatable, Sendable {
           reason: "Widget settings must match the item type."
         )
       }
+      if item.itemSpacing != nil && item.type != .group {
+        throw ConfigurationError.invalidValue(
+          path: "\(location).itemSpacing",
+          reason: "Only group items support itemSpacing."
+        )
+      }
+      try ItemStyle.validateNumber(
+        item.itemSpacing,
+        range: 0...96,
+        path: "\(location).itemSpacing"
+      )
+      if item.childStyle != nil && item.type != .group {
+        throw ConfigurationError.invalidValue(
+          path: "\(location).childStyle",
+          reason: "Only group items support childStyle."
+        )
+      }
+      try item.childStyle?.validate(path: "\(location).childStyle")
       try item.style?.validate(path: "\(location).style")
 
       guard !item.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -285,7 +303,9 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
       symbolPosition,
       type,
       primaryAction, secondaryAction,
-      popup, command, children, plugin, refresh, yabai, aerospace, battery, cpu, disk, media,
+      popup, command, children, itemSpacing, childStyle, plugin, refresh, yabai, aerospace, battery,
+      cpu, disk,
+      media,
       memory,
       spaces,
       throughput,
@@ -316,6 +336,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
 
   var command: ShellCommand?
   var children: [Item]?
+  var itemSpacing: Double?
+  var childStyle: ItemStyle?
   var plugin: Plugin?
   var frontApplication: FrontApplicationConfiguration?
   var yabai: YabaiConfiguration?
@@ -357,6 +379,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     popup: String? = nil,
     command: ShellCommand? = nil,
     children: [Item]? = nil,
+    itemSpacing: Double? = nil,
+    childStyle: ItemStyle? = nil,
     plugin: Plugin? = nil,
     frontApplication: FrontApplicationConfiguration? = nil,
     yabai: YabaiConfiguration? = nil,
@@ -396,6 +420,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
 
     self.command = command
     self.children = children
+    self.itemSpacing = itemSpacing
+    self.childStyle = childStyle
     self.plugin = plugin
     self.frontApplication = frontApplication
     self.yabai = yabai
@@ -442,6 +468,8 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
 
     command = try container.decodeIfPresent(ShellCommand.self, forKey: .command)
     children = try container.decodeIfPresent([Item].self, forKey: .children)
+    itemSpacing = try container.decodeIfPresent(Double.self, forKey: .itemSpacing)
+    childStyle = try container.decodeIfPresent(ItemStyle.self, forKey: .childStyle)
     plugin = try container.decodeIfPresent(Plugin.self, forKey: .plugin)
     frontApplication = try container.decodeIfPresent(
       FrontApplicationConfiguration.self,
