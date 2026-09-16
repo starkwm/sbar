@@ -1,0 +1,50 @@
+{
+  "$schema": "../../Sources/SbarCore/Resources/config.schema.json",
+  "schemaVersion": 1,
+  "bar": {
+    "position": "top",
+    "height": 32,
+    "displays": "main"
+  },
+  "theme": {
+    "horizontalPadding": 12,
+    "itemSpacing": 12,
+    "itemStyle": {
+      "horizontalPadding": 8
+    }
+  },
+  "items": {
+    "right": [
+      {
+        "id": "status",
+        "type": "group",
+        "itemSpacing": 10,
+        "childStyle": {
+          "horizontalPadding": 0
+        },
+        "children": [
+          {
+            "id": "volume",
+            "type": "volume",
+            "text": ""
+          },
+          {
+            "id": "network",
+            "type": "network",
+            "text": ""
+          },
+          {
+            "id": "battery",
+            "type": "battery",
+            "text": ""
+          }
+        ]
+      },
+      {
+        "id": "clock",
+        "type": "datetime",
+        "format": "HH:mm"
+      }
+    ]
+  }
+}
