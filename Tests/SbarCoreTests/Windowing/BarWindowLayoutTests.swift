@@ -5,6 +5,92 @@ import Testing
 
 @Suite("BarWindowLayout")
 struct BarWindowLayoutTests {
+  @Test(
+    "side shadows preserve content coordinates and pass clicks through the fade",
+    arguments: [BarPosition.left, .right]
+  )
+  func verticalShadows(position: BarPosition) {
+    let screen = CGRect(x: -100, y: -200, width: 900, height: 700)
+    let bar = BarPlacement.frame(
+      screenFrame: screen,
+      visibleFrame: screen,
+      settings: .init(position: position, width: 48)
+    )
+    let layout = BarWindowLayout(
+      screenFrame: screen,
+      barFrame: bar,
+      position: position,
+      shadow: true,
+      cornerRadius: 0
+    )
+    #expect(layout.shadowExtent == 16)
+    #expect(!layout.hasNativeShadow)
+    #expect(layout.frame.width == 64)
+    #expect(layout.frame.height == bar.height)
+    #expect(
+      CGRect(
+        x: layout.frame.minX + layout.contentFrame.minX,
+        y: layout.frame.maxY - layout.contentFrame.maxY,
+        width: layout.contentFrame.width,
+        height: layout.contentFrame.height
+      ) == bar
+    )
+    let hit = CGRect(x: 5, y: 10, width: 30, height: 20)
+    let fade = CGPoint(x: position == .left ? 56 : 8, y: 15)
+    for passthrough in [false, true] {
+      #expect(
+        layout.ignoresMouse(at: fade, passingThroughEmptyRegions: passthrough, hitRegions: [hit])
+      )
+      #expect(
+        !layout.ignoresMouse(
+          at: CGPoint(x: layout.contentFrame.minX + 10, y: 15),
+          passingThroughEmptyRegions: passthrough,
+          hitRegions: [hit]
+        )
+      )
+      #expect(
+        layout.ignoresMouse(
+          at: CGPoint(x: layout.contentFrame.minX + 10, y: 50),
+          passingThroughEmptyRegions: passthrough,
+          hitRegions: [hit]
+        ) == passthrough
+      )
+    }
+    let smallScreen = CGRect(x: 0, y: 0, width: 40, height: 100)
+    let smallBar = BarPlacement.frame(
+      screenFrame: smallScreen,
+      visibleFrame: smallScreen,
+      settings: .init(position: position)
+    )
+    let smallLayout = BarWindowLayout(
+      screenFrame: smallScreen,
+      barFrame: smallBar,
+      position: position,
+      shadow: true,
+      cornerRadius: 0
+    )
+    #expect(smallLayout.shadowExtent == 8)
+    #expect(smallLayout.frame == smallScreen)
+    let disabled = BarWindowLayout(
+      screenFrame: screen,
+      barFrame: bar,
+      position: position,
+      shadow: false,
+      cornerRadius: 0
+    )
+    #expect(disabled.frame == bar)
+    #expect(disabled.contentFrame.origin == .zero)
+    let inset = BarWindowLayout(
+      screenFrame: screen,
+      barFrame: bar.insetBy(dx: 0, dy: 6),
+      position: position,
+      shadow: true,
+      cornerRadius: 0
+    )
+    #expect(inset.hasNativeShadow)
+    #expect(inset.shadowExtent == 0)
+  }
+
   @Test("square full-width bars cast an edge shadow without moving their content")
   func edgeShadowGeometry() {
     let screen = CGRect(x: -1440, y: 100, width: 1440, height: 900)
@@ -26,7 +112,7 @@ struct BarWindowLayoutTests {
       #expect(layout.frame.height == bar.height + 16)
       #expect(layout.frame.minX == bar.minX)
       #expect(layout.contentFrame.size == bar.size)
-      #expect(layout.shadowAbove == (position == .bottom))
+      #expect(layout.position == position)
       let contentOnScreen = CGRect(
         x: layout.frame.minX + layout.contentFrame.minX,
         y: layout.frame.maxY - layout.contentFrame.maxY,

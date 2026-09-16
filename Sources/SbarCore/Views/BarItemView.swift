@@ -22,7 +22,8 @@ struct BarItemView: View {
         }
       } content: {
         if !presentation.segments.isEmpty {
-          HStack(spacing: presentation.segmentSpacing) {
+          let layout = barPosition.stack(spacing: presentation.segmentSpacing)
+          layout {
             ForEach(presentation.segments.indices, id: \.self) { index in
               let segment = presentation.segments[index]
               SymbolContentView(position: configuration.symbolPosition) {
@@ -83,7 +84,9 @@ struct BarItemView: View {
         )
       ).monospacedDigit()
     case .divider:
-      Rectangle().frame(width: 1, height: 16).opacity(0.3).accessibilityHidden(true)
+      Rectangle()
+        .frame(width: barPosition.isVertical ? 16 : 1, height: barPosition.isVertical ? 1 : 16)
+        .opacity(0.3).accessibilityHidden(true)
     case .frontApplication:
       Text(
         providers.itemSnapshots[configuration.id] ?? providers.sharedValues[
@@ -106,6 +109,7 @@ struct BarItemView: View {
     }
   }
 
+  @Environment(\.barPosition) private var barPosition
   @Environment(\.barDisplayUUID) private var barDisplayUUID
 
   @Environment(ProviderRuntime.self) private var providers

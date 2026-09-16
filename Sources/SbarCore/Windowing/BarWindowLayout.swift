@@ -6,7 +6,7 @@ struct BarWindowLayout {
   let frame: CGRect
   let contentFrame: CGRect
   let shadowExtent: CGFloat
-  let shadowAbove: Bool
+  let position: BarPosition
   let hasNativeShadow: Bool
 
   init(
@@ -16,25 +16,32 @@ struct BarWindowLayout {
     shadow: Bool,
     cornerRadius: Double
   ) {
-    let edgeToEdge = barFrame.minX <= screenFrame.minX && barFrame.maxX >= screenFrame.maxX
+    self.position = position
+    let edgeToEdge =
+      position.isVertical
+      ? barFrame.minY <= screenFrame.minY && barFrame.maxY >= screenFrame.maxY
+      : barFrame.minX <= screenFrame.minX && barFrame.maxX >= screenFrame.maxX
     let usesEdgeShadow = shadow && edgeToEdge && cornerRadius == 0
-    let available =
-      position == .top
-      ? barFrame.minY - screenFrame.minY : screenFrame.maxY - barFrame.maxY
+    let available: CGFloat
+    switch position {
+    case .top: available = barFrame.minY - screenFrame.minY
+    case .bottom: available = screenFrame.maxY - barFrame.maxY
+    case .left: available = screenFrame.maxX - barFrame.maxX
+    case .right: available = barFrame.minX - screenFrame.minX
+    }
     shadowExtent = usesEdgeShadow ? min(Self.edgeShadowExtent, max(0, available)) : 0
-    shadowAbove = position == .bottom
     hasNativeShadow = shadow && !usesEdgeShadow
 
     frame = CGRect(
-      x: barFrame.minX,
-      y: barFrame.minY - (shadowAbove ? 0 : shadowExtent),
-      width: barFrame.width,
-      height: barFrame.height + shadowExtent
+      x: barFrame.minX - (position == .right ? shadowExtent : 0),
+      y: barFrame.minY - (position == .top ? shadowExtent : 0),
+      width: barFrame.width + (position.isVertical ? shadowExtent : 0),
+      height: barFrame.height + (position.isVertical ? 0 : shadowExtent)
     )
     // SwiftUI and item hit regions use top-left coordinates within the panel.
     contentFrame = CGRect(
-      x: 0,
-      y: shadowAbove ? shadowExtent : 0,
+      x: position == .right ? shadowExtent : 0,
+      y: position == .bottom ? shadowExtent : 0,
       width: barFrame.width,
       height: barFrame.height
     )

@@ -5,6 +5,42 @@ import Testing
 
 @Suite("OverflowSelection")
 struct OverflowSelectionTests {
+  @Test("vertical overflow uses unscaled heights, preserves priority and reserves its button")
+  func verticalOverflow() {
+    let items = [
+      Item(id: "a", type: .text, priority: 10, style: ItemStyle(width: 400)),
+      Item(id: "b", type: .text, style: ItemStyle(minWidth: 200)),
+      Item(id: "c", type: .text),
+    ]
+    #expect(
+      OverflowSelection.visibleItemIDs(
+        items: items,
+        lengths: ["a": 30, "b": 30, "c": 30],
+        available: 110,
+        spacing: 10,
+        isVertical: true
+      ) == ["a", "b", "c"]
+    )
+    #expect(
+      OverflowSelection.visibleItemIDs(
+        items: items,
+        lengths: ["a": 30, "b": 30, "c": 30],
+        available: 100,
+        spacing: 10,
+        isVertical: true
+      ) == ["a"]
+    )
+    #expect(
+      OverflowSelection.visibleItemIDs(
+        items: [items[0]],
+        lengths: ["a": 30],
+        available: 29,
+        spacing: 0,
+        isVertical: true
+      ).isEmpty
+    )
+  }
+
   @Test(
     "reserved widths are respected before and after measurement, including theme defaults",
     arguments: [ItemStyle(minWidth: 100), ItemStyle(width: 100)],
@@ -16,7 +52,7 @@ struct OverflowSelectionTests {
     #expect(
       OverflowSelection.visibleItemIDs(
         items: [item],
-        widths: widths,
+        lengths: widths,
         available: 90,
         spacing: 0
       ).isEmpty
@@ -24,7 +60,7 @@ struct OverflowSelectionTests {
     #expect(
       OverflowSelection.visibleItemIDs(
         items: [item],
-        widths: widths,
+        lengths: widths,
         available: 100,
         spacing: 0
       ) == [item.id]
@@ -33,7 +69,7 @@ struct OverflowSelectionTests {
     #expect(
       OverflowSelection.visibleItemIDs(
         items: [item],
-        widths: widths,
+        lengths: widths,
         available: 90,
         spacing: 0,
         defaultStyle: style
@@ -47,7 +83,7 @@ struct OverflowSelectionTests {
     #expect(
       OverflowSelection.visibleItemIDs(
         items: [item],
-        widths: [item.id: 300],
+        lengths: [item.id: 300],
         available: 60,
         spacing: 0,
         defaultStyle: ItemStyle(minWidth: 100, width: 120)
@@ -61,7 +97,7 @@ struct OverflowSelectionTests {
     #expect(
       OverflowSelection.visibleItemIDs(
         items: [item],
-        widths: [item.id: 200],
+        lengths: [item.id: 200],
         available: 120,
         spacing: 0
       ).isEmpty
@@ -70,7 +106,7 @@ struct OverflowSelectionTests {
     #expect(
       OverflowSelection.visibleItemIDs(
         items: [item, other],
-        widths: [item.id: 100, other.id: 60],
+        lengths: [item.id: 100, other.id: 60],
         available: 150,
         spacing: 10
       ) == [other.id]
@@ -98,7 +134,7 @@ struct OverflowSelectionTests {
     #expect(displayed.map(\.id) == [text.id])
     let selected = OverflowSelection.visibleItemIDs(
       items: displayed,
-      widths: [text.id: 100, media.id: CGFloat(measuredWidth), disabled.id: 200],
+      lengths: [text.id: 100, media.id: CGFloat(measuredWidth), disabled.id: 200],
       available: 80,
       spacing: 10
     )
@@ -118,7 +154,7 @@ struct OverflowSelectionTests {
     #expect(
       OverflowSelection.visibleItemIDs(
         items: playing,
-        widths: [text.id: 100, media.id: 120],
+        lengths: [text.id: 100, media.id: 120],
         available: 160,
         spacing: 10
       ) == [media.id]
@@ -135,7 +171,7 @@ struct OverflowSelectionTests {
     #expect(
       OverflowSelection.visibleItemIDs(
         items: items,
-        widths: ["a": 40, "b": 40, "c": 40],
+        lengths: ["a": 40, "b": 40, "c": 40],
         available: 80,
         spacing: 5
       ) == ["b"]

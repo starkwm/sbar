@@ -54,8 +54,10 @@ Use the common [`text` field](text-templates.md) to customise labels with provid
 
 | Property | Values | Default |
 | --- | --- | --- |
-| `position` | `top` or `bottom` | `top` |
-| `height` | 20–96 points, including content padding | `32` |
+| `position` | `top`, `bottom`, `left`, or `right` | `top` |
+| `height` | Horizontal bar height, 20–96 points including padding | `32` |
+| `width` | Vertical bar width, 20–96 points including padding | `32` |
+| `extendToTopEdge` | Extend side bars to the physical top edge, respecting the Dock and margins; ignored by horizontal bars | `false` |
 | `margin` | Object with `top`, `bottom`, `left`, `right` offsets (0–4096 points each) | All `0` |
 | `displays` | `main`, `all`, or `selected` | `all` |
 | `displayIDs` | Display IDs, required when `displays` is `selected` | None |
@@ -65,7 +67,9 @@ Use the common [`text` field](text-templates.md) to customise labels with provid
 
 `main` selects the primary display. Use `sbar query --displays` to find connected display IDs and names.
 
-Top placement uses the physical screen edge, sharing the system menu-bar area. Bottom placement respects the Dock's visible work area. On notched displays, items avoid the cutout and the center section sits immediately to its right.
+Top bars start at the physical screen edge and share the menu-bar area. Bottom and side bars fit within the space left by the menu bar and Dock. Set `bar.extendToTopEdge` to `true` to extend a side bar into the menu-bar area. When a top bar crosses a notch, its items avoid the cutout and its center section sits to the right of it.
+
+Bars hide on displays showing a full-screen app and return when you switch back to a desktop Space. Bars on other displays stay visible. This applies to every bar position and window level, even without a Spaces item.
 
 The default `floating` window level keeps the bar above ordinary windows and below system notifications and the revealed menu bar. Omitting `windowLevel` or setting it to `null` uses this default. Explicit `statusBar` and `screenSaver` levels can cover notifications, especially when the menu bar auto-hides and banners overlap the bar.
 
@@ -88,13 +92,47 @@ For a floating bar, inset the panel, round its background, and enable its shadow
 }
 ```
 
-Margins inset the placement area: top bars anchor to its top edge, bottom bars to its bottom edge. Left and right margins control width independently. Excessive margins clamp to leave at least one point of available area; height shrinks to fit. A top margin is measured from the physical screen edge, so choose enough clearance for your display's notch/menu bar. Notch avoidance stops once the panel is below the cutout. These settings reload automatically when the configuration file changes.
+Margins leave space between the bar and the edges of its placement area. Left and right margins shorten horizontal bars. Top and bottom margins shorten side bars. If the margins leave less than one point, sbar clamps them and shrinks the bar to fit.
 
-The theme's `verticalPadding` and `cornerRadius` accept 0–48 points and default to zero. Padding sits inside `bar.height`; the rounded shape clips both material/custom backgrounds and content.
+For a top bar, `margin.top` starts at the physical screen edge. Set it high enough to clear the menu bar or notch. Side bars with `extendToTopEdge` also measure `margin.top` from the physical screen edge. Other margins and positions use the usable display area. Changes reload automatically.
 
-Set `bar.shadow` to `true` for a raised appearance. It defaults to `false`; `null` also uses that default. Inset or rounded bars use the native macOS window shadow, whose color, blur, and offset are controlled by the system. Square bars spanning the display's full width use a soft 16-point fade below a top bar or above a bottom bar, avoiding the native window's thin outline. The fade shortens if it reaches the screen edge.
+The theme's `verticalPadding` and `cornerRadius` accept 0 to 48 points and default to zero. Padding sits inside the bar. Rounded corners clip its background and content.
 
-The shadow does not change the bar's configured height, content position, or mouse hit regions. The edge fade uses extra transparent window space that always passes clicks through. Shadow changes reload automatically, including after edits to the margins, background, or corner radius.
+Set `bar.shadow` to `true` to add a shadow. Omitted or null values default to `false`. Inset or rounded bars use the native macOS window shadow. Square bars spanning the full display width use a 16-point fade below a top bar or above a bottom bar. Side bars spanning the full display height cast the fade towards the middle of the display. The fade shortens if it reaches the opposite screen edge.
+
+Shadows sit outside the bar and do not move its content or click targets. The edge fade always passes clicks through.
+
+## Vertical bars
+
+Set `bar.position` to `left` or `right` and set the width with `bar.width`. Items stay upright and run from top to bottom on either edge.
+
+| Section | Position in a side bar |
+| --- | --- |
+| `items.left` | Top |
+| `items.center` | Middle |
+| `items.right` | Bottom |
+
+The matching `theme.regions` styles follow the same order.
+
+```json
+{
+  "schemaVersion": 1,
+  "bar": { "position": "left", "width": 64 },
+  "theme": { "horizontalPadding": 4, "verticalPadding": 8 },
+  "items": {
+    "left": [{ "id": "spaces", "type": "spaces", "spaces": { "showSymbol": false } }],
+    "right": [{ "id": "clock", "type": "datetime", "format": "HH:mm" }]
+  }
+}
+```
+
+`bar.width` controls side bars; `bar.height` controls top and bottom bars. Both default to 32 points and accept 20 to 96. Padding and item widths keep their usual directions. Use short labels or `"text": ""` for icons without labels. Long labels truncate to fit.
+
+Group children and provider entries, such as a list of Spaces, stack vertically. Dividers run across the bar and spacers expand along it. [Overflow](layout.md#overflow) uses item heights and the same priority order as horizontal bars. Popups open towards the middle of the display. Items inside them keep their horizontal layout.
+
+Side bars do not reserve space for other windows. Set a left or right gap in your window manager if needed.
+
+See the [vertical example](../examples/vertical/README.md) for app shortcuts, status icons and popups.
 
 ## Items
 
@@ -124,7 +162,7 @@ The shadow does not change the bar's configured height, content position, or mou
 | [`plugin`](providers/plugin.md) | Text streamed by an external process |
 | [`group`](layout.md) | Inline child items |
 | [`popup`](layout.md) | A label that opens child items in a popover |
-| [`divider`](layout.md#dividers-and-spacers) | Vertical separator |
+| [`divider`](layout.md#dividers-and-spacers) | Separator across the bar |
 | [`spacer`](layout.md#dividers-and-spacers) | Flexible empty space |
 
 Optional properties include `enabled`, [`text`](text-templates.md), [`symbol` and `symbolPosition`](symbols.md), `priority`, [`style`](styling.md), [`refresh`](#refresh-policies), [`primaryAction` and `secondaryAction`](actions.md), and [`popup` text](layout.md). `enabled` defaults to `true` and `priority` defaults to `0`.

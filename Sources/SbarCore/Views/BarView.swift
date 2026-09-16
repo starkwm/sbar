@@ -6,34 +6,43 @@ struct BarView: View {
   var hitRegionsChanged: (([CGRect]) -> Void)?
 
   var body: some View {
-    BarRegionLayout(
-      hasCenter: configuration.items.center.contains {
-        providers.isVisible($0, displayUUID: barDisplayUUID)
-      },
-      notch: notch.map { $0.offsetBy(dx: -(configuration.theme?.horizontalPadding ?? 10), dy: 0) }
-    ) {
-      region(
-        configuration.items.left,
-        style: configuration.theme?.regions?.left,
-        alignment: .leading
+    GeometryReader { geometry in
+      BarRegionLayout(
+        hasCenter: configuration.items.center.contains {
+          providers.isVisible($0, displayUUID: barDisplayUUID)
+        },
+        notch: notch.map {
+          $0.offsetBy(dx: -(configuration.theme?.horizontalPadding ?? 10), dy: 0)
+        },
+        isVertical: configuration.bar.position.isVertical
+      ) {
+        region(
+          configuration.items.left,
+          style: configuration.theme?.regions?.left,
+          alignment: configuration.bar.position.isVertical ? .top : .leading
+        )
+        region(
+          configuration.items.center,
+          style: configuration.theme?.regions?.center,
+          alignment: configuration.bar.position.isVertical || notch == nil ? .center : .leading
+        )
+        region(
+          configuration.items.right,
+          style: configuration.theme?.regions?.right,
+          alignment: configuration.bar.position.isVertical ? .bottom : .trailing
+        )
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .padding(
+        .horizontal,
+        min(configuration.theme?.horizontalPadding ?? 10, geometry.size.width / 2)
       )
-      region(
-        configuration.items.center,
-        style: configuration.theme?.regions?.center,
-        alignment: notch == nil ? .center : .leading
-      )
-      region(
-        configuration.items.right,
-        style: configuration.theme?.regions?.right,
-        alignment: .trailing
+      .padding(
+        .vertical,
+        min(configuration.theme?.verticalPadding ?? 0, geometry.size.height / 2)
       )
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .padding(.horizontal, configuration.theme?.horizontalPadding ?? 10)
-    .padding(
-      .vertical,
-      min(configuration.theme?.verticalPadding ?? 0, configuration.bar.height / 2)
-    )
+    .environment(\.barPosition, configuration.bar.position)
     .coordinateSpace(name: "bar")
     .onPreferenceChange(HitRegionsKey.self) { hitRegionsChanged?($0) }
     .background {

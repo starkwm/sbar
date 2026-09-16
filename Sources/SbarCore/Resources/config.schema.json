@@ -23,6 +23,8 @@
           "enum": [
             "top",
             "bottom",
+            "left",
+            "right",
             null
           ],
           "default": "top"
@@ -35,6 +37,21 @@
           "minimum": 20,
           "maximum": 96,
           "default": 32
+        },
+        "width": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 20,
+          "maximum": 96,
+          "default": 32,
+          "description": "Width of left and right bars, including content padding."
+        },
+        "extendToTopEdge": {
+          "type": ["boolean", "null"],
+          "default": false,
+          "description": "Extend left and right bars to the physical top edge while respecting the Dock. Top margin still applies. Ignored by top and bottom bars."
         },
         "displays": {
           "enum": [
@@ -72,7 +89,7 @@
             "null"
           ],
           "default": false,
-          "description": "Draw a native window shadow, or a soft edge shadow for square bars spanning the display width."
+          "description": "Draw a native window shadow, or an inward edge shadow for square bars spanning the display along their layout axis."
         },
         "mousePassThrough": {
           "type": [

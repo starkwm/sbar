@@ -7,12 +7,13 @@ struct BarWindowView: View {
   var hitRegionsChanged: (([CGRect]) -> Void)?
 
   var body: some View {
-    VStack(spacing: 0) {
-      if layout.shadowAbove { edgeShadow }
+    ZStack(alignment: .topLeading) {
+      edgeShadow
       BarView(configuration: configuration, notch: notch, hitRegionsChanged: hitRegionsChanged)
-        .frame(height: layout.contentFrame.height)
-      if !layout.shadowAbove { edgeShadow }
+        .frame(width: layout.contentFrame.width, height: layout.contentFrame.height)
+        .offset(x: layout.contentFrame.minX, y: layout.contentFrame.minY)
     }
+    .frame(width: layout.frame.width, height: layout.frame.height, alignment: .topLeading)
   }
 
   private var edgeShadow: some View {
@@ -23,11 +24,36 @@ struct BarWindowView: View {
         .init(color: .black.opacity(0.025), location: 0.7),
         .init(color: .clear, location: 1),
       ],
-      startPoint: layout.shadowAbove ? .bottom : .top,
-      endPoint: layout.shadowAbove ? .top : .bottom
+      startPoint: shadowStart,
+      endPoint: shadowEnd
     )
-    .frame(height: layout.shadowExtent)
+    .frame(
+      width: layout.position.isVertical ? layout.shadowExtent : layout.contentFrame.width,
+      height: layout.position.isVertical ? layout.contentFrame.height : layout.shadowExtent
+    )
+    .offset(
+      x: layout.position == .left ? layout.contentFrame.maxX : 0,
+      y: layout.position == .top ? layout.contentFrame.maxY : 0
+    )
     .allowsHitTesting(false)
     .accessibilityHidden(true)
+  }
+
+  private var shadowStart: UnitPoint {
+    switch layout.position {
+    case .top: .top
+    case .bottom: .bottom
+    case .left: .leading
+    case .right: .trailing
+    }
+  }
+
+  private var shadowEnd: UnitPoint {
+    switch layout.position {
+    case .top: .bottom
+    case .bottom: .top
+    case .left: .trailing
+    case .right: .leading
+    }
   }
 }
