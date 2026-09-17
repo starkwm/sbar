@@ -1,4 +1,3 @@
-import Darwin
 import Foundation
 import StarkIPC
 import Testing
@@ -14,15 +13,11 @@ struct ControlTests {
     let server = ControlServer(path: path) { _ in ControlResponse() }
     try server.start()
     defer { server.stop() }
-    let fd = try StarkIPC.LocalSocket.connect(path: path, serviceName: "sbar")
-    defer { close(fd) }
-    try StarkIPC.LocalSocket.send(
-      JSONEncoder().encode(ControlRequest(command: "subscribe")) + Data([10]),
-      to: fd
-    )
-    #expect(try receive(from: fd).ok)
+    let client = try SocketClient(path: path, serviceName: "sbar")
+    try client.send(ControlRequest(command: "subscribe"))
+    #expect(try client.receive(ControlResponse.self).ok)
     server.publish(ControlResponse(value: .string("changed")))
-    #expect(try receive(from: fd).value == .string("changed"))
+    #expect(try client.receive(ControlResponse.self).value == .string("changed"))
   }
 
   @Test("only successful stop replies invoke the stop callback", arguments: [false, true])
@@ -37,13 +32,9 @@ struct ControlTests {
     )
     try server.start()
     defer { server.stop() }
-    let fd = try StarkIPC.LocalSocket.connect(path: path, serviceName: "sbar")
-    defer { close(fd) }
-    try StarkIPC.LocalSocket.send(
-      JSONEncoder().encode(ControlRequest(command: "stop")) + Data([10]),
-      to: fd
-    )
-    #expect(try receive(from: fd).ok == ok)
+    let client = try SocketClient(path: path, serviceName: "sbar")
+    try client.send(ControlRequest(command: "stop"))
+    #expect(try client.receive(ControlResponse.self).ok == ok)
     // Synchronise with the server queue so a failed reply cannot call onStop later.
     server.stop()
     #expect(stopped.wait(timeout: .now()) == (ok ? .success : .timedOut))
@@ -138,17 +129,4 @@ struct ControlTests {
     #expect(events.recent.last?.value == .number(3))
   }
 
-  private func receive(from fd: Int32) throws -> ControlResponse {
-    var timeout = timeval(tv_sec: 2, tv_usec: 0)
-    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, socklen_t(MemoryLayout<timeval>.size))
-    var data = Data()
-    var byte: UInt8 = 0
-    while true {
-      let count = recv(fd, &byte, 1, 0)
-      try #require(count == 1, "Expected a complete response")
-      if byte == 10 { break }
-      data.append(byte)
-    }
-    return try JSONDecoder().decode(ControlResponse.self, from: data)
-  }
 }
