@@ -60,6 +60,7 @@ final class SpacesProvider {
     return SpacesState.parse(displays: displays, activeSpaceID: api.activeSpace(connection))
   }
 
+  private let retryInterval: Duration
   private let query: @MainActor () -> SpacesState
   private let workspace: NotificationCenter
   private let application: NotificationCenter
@@ -71,8 +72,10 @@ final class SpacesProvider {
   init(
     query: @escaping @MainActor () -> SpacesState = SpacesProvider.currentState,
     workspace: NotificationCenter = NSWorkspace.shared.notificationCenter,
-    application: NotificationCenter = .default
+    application: NotificationCenter = .default,
+    retryInterval: Duration = .milliseconds(100)
   ) {
+    self.retryInterval = retryInterval
     self.query = query
     self.workspace = workspace
     self.application = application
@@ -120,7 +123,7 @@ final class SpacesProvider {
           self.update?(state)
           return
         }
-        do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
+        do { try await Task.sleep(for: self.retryInterval) } catch { return }
       }
     }
   }

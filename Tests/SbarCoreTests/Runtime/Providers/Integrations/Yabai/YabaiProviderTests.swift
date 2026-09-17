@@ -140,20 +140,23 @@ struct YabaiProviderTests {
     let valid = state
     var reads = 0
     var fail = false
-    let provider = YabaiProvider(read: {
-      reads += 1
-      return fail || reads == 1 ? YabaiState() : valid
-    })
+    let provider = YabaiProvider(
+      retryInterval: .milliseconds(5),
+      read: {
+        reads += 1
+        return fail || reads == 1 ? YabaiState() : valid
+      }
+    )
     var updates: [YabaiState] = []
     provider.start { updates.append($0) }
     defer { provider.stop() }
     for _ in 0..<5 { provider.requestRefresh() }
-    try await Task.sleep(for: .milliseconds(250))
+    try await waitUntil { updates == [valid] }
     #expect(reads == 2)
     #expect(updates == [valid])
     fail = true
     provider.requestRefresh()
-    try await Task.sleep(for: .milliseconds(400))
+    try await waitUntil { updates.last?.unavailable != nil }
     #expect(reads == 5)
     #expect(updates.last?.unavailable != nil)
     provider.requestRefresh()
@@ -210,13 +213,13 @@ struct YabaiProviderTests {
     )
     runtime.configure(Configuration(bar: .init(), items: .init(right: [manual, event])))
     defer { runtime.stop() }
-    try await Task.sleep(for: .milliseconds(120))
+    try await waitUntil { runtime.presentation(for: manual)?.text == "Code" }
     #expect(runtime.presentation(for: manual)?.text == "Code")
     current.workspaces[0].label = "Work"
     runtime.trigger("manual")
     runtime.trigger("changed")
     #expect(runtime.presentation(for: manual)?.text == "Code")
-    try await Task.sleep(for: .milliseconds(120))
+    try await waitUntil { runtime.presentation(for: event)?.text == "Work" }
     #expect(runtime.presentation(for: manual)?.text == "Work")
     #expect(runtime.presentation(for: event)?.text == "Work")
   }

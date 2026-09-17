@@ -68,6 +68,7 @@ final class ProviderRuntime {
 
   @ObservationIgnored private var commandTasks: [String: Task<Void, Never>] = [:]
 
+  @ObservationIgnored private let pluginRestartSleep: @MainActor (Duration) async throws -> Void
   @ObservationIgnored private var pluginItems: [Item] = []
   @ObservationIgnored private var pluginTasks: [String: Task<Void, Never>] = [:]
   @ObservationIgnored private var pluginInputs: [String: PluginMailbox] = [:]
@@ -87,7 +88,10 @@ final class ProviderRuntime {
     weather: WeatherProvider = WeatherProvider(),
     vpn: VPNProvider = VPNProvider(),
     bluetooth: BluetoothProvider = BluetoothProvider(),
-    audioDevice: AudioDeviceProvider = AudioDeviceProvider()
+    audioDevice: AudioDeviceProvider = AudioDeviceProvider(),
+    pluginRestartSleep: @escaping @MainActor (Duration) async throws -> Void = {
+      try await Task.sleep(for: $0)
+    }
   ) {
     self.aerospace = aerospace
     self.yabai = yabai
@@ -96,6 +100,7 @@ final class ProviderRuntime {
     self.vpn = vpn
     self.bluetooth = bluetooth
     self.audioDevice = audioDevice
+    self.pluginRestartSleep = pluginRestartSleep
   }
 
   func configure(_ configuration: Configuration) {
@@ -588,6 +593,7 @@ final class ProviderRuntime {
   private func startPlugin(_ item: Item) {
     guard var configuration = item.plugin else { return }
     configuration.executable = ActionRunner.expand(configuration.executable)
+    let sleep = pluginRestartSleep
     pluginTasks[item.id] = Task { [weak self, configuration] in
       var delay = 1.0
       repeat {
@@ -625,7 +631,7 @@ final class ProviderRuntime {
           uptime: started.duration(to: .now),
           receivedOutput: receivedOutput
         )
-        do { try await Task.sleep(for: .seconds(delay)) } catch { return }
+        do { try await sleep(.seconds(delay)) } catch { return }
         delay = min(30, delay * 2)
       } while !Task.isCancelled
     }

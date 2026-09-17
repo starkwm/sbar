@@ -34,13 +34,18 @@ final class YabaiProvider {
     }
   }
 
+  private let retryInterval: Duration
   private let read: @MainActor () async -> YabaiState
   private var polling: Task<Void, Never>?
   private var refresh: Task<Void, Never>?
   private var update: (@MainActor (YabaiState) -> Void)?
   private var generation = UUID()
 
-  init(read: @escaping @MainActor () async -> YabaiState = YabaiProvider.query) {
+  init(
+    retryInterval: Duration = .milliseconds(100),
+    read: @escaping @MainActor () async -> YabaiState = YabaiProvider.query
+  ) {
+    self.retryInterval = retryInterval
     self.read = read
   }
 
@@ -73,7 +78,7 @@ final class YabaiProvider {
           self.update?(state)
           return
         }
-        do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
+        do { try await Task.sleep(for: self.retryInterval) } catch { return }
       }
     }
   }

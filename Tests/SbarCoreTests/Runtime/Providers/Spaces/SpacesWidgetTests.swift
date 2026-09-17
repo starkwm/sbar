@@ -168,7 +168,8 @@ struct SpacesWidgetTests {
         return valid
       },
       workspace: workspace,
-      application: application
+      application: application,
+      retryInterval: .milliseconds(5)
     )
     var updates: [SpacesState] = []
     provider.start { updates.append($0) }
@@ -177,13 +178,13 @@ struct SpacesWidgetTests {
     for _ in 0..<5 {
       workspace.post(name: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
     }
-    try await Task.sleep(for: .milliseconds(250))
+    try await waitUntil { updates.count == 2 }
     #expect(reads == 3)
     #expect(updates.count == 2)
     #expect(updates.allSatisfy { $0.complete })
     unavailable = true
     application.post(name: NSApplication.didChangeScreenParametersNotification, object: nil)
-    try await Task.sleep(for: .milliseconds(450))
+    try await waitUntil { updates.last?.complete == false }
     #expect(updates.last?.complete == false)
     #expect(reads == 7)
     workspace.post(name: NSWorkspace.didActivateApplicationNotification, object: nil)

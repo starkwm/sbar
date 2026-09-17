@@ -117,15 +117,27 @@ struct PluginStateTests {
         ]
       )
     )
-    let runtime = ProviderRuntime()
+    var delays: [Duration] = []
+    var pendingRestart: CheckedContinuation<Void, any Error>?
+    let runtime = ProviderRuntime(pluginRestartSleep: { delay in
+      delays.append(delay)
+      try await withCheckedThrowingContinuation { pendingRestart = $0 }
+    })
     runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
-    defer { runtime.stop() }
-    for _ in 0..<100 where runtime.pluginStates[item.id]?.status != .failure {
-      try await Task.sleep(for: .milliseconds(10))
+    defer {
+      runtime.stop()
+      pendingRestart?.resume(throwing: CancellationError())
     }
+    try await waitUntil { pendingRestart != nil }
+    #expect(delays == [.seconds(1)])
+    #expect(runtime.pluginStates[item.id]?.status == .failure)
     #expect(runtime.pluginStates[item.id]?.lastSuccess?.text == "started")
     for _ in 0..<40 { runtime.trigger("queued") }
-    try await Task.sleep(for: .milliseconds(1200))
+    let restart = try #require(pendingRestart)
+    pendingRestart = nil
+    restart.resume()
+    try await waitUntil { pendingRestart != nil }
+    #expect(delays == [.seconds(1), .seconds(2)])
     #expect(runtime.pluginStates[item.id]?.lastSuccess?.text == "started")
     #expect(runtime.pluginStates[item.id]?.status == .failure)
     #expect(runtime.itemValues[item.id] == "Process exited with status 7.")
