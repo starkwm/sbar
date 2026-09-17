@@ -1,8 +1,7 @@
 import Foundation
-import Observation
 import StarkConfiguration
 
-@MainActor @Observable
+@MainActor
 final class ConfigurationStore {
   nonisolated static func describe(_ error: any Error) -> String {
     let path: [any CodingKey]
@@ -39,9 +38,9 @@ final class ConfigurationStore {
   private(set) var configuration = Configuration.default
   private(set) var errorMessage: String?
 
-  @ObservationIgnored var configurationDidChange: (() -> Void)?
+  var configurationDidChange: (() -> Void)?
 
-  @ObservationIgnored private var watcher: ConfigurationWatcher?
+  private var watcher: ConfigurationWatcher?
 
   init(
     configurationURL: URL = ConfigurationPath.defaultURL()

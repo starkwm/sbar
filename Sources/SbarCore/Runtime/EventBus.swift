@@ -1,11 +1,10 @@
 import Foundation
-import Observation
 
-@MainActor @Observable
+@MainActor
 final class EventBus {
   private(set) var recent: [RuntimeEvent] = []
 
-  @ObservationIgnored var onEvent: ((RuntimeEvent) -> Void)?
+  var onEvent: ((RuntimeEvent) -> Void)?
 
   func emit(_ event: RuntimeEvent) {
     recent.append(event)
