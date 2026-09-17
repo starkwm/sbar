@@ -90,6 +90,19 @@ struct ConfigurationStoreTests {
     store.load()
 
     #expect(updates == 1)
+    #expect(store.errorMessage != nil)
+
+    try write(height: 40, to: url)
+    store.load()
+
+    #expect(updates == 1)
+    #expect(store.errorMessage == nil)
+
+    try write(height: 48, to: url)
+    store.load()
+
+    #expect(updates == 2)
+    #expect(store.configuration.bar.height == 48)
   }
 
   @Test("observation loads immediately, stops updates, and reloads after restarting")

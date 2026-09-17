@@ -80,12 +80,8 @@ final class ConfigurationStore {
         decoded = .default
       }
 
-      try decoded.validate()
+      try apply(decoded)
       errorMessage = nil
-      guard decoded != configuration else { return }
-
-      configuration = decoded
-      configurationDidChange?()
     } catch {
       errorMessage = Self.describe(error)
     }
