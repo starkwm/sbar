@@ -1,6 +1,15 @@
 {
-  "originHash" : "59558e773cbfec43c3a5d977d4aca269318619824b16992aa646cfe3c9ee36d8",
+  "originHash" : "9a181a7230c2274fab00cf8aecfcb8d8134b23ec68f029a76ee9579048d0fbfd",
   "pins" : [
+    {
+      "identity" : "stark-configuration",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/starkwm/stark-configuration",
+      "state" : {
+        "revision" : "c034e29e15bc32c5d854efb2febd5d84d2dd05b9",
+        "version" : "0.0.1"
+      }
+    },
     {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",

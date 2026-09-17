@@ -10,7 +10,8 @@ let package = Package(
     .executable(name: "sbar", targets: ["Sbar"])
   ],
   dependencies: [
-    .package(url: "https://github.com/apple/swift-argument-parser", from: "1.7.1")
+    .package(url: "https://github.com/apple/swift-argument-parser", from: "1.7.1"),
+    .package(url: "https://github.com/starkwm/stark-configuration", from: "0.0.1"),
   ],
   targets: [
     .executableTarget(
@@ -28,6 +29,7 @@ let package = Package(
     ),
     .target(
       name: "SbarCore",
+      dependencies: [.product(name: "StarkConfiguration", package: "stark-configuration")],
       exclude: ["Resources"]
     ),
     .testTarget(name: "SbarTests", dependencies: ["Sbar"]),

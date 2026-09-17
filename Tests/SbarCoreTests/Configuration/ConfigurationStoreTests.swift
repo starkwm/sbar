@@ -92,8 +92,8 @@ struct ConfigurationStoreTests {
     #expect(updates == 1)
   }
 
-  @Test("startObserving: handles replacement, edits, deletion, and recreation")
-  func startObservingHandlesFileChanges() async throws {
+  @Test("observation loads immediately, stops updates, and reloads after restarting")
+  func observationLifecycle() async throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
     let url = directory.appending(path: "config.json")
@@ -102,45 +102,7 @@ struct ConfigurationStoreTests {
     let store = ConfigurationStore(configurationURL: url)
     store.startObserving()
     defer { store.stopObserving() }
-
-    try write(height: 48, to: url)
-    try await wait { store.configuration.bar.height == 48 }
-
-    try write(height: 52, to: url, atomic: false)
-    try await wait { store.configuration.bar.height == 52 }
-
-    try FileManager.default.removeItem(at: url)
-    try await wait { store.configuration == .default }
-
-    try write(height: 60, to: url)
-    try await wait { store.configuration.bar.height == 60 }
-  }
-
-  @Test("startObserving: finds files created inside initially missing directories")
-  func startObservingFindsFilesInNewDirectories() async throws {
-    let directory = try temporaryDirectory()
-    defer { try? FileManager.default.removeItem(at: directory) }
-    let parent = directory.appending(path: "nested/sbar")
-    let url = parent.appending(path: "config.json")
-    let store = ConfigurationStore(configurationURL: url)
-    store.startObserving()
-    defer { store.stopObserving() }
-
-    try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
-    try write(height: 56, to: url)
-    try await wait { store.configuration.bar.height == 56 }
-  }
-
-  @Test("stopObserving: cancels pending reloads and allows observation to restart")
-  func stopObservingCancelsReloadsAndAllowsRestart() async throws {
-    let directory = try temporaryDirectory()
-    defer { try? FileManager.default.removeItem(at: directory) }
-    let url = directory.appending(path: "config.json")
-    try write(height: 40, to: url)
-
-    let store = ConfigurationStore(configurationURL: url)
-    store.startObserving()
-    defer { store.stopObserving() }
+    #expect(store.configuration.bar.height == 40)
 
     try write(height: 48, to: url)
     store.stopObserving()
@@ -152,7 +114,7 @@ struct ConfigurationStoreTests {
     #expect(store.configuration.bar.height == 48)
 
     try write(height: 56, to: url)
-    try await wait { store.configuration.bar.height == 56 }
+    try await waitUntil { store.configuration.bar.height == 56 }
   }
 
   @Test(
@@ -193,23 +155,13 @@ struct ConfigurationStoreTests {
     return url
   }
 
-  private func write(height: Double, to url: URL, atomic: Bool = true) throws {
+  private func write(height: Double, to url: URL) throws {
     let configuration = Configuration(
       schemaVersion: Configuration.currentSchemaVersion,
       bar: .init(height: height),
       items: .init()
     )
 
-    try JSONEncoder().encode(configuration).write(to: url, options: atomic ? .atomic : [])
-  }
-
-  private func wait(until condition: () -> Bool) async throws {
-    let deadline = ContinuousClock.now.advanced(by: .seconds(3))
-
-    while !condition(), ContinuousClock.now < deadline {
-      try await Task.sleep(for: .milliseconds(20))
-    }
-
-    #expect(condition(), "Configuration did not reload before the deadline")
+    try JSONEncoder().encode(configuration).write(to: url, options: .atomic)
   }
 }

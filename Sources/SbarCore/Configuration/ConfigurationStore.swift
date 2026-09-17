@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import StarkConfiguration
 
 @MainActor @Observable
 final class ConfigurationStore {
