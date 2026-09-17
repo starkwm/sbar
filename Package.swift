@@ -12,6 +12,7 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/apple/swift-argument-parser", from: "1.7.1"),
     .package(url: "https://github.com/starkwm/stark-configuration", from: "0.0.1"),
+    .package(url: "https://github.com/starkwm/stark-ipc", from: "0.0.1"),
   ],
   targets: [
     .executableTarget(
@@ -29,7 +30,10 @@ let package = Package(
     ),
     .target(
       name: "SbarCore",
-      dependencies: [.product(name: "StarkConfiguration", package: "stark-configuration")],
+      dependencies: [
+        .product(name: "StarkConfiguration", package: "stark-configuration"),
+        .product(name: "StarkIPC", package: "stark-ipc"),
+      ],
       exclude: ["Resources"]
     ),
     .testTarget(name: "SbarTests", dependencies: ["Sbar"]),

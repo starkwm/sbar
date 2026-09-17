@@ -6,40 +6,43 @@ import Testing
 
 @Suite("Control")
 struct ControlTests {
-  @Test("ControlServer.start: handles fragmented requests and excludes a second server")
-  func startHandlesFragmentedRequestsAndExcludesSecondServer() throws {
+  @Test("subscriptions receive published events")
+  func subscriptionReceivesEvents() throws {
     let path = "/tmp/sbar-\(UUID().uuidString).sock"
     defer { try? FileManager.default.removeItem(atPath: path + ".lock") }
-
-    let server = ControlServer(path: path) { request in
-      ControlResponse(value: .string(request.command))
-    }
+    let server = ControlServer(path: path) { _ in ControlResponse() }
     try server.start()
     defer { server.stop() }
-
-    let other = ControlServer(path: path) { _ in ControlResponse() }
-    #expect(throws: (any Error).self) { try other.start() }
-
     let fd = try LocalSocket.connect(path: path)
     defer { close(fd) }
-    var timeout = timeval(tv_sec: 2, tv_usec: 0)
-    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, socklen_t(MemoryLayout<timeval>.size))
-
-    let data = try JSONEncoder().encode(ControlRequest(command: "query"))
-    try LocalSocket.send(data.prefix(5), to: fd)
-    try LocalSocket.send(data.dropFirst(5) + Data([10]), to: fd)
-
-    var buffer = [UInt8](repeating: 0, count: 1024)
-    let count = recv(fd, &buffer, buffer.count, 0)
-    #expect(count > 0)
-
-    let response = try JSONDecoder().decode(
-      ControlResponse.self,
-      from: Data(buffer.prefix(max(0, count)))
+    try LocalSocket.send(
+      JSONEncoder().encode(ControlRequest(command: "subscribe")) + Data([10]),
+      to: fd
     )
+    #expect(try receive(from: fd).ok)
+    server.publish(ControlResponse(value: .string("changed")))
+    #expect(try receive(from: fd).value == .string("changed"))
+  }
 
-    #expect(response.ok)
-    #expect(response.value == .string("query"))
+  @Test("only successful stop replies invoke the stop callback", arguments: [false, true])
+  func stopCallback(ok: Bool) throws {
+    let path = "/tmp/sbar-\(UUID().uuidString).sock"
+    defer { try? FileManager.default.removeItem(atPath: path + ".lock") }
+    let stopped = DispatchSemaphore(value: 0)
+    let server = ControlServer(
+      path: path,
+      onStop: { stopped.signal() },
+      handler: { _ in ControlResponse(ok: ok) }
+    )
+    try server.start()
+    defer { server.stop() }
+    let fd = try LocalSocket.connect(path: path)
+    defer { close(fd) }
+    try LocalSocket.send(JSONEncoder().encode(ControlRequest(command: "stop")) + Data([10]), to: fd)
+    #expect(try receive(from: fd).ok == ok)
+    // Synchronise with the server queue so a failed reply cannot call onStop later.
+    server.stop()
+    #expect(stopped.wait(timeout: .now()) == (ok ? .success : .timedOut))
   }
 
   @MainActor
@@ -129,5 +132,19 @@ struct ControlTests {
         .ok
     )
     #expect(events.recent.last?.value == .number(3))
+  }
+
+  private func receive(from fd: Int32) throws -> ControlResponse {
+    var timeout = timeval(tv_sec: 2, tv_usec: 0)
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, socklen_t(MemoryLayout<timeval>.size))
+    var data = Data()
+    var byte: UInt8 = 0
+    while true {
+      let count = recv(fd, &byte, 1, 0)
+      try #require(count == 1, "Expected a complete response")
+      if byte == 10 { break }
+      data.append(byte)
+    }
+    return try JSONDecoder().decode(ControlResponse.self, from: data)
   }
 }
