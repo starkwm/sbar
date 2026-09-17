@@ -1,5 +1,6 @@
 import Darwin
 import Foundation
+import StarkIPC
 import Testing
 
 @testable import SbarCore
@@ -13,9 +14,9 @@ struct ControlTests {
     let server = ControlServer(path: path) { _ in ControlResponse() }
     try server.start()
     defer { server.stop() }
-    let fd = try LocalSocket.connect(path: path)
+    let fd = try StarkIPC.LocalSocket.connect(path: path, serviceName: "sbar")
     defer { close(fd) }
-    try LocalSocket.send(
+    try StarkIPC.LocalSocket.send(
       JSONEncoder().encode(ControlRequest(command: "subscribe")) + Data([10]),
       to: fd
     )
@@ -36,9 +37,12 @@ struct ControlTests {
     )
     try server.start()
     defer { server.stop() }
-    let fd = try LocalSocket.connect(path: path)
+    let fd = try StarkIPC.LocalSocket.connect(path: path, serviceName: "sbar")
     defer { close(fd) }
-    try LocalSocket.send(JSONEncoder().encode(ControlRequest(command: "stop")) + Data([10]), to: fd)
+    try StarkIPC.LocalSocket.send(
+      JSONEncoder().encode(ControlRequest(command: "stop")) + Data([10]),
+      to: fd
+    )
     #expect(try receive(from: fd).ok == ok)
     // Synchronise with the server queue so a failed reply cannot call onStop later.
     server.stop()

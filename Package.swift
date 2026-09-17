@@ -37,6 +37,9 @@ let package = Package(
       exclude: ["Resources"]
     ),
     .testTarget(name: "SbarTests", dependencies: ["Sbar"]),
-    .testTarget(name: "SbarCoreTests", dependencies: ["SbarCore"]),
+    .testTarget(
+      name: "SbarCoreTests",
+      dependencies: ["SbarCore", .product(name: "StarkIPC", package: "stark-ipc")]
+    ),
   ]
 )
