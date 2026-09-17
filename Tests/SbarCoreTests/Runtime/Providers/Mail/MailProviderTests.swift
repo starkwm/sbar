@@ -116,18 +116,24 @@ struct MailProviderTests {
   func cancellation() async throws {
     var reads = 0
     var updates: [MailState] = []
+    var suspended: CheckedContinuation<MailState, Never>?
     let provider = MailProvider {
       reads += 1
-      let count = reads
       // Simulates an Apple Event that finishes even after cancellation.
-      await Task.detached { try? await Task.sleep(for: .milliseconds(60)) }.value
-      return MailState(status: .available, unreadCount: count)
+      if reads == 1 { return await withCheckedContinuation { suspended = $0 } }
+      return MailState(status: .available, unreadCount: reads)
     }
-    defer { provider.stop() }
+    defer {
+      suspended?.resume(returning: MailState(status: .available, unreadCount: 1))
+      provider.stop()
+    }
     provider.start { updates.append($0) }
-    try await Task.sleep(for: .milliseconds(20))
+    try await waitUntil { suspended != nil }
     provider.start { updates.append($0) }
-    try await Task.sleep(for: .milliseconds(100))
+    try await waitUntil { !updates.isEmpty }
+    suspended?.resume(returning: MailState(status: .available, unreadCount: 1))
+    suspended = nil
+    try await Task.sleep(for: .milliseconds(50))
     #expect(updates.map(\.unreadCount) == [2])
   }
 }

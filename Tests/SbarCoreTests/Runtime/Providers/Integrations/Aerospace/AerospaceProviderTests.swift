@@ -95,24 +95,30 @@ struct AerospaceProviderTests {
   func lifecycle() async throws {
     let valid = state
     var reads = 0
+    var suspended: CheckedContinuation<AerospaceState, Never>?
     let provider = AerospaceProvider(read: {
       reads += 1
-      let number = reads
-      try? await Task.sleep(for: .milliseconds(100))
-      return number == 2 ? AerospaceState() : valid
+      if reads == 1 { return await withCheckedContinuation { suspended = $0 } }
+      return reads == 2 ? AerospaceState() : valid
     })
     var updates: [AerospaceState] = []
     provider.start { updates.append($0) }
-    defer { provider.stop() }
+    defer {
+      suspended?.resume(returning: valid)
+      provider.stop()
+    }
     for _ in 0..<5 { provider.requestRefresh() }
-    try await Task.sleep(for: .milliseconds(80))
+    try await waitUntil { suspended != nil }
     provider.requestRefresh()
-    try await Task.sleep(for: .milliseconds(200))
+    try await waitUntil { updates.count == 1 }
     #expect(reads == 2)
     #expect(updates.count == 1)
     #expect(updates.last?.unavailable != nil)
+    suspended?.resume(returning: valid)
+    suspended = nil
     provider.requestRefresh()
-    try await Task.sleep(for: .milliseconds(200))
+    try await waitUntil { updates.last == valid }
+    #expect(updates.count == 2)
     #expect(updates.last == valid)
     provider.requestRefresh()
     provider.stop()

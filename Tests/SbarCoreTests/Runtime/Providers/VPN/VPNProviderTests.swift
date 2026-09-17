@@ -96,7 +96,7 @@ struct VPNProviderTests {
       available: true
     )
     monitor.changed?()
-    try await Task.sleep(for: .milliseconds(150))
+    try await waitUntil { runtime.sharedValues[.vpn] == "Work connected" }
     #expect(runtime.sharedValues[.vpn] == "Work connected")
     #expect(runtime.presentation(for: event)?.text == "Work connected")
     #expect(runtime.presentation(for: manual)?.text == "VPN disconnected")
