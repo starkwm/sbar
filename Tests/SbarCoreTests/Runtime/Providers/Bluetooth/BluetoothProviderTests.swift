@@ -40,7 +40,7 @@ struct BluetoothProviderTests {
     #expect(states.isEmpty)
     monitor.state = BluetoothState(status: .connected, devices: [.init(id: "1", name: "Keyboard")])
     monitor.changed?()
-    try await Task.sleep(for: .milliseconds(150))
+    try await waitUntil { states == [monitor.state] }
     #expect(states == [monitor.state])
   }
 
@@ -48,14 +48,14 @@ struct BluetoothProviderTests {
   func recovery() async throws {
     let monitor = TestBluetoothMonitor()
     monitor.canStart = false
-    let provider = BluetoothProvider(monitor: monitor)
+    let provider = BluetoothProvider(monitor: monitor, retryInterval: .milliseconds(10))
     defer { provider.stop() }
     var states: [BluetoothState] = []
     provider.start { states.append($0) }
     #expect(states == [BluetoothState()])
     #expect(monitor.reads == 0)
     monitor.canStart = true
-    try await Task.sleep(for: .milliseconds(2200))
+    try await waitUntil { states.last == BluetoothState(status: .on) }
     #expect(monitor.starts == 2)
     #expect(states.last == BluetoothState(status: .on))
   }
@@ -114,11 +114,11 @@ struct BluetoothProviderTests {
     #expect(runtime.presentation(for: manual) == nil)
     monitor.state = BluetoothState(status: .connected, devices: [.init(id: "1", name: "Keyboard")])
     monitor.changed?()
-    try await Task.sleep(for: .milliseconds(150))
+    try await waitUntil { runtime.presentation(for: manual)?.text == "Keyboard connected" }
     #expect(runtime.presentation(for: manual)?.text == "Keyboard connected")
     monitor.state = BluetoothState(status: .connected, devices: [.init(id: "2", name: "Mouse")])
     monitor.changed?()
-    try await Task.sleep(for: .milliseconds(150))
+    try await waitUntil { runtime.sharedValues[.bluetooth] == "Mouse connected" }
     #expect(runtime.sharedValues[.bluetooth] == "Mouse connected")
     #expect(runtime.presentation(for: event)?.text == "Mouse connected")
     #expect(runtime.presentation(for: manual)?.text == "Keyboard connected")

@@ -4,13 +4,18 @@ import Foundation
 @MainActor
 final class AudioDeviceProvider {
   private let access: any AudioDeviceAccess
+  private let retryInterval: Duration
   private var observers: [AudioDeviceProperty: @MainActor () -> Void] = [:]
   private var update: (@MainActor (AudioDeviceState) -> Void)?
   private var refreshTask: Task<Void, Never>?
   private var generation = UUID()
 
-  init(access: any AudioDeviceAccess = SystemAudioDeviceAccess()) {
+  init(
+    access: any AudioDeviceAccess = SystemAudioDeviceAccess(),
+    retryInterval: Duration = .seconds(2)
+  ) {
     self.access = access
+    self.retryInterval = retryInterval
   }
 
   func start(update: @escaping @MainActor (AudioDeviceState) -> Void) {
@@ -48,7 +53,7 @@ final class AudioDeviceProvider {
     }
     update(state)
     if state.output.status == .unavailable || state.input.status == .unavailable {
-      scheduleRefresh(after: .seconds(2))
+      scheduleRefresh(after: retryInterval)
     }
   }
 

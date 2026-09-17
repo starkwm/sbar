@@ -20,7 +20,7 @@ struct AudioDeviceProviderTests {
     access.values[.init(object: 13, selector: kAudioDevicePropertyDeviceIsAlive)] = 1
     access.names[13] = "Headphones"
     access.emit(.init(selector: kAudioHardwarePropertyDefaultOutputDevice))
-    try await Task.sleep(for: .milliseconds(150))
+    try await waitUntil { states.last?.output.id == 13 }
     #expect(states.last?.output.id == 13)
     #expect(states.last?.output.name == "Headphones")
     #expect(access.observers.keys.allSatisfy { $0.object != 11 })
@@ -28,7 +28,7 @@ struct AudioDeviceProviderTests {
     #expect(access.installations[.init(object: 12, selector: kAudioObjectPropertyName)] == 1)
     access.names[12] = "Renamed microphone"
     access.emit(.init(object: 12, selector: kAudioObjectPropertyName))
-    try await Task.sleep(for: .milliseconds(150))
+    try await waitUntil { states.last?.input.name == "Renamed microphone" }
     #expect(states.last?.input.name == "Renamed microphone")
     #expect(states.count == 3)
   }
@@ -57,18 +57,18 @@ struct AudioDeviceProviderTests {
     #expect(state.input.status == .disconnected)
     access.values[input] = nil
     access.emit(input)
-    try await Task.sleep(for: .milliseconds(150))
+    try await waitUntil { state.input.status == .unavailable }
     #expect(state.input.status == .unavailable)
     #expect(state.output.name == "Speakers")
     let alive = AudioDeviceProperty(object: 11, selector: kAudioDevicePropertyDeviceIsAlive)
     access.values[alive] = 0
     access.emit(alive)
-    try await Task.sleep(for: .milliseconds(150))
+    try await waitUntil { state.output.status == .disconnected }
     #expect(state.output.status == .disconnected)
     #expect(state.output.name == nil)
     access.values[alive] = nil
     access.emit(alive)
-    try await Task.sleep(for: .milliseconds(150))
+    try await waitUntil { state.output.status == .unavailable }
     #expect(state.output.status == .unavailable)
   }
 
@@ -85,14 +85,14 @@ struct AudioDeviceProviderTests {
     } else {
       access.names[11] = nil
     }
-    let provider = AudioDeviceProvider(access: access)
+    let provider = AudioDeviceProvider(access: access, retryInterval: .milliseconds(10))
     defer { provider.stop() }
     var state = AudioDeviceState()
     provider.start { state = $0 }
     #expect(state.output.status == .unavailable)
     access.failures.removeAll()
     access.names[11] = "Speakers"
-    try await Task.sleep(for: .milliseconds(2200))
+    try await waitUntil { state.output.status == .available && state.input.status == .available }
     #expect(state.output.status == .available)
     #expect(state.input.status == .available)
     #expect(access.observers.count == 8)
@@ -135,7 +135,7 @@ struct AudioDeviceProviderTests {
     let stale = access.observers[property]
     access.emit(.init(selector: kAudioHardwarePropertyServiceRestarted))
     #expect(access.observers.isEmpty)
-    try await Task.sleep(for: .milliseconds(150))
+    try await waitUntil { access.observers.count == 8 }
     #expect(access.observers.count == 8)
     #expect(access.installations.values.allSatisfy { $0 == 2 })
     stale?()
@@ -177,7 +177,7 @@ struct AudioDeviceProviderTests {
     #expect(runtime.presentation(for: manual)?.text == "Microphone")
     access.names[12] = "USB Microphone"
     access.emit(.init(object: 12, selector: kAudioObjectPropertyName))
-    try await Task.sleep(for: .milliseconds(150))
+    try await waitUntil { runtime.presentation(for: input)?.text == "USB Microphone" }
     #expect(runtime.sharedValues[.audioDevice] == "Speakers")
     #expect(runtime.presentation(for: event)?.text == "Speakers")
     #expect(runtime.presentation(for: input)?.text == "USB Microphone")

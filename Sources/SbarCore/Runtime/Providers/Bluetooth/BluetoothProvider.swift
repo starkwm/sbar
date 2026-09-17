@@ -5,13 +5,18 @@ import IOBluetooth
 @MainActor
 final class BluetoothProvider {
   private let monitor: any BluetoothMonitoring
+  private let retryInterval: Duration
   private var update: (@MainActor (BluetoothState) -> Void)?
   private var refreshTask: Task<Void, Never>?
   private var generation = UUID()
   private var observing = false
 
-  init(monitor: any BluetoothMonitoring = SystemBluetoothMonitor()) {
+  init(
+    monitor: any BluetoothMonitoring = SystemBluetoothMonitor(),
+    retryInterval: Duration = .seconds(2)
+  ) {
     self.monitor = monitor
+    self.retryInterval = retryInterval
   }
 
   func start(update: @escaping @MainActor (BluetoothState) -> Void) {
@@ -41,7 +46,7 @@ final class BluetoothProvider {
     // Core Bluetooth reports its initial state asynchronously, possibly after a permission prompt.
     guard let state = observing ? monitor.read() : BluetoothState() else { return }
     update(state)
-    if state.status == .unavailable { scheduleRefresh(after: .seconds(2)) }
+    if state.status == .unavailable { scheduleRefresh(after: retryInterval) }
   }
 
   private func scheduleRefresh(after delay: Duration = .milliseconds(50)) {
