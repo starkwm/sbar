@@ -27,7 +27,24 @@ Set `spaces.scope` to `"display"` to show the Spaces belonging to each bar's dis
 }
 ```
 
-Use conditions on `index` to rename positions or `workspaceId` to match native IDs. Positions follow the selected scope and fullscreen filter, and can change when Spaces are reordered. With `includeFullscreen:false`, an active fullscreen Space has default text `Fullscreen`; the loop contains only desktop Spaces, with none highlighted. Use `{{^workspaces}}{{value}}{{/workspaces}}` to show a fallback for an empty list.
+Set `spaces.names` to override names by position. The first array entry names Space 1, the second names Space 2, and so on. Missing entries, `null`, and empty strings keep the default number; extra entries are ignored. Names follow the selected scope and fullscreen filter, so display scope starts at the first name on each display. Reordering Spaces can change which Space receives each name.
+
+```json
+{
+  "id": "spaces",
+  "type": "spaces",
+  "spaces": {
+    "names": ["Code", "Web", null, "Chat"],
+    "includeFullscreen": false
+  }
+}
+```
+
+Names apply to the default current label and to `{{name}}` and `{{value}}` in templates, including workspace lists. `{{index}}` remains numeric and `{{workspaceId}}` keeps the native ID. Names are literal text, so template tags within a name are not evaluated. Active-Space highlighting is preserved.
+
+Names can contain Unicode symbols or Nerd Font glyphs. For example, use `"names": ["\uf121", "\uf0ac"]` with top-level `"style": {"fontFamily": "Symbols Nerd Font Mono"}` and install that font on your Mac. These are text labels; SF Symbol names are not rendered as per-workspace icons.
+
+Use template conditions on `index` for further formatting or `workspaceId` to match native IDs. With `includeFullscreen:false`, an active fullscreen Space keeps the default text `Fullscreen`; the loop contains only desktop Spaces, with none highlighted. Use `{{^workspaces}}{{value}}{{/workspaces}}` to show a fallback for an empty list.
 
 Top-level `text: ""` displays only the symbol; `spaces.showSymbol:false` hides the symbol, which is shown by default. `spaces.symbols.available` and `.unavailable` override the default `rectangle.3.group` and `questionmark` symbols. They accept SF Symbol names or custom glyphs with shared `spaces.symbols.font` and `.size`, like other providers. A top-level `symbol` overrides both states. `spaces.tints.active` colors the current value or active list entry; `.inactive` colors other list entries, and `.unavailable` colors an unavailable state. Unspecified tints inherit the item style.
 

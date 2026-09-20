@@ -100,6 +100,63 @@ struct SpacesWidgetTests {
     }
   }
 
+  @Test("name overrides apply to current labels and lists without changing identity or styling")
+  func names() {
+    var item = Item(
+      id: "spaces",
+      type: .spaces,
+      spaces: SpacesConfiguration(
+        names: ["Code", "\u{f121}", "{{index}}"],
+        tints: SpacesTints(active: "#00FF00", inactive: "#888888")
+      )
+    )
+    #expect(snapshot.presentation(for: item).text == "\u{f121}")
+    item.text = "{{name}}|{{value}}|{{index}}|{{workspaceId}}"
+    #expect(snapshot.presentation(for: item).text == "\u{f121}|\u{f121}|2|20")
+    item.text = "{{#workspaces}}{{name}}{{/workspaces}}"
+    let result = snapshot.presentation(for: item)
+    #expect(result.segments.map(\.text) == ["Code", "\u{f121}", "{{index}}", "4"])
+    #expect(result.segments[1].emphasized)
+    #expect(result.segments[1].tint == "#00FF00")
+    #expect(result.segments[0].tint == "#888888")
+    item.text = "{{#workspaces}}{{value}}{{/workspaces}}"
+    #expect(snapshot.presentation(for: item).text == result.text)
+    item.text = "{{#index=2}}Custom{{/index}}"
+    #expect(snapshot.presentation(for: item).text == "Custom")
+  }
+
+  @Test("name positions follow display scope and fullscreen filtering")
+  func scopedNames() {
+    var item = Item(
+      id: "spaces",
+      type: .spaces,
+      spaces: SpacesConfiguration(names: ["Code", "Web", "Chat"], includeFullscreen: false)
+    )
+    #expect(snapshot.presentation(for: item).text == "Fullscreen")
+    item.text = "{{#workspaces}}{{name}}:{{workspaceId}};{{/workspaces}}"
+    #expect(snapshot.presentation(for: item).text == "Code:10;Web:30;Chat:40;")
+    item.spaces?.scope = .display
+    #expect(snapshot.presentation(for: item, displayUUID: "display-b").text == "Code:30;Web:40;")
+    item.text = nil
+    let local = snapshot.presentation(for: item, displayUUID: "display-b")
+    #expect(local.text == "Web")
+    #expect(local.accessibilityLabel == "Space Web, 2 of 2")
+    #expect(SpacesState().presentation(for: item).text == "Spaces unavailable")
+  }
+
+  @Test("missing, null, and empty names retain default numbers and extra names are ignored")
+  func nameFallbacks() {
+    var item = Item(
+      id: "spaces",
+      type: .spaces,
+      text: "{{#workspaces}}{{name}}{{#separator}},{{/separator}}{{/workspaces}}"
+    )
+    for names: [String?]? in [nil, [], [nil, ""], ["", nil, "", nil, "Unused"]] {
+      item.spaces = SpacesConfiguration(names: names)
+      #expect(snapshot.presentation(for: item).text == "1,2,3,4")
+    }
+  }
+
   @Test("parser rejects booleans, negative, fractional, string, and zero IDs")
   func malformedIDs() {
     for value: Any in [true, false, -1, 1.5, "10", 0, Double.nan, Double.infinity] {
@@ -126,15 +183,17 @@ struct SpacesWidgetTests {
     let item = try JSONDecoder().decode(
       Item.self,
       from: Data(
-        ##"{"id":"spaces","type":"spaces","spaces":{"scope":"display","includeFullscreen":false,"showSymbol":true,"symbols":{"font":"Shared","available":{"glyph":"S"}},"tints":{"active":"#00FF00"}}}"##
+        ##"{"id":"spaces","type":"spaces","spaces":{"scope":"display","names":["Code",null,"","\uf121"],"includeFullscreen":false,"showSymbol":true,"symbols":{"font":"Shared","available":{"glyph":"S"}},"tints":{"active":"#00FF00"}}}"##
           .utf8
       )
     )
     try item.spaces?.validate(path: "spaces")
+    #expect(item.spaces?.names == ["Code", nil, "", "\u{f121}"])
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
     for json in [
       #"{"scope":"invalid"}"#, #"{"tints":{"active":"red"}}"#,
       #"{"symbols":{"available":{"glyph":"S"}}}"#,
+      #"{"names":"Code"}"#, #"{"names":[1]}"#, #"{"names":[true]}"#,
     ] {
       #expect(throws: (any Error).self) {
         let settings = try JSONDecoder().decode(SpacesConfiguration.self, from: Data(json.utf8))
@@ -154,15 +213,13 @@ struct SpacesWidgetTests {
     let workspace = NotificationCenter()
     let application = NotificationCenter()
     let valid = snapshot
-    var reads = 0
-    var transient = false
-    var unavailable = false
+    let queryState = TestSpacesQueryState()
     let provider = SpacesProvider(
       query: {
-        reads += 1
-        if unavailable { return SpacesState() }
-        if transient {
-          transient = false
+        queryState.reads += 1
+        if queryState.unavailable { return SpacesState() }
+        if queryState.transient {
+          queryState.transient = false
           return SpacesState()
         }
         return valid
@@ -174,23 +231,23 @@ struct SpacesWidgetTests {
     var updates: [SpacesState] = []
     provider.start { updates.append($0) }
     defer { provider.stop() }
-    transient = true
+    queryState.transient = true
     for _ in 0..<5 {
       workspace.post(name: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
     }
     try await waitUntil { updates.count == 2 }
-    #expect(reads == 3)
+    #expect(queryState.reads == 3)
     #expect(updates.count == 2)
     #expect(updates.allSatisfy { $0.complete })
-    unavailable = true
+    queryState.unavailable = true
     application.post(name: NSApplication.didChangeScreenParametersNotification, object: nil)
     try await waitUntil { updates.last?.complete == false }
     #expect(updates.last?.complete == false)
-    #expect(reads == 7)
+    #expect(queryState.reads == 7)
     workspace.post(name: NSWorkspace.didActivateApplicationNotification, object: nil)
     provider.stop()
     try await Task.sleep(for: .milliseconds(150))
-    #expect(reads == 7)
+    #expect(queryState.reads == 7)
   }
 
   @Test("manual refresh keeps the whole display snapshot until triggered")
@@ -216,4 +273,11 @@ struct SpacesWidgetTests {
     runtime.trigger("spaces")
     #expect(runtime.presentation(for: item, displayUUID: "display-b")?.text == "1 / 2")
   }
+}
+
+@MainActor
+private final class TestSpacesQueryState {
+  var reads = 0
+  var transient = false
+  var unavailable = false
 }

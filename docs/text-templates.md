@@ -104,13 +104,14 @@ they describe the current workspace selected by the provider's `scope`. Inside
 ```
 
 The example renames the first Space to Code and retains per-Space highlighting.
+For positional names without conditions, set [`spaces.names`](providers/spaces.md). These names become the default label and the `name` and `value` template fields; `index` remains numeric.
 Use `{{#separator}} · {{/separator}}` inside the loop for a separator between entries. It uses the provider's inactive tint and is never bold. Without an inactive tint it inherits the item colour. Ordinary literal text inside the loop still inherits that entry's styling. No extra spacing is inserted between template runs.
 `{{^workspaces}}` supplies a fallback when the list is empty or unavailable.
 Workspace loops cannot nest and cannot be compared or inserted as a scalar value.
 
 | Field | Meaning |
 | --- | --- |
-| `name` | Native display name; Spaces uses its one-based position, Yabai falls back to its Mission Control index |
+| `name` | Native display name; Spaces uses its `names` override or one-based position, Yabai falls back to its Mission Control index |
 | `index` | Spaces position after scope/fullscreen filtering; Aerospace position in the scoped query order; Yabai's original Mission Control index |
 | `workspaceId` | Native Space/Yabai ID, or Aerospace workspace name |
 | `total` | Number of entries after scope/fullscreen filtering |

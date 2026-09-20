@@ -1949,6 +1949,19 @@
           ],
           "default": "focused"
         },
+        "names": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": "Display names by position after scope and fullscreen filtering. The first entry names Space 1. Missing, null, or empty entries retain the default number. Supports literal text and font glyphs."
+        },
         "symbols": {
           "$ref": "#/$defs/spacesSymbols"
         },
