@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 permissions:
@@ -9,11 +11,4 @@ permissions:
 
 jobs:
   lint-and-test:
-    name: Lint and test
-    runs-on: macos-26
-    steps:
-      - uses: actions/checkout@v6
-      - name: Lint
-        run: make lint
-      - name: Test
-        run: make test
+    uses: starkwm/workflows/.github/workflows/lint-and-test.yml@main
