@@ -83,10 +83,19 @@ struct SpacesState: Equatable, Sendable {
     }
     let visible = entries.filter { settings.includeFullscreen != false || !$0.fullscreen }
     let index = visible.firstIndex { $0.id == active }
-    let label = index.map { String($0 + 1) } ?? "Fullscreen"
+    func name(at index: Int?) -> String {
+      guard let index else { return "Fullscreen" }
+      if let names = settings.names, names.indices.contains(index),
+        let name = names[index], !name.isEmpty
+      {
+        return name
+      }
+      return String(index + 1)
+    }
+    let label = name(at: index)
     func entry(_ space: SpaceEntry, index: Int?) -> WorkspaceText.Entry {
       WorkspaceText.Entry(
-        name: index.map { String($0 + 1) } ?? "Fullscreen",
+        name: name(at: index),
         index: index.map { $0 + 1 },
         identifier: String(space.id),
         active: space.id == active,
