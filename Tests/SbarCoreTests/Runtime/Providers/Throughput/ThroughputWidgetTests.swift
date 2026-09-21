@@ -9,12 +9,14 @@ struct ThroughputWidgetTests {
   @Test("interface appearance and disappearance cannot create aggregate counter spikes")
   func interfaceChanges() {
     var provider = ThroughputProvider()
+
     #expect(
       provider.record(counters: ["en0": .init(received: 100, sent: 50)], at: 0).rate(
         interfaces: nil,
         smoothingSamples: 1
       ) == nil
     )
+
     let added = provider.record(
       counters: [
         "en0": .init(received: 300, sent: 150),
@@ -22,10 +24,12 @@ struct ThroughputWidgetTests {
       ],
       at: 2
     )
+
     #expect(
       added.rate(interfaces: nil, smoothingSamples: 1) == ThroughputRate(download: 100, upload: 50)
     )
     #expect(added.rate(interfaces: ["en1"], smoothingSamples: 1) == nil)
+
     let both = provider.record(
       counters: [
         "en0": .init(received: 500, sent: 250),
@@ -33,6 +37,7 @@ struct ThroughputWidgetTests {
       ],
       at: 4
     )
+
     #expect(
       both.rate(interfaces: nil, smoothingSamples: 1) == ThroughputRate(download: 300, upload: 100)
     )
@@ -40,7 +45,9 @@ struct ThroughputWidgetTests {
       both.rate(interfaces: ["en1"], smoothingSamples: 1)
         == ThroughputRate(download: 200, upload: 50)
     )
+
     let removed = provider.record(counters: ["en0": .init(received: 700, sent: 350)], at: 6)
+
     #expect(
       removed.rate(interfaces: nil, smoothingSamples: 1)
         == ThroughputRate(download: 100, upload: 50)
@@ -52,6 +59,7 @@ struct ThroughputWidgetTests {
   func recovery() {
     var provider = ThroughputProvider()
     _ = provider.record(counters: ["en0": .init(received: 100, sent: 100)], at: 0)
+
     #expect(
       provider.record(counters: ["en0": .init(received: 300, sent: 100)], at: 2).rate(
         interfaces: nil,
@@ -99,7 +107,9 @@ struct ThroughputWidgetTests {
       provider.record(counters: ["en0": .init(received: 1400, sent: 700)], at: 29).text
         == "Throughput —"
     )
+
     provider.reset()
+
     #expect(
       provider.record(counters: ["en0": .init(received: 1600, sent: 800)], at: 32).text
         == "Throughput —"
@@ -112,12 +122,15 @@ struct ThroughputWidgetTests {
     var provider = ThroughputProvider()
     var counters = ThroughputCounters(received: 0, sent: 0)
     _ = provider.record(counters: ["en0": counters], at: 0)
+
     for index in 1...40 {
       counters.received += UInt64(index * 2)
       counters.sent += UInt64(index * 4)
       let state = provider.record(counters: ["en0": counters], at: Double(index * 2))
+
       #expect(state.histories["en0"]?.count == min(index, 30))
       #expect(state.rate(interfaces: nil, smoothingSamples: 1)?.download == Double(index))
+
       if index > 1 {
         #expect(
           state.rate(interfaces: ["en0"], smoothingSamples: 2)?.download == Double(index) - 0.5
@@ -154,6 +167,7 @@ struct ThroughputWidgetTests {
     )
     item.text = "{{#transfers}}{{symbol}}{{number}}{{/transfers}}"
     let result = state.presentation(for: item)
+
     #expect(
       result.segments == [
         WidgetSegment(text: "1.5", symbol: .glyph("D", font: "Shared", size: 18)),
@@ -161,16 +175,24 @@ struct ThroughputWidgetTests {
       ]
     )
     #expect(result.accessibilityLabel == "Download 1.5 KiB/s, Upload 512 B/s")
+
     item.text =
       "{{#transfers}}{{#direction=download}}{{symbol}}{{number}}{{/direction}}{{/transfers}}"
+
     #expect(state.presentation(for: item).segments.count == 1)
+
     item.text = "{{#transfers}}{{#direction=download}}{{symbol}}{{/direction}}{{/transfers}}"
+
     #expect(state.presentation(for: item).text.isEmpty)
     #expect(state.presentation(for: item).segments.first?.symbol != nil)
+
     item.symbol = "star"
+
     #expect(state.presentation(for: item).symbol == "star")
     #expect(state.presentation(for: item).segments.isEmpty)
+
     item.throughput?.showSymbol = false
+
     #expect(state.presentation(for: item).symbol == nil)
     #expect(
       state.presentation(for: item).accessibilityLabel == "Download 1.5 KiB/s, Upload 512 B/s"
@@ -179,6 +201,7 @@ struct ThroughputWidgetTests {
       ThroughputState().presentation(for: item).accessibilityLabel
         == "Network throughput unavailable"
     )
+
     for name in ["arrow.down", "arrow.up", "questionmark"] {
       #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil)
     }
@@ -190,13 +213,17 @@ struct ThroughputWidgetTests {
     var item = Item(id: "net", type: .throughput)
     item.text =
       "{{#available}}{{download.value}}|{{download.unit}}|{{upload}}{{/available}}{{^available}}Offline{{/available}}"
+
     #expect(state.presentation(for: item).text == "1|KiB/s|0 B/s")
     #expect(ThroughputState().presentation(for: item).text == "Offline")
+
     item.throughput = ThroughputConfiguration(unit: .bits)
     item.text =
       "{{#transfers}}{{index}}:{{direction}}={{number}} {{unit}}{{#separator}};{{/separator}}{{/transfers}}"
+
     #expect(state.presentation(for: item).text == "1:download=8.2 kbit/s;2:upload=0 bit/s")
     #expect(ThroughputState().presentation(for: item).text == "")
+
     for source in [
       "{{#transfers}}{{#symbol}}x{{/symbol}}{{/transfers}}",
       "{{#direction=sideways}}x{{/direction}}",
@@ -221,7 +248,9 @@ struct ThroughputWidgetTests {
       )
     )
     try item.throughput?.validate(path: "throughput")
+
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+
     for json in [
       #"{"interfaces":[]}"#, #"{"interfaces":["en0","en0"]}"#,
       #"{"interfaces":[" "]}"#, #"{"unit":"invalid"}"#,
@@ -234,6 +263,7 @@ struct ThroughputWidgetTests {
         try settings.validate(path: "throughput")
       }
     }
+
     #expect(throws: ConfigurationError.self) {
       try Configuration(
         bar: .init(),
@@ -267,11 +297,16 @@ struct ThroughputWidgetTests {
         for: .throughput
       )
       runtime.trigger("net")
+
       #expect(runtime.presentation(for: item)?.segments.first?.text == "200 B/s")
+
       runtime.updateWidgetState(.throughput(ThroughputState()), for: .throughput)
+
       #expect(runtime.sharedValues[.throughput] == "Throughput —")
       #expect(runtime.presentation(for: item)?.segments.isEmpty == (mode == "event"))
+
       runtime.trigger("net")
+
       #expect(runtime.presentation(for: item)?.symbol == "questionmark")
     }
   }

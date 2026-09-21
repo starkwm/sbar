@@ -22,17 +22,24 @@ struct TemplateTransitionTests {
       for: .throughput
     )
     runtime.trigger(item.id)
+
     #expect(runtime.presentation(for: item)?.text == "1 KiB/s | 0 B/s")
+
     runtime.updateWidgetState(.throughput(.init()), for: .throughput)
+
     #expect(runtime.presentation(for: item)?.text == "1 KiB/s | 0 B/s")
+
     runtime.trigger(item.id)
+
     #expect(runtime.presentation(for: item)?.text == "Offline")
     #expect(runtime.presentation(for: item)?.symbol == "questionmark")
+
     runtime.updateWidgetState(
       .throughput(.init(histories: ["en0": [.init(download: 0, upload: 0)]])),
       for: .throughput
     )
     runtime.trigger(item.id)
+
     #expect(runtime.presentation(for: item)?.text == "0 B/s | 0 B/s")
     #expect(runtime.presentation(for: item)?.symbol == nil)
     #expect(runtime.presentation(for: item)?.segments.compactMap(\.symbol).count == 2)
@@ -47,6 +54,7 @@ struct TemplateTransitionTests {
       text:
         "{{#connected}}{{symbol}}{{/connected}}{{#services}}{{#connected}}{{name}}{{/connected}}{{#separator}}, {{/separator}}{{/services}}{{^available}}Unavailable{{/available}}"
     )
+
     for active in [true, false, true] {
       runtime.updateWidgetState(
         .vpn(
@@ -61,10 +69,13 @@ struct TemplateTransitionTests {
         ),
         for: .vpn
       )
+
       #expect(runtime.presentation(for: item)?.text == (active ? "A, C" : ""))
       #expect((runtime.presentation(for: item)?.symbol != nil) == active)
     }
+
     runtime.updateWidgetState(.vpn(.init(available: false)), for: .vpn)
+
     #expect(runtime.presentation(for: item)?.text == "Unavailable")
     #expect(runtime.presentation(for: item)?.symbol == nil)
   }

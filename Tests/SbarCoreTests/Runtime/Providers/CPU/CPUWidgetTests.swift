@@ -9,6 +9,7 @@ struct CPUWidgetTests {
   @Test("sampling rounds, resets after failure and pauses, and bounds retained history")
   func sampling() {
     var provider = CPUProvider()
+
     #expect(provider.record(ticks: [0, 0, 0, 0], at: 0).samples.isEmpty)
     #expect(provider.record(ticks: [129, 0, 871, 0], at: 2).text == "CPU 13%")
     #expect(provider.record(ticks: nil, at: 4).text == "CPU —")
@@ -17,14 +18,18 @@ struct CPUWidgetTests {
     #expect(provider.record(ticks: [400, 0, 1000, 0], at: 20).samples.isEmpty)
     #expect(provider.record(ticks: [400, 0, 1100, 0], at: 22).text == "CPU 0%")
     #expect(provider.record(ticks: [400, 0, 1100, 0], at: 24).samples.isEmpty)
+
     for index in 1...40 {
       let state = provider.record(
         ticks: [400 + UInt32(index), 0, 1100, 0],
         at: 24 + Double(index * 2)
       )
+
       #expect(state.samples.count == min(index, 30))
     }
+
     provider.reset()
+
     #expect(provider.record(ticks: [1000, 0, 2000, 0], at: 106).samples.isEmpty)
   }
 
@@ -41,9 +46,11 @@ struct CPUWidgetTests {
   @Test("smoothing averages available samples and rounding drives all appearance")
   func smoothing() {
     let state = CPUState(samples: [0, 59.6, 90])
+
     #expect(state.percentage(smoothingSamples: 1) == 90)
     #expect(state.percentage(smoothingSamples: 2) == 75)
     #expect(state.percentage(smoothingSamples: 30) == 50)
+
     let item = Item(
       id: "cpu",
       type: .cpu,
@@ -53,6 +60,7 @@ struct CPUWidgetTests {
       )
     )
     let result = state.presentation(for: item)
+
     #expect(result.text == "CPU 75%")
     #expect(result.tint == "#FFFF00")
     #expect(result.accessibilityLabel == "CPU usage 75 percent")
@@ -82,20 +90,28 @@ struct CPUWidgetTests {
       (84, "exclamationmark", "#FFFF00"),
       (85, .glyph("H", font: "Other", size: 18), "#FF0000"),
     ]
+
     for (value, symbol, tint) in cases {
       let result = CPUState(samples: [value]).presentation(for: item)
+
       #expect(result.symbol == symbol)
       #expect(result.tint == tint)
     }
+
     let unavailable = CPUState().presentation(for: item)
+
     #expect(unavailable.text == "CPU —")
     #expect(unavailable.symbol == "questionmark")
     #expect(unavailable.tint == "#888888")
     #expect(unavailable.accessibilityLabel == "CPU usage unavailable")
     #expect(CPUState(samples: [12]).presentation(for: item).text == "CPU 12%")
+
     item.symbol = "star"
+
     #expect(CPUState().presentation(for: item).symbol == "star")
+
     item.cpu?.showSymbol = false
+
     #expect(CPUState().presentation(for: item).symbol == nil)
     #expect(CPUState().presentation(for: item).accessibilityLabel == "CPU usage unavailable")
 
@@ -114,7 +130,9 @@ struct CPUWidgetTests {
       )
     )
     try item.cpu?.validate(path: "cpu")
+
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+
     for json in [
       #"{"warningThreshold":-1}"#, #"{"highThreshold":101}"#,
       #"{"warningThreshold":85}"#, #"{"highThreshold":60}"#,
@@ -127,14 +145,18 @@ struct CPUWidgetTests {
         try settings.validate(path: "cpu")
       }
     }
+
     let invalid = Configuration(
       bar: .init(),
       items: .init(right: [
         Item(id: "text", type: .text, cpu: CPUConfiguration())
       ])
     )
+
     #expect(throws: ConfigurationError.self) { try invalid.validate() }
+
     let state = CPUState(samples: [12])
+
     #expect(
       state.presentation(for: Item(id: "cpu", type: .cpu))
         == state.presentation(for: Item(id: "cpu", type: .cpu, cpu: CPUConfiguration()))
@@ -157,12 +179,17 @@ struct CPUWidgetTests {
     let item = try #require(configuration.items.active.first)
     runtime.updateWidgetState(.cpu(CPUState(samples: [80, 100])), for: .cpu)
     runtime.trigger("cpu")
+
     #expect(runtime.presentation(for: item)?.text == "CPU 90%")
     #expect(runtime.presentation(for: item)?.tint == "#FF0000")
+
     runtime.updateWidgetState(.cpu(CPUState()), for: .cpu)
+
     #expect(runtime.sharedValues[.cpu] == "CPU —")
     #expect(runtime.presentation(for: item)?.text == "CPU 90%")
+
     runtime.trigger("cpu")
+
     #expect(runtime.presentation(for: item)?.text == "CPU —")
     #expect(runtime.presentation(for: item)?.tint == "#888888")
   }

@@ -38,6 +38,7 @@ struct ProcessRunnerTests {
     let start = ContinuousClock.now
     task.cancel()
     await #expect(throws: (any Error).self) { try await task.value }
+
     #expect(start.duration(to: .now) < .seconds(1))
   }
 
@@ -48,6 +49,7 @@ struct ProcessRunnerTests {
       executable: "/bin/sh",
       arguments: ["-c", "sleep 10 & sleep 0.05; exit 7"]
     )
+
     #expect(result.exitCode == 7)
     #expect(start.duration(to: .now) < .seconds(1))
   }
@@ -58,6 +60,7 @@ struct ProcessRunnerTests {
       executable: "/bin/sh",
       arguments: ["-c", "exec 1>&- 2>&-; sleep 0.05; exit 3"]
     )
+
     #expect(result.exitCode == 3)
   }
 

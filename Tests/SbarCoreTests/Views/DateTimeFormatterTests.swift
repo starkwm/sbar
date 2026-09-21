@@ -38,6 +38,7 @@ struct DateTimeFormatterTests {
     expected.locale = locale
     expected.timeZone = timeZone
     expected.dateStyle = style
+
     #expect(
       DateTimeFormatter.string(
         date,
@@ -58,6 +59,7 @@ struct DateTimeFormatterTests {
     formatter.timeStyle = .short
     _ = string("yyyy")
     let expected = formatter.string(from: date)
+
     #expect(string(nil) == expected)
     #expect(string("") == expected)
   }
@@ -91,6 +93,7 @@ struct DateTimeFormatterTests {
     expected.timeZone = timeZone
     expected.dateStyle = .long
     expected.timeStyle = .medium
+
     #expect(
       DateTimeFormatter.string(
         date,

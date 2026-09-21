@@ -92,6 +92,7 @@ enum WidgetState: Equatable, Sendable {
       let symbol =
         item.symbol ?? settings.symbols?.resolve(state)
         ?? (state == .offline && settings.interface == .wifi ? "wifi.slash" : state.defaultSymbol)
+
       return WidgetPresentation(
         text: label,
         symbol: settings.showSymbol == false ? nil : symbol,
@@ -104,6 +105,7 @@ enum WidgetState: Equatable, Sendable {
       let level = min(100, max(0, percentage ?? 100))
       let index = Int((Double(level) / 25).rounded())
       let batterySymbol: ItemSymbol
+
       if let symbols = settings.symbols, let levels = symbols.levels, levels.count == 5,
         let resolved = symbols.resolve(levels[index])
       {
@@ -111,12 +113,15 @@ enum WidgetState: Equatable, Sendable {
       } else {
         batterySymbol = .system("battery.\(index * 25)percent")
       }
+
       let chargingSymbol: ItemSymbol?
+
       if let symbols = settings.symbols, let levels = symbols.chargingLevels, levels.count == 5 {
         chargingSymbol = symbols.resolve(levels[index])
       } else {
         chargingSymbol = nil
       }
+
       let symbol =
         charging
         ? (chargingSymbol ?? settings.symbols?.resolve(settings.symbols?.charging)
@@ -134,6 +139,7 @@ enum WidgetState: Equatable, Sendable {
         percentage.map {
           "\($0) percent, \(charging ? "charging" : pluggedIn ? "plugged in" : "on battery")"
         } ?? "AC power"
+
       return WidgetPresentation(
         text: percentage.map { "\($0)%" } ?? "AC power",
         symbol: settings.showSymbol == false ? nil : item.symbol ?? symbol,
@@ -144,6 +150,7 @@ enum WidgetState: Equatable, Sendable {
       let settings = item.volume ?? VolumeConfiguration()
       let symbol: ItemSymbol
       let tint: String?
+
       if !available {
         symbol = settings.symbols?.resolve(settings.symbols?.unavailable) ?? "speaker.slash"
         tint = settings.tints?.unavailable
@@ -153,6 +160,7 @@ enum WidgetState: Equatable, Sendable {
       } else if let percentage {
         let level = min(100, max(0, percentage))
         let index = level == 0 ? 0 : level <= 33 ? 1 : level <= 66 ? 2 : 3
+
         if let symbols = settings.symbols, let levels = symbols.levels, levels.count == 4,
           let resolved = symbols.resolve(levels[index])
         {
@@ -164,11 +172,13 @@ enum WidgetState: Equatable, Sendable {
             ][index]
           )
         }
+
         tint = nil
       } else {
         symbol = settings.symbols?.resolve(settings.symbols?.fixed) ?? "speaker.wave.3.fill"
         tint = settings.tints?.fixed
       }
+
       return WidgetPresentation(
         text: text,
         symbol: settings.showSymbol == false ? nil : item.symbol ?? symbol,

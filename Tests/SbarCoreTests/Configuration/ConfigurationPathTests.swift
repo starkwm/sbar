@@ -14,11 +14,17 @@ struct ConfigurationPathTests {
     let jsonc = directory.appending(path: "config.jsonc")
 
     #expect(ConfigurationPath.defaultURL(directory: directory) == json)
+
     try Data("{}".utf8).write(to: json)
+
     #expect(ConfigurationPath.defaultURL(directory: directory) == json)
+
     try Data("/* invalid".utf8).write(to: jsonc)
+
     #expect(ConfigurationPath.defaultURL(directory: directory) == jsonc)
+
     try FileManager.default.removeItem(at: json)
+
     #expect(ConfigurationPath.defaultURL(directory: directory) == jsonc)
   }
 }

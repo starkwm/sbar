@@ -40,6 +40,7 @@ struct BarItemViewTests {
     )
     item.spaces?.tints = SpacesTints(active: "#0000FF", inactive: "#0000FF")
     let expected = try render(BarItemView(configuration: item).environment(runtime))
+
     #expect(hovered == expected)
     #expect(hovered != normal)
   }
@@ -52,6 +53,7 @@ struct BarItemViewTests {
   func itemSymbols(position: ItemSymbolPosition?, symbol: ItemSymbol) throws {
     let runtime = ProviderRuntime()
     var item = Item(id: "text", type: .text, text: "Status", symbol: symbol)
+
     if let position { item.symbolPosition = position }
 
     try expectRendering(
@@ -163,7 +165,9 @@ struct BarItemViewTests {
     .fontWeight(nil)
     let overridden = HStack(spacing: 4) {
       if position == .left { Image(systemName: "star.fill") }
+
       rates
+
       if position == .right { Image(systemName: "star.fill") }
     }
     try expectRendering(item, runtime: runtime, matches: overridden)
@@ -178,6 +182,7 @@ struct BarItemViewTests {
     let icon = NSImage(size: NSSize(width: 24, height: 24), flipped: false) { bounds in
       NSColor.systemRed.setFill()
       NSBezierPath(ovalIn: bounds).fill()
+
       return true
     }
     runtime.updateFrontApplication(.init(name: "Example", icon: icon))
@@ -220,7 +225,9 @@ struct BarItemViewTests {
   {
     HStack(spacing: 4) {
       if position != .right { symbol }
+
       Text(text).monospacedDigit()
+
       if position == .right { symbol }
     }
   }
@@ -234,6 +241,7 @@ struct BarItemViewTests {
       BarItemView(configuration: item, symbolFontSize: 24).environment(runtime)
     )
     let reference = try render(expected)
+
     #expect(actual == reference)
   }
 
@@ -250,6 +258,7 @@ struct BarItemViewTests {
     )
     renderer.scale = 2
     let image = try #require(renderer.cgImage)
+
     return try #require(
       NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])
     )

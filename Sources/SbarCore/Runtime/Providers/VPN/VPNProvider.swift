@@ -30,15 +30,19 @@ final class VPNProvider {
 
   private func refresh() {
     guard let update else { return }
+
     if !observing {
       let generation = generation
       observing = monitor.start { [weak self] in
         guard let self, self.generation == generation else { return }
+
         self.scheduleRefresh()
       }
     }
+
     let state = observing ? monitor.read() : VPNState()
     update(state)
+
     if state.status == .unavailable { scheduleRefresh(after: .seconds(2)) }
   }
 
@@ -46,7 +50,9 @@ final class VPNProvider {
     refreshTask?.cancel()
     refreshTask = Task { [weak self] in
       do { try await Task.sleep(for: delay) } catch { return }
+
       guard let self, !Task.isCancelled else { return }
+
       self.refreshTask = nil
       self.refresh()
     }
@@ -91,6 +97,7 @@ final class SystemVPNMonitor: VPNMonitoring {
     guard let preferences = SCPreferencesCreate(nil, "sbar.vpn" as CFString, nil) else {
       return false
     }
+
     self.preferences = preferences
     var context = SCPreferencesContext(
       version: 0,
@@ -109,28 +116,35 @@ final class SystemVPNMonitor: VPNMonitoring {
       ), SCPreferencesSetDispatchQueue(preferences, .main)
     else {
       stop()
+
       return false
     }
+
     return true
   }
 
   func read() -> VPNState {
     guard let preferences, let handler else { return VPNState() }
+
     SCPreferencesSynchronize(preferences)
     guard let services = SCNetworkServiceCopyAll(preferences) as? [SCNetworkService] else {
       return VPNState()
     }
+
     var entries: [VPNServiceState] = []
     var observed = Set<String>()
+
     for service in services where SCNetworkServiceGetEnabled(service) {
       guard let interface = SCNetworkServiceGetInterface(service),
         let type = SCNetworkInterfaceGetInterfaceType(interface) as String?
       else { continue }
+
       let underlying = SCNetworkInterfaceGetInterface(interface).flatMap {
         SCNetworkInterfaceGetInterfaceType($0) as String?
       }
       guard Self.isVPN(interfaceType: type, underlyingType: underlying) else { continue }
       guard let id = SCNetworkServiceGetServiceID(service) else { return VPNState() }
+
       let name = SCNetworkServiceGetName(service) as String? ?? "VPN"
       let key = id as String
       observed.insert(key)
@@ -142,6 +156,7 @@ final class SystemVPNMonitor: VPNMonitoring {
         copyDescription: nil
       )
       var status = VPNStatus.unavailable
+
       if let connection = connections[key] {
         status = Self.status(SCNetworkConnectionGetStatus(connection))
       } else if let connection = SCNetworkConnectionCreateWithServiceID(
@@ -154,11 +169,13 @@ final class SystemVPNMonitor: VPNMonitoring {
       ) {
         // Read before subscribing: registration can briefly report a cached disconnected state.
         let initial = Self.status(SCNetworkConnectionGetStatus(connection))
+
         if SCNetworkConnectionSetDispatchQueue(connection, .main) {
           connections[key] = connection
           status = initial
         }
       }
+
       entries.append(VPNServiceState(id: key, name: name, status: status))
     }
     for id in connections.keys.filter({ !observed.contains($0) }) {
@@ -166,21 +183,25 @@ final class SystemVPNMonitor: VPNMonitoring {
         SCNetworkConnectionSetDispatchQueue(connection, nil)
       }
     }
+
     return VPNState(services: entries.sorted { $0.id < $1.id }, available: true)
   }
 
   func stop() {
     clearConnections()
+
     if let preferences {
       SCPreferencesSetDispatchQueue(preferences, nil)
       SCPreferencesSetCallback(preferences, nil, nil)
     }
+
     preferences = nil
     handler = nil
   }
 
   private func clearConnections() {
     for connection in connections.values { SCNetworkConnectionSetDispatchQueue(connection, nil) }
+
     connections = [:]
   }
 }
@@ -213,6 +234,7 @@ private final class VPNChangeHandler: Sendable {
 
   private static func notify(_ info: UnsafeMutableRawPointer?) {
     guard let info else { return }
+
     let handler = Unmanaged<VPNChangeHandler>.fromOpaque(info).takeUnretainedValue()
     Task { @MainActor in handler.changed() }
   }

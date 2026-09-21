@@ -12,7 +12,9 @@ final class PluginMailbox: @unchecked Sendable {
     data.append(10)
 
     lock.lock()
+
     if messages.count < 32 { messages.append(data) }
+
     let wake = wakeHandler
     lock.unlock()
     wake?()

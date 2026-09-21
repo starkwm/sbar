@@ -12,6 +12,7 @@ struct AerospaceState: Equatable, Sendable {
           && (!$0.visible || visibleMonitors.insert($0.monitor).inserted)
       })
     else { return Self() }
+
     return Self(workspaces: rows, displays: displays, unavailable: nil)
   }
 
@@ -46,6 +47,7 @@ struct AerospaceState: Equatable, Sendable {
         for: item
       )
     }
+
     let label = current.name
     func entry(_ row: AerospaceWorkspace) -> WorkspaceText.Entry {
       WorkspaceText.Entry(
@@ -61,6 +63,7 @@ struct AerospaceState: Equatable, Sendable {
         emphasized: row.focused
       )
     }
+
     return WorkspaceText(current: entry(current), entries: rows.map(entry)).apply(
       to: WidgetPresentation(
         text: label,

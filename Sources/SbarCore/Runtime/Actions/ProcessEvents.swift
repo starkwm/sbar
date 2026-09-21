@@ -9,6 +9,7 @@ final class ProcessEvents: Sendable {
   init() throws {
     let queue = kqueue()
     guard queue >= 0 else { throw ProcessError.launch(errno) }
+
     _ = fcntl(queue, F_SETFD, FD_CLOEXEC)
     var event = kevent64_s()
     event.ident = 1
@@ -19,6 +20,7 @@ final class ProcessEvents: Sendable {
       close(queue)
       throw ProcessError.launch(code)
     }
+
     descriptor = queue
   }
 
@@ -56,6 +58,7 @@ final class ProcessEvents: Sendable {
 
     var event = kevent64_s()
     let result: Int32
+
     if let timeout {
       let components = max(.zero, timeout).components
       var deadline = timespec(

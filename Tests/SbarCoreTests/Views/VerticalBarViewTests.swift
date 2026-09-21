@@ -29,11 +29,14 @@ struct VerticalBarViewTests {
       },
       runtime: runtime
     )
+
     #expect(actual == expected)
+
     let horizontal = try render(
       InteractiveItemView(item: nested, defaultStyle: nil),
       runtime: runtime
     )
+
     #expect(actual != horizontal)
   }
 
@@ -53,8 +56,11 @@ struct VerticalBarViewTests {
       Rectangle().frame(width: 16, height: 1).opacity(0.3),
       runtime: runtime
     )
+
     #expect(vertical == expected)
+
     let text = Item(id: "text", type: .text, text: "Hello", symbol: .system("star"))
+
     #expect(
       try render(
         BarItemView(configuration: text).environment(\.barPosition, position),
@@ -100,6 +106,7 @@ struct VerticalBarViewTests {
         )
       )
     )
+
     #expect(vertical.pixelsHigh > horizontal.pixelsHigh)
     #expect(vertical.pixelsWide < horizontal.pixelsWide)
   }
@@ -114,6 +121,7 @@ struct VerticalBarViewTests {
     )
     renderer.scale = 2
     let image = try #require(renderer.cgImage)
+
     return try #require(
       NSBitmapImageRep(cgImage: image)
         .representation(using: .png, properties: [:])

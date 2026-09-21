@@ -5,17 +5,21 @@ struct DiskProvider {
   static func volume(for path: String) -> DiskVolume? {
     let resolved = URL(fileURLWithPath: path).resolvingSymlinksInPath().path
     guard FileManager.default.fileExists(atPath: resolved) else { return nil }
+
     var info = statfs()
     guard statfs(resolved, &info) == 0 else { return nil }
+
     let mount = withUnsafePointer(to: &info.f_mntonname) {
       $0.withMemoryRebound(to: CChar.self, capacity: Int(MNAMELEN)) { String(cString: $0) }
     }
+
     // A leftover directory for an unmounted /Volumes drive must not report the root disk.
     if resolved.hasPrefix("/Volumes/") {
       let components = resolved.split(separator: "/")
       let expected = "/Volumes/\(components[1])"
       guard mount == expected || mount.hasPrefix(expected + "/") else { return nil }
     }
+
     return DiskVolume(
       identity: "\(info.f_fsid.val.0):\(info.f_fsid.val.1)",
       mountPath: mount,
@@ -28,7 +32,9 @@ struct DiskProvider {
       let free = attributes[.systemFreeSize] as? NSNumber,
       let total = attributes[.systemSize] as? NSNumber
     else { return DiskState() }
+
     let state = DiskState(freeBytes: free.int64Value, totalBytes: total.int64Value)
+
     return state.available ? state : DiskState()
   }
 
@@ -42,6 +48,7 @@ struct DiskProvider {
     mounts = mounts.filter { paths.contains($0.key) }
     var volumes: [String: DiskState] = [:]
     var result: [String: DiskState] = [:]
+
     for path in paths.sorted() {
       guard let volume = resolve(path),
         mounts[path].map({ $0 == volume.mountPath }) ?? true
@@ -49,6 +56,7 @@ struct DiskProvider {
         result[path] = DiskState()
         continue
       }
+
       let state = volumes[volume.identity] ?? read(volume)
       guard let after = resolve(path), after.identity == volume.identity,
         after.mountPath == volume.mountPath
@@ -56,10 +64,14 @@ struct DiskProvider {
         result[path] = DiskState()
         continue
       }
+
       volumes[volume.identity] = state
+
       if state.available { mounts[path] = volume.mountPath }
+
       result[path] = state
     }
+
     return result
   }
 }

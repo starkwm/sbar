@@ -136,9 +136,13 @@ struct OverflowSelection {
     func length() -> CGFloat {
       selected.reduce(0) { total, item in
         if isVertical { return total + (lengths[item.id] ?? 28) }
+
         let style = (item.style ?? ItemStyle()).resolved(over: defaultStyle)
+
         if let width = style.width { return total + width }
+
         let measured = (lengths[item.id] ?? 40) * (flexible.contains(item.type) ? 0.8 : 1)
+
         return total + max(style.minWidth ?? 0, measured)
       }
         + CGFloat(max(0, selected.count - 1)) * spacing
@@ -151,6 +155,7 @@ struct OverflowSelection {
         ? $0.offset > $1.offset : $0.element.priority < $1.element.priority
     }) {
       selected.removeAll { $0.id == item.element.id }
+
       if length() + (selected.isEmpty ? 0 : spacing) + 28 <= available { break }
     }
 

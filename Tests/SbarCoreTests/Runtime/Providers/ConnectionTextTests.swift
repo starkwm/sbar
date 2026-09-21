@@ -25,6 +25,7 @@ struct ConnectionTextTests {
     )
     try Configuration(bar: .init(), items: .init(right: [item])).validate()
     let result = try #require(runtime.presentation(for: item))
+
     #expect(
       result.text
         == "connected (3): vpn/a Secure Home, vpn/b Home disconnected, vpn/z Work connecting"
@@ -51,6 +52,7 @@ struct ConnectionTextTests {
         "{{#devices}}{{index}}/{{total}} {{deviceId}} {{name}} {{#connected}}linked{{/connected}}{{#separator}} | {{/separator}}{{/devices}}"
     )
     try Configuration(bar: .init(), items: .init(right: [item])).validate()
+
     #expect(
       runtime.presentation(for: item)?.text
         == "1/2 a Keyboard {{status}} linked | 2/2 b Mouse linked"
@@ -75,19 +77,25 @@ struct ConnectionTextTests {
       .vpn(.init(services: [.init(id: "a", name: "Stale", status: .connected)], available: false)),
       for: .vpn
     )
+
     #expect(runtime.presentation(for: vpn)?.text == "VPN unavailable")
     #expect(runtime.isVisible(vpn))
+
     runtime.updateWidgetState(.vpn(.init(available: true)), for: .vpn)
+
     #expect(runtime.presentation(for: vpn)?.text == "VPN disconnected")
     #expect(!runtime.isVisible(vpn))
+
     let bt = Item(
       id: "bt",
       type: .bluetooth,
       text: "{{#devices}}{{value}}{{/devices}}{{^devices}}{{value}}{{/devices}}"
     )
+
     for status in [BluetoothStatus.off, .on, .unauthorized, .unavailable] {
       let state = BluetoothState(status: status, devices: [.init(id: "x", name: "Stale")])
       runtime.updateWidgetState(.bluetooth(state), for: .bluetooth)
+
       #expect(runtime.presentation(for: bt)?.text == state.text)
     }
   }
@@ -112,8 +120,11 @@ struct ConnectionTextTests {
       .vpn(.init(services: [.init(id: "x", name: "Work", status: .connected)], available: true)),
       for: .vpn
     )
+
     #expect(runtime.presentation(for: item)?.text == "Work connecting")
+
     runtime.trigger(item.id)
+
     #expect(runtime.presentation(for: item)?.text == "Work connected")
   }
 

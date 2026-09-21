@@ -23,9 +23,11 @@ struct InteractiveItemView: View {
 
   private var style: ItemStyle {
     var style = (item.style ?? ItemStyle()).resolved(over: defaultStyle)
+
     if let tint = providers.presentation(for: item, displayUUID: barDisplayUUID)?.tint {
       style.tint = tint
     }
+
     return style
   }
 

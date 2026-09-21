@@ -21,6 +21,7 @@ struct FilteredSeparatorTests {
     }
     let runs = template.renderRuns([:], entries: entries)
     let selected = shown.indices.filter { shown[$0] }
+
     #expect(runs.map(\.text).joined() == selected.map(String.init).joined(separator: ", "))
     #expect(runs.filter { !$0.separator }.compactMap(\.entry) == selected)
   }
@@ -35,6 +36,7 @@ struct FilteredSeparatorTests {
       [:],
       entries: [["direction": "download"], ["direction": "upload"]]
     )
+
     #expect(runs.map(\.text).joined() == "|/U")
     #expect(runs.filter(\.symbol).count == 2)
   }

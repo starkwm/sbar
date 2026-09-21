@@ -72,6 +72,7 @@ final class ConfigurationStore {
   func load() {
     do {
       let decoded: Configuration
+
       do {
         decoded = try ConfigurationDecoder.decode(
           from: Data(contentsOf: configurationURL)

@@ -13,6 +13,7 @@ struct YabaiState: Equatable, Sendable {
           && uuids.insert($0.uuid.lowercased()).inserted
       })
     else { return Self() }
+
     var visible = Set<Int>()
     guard !rows.isEmpty, rows.filter(\.focused).count == 1,
       rows.allSatisfy({
@@ -21,6 +22,7 @@ struct YabaiState: Equatable, Sendable {
           && (!$0.visible || visible.insert($0.monitor).inserted)
       }), visible == displayIndexes
     else { return Self() }
+
     return Self(
       workspaces: rows.sorted { $0.index < $1.index },
       displays: Dictionary(uniqueKeysWithValues: displays.map { ($0.index, $0.uuid) }),
@@ -59,6 +61,7 @@ struct YabaiState: Equatable, Sendable {
         for: item
       )
     }
+
     let label =
       settings.includeFullscreen == false && current.fullscreen ? "Fullscreen" : current.name
     let selected = rows.filter { settings.includeFullscreen != false || !$0.fullscreen }
@@ -77,6 +80,7 @@ struct YabaiState: Equatable, Sendable {
         emphasized: row.focused
       )
     }
+
     return WorkspaceText(current: entry(current), entries: selected.map(entry)).apply(
       to: WidgetPresentation(
         text: label,
@@ -115,6 +119,7 @@ struct YabaiWorkspace: Decodable, Equatable, Sendable {
 
   var name: String {
     let value = label?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
     return value.isEmpty ? String(index) : value
   }
 }

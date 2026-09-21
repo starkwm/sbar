@@ -9,6 +9,7 @@ struct AudioDeviceConfiguration: Codable, Equatable, Sendable {
 
   func validate(path: String) throws {
     try symbols?.validate(path: "\(path).symbols")
+
     for (key, value) in tints ?? [:] {
       guard AudioDeviceStatus(rawValue: key) != nil else {
         throw ConfigurationError.invalidValue(
@@ -16,6 +17,7 @@ struct AudioDeviceConfiguration: Codable, Equatable, Sendable {
           reason: "Unknown audio device status."
         )
       }
+
       try ItemStyle.validateColor(value, path: "\(path).tints.\(key)")
     }
   }
@@ -35,6 +37,7 @@ struct AudioDeviceSymbols: Codable, Equatable, Sendable {
 
   func validate(path: String) throws {
     try WidgetSymbol.validateDefaults(font: font, size: size, path: path)
+
     for (key, symbol) in [
       ("output", output), ("input", input), ("disconnected", disconnected),
       ("unavailable", unavailable),
@@ -45,11 +48,13 @@ struct AudioDeviceSymbols: Codable, Equatable, Sendable {
 
   func resolve(_ status: AudioDeviceStatus, device: AudioDeviceKind) -> ItemSymbol? {
     let symbol: WidgetSymbol?
+
     switch status {
     case .available: symbol = device == .input ? input : output
     case .disconnected: symbol = disconnected
     case .unavailable: symbol = unavailable
     }
+
     return symbol?.resolve(font: font, size: size)
   }
 }
@@ -62,6 +67,7 @@ extension AudioDeviceSymbols {
         .init(codingPath: decoder.codingPath, debugDescription: "Unknown audio device symbol key.")
       )
     }
+
     let container = try decoder.container(keyedBy: CodingKeys.self)
     font = try container.decodeIfPresent(String.self, forKey: .font)
     size = try container.decodeIfPresent(Double.self, forKey: .size)

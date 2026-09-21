@@ -8,11 +8,13 @@ struct MemoryState: Equatable, Sendable {
 
   var available: Bool {
     guard let usedBytes, let totalBytes else { return false }
+
     return totalBytes > 0 && usedBytes <= totalBytes && totalBytes <= UInt64(Int64.max)
   }
 
   func value(format: MemoryFormat) -> String {
     guard available, let usedBytes, let totalBytes else { return "—" }
+
     switch format {
     case .used:
       return ByteCountFormatter.string(fromByteCount: Int64(usedBytes), countStyle: .memory)
@@ -21,6 +23,7 @@ struct MemoryState: Equatable, Sendable {
     case .usedTotal:
       let used = ByteCountFormatter.string(fromByteCount: Int64(usedBytes), countStyle: .memory)
       let total = ByteCountFormatter.string(fromByteCount: Int64(totalBytes), countStyle: .memory)
+
       return "\(used) / \(total)"
     }
   }
@@ -28,6 +31,7 @@ struct MemoryState: Equatable, Sendable {
   func presentation(for item: Item) -> WidgetPresentation {
     let settings = item.memory ?? MemoryConfiguration()
     let selected = available ? settings.symbols?.available : settings.symbols?.unavailable
+
     return WidgetPresentation(
       text: text,
       symbol: settings.showSymbol == false

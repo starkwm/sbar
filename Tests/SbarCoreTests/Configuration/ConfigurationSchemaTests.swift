@@ -13,17 +13,23 @@ struct ConfigurationSchemaTests {
     let definitions = try #require(schema["$defs"] as? [String: Any])
     let style = try #require(definitions["itemStyle"] as? [String: Any])
     let properties = try #require(style["properties"] as? [String: Any])
+
     for key in ["hoverTint", "hoverBackground"] {
       let field = try #require(properties[key] as? [String: Any])
+
       #expect(field["type"] as? [String] == ["string", "null"])
+
       let pattern = try #require(field["pattern"] as? String)
+
       for value in ["#112233", "#AABBCC80", "#00000000", "red", "#fff", "#gg0000"] {
         let matches = value.range(of: pattern, options: .regularExpression) != nil
         let decoded = try JSONDecoder().decode(
           ItemStyle.self,
           from: JSONSerialization.data(withJSONObject: [key: value])
         )
+
         #expect(matches == (RGBA(hex: value) != nil))
+
         if matches {
           try decoded.validate(path: "style")
         } else {
@@ -41,11 +47,15 @@ struct ConfigurationSchemaTests {
     let definitions = try #require(schema["$defs"] as? [String: Any])
     let style = try #require(definitions["itemStyle"] as? [String: Any])
     let properties = try #require(style["properties"] as? [String: Any])
+
     for key in ["minWidth", "width"] {
       let field = try #require(properties[key] as? [String: Any])
+
       #expect(field["type"] as? [String] == ["number", "null"])
+
       let lower = try #require(field["minimum"] as? Double)
       let upper = try #require(field["maximum"] as? Double)
+
       for value in [lower, upper] {
         let decoded = try JSONDecoder().decode(
           ItemStyle.self,
@@ -58,11 +68,14 @@ struct ConfigurationSchemaTests {
           ItemStyle.self,
           from: JSONSerialization.data(withJSONObject: [key: value])
         )
+
         #expect(throws: (any Error).self) { try decoded.validate(path: "style") }
       }
     }
+
     let alignment = try #require(properties["alignment"] as? [String: Any])
     let values = try #require(alignment["enum"] as? [Any])
+
     #expect(Set(values.compactMap { $0 as? String }) == Set(ItemAlignment.allCases.map(\.rawValue)))
     #expect(values.contains { $0 is NSNull })
   }

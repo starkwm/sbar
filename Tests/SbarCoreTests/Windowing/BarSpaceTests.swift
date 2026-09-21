@@ -10,6 +10,7 @@ struct BarSpaceTests {
   func sharedSpace() {
     let system = TestBarSpaceAccess()
     let space = BarSpace(access: system.access)
+
     #expect(system.creations == 0)
     #expect(space.addWindow(10))
     #expect(space.addWindow(20))
@@ -17,22 +18,28 @@ struct BarSpaceTests {
     #expect(system.creations == 1)
     #expect(system.windows == [10, 20, 10])
     #expect(system.spaces == [42, 42, 42])
+
     space.stop()
     space.stop()
+
     #expect(system.destroyed == [42])
   }
 
   @Test("missing APIs and invalid window numbers leave AppKit in control")
   func unavailable() {
     let unavailable = BarSpace(access: nil)
+
     #expect(!unavailable.addWindow(10))
+
     unavailable.stop()
 
     let system = TestBarSpaceAccess()
     let space = BarSpace(access: system.access)
+
     for number in [-1, 0, Int(UInt32.max) + 1] {
       #expect(!space.addWindow(number))
     }
+
     #expect(system.creations == 0)
     #expect(system.windows.isEmpty)
   }
@@ -42,12 +49,17 @@ struct BarSpaceTests {
     let system = TestBarSpaceAccess()
     system.createdSpace = nil
     let space = BarSpace(access: system.access)
+
     #expect(!space.addWindow(10))
     #expect(system.windows.isEmpty)
+
     system.createdSpace = 43
+
     #expect(space.addWindow(10))
     #expect(system.spaces == [43])
+
     space.stop()
+
     #expect(system.destroyed == [43])
   }
 
@@ -55,12 +67,17 @@ struct BarSpaceTests {
   func restart() {
     let system = TestBarSpaceAccess()
     let space = BarSpace(access: system.access)
+
     #expect(space.addWindow(10))
+
     space.stop()
     system.createdSpace = 43
+
     #expect(space.addWindow(20))
     #expect(system.spaces == [42, 43])
+
     space.stop()
+
     #expect(system.destroyed == [42, 43])
   }
 }
@@ -77,6 +94,7 @@ private final class TestBarSpaceAccess {
     BarSpace.Access(
       create: {
         self.creations += 1
+
         return self.createdSpace
       },
       addWindow: { window, space in

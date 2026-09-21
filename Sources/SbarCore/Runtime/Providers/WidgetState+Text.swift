@@ -5,11 +5,13 @@ extension WidgetState {
     switch self {
     case .vpn(let state):
       guard state.available else { return [] }
+
       return state.services.sorted {
         $0.name == $1.name ? $0.id < $1.id : $0.name < $1.name
       }.enumerated().map { index, service in
         let cleaned = service.name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
         let name = cleaned.isEmpty ? "VPN" : cleaned
+
         return [
           "name": name, "serviceId": service.id, "status": service.status.rawValue,
           "connected": String(service.status == .connected),
@@ -19,11 +21,13 @@ extension WidgetState {
       }
     case .bluetooth(let state):
       guard state.status == .connected else { return [] }
+
       return state.devices.sorted {
         $0.name == $1.name ? $0.id < $1.id : $0.name < $1.name
       }.enumerated().map { index, device in
         let cleaned = device.name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
         let name = cleaned.isEmpty ? "Unnamed device" : cleaned
+
         return [
           "name": name, "deviceId": device.id, "status": "connected", "connected": "true",
           "index": String(index + 1), "value": "\(name) connected",
@@ -37,6 +41,7 @@ extension WidgetState {
     switch self {
     case .cpu(let state):
       let percentage = state.percentage(smoothingSamples: item.cpu?.smoothingSamples ?? 1)
+
       return [
         "percentage": percentage.map(String.init) ?? "", "available": String(percentage != nil),
       ]
@@ -58,6 +63,7 @@ extension WidgetState {
       guard state.available, let used = state.usedBytes, let total = state.totalBytes else {
         return ["available": "false"]
       }
+
       return [
         "available": "true", "used": state.value(format: .used),
         "total": ByteCountFormatter.string(fromByteCount: Int64(total), countStyle: .memory),
@@ -68,6 +74,7 @@ extension WidgetState {
       guard state.available, let free = state.freeBytes, let total = state.totalBytes else {
         return ["available": "false"]
       }
+
       return [
         "available": "true", "used": state.value(format: .used), "free": state.value(format: .free),
         "total": state.value(format: .total), "freeBytes": String(free),
@@ -76,6 +83,7 @@ extension WidgetState {
       ]
     case .media(let state):
       let player = state.selected(source: item.media?.source)
+
       return [
         "available": String(player != nil && player?.status != .unknown),
         "title": player?.title ?? "", "artist": player?.artist ?? "",
@@ -99,6 +107,7 @@ extension WidgetState {
       else {
         return ["available": "false"]
       }
+
       return [
         "available": "true",
         "download": ThroughputState.format(rate.download, unit: item.throughput?.unit ?? .bytes),
@@ -107,9 +116,11 @@ extension WidgetState {
     case .network(let connection):
       let selected =
         item.network?.interface.map { $0 == connection ? connection : .offline } ?? connection
+
       return ["status": selected.rawValue, "connected": String(selected != .offline)]
     case .vpn(let state):
       let names = state.services.filter { $0.status != .disconnected }.map(\.name).sorted()
+
       return [
         "status": state.status.rawValue, "names": names.joined(separator: ", "),
         "connected": String(state.status == .connected), "available": String(state.available),
@@ -122,6 +133,7 @@ extension WidgetState {
       ]
     case .audioDevice(let state):
       let endpoint = item.audioDevice?.device == .input ? state.input : state.output
+
       return [
         "name": endpoint.name ?? "", "status": endpoint.status.rawValue,
         "available": String(endpoint.status == .available),

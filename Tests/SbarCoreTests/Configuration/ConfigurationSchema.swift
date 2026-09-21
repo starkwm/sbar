@@ -8,6 +8,7 @@ struct ConfigurationSchema {
       .deletingLastPathComponent()
       .deletingLastPathComponent()
     let url = root.appending(path: "Sources/SbarCore/Resources/config.schema.json")
+
     return try Data(contentsOf: url)
   }
 }

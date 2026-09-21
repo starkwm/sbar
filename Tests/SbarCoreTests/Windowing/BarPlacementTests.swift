@@ -18,17 +18,23 @@ struct BarPlacementTests {
     )
     settings.position = position
     let frame = BarPlacement.frame(screenFrame: screen, visibleFrame: visible, settings: settings)
+
     #expect(frame.maxY == screen.maxY)
     #expect(frame.minY == visible.minY)
+
     let expectedX: CGFloat = position == .left ? visible.minX : visible.maxX - settings.width
+
     #expect(frame.minX == expectedX)
+
     settings.margin = .init(top: 8, bottom: 12)
     let inset = BarPlacement.frame(screenFrame: screen, visibleFrame: visible, settings: settings)
+
     #expect(inset.maxY == screen.maxY - 8)
     #expect(inset.minY == visible.minY + 12)
     #expect(
       try JSONDecoder().decode(BarSettings.self, from: Data("{}".utf8)).extendToTopEdge == false
     )
+
     for horizontal in [BarPosition.top, .bottom] {
       settings.position = horizontal
       let enabled = BarPlacement.frame(
@@ -37,10 +43,12 @@ struct BarPlacementTests {
         settings: settings
       )
       settings.extendToTopEdge = false
+
       #expect(
         enabled
           == BarPlacement.frame(screenFrame: screen, visibleFrame: visible, settings: settings)
       )
+
       settings.extendToTopEdge = true
     }
   }
@@ -63,13 +71,16 @@ struct BarPlacementTests {
         margin: .init(top: 10, bottom: 20, left: 6, right: 8)
       )
     )
+
     #expect(frame == CGRect(x: position == .left ? -1374 : -56, y: -180, width: 48, height: 846))
+
     let rightDock = CGRect(x: -1440, y: -200, width: 1380, height: 876)
     let besideDock = BarPlacement.frame(
       screenFrame: screen,
       visibleFrame: rightDock,
       settings: .init(position: position, width: 48)
     )
+
     #expect(besideDock.minX == (position == .left ? -1440 : -108))
     #expect(besideDock.maxY == rightDock.maxY)
   }
@@ -77,6 +88,7 @@ struct BarPlacementTests {
   @Test("side bars clamp width and excessive margins", arguments: [BarPosition.left, .right])
   func verticalClamping(position: BarPosition) {
     let screen = CGRect(x: 100, y: -200, width: 24, height: 100)
+
     #expect(
       BarPlacement.frame(
         screenFrame: screen,
@@ -84,6 +96,7 @@ struct BarPlacementTests {
         settings: .init(position: position, width: 96)
       ) == screen
     )
+
     let frame = BarPlacement.frame(
       screenFrame: screen,
       visibleFrame: screen,
@@ -92,6 +105,7 @@ struct BarPlacementTests {
         margin: .init(top: 4096, bottom: 4096, left: 4096, right: 4096)
       )
     )
+
     #expect(frame == CGRect(x: 123, y: -200, width: 1, height: 1))
   }
 
@@ -122,6 +136,7 @@ struct BarPlacementTests {
     let screen = CGRect(x: -1440, y: 100, width: 1440, height: 900)
     let visible = CGRect(x: -1440, y: 140, width: 1440, height: 836)
     let margin = BarMargin(top: 44, bottom: 12, left: 20, right: 30)
+
     #expect(
       BarPlacement.frame(
         screenFrame: screen,
@@ -147,6 +162,7 @@ struct BarPlacementTests {
       visibleFrame: screen,
       settings: .init(margin: .init(top: 4096, bottom: 4096, left: 4096, right: 4096))
     )
+
     #expect(frame == CGRect(x: 199, y: -200, width: 1, height: 1))
   }
 

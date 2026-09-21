@@ -68,6 +68,7 @@ struct SpacesProviderTests {
     )
 
     try await Task.sleep(for: .milliseconds(150))
+
     #expect(previousUpdates == 1)
     #expect(updates == 2)
 
@@ -78,6 +79,7 @@ struct SpacesProviderTests {
     )
 
     try await Task.sleep(for: .milliseconds(150))
+
     #expect(updates == 2)
   }
 }

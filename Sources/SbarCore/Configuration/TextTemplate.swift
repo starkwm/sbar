@@ -122,9 +122,11 @@ struct TextTemplate {
     path: String = "text"
   ) throws {
     var remaining = source[...]
+
     func fail(_ reason: String) -> ConfigurationError {
       .invalidValue(path: path, reason: reason)
     }
+
     func parse(closing: String? = nil, depth: Int = 0, inCollection: Bool = false) throws -> [Part]
     {
       guard depth <= 8 else { throw fail("Text sections may nest at most eight levels.") }
@@ -211,6 +213,7 @@ struct TextTemplate {
 
       return result
     }
+
     parts = try parse()
   }
 
@@ -224,6 +227,7 @@ struct TextTemplate {
     preserveField: (_ name: String, _ entry: Int?) -> Bool = { _, _ in false }
   ) -> [Run] {
     var runs: [Run] = []
+
     func append(
       _ text: String,
       entry: Int?,
@@ -244,6 +248,7 @@ struct TextTemplate {
         )
       }
     }
+
     func render(
       _ parts: [Part],
       values: [String: String],
@@ -307,6 +312,7 @@ struct TextTemplate {
         }
       }
     }
+
     render(parts, values: values)
 
     return runs

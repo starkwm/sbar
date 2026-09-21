@@ -33,6 +33,7 @@ struct RemovedTextSettings {
     let container = try decoder.container(keyedBy: Key.self)
     func reject(_ key: Key, in values: KeyedDecodingContainer<Key>) throws {
       guard values.contains(key) else { return }
+
       throw DecodingError.dataCorruptedError(
         forKey: key,
         in: values,
@@ -41,10 +42,13 @@ struct RemovedTextSettings {
       )
     }
     try reject(Key("label"), in: container)
+
     for provider in fields.keys.sorted() {
       let key = Key(provider)
       guard container.contains(key), try !container.decodeNil(forKey: key) else { continue }
+
       let nested = try container.nestedContainer(keyedBy: Key.self, forKey: key)
+
       for field in fields[provider] ?? [] { try reject(Key(field), in: nested) }
     }
   }

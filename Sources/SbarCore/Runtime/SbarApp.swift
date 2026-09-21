@@ -29,6 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
   func applicationDidFinishLaunching(_ notification: Notification) {
     coordinator.start()
+
     if coordinator.controlError != nil { NSApp.terminate(nil) }
   }
 

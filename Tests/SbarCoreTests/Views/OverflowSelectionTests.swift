@@ -12,6 +12,7 @@ struct OverflowSelectionTests {
       Item(id: "b", type: .text, style: ItemStyle(minWidth: 200)),
       Item(id: "c", type: .text),
     ]
+
     #expect(
       OverflowSelection.visibleItemIDs(
         items: items,
@@ -49,6 +50,7 @@ struct OverflowSelectionTests {
   func reservedWidths(style: ItemStyle, measuredWidth: CGFloat?) {
     var item = Item(id: "item", type: .text, style: style)
     let widths = measuredWidth.map { [item.id: $0] } ?? [:]
+
     #expect(
       OverflowSelection.visibleItemIDs(
         items: [item],
@@ -65,7 +67,9 @@ struct OverflowSelectionTests {
         spacing: 0
       ) == [item.id]
     )
+
     item.style = nil
+
     #expect(
       OverflowSelection.visibleItemIDs(
         items: [item],
@@ -80,6 +84,7 @@ struct OverflowSelectionTests {
   @Test("fixed widths override inherited minimums and stale measurements")
   func fixedWidthOverrides() {
     let item = Item(id: "item", type: .text, style: ItemStyle(width: 60))
+
     #expect(
       OverflowSelection.visibleItemIDs(
         items: [item],
@@ -94,6 +99,7 @@ struct OverflowSelectionTests {
   @Test("minimum widths allow larger labels and preserve overflow priorities")
   func minimumWidthGrowth() {
     let item = Item(id: "item", type: .text, style: ItemStyle(minWidth: 100))
+
     #expect(
       OverflowSelection.visibleItemIDs(
         items: [item],
@@ -102,7 +108,9 @@ struct OverflowSelectionTests {
         spacing: 0
       ).isEmpty
     )
+
     let other = Item(id: "other", type: .text, priority: 10, style: ItemStyle(width: 60))
+
     #expect(
       OverflowSelection.visibleItemIDs(
         items: [item, other],
@@ -131,13 +139,16 @@ struct OverflowSelectionTests {
     let items = [text, media, disabled]
     runtime.updateWidgetState(.media(MediaState()), for: .media)
     let displayed = items.filter { runtime.isVisible($0) }
+
     #expect(displayed.map(\.id) == [text.id])
+
     let selected = OverflowSelection.visibleItemIDs(
       items: displayed,
       lengths: [text.id: 100, media.id: CGFloat(measuredWidth), disabled.id: 200],
       available: 80,
       spacing: 10
     )
+
     #expect(selected == [text.id])
     #expect(selected.count == displayed.count)
 
@@ -150,6 +161,7 @@ struct OverflowSelectionTests {
       for: .media
     )
     let playing = items.filter { runtime.isVisible($0) }
+
     #expect(playing.map(\.id) == [text.id, media.id])
     #expect(
       OverflowSelection.visibleItemIDs(

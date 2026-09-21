@@ -12,13 +12,16 @@ struct TextTemplateConditionTests {
       fields: TextTemplate.fields(for: .vpn),
       allowedValues: TextTemplate.allowedValues(for: .vpn)
     )
+
     #expect(template.render(["status": "connected", "value": "VPN connected"]) == "Secure")
     #expect(template.render(["status": "connecting"]) == "Wait")
     #expect(
       template.render(["status": "disconnected", "value": "VPN disconnected"]) == "VPN disconnected"
     )
     #expect(template.render(["value": "Waiting"]) == "Waiting")
+
     let literal = try TextTemplate("{{# title = A song }}{{title}}{{/title}}", fields: ["title"])
+
     #expect(literal.render(["title": "A song"]) == "A song")
     #expect(literal.render(["title": "a song"]) == "")
   }
@@ -49,12 +52,14 @@ struct TextTemplateConditionTests {
   )
   func statusVocabulary(type: ItemType) throws {
     let allowed = TextTemplate.allowedValues(for: type)
+
     for status in try #require(allowed["status"]) {
       let template = try TextTemplate(
         "{{#status=\(status)}}yes{{/status}}",
         fields: TextTemplate.fields(for: type),
         allowedValues: allowed
       )
+
       #expect(template.render(["status": status]) == "yes")
     }
   }
@@ -62,13 +67,16 @@ struct TextTemplateConditionTests {
   @Test("battery and volume statuses use explicit precedence")
   func statuses() {
     let battery = Item(id: "battery", type: .battery)
+
     for (state, status) in [
       (WidgetState.battery(percentage: nil, charging: false, pluggedIn: true), "noBattery"),
       (.battery(percentage: 40, charging: true, pluggedIn: true), "charging"),
       (.battery(percentage: 100, charging: false, pluggedIn: true), "pluggedIn"),
       (.battery(percentage: 40, charging: false, pluggedIn: false), "onBattery"),
     ] { #expect(state.textValues(for: battery)["status"] == status) }
+
     let volume = Item(id: "volume", type: .volume)
+
     for (state, status) in [
       (WidgetState.volume(percentage: 40, muted: true, available: false), "unavailable"),
       (.volume(percentage: nil, muted: true, available: true), "muted"),
@@ -89,9 +97,11 @@ struct TextTemplateConditionTests {
       network: .init(interface: .wifi, hideWhenDisconnected: true)
     )
     let connection = try #require(runtime.presentation(for: wifi))
+
     #expect(connection.text == "No Wi-Fi")
     #expect(connection.hidden)
     #expect(connection.accessibilityLabel == "Wi-Fi disconnected")
+
     runtime.updateWidgetState(
       .audioDevice(
         .init(
@@ -108,6 +118,7 @@ struct TextTemplateConditionTests {
         "{{#status=disconnected}}No microphone{{/status}}{{^status=disconnected}}{{value}}{{/status}}",
       audioDevice: .init(device: .input)
     )
+
     #expect(runtime.presentation(for: mic)?.text == "No microphone")
     #expect(runtime.presentation(for: mic)?.accessibilityLabel == "No input")
   }

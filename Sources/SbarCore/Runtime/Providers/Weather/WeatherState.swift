@@ -18,6 +18,7 @@ struct WeatherState: Equatable, Sendable {
       "status": status, "value": "Weather unavailable",
     ]
     guard let reading else { return values }
+
     let fahrenheit = settings?.temperatureUnit == .fahrenheit
     func temperature(_ value: Double) -> String {
       Self.number(fahrenheit ? value * 1.8 + 32 : value)
@@ -25,12 +26,14 @@ struct WeatherState: Equatable, Sendable {
     let unit = fahrenheit ? "°F" : "°C"
     let windUnit: String
     let windFactor: Double
+
     switch settings?.windSpeedUnit ?? .kmh {
     case .kmh: (windUnit, windFactor) = ("km/h", 1)
     case .mph: (windUnit, windFactor) = ("mph", 1 / 1.609344)
     case .ms: (windUnit, windFactor) = ("m/s", 1 / 3.6)
     case .kn: (windUnit, windFactor) = ("kn", 1 / 1.852)
     }
+
     values.merge([
       "temperature": temperature(reading.temperature), "temperatureUnit": unit,
       "feelsLike": reading.apparentTemperature.map(temperature) ?? "",
@@ -41,12 +44,14 @@ struct WeatherState: Equatable, Sendable {
       "updatedAt": reading.time.ISO8601Format(),
       "value": "\(temperature(reading.temperature))\(unit)",
     ]) { _, new in new }
+
     return values
   }
 
   func presentation(for item: Item) -> WidgetPresentation {
     let values = textValues(settings: item.weather)
     let text = values["value"] ?? "Weather unavailable"
+
     return WidgetPresentation(
       text: text,
       symbol: item.weather?.showSymbol == false

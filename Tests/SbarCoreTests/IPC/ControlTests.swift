@@ -15,8 +15,11 @@ struct ControlTests {
     defer { server.stop() }
     let client = try SocketClient(path: path, serviceName: "sbar")
     try client.send(ControlRequest(command: "subscribe"))
+
     #expect(try client.receive(ControlResponse.self).ok)
+
     server.publish(ControlResponse(value: .string("changed")))
+
     #expect(try client.receive(ControlResponse.self).value == .string("changed"))
   }
 
@@ -34,14 +37,16 @@ struct ControlTests {
     defer { server.stop() }
     let client = try SocketClient(path: path, serviceName: "sbar")
     try client.send(ControlRequest(command: "stop"))
+
     #expect(try client.receive(ControlResponse.self).ok == ok)
+
     // Synchronise with the server queue so a failed reply cannot call onStop later.
     server.stop()
+
     #expect(stopped.wait(timeout: .now()) == (ok ? .success : .timedOut))
   }
 
   @MainActor
-
   @Test("ControlRouter.handle: retains file errors in diagnostics after runtime edits")
   func diagnostics() throws {
     let url = FileManager.default.temporaryDirectory.appending(
@@ -75,6 +80,7 @@ struct ControlTests {
     let response = router.handle(ControlRequest(command: "query", arguments: ["diagnostics"]))
     guard case .object(let values) = response.value else {
       Issue.record("Missing diagnostics")
+
       return
     }
 
@@ -84,6 +90,7 @@ struct ControlTests {
 
     guard case .array(let recent) = values["events"] else {
       Issue.record("Missing events")
+
       return
     }
 
@@ -94,7 +101,6 @@ struct ControlTests {
   }
 
   @MainActor
-
   @Test("ControlRouter.handle: validates transient edits and retains trigger payloads")
   func runtimeEdits() {
     let store = ConfigurationStore(

@@ -7,9 +7,11 @@ struct ItemStyleModifier: ViewModifier {
   private var font: Font {
     let size = style.fontSize ?? 13
     let weight = (style.fontWeight ?? .regular).swiftUIWeight
+
     if let family = style.fontFamily {
       return .custom(family, size: size).weight(weight)
     }
+
     return .system(size: size, weight: weight)
   }
 
@@ -30,6 +32,7 @@ struct ItemStyleModifier: ViewModifier {
           Color(hex: hovering ? style.hoverBackground ?? style.background : style.background)
             ?? .clear
         )
+
         if hovering && style.hoverBackground == nil {
           shape.fill(Color.primary.opacity(0.08))
         }
@@ -40,6 +43,7 @@ struct ItemStyleModifier: ViewModifier {
   @ViewBuilder
   private func sizedContent<StyledContent: View>(_ content: StyledContent) -> some View {
     let alignment = (style.alignment ?? .center).swiftUIAlignment
+
     if let width = style.width {
       content
         .lineLimit(1)

@@ -29,6 +29,7 @@ struct CPUProvider {
     let ticks =
       result == KERN_SUCCESS
       ? [info.cpu_ticks.0, info.cpu_ticks.1, info.cpu_ticks.2, info.cpu_ticks.3] : nil
+
     return record(ticks: ticks, at: Date.timeIntervalSinceReferenceDate)
   }
 
@@ -41,18 +42,24 @@ struct CPUProvider {
   mutating func record(ticks: [UInt32]?, at time: TimeInterval) -> CPUState {
     guard let ticks, ticks.count == 4 else {
       reset()
+
       return CPUState()
     }
+
     let elapsed = previousTime.map { time - $0 }
     let usage = Self.usage(previous: previousCPU, current: ticks)
     previousCPU = ticks
     previousTime = time
     guard let elapsed, elapsed > 0, elapsed <= 10, let usage else {
       samples = []
+
       return CPUState()
     }
+
     samples.append(usage * 100)
+
     if samples.count > 30 { samples.removeFirst(samples.count - 30) }
+
     return CPUState(samples: samples)
   }
 }

@@ -13,6 +13,7 @@ struct WorkspaceTextTests {
         "{{#workspaces}}{{name}}{{#separator}}{{#available}} · {{/available}}{{/separator}}{{/workspaces}}",
       spaces: .init(tints: .init(active: "#FFFFFF", inactive: "#888888"))
     )
+
     for active in [UInt64(1), 2, 3] {
       let state = SpacesState(
         displays: [
@@ -25,19 +26,24 @@ struct WorkspaceTextTests {
         focusedID: active
       )
       let result = state.presentation(for: item)
+
       #expect(result.text == "1 · 2 · 3")
       #expect(result.segments.count == 5)
+
       for index in [1, 3] {
         #expect(result.segments[index].text == " · ")
         #expect(result.segments[index].tint == "#888888")
         #expect(!result.segments[index].emphasized)
       }
+
       #expect(result.segments[(Int(active) - 1) * 2].emphasized)
     }
+
     let single = SpacesState(
       displays: [.init(identifier: "main", spaces: [.init(id: 1)], activeID: 1)],
       focusedID: 1
     )
+
     #expect(single.presentation(for: item).text == "1")
     #expect(SpacesState().presentation(for: item).text.isEmpty)
   }
@@ -55,12 +61,15 @@ struct WorkspaceTextTests {
         ["name": "Code", "active": "true"], ["name": "Web", "active": "false"],
       ]
     )
+
     #expect(runs.map(\.text) == ["[", "*Code, ", "Web", "]"])
     #expect(runs.map(\.entry) == [nil, 0, 1, nil])
+
     let fallback = try TextTemplate(
       "{{^workspaces}}{{value}}{{/workspaces}}",
       fields: TextTemplate.fields(for: .spaces)
     )
+
     #expect(fallback.render(["value": "Unavailable"]) == "Unavailable")
   }
 
@@ -113,9 +122,12 @@ struct WorkspaceTextTests {
       text: "{{id}}: {{name}}/{{total}} {{#active}}A{{/active}}{{#focused}}F{{/focused}}",
       spaces: .init(scope: .display, tints: .init(active: "#FFFFFF"))
     )
+
     #expect(state.presentation(for: item, displayUUID: "b").text == "spaces: 2/2 A")
+
     item.text = "{{#workspaces}}{{workspaceId}}:{{index}}{{^last}} | {{/last}}{{/workspaces}}"
     let result = state.presentation(for: item, displayUUID: "b")
+
     #expect(result.text == "20:1 | 30:2")
     #expect(result.segmentSpacing == 0)
     #expect(result.segments.map(\.emphasized) == [false, true])
@@ -136,11 +148,14 @@ struct WorkspaceTextTests {
       displays: [.init(identifier: "a", spaces: [.init(id: 10, fullscreen: true)], activeID: 10)],
       focusedID: 10
     )
+
     #expect(fullscreen.presentation(for: item).text == "Fullscreen")
     #expect(fullscreen.presentation(for: item).segments.isEmpty)
     #expect(SpacesState().presentation(for: item).text == "Spaces unavailable")
+
     var hidden = item
     hidden.text = "{{#workspaces}}{{#index=99}}{{name}}{{/index}}{{/workspaces}}"
+
     #expect(fullscreen.presentation(for: hidden).text.isEmpty)
     #expect(fullscreen.presentation(for: hidden).segments.isEmpty)
   }
@@ -162,8 +177,10 @@ struct WorkspaceTextTests {
         "{{#workspaces}}{{index}}={{#name=Code}}Dev{{/name}}{{^name=Code}}{{name}}{{/name}}{{^last}},{{/last}}{{/workspaces}}"
     )
     let result = aero.presentation(for: item, displayUUID: nil)
+
     #expect(result.text == "1=Web,2=Dev")
     #expect(result.segments.map(\.emphasized) == [false, true])
+
     let yabai = YabaiState(
       workspaces: [
         .init(
@@ -193,6 +210,7 @@ struct WorkspaceTextTests {
       type: .yabai,
       text: "{{#workspaces}}{{index}}:{{name}}/{{total}}{{^last}},{{/last}}{{/workspaces}}"
     )
+
     #expect(yabai.presentation(for: y, displayUUID: nil).text == "2:Code/2,4:4/2")
   }
 }

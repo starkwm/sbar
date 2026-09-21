@@ -6,6 +6,7 @@ struct VPNState: Equatable, Sendable {
 
   var status: VPNStatus {
     guard available else { return .unavailable }
+
     return [.unavailable, .connected, .connecting, .disconnecting].first { status in
       services.contains { $0.status == status }
     } ?? .disconnected
@@ -23,9 +24,11 @@ struct VPNState: Equatable, Sendable {
       available && !active.isEmpty
       ? active.map { service in
         let name = service.name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+
         return "\(name.isEmpty ? "VPN" : name) \(service.status.label)"
       }.joined(separator: ", ")
       : summary
+
     return WidgetPresentation(
       text: details,
       symbol: settings.showSymbol == false

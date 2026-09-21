@@ -62,15 +62,20 @@ struct ThemeTests {
     let config = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
     try config.validate()
     let theme = try #require(config.theme?.itemStyle)
+
     #expect(ItemStyle().resolved(over: theme).fontFamily == "Menlo")
+
     let style = try #require(config.items.right[0].style).resolved(over: theme)
+
     #expect(style.fontFamily == "Helvetica Neue")
     #expect(style.fontSize == 18)
     #expect(style.fontWeight == .bold)
+
     let inherited = try JSONDecoder().decode(
       ItemStyle.self,
       from: Data(#"{"fontFamily":null}"#.utf8)
     )
+
     #expect(inherited.resolved(over: theme).fontFamily == "Menlo")
     #expect(
       try JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(config)) == config
@@ -89,10 +94,13 @@ struct ThemeTests {
     try config.validate()
     let theme = try #require(config.theme?.itemStyle)
     let inherited = ItemStyle().resolved(over: theme)
+
     #expect(inherited.minWidth == 80)
     #expect(inherited.width == 120)
     #expect(inherited.alignment == .trailing)
+
     let style = try #require(config.items.right[0].style).resolved(over: theme)
+
     #expect(style.minWidth == 0)
     #expect(style.width == 120)
     #expect(style.alignment == .leading)
@@ -114,14 +122,17 @@ struct ThemeTests {
     let style = field == "minWidth" ? ItemStyle(minWidth: value) : ItemStyle(width: value)
     var config = Configuration.default
     config.items.right[1].style = style
+
     #expect(
       throws: ConfigurationError.invalidValue(
         path: "items.right[1].style.\(field)",
         reason: "Must be between 0.0 and 4096.0."
       )
     ) { try config.validate() }
+
     config.items.right[1].style = nil
     config.theme = Theme(itemStyle: style)
+
     #expect(
       throws: ConfigurationError.invalidValue(
         path: "theme.itemStyle.\(field)",
@@ -152,16 +163,19 @@ struct ThemeTests {
   func symbolWeight() throws {
     let theme = ItemStyle(fontWeight: .bold, symbolFontWeight: .medium)
     let inherited = ItemStyle(fontWeight: .regular).resolved(over: theme)
+
     #expect(inherited.fontWeight == .regular)
     #expect(inherited.symbolFontWeight == .medium)
     #expect(
       ItemStyle(symbolFontWeight: .semibold).resolved(over: theme).symbolFontWeight == .semibold
     )
     #expect(ItemStyle().resolved(over: ItemStyle(fontWeight: .bold)).symbolFontWeight == nil)
+
     let decoded = try JSONDecoder().decode(
       ItemStyle.self,
       from: Data(#"{"symbolFontWeight":"bold"}"#.utf8)
     )
+
     #expect(decoded.symbolFontWeight == .bold)
     #expect(
       try JSONDecoder().decode(ItemStyle.self, from: JSONEncoder().encode(decoded)) == decoded
@@ -177,13 +191,16 @@ struct ThemeTests {
     let item = try JSONDecoder().decode(ItemStyle.self, from: Data(json.utf8))
     let theme = ItemStyle(hoverTint: "#FFFFFF", hoverBackground: "#33445580")
     let resolved = item.resolved(over: theme)
+
     #expect(resolved.hoverTint == "#FFFFFF")
     #expect(resolved.hoverBackground == "#00000000")
     #expect(ItemStyle(hoverTint: "#112233").resolved(over: theme).hoverTint == "#112233")
     #expect(ItemStyle().resolved(over: theme).hoverBackground == "#33445580")
     #expect(ItemStyle().resolved(over: nil).hoverTint == nil)
     #expect(ItemStyle().resolved(over: nil).hoverBackground == nil)
+
     try resolved.validate(path: "style")
+
     #expect(
       try JSONDecoder().decode(ItemStyle.self, from: JSONEncoder().encode(resolved)) == resolved
     )
@@ -201,14 +218,17 @@ struct ThemeTests {
     )
     var config = Configuration.default
     config.items.right[1].style = style
+
     #expect(
       throws: ConfigurationError.invalidValue(
         path: "items.right[1].style.\(field)",
         reason: "Use #RRGGBB or #RRGGBBAA."
       )
     ) { try config.validate() }
+
     config.items.right[1].style = nil
     config.theme = Theme(itemStyle: style)
+
     #expect(
       throws: ConfigurationError.invalidValue(
         path: "theme.itemStyle.\(field)",

@@ -8,6 +8,7 @@ struct CPUState: Equatable, Sendable {
   func percentage(smoothingSamples: Int) -> Int? {
     let values = samples.suffix(min(30, max(1, smoothingSamples)))
     guard !values.isEmpty else { return nil }
+
     return Int((values.reduce(0, +) / Double(values.count)).rounded())
   }
 
@@ -16,6 +17,7 @@ struct CPUState: Equatable, Sendable {
     let percentage = percentage(smoothingSamples: settings.smoothingSamples ?? 1)
     let selected: WidgetSymbol?
     let tint: String?
+
     if let percentage {
       if percentage >= (settings.highThreshold ?? 85) {
         selected = settings.symbols?.high
@@ -31,6 +33,7 @@ struct CPUState: Equatable, Sendable {
       selected = settings.symbols?.unavailable
       tint = settings.tints?.unavailable
     }
+
     return WidgetPresentation(
       text: percentage.map { "CPU \($0)%" } ?? "CPU —",
       symbol: settings.showSymbol == false

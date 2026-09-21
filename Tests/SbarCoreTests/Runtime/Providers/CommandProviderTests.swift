@@ -13,22 +13,31 @@ struct CommandProviderTests {
       ##"{"text":"3 updates","symbol":"shippingbox.fill","tint":"#FFCC00","hidden":true}"##,
       configuration: settings
     )
+
     #expect(value.symbol == "shippingbox.fill")
+
     var item = Item(id: "cmd", type: .command, command: settings)
     let state = CommandState(status: .success, lastSuccess: value)
+
     #expect(state.presentation(for: item).hidden)
     #expect(state.presentation(for: item).tint == "#FFCC00")
+
     item.symbol = "star"
+
     #expect(state.presentation(for: item).symbol == "star")
+
     item.command?.showSymbol = false
 
     #expect(state.presentation(for: item).symbol == nil)
     #expect(state.presentation(for: item).text == "3 updates")
+
     let glyph = try CommandState.decode(
       #"{"text":"ok","symbol":{"glyph":"X","font":"Menlo","size":14}}"#,
       configuration: settings
     )
+
     #expect(glyph.symbol == .glyph("X", font: "Menlo", size: 14))
+
     for output in [
       "", "[]", "{}", #"{"text":2}"#, #"{"text":"x","tint":"red"}"#,
       #"{"text":"x","symbol":{"glyph":"X"}}"#,
@@ -49,10 +58,15 @@ struct CommandProviderTests {
       lastSuccess: CommandValue(text: "abc\ndefgh"),
       error: "failed"
     )
+
     #expect(state.presentation(for: item).text == "abc …")
+
     item.command?.onError = .show
+
     #expect(state.presentation(for: item).text == "fail…")
+
     item.command?.onError = .hide
+
     #expect(state.presentation(for: item).hidden)
     #expect(CommandState.displayText(" \n\t ", limit: 10) == "")
     #expect(CommandState.displayText("abc", limit: 1) == "…")
@@ -66,18 +80,21 @@ struct CommandProviderTests {
     ] {
       #expect(throws: ConfigurationError.self) { try command.validate(path: "command") }
     }
+
     #expect(throws: ConfigurationError.self) {
       try Configuration(
         bar: .init(),
         items: .init(right: [Item(id: "bad", type: .text, command: ShellCommand(script: "x"))])
       ).validate()
     }
+
     let command = ShellCommand(
       script: "x",
       format: .json,
       onError: .keepLast,
       symbols: CommandSymbols(success: .system("star"))
     )
+
     #expect(
       try JSONDecoder().decode(ShellCommand.self, from: JSONEncoder().encode(command)) == command
     )
@@ -111,6 +128,7 @@ struct CommandProviderTests {
     let runtime = ProviderRuntime()
     runtime.configure(Configuration(bar: .init(), items: .init(right: items)))
     defer { runtime.stop() }
+
     for _ in 0..<200
     where items.contains(where: {
       runtime.commandStates[$0.id]?.status == nil
@@ -118,6 +136,7 @@ struct CommandProviderTests {
     }) {
       try await Task.sleep(for: .milliseconds(10))
     }
+
     #expect(runtime.itemValues["stdout"] == "ok")
     #expect(runtime.itemValues["combined"] == "warning")
     #expect(runtime.itemValues["failure"] == "Exit 7: broken")
@@ -142,24 +161,33 @@ struct CommandProviderTests {
     let runtime = ProviderRuntime()
     runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
     defer { runtime.stop() }
+
     for _ in 0..<100 where runtime.commandStates[item.id]?.status != .success {
       try await Task.sleep(for: .milliseconds(10))
     }
+
     item.command?.maxLength = 3
     runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
+
     #expect(runtime.commandStates[item.id]?.status == .success)
     #expect(runtime.presentation(for: item)?.text == "re…")
+
     for _ in 0..<5 { runtime.trigger(item.id) }
     for _ in 0..<100 where runtime.commandStates[item.id]?.status != .failure {
       try await Task.sleep(for: .milliseconds(10))
     }
+
     #expect(runtime.commandStates[item.id]?.status == .failure)
     #expect(try String(contentsOf: file, encoding: .utf8) == "runrun")
     #expect(runtime.presentation(for: item)?.text == "re…")
+
     item.command?.onError = .show
     runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
+
     #expect(runtime.presentation(for: item)?.text == "Ex…")
+
     runtime.configure(Configuration(bar: .init(), items: .init()))
+
     #expect(runtime.commandStates.isEmpty)
   }
 
@@ -173,20 +201,27 @@ struct CommandProviderTests {
     let runtime = ProviderRuntime()
     runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
     defer { runtime.stop() }
+
     for _ in 0..<100 where runtime.commandStates[item.id]?.status != .failure {
       try await Task.sleep(for: .milliseconds(10))
     }
+
     #expect(runtime.itemValues[item.id] == "Command timed out.")
+
     item.command?.script = "printf recovered"
     runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
+
     for _ in 0..<100 where runtime.commandStates[item.id]?.status != .success {
       try await Task.sleep(for: .milliseconds(10))
     }
+
     #expect(runtime.itemValues[item.id] == "recovered")
+
     item.command?.script = "sleep 0.1; printf stale"
     runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
     runtime.configure(Configuration(bar: .init(), items: .init()))
     try await Task.sleep(for: .milliseconds(180))
+
     #expect(runtime.itemValues[item.id] == nil)
   }
 }

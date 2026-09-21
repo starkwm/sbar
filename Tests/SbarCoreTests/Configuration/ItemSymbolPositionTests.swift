@@ -17,9 +17,11 @@ struct ItemSymbolPositionTests {
 
     #expect(item.symbolPosition == .left)
     #expect(Item(id: "text", type: .text).symbolPosition == .left)
+
     let encoded = try #require(
       JSONSerialization.jsonObject(with: JSONEncoder().encode(item)) as? [String: Any]
     )
+
     #expect(encoded["symbolPosition"] as? String == "left")
   }
 
@@ -31,10 +33,12 @@ struct ItemSymbolPositionTests {
         "{\"id\":\"text\",\"type\":\"text\",\"symbolPosition\":\"\(position.rawValue)\"}".utf8
       )
     )
+
     #expect(item == Item(id: "text", type: .text, symbolPosition: position))
 
     let data = try JSONEncoder().encode(item)
     let encoded = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
     #expect(encoded["symbolPosition"] as? String == position.rawValue)
     #expect(try JSONDecoder().decode(Item.self, from: data) == item)
   }
@@ -56,6 +60,7 @@ struct ItemSymbolPositionTests {
       )
     )
     try configuration.validate()
+
     #expect(configuration.items.all.map(\.symbolPosition) == [.right, .left, .left, .right])
     #expect(
       try JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(configuration))
@@ -75,9 +80,11 @@ struct ItemSymbolPositionTests {
       ]}}
       """.utf8
     )
+
     #expect(throws: DecodingError.self) {
       try JSONDecoder().decode(Configuration.self, from: data)
     }
+
     do {
       _ = try JSONDecoder().decode(Configuration.self, from: data)
     } catch {

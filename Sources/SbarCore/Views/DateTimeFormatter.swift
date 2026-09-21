@@ -16,9 +16,11 @@ struct DateTimeFormatter {
     formatter.timeZone = timeZone
     formatter.dateStyle = style(dateStyle ?? .none)
     formatter.timeStyle = style(timeStyle ?? .short)
+
     if let format, !format.isEmpty {
       formatter.dateFormat = format
     }
+
     return formatter.string(from: date)
   }
 

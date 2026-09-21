@@ -74,15 +74,18 @@ struct PluginTests {
     try await Task.sleep(for: .milliseconds(100))
     mailbox.send(PluginInput(event: "refresh", value: nil))
     try await task.value
+
     #expect(messages.withLock { $0 } == ["received"])
   }
 
   @Test("PluginRunner.run: drains queued input through pipe backpressure", .timeLimit(.minutes(1)))
   func runDrainsQueuedInput() async throws {
     let mailbox = PluginMailbox()
+
     for _ in 0..<8 {
       mailbox.send(PluginInput(event: String(repeating: "x", count: 30_000), value: nil))
     }
+
     let messages = OSAllocatedUnfairLock(initialState: [String]())
     try await PluginRunner.run(
       configuration: .init(
@@ -95,6 +98,7 @@ struct PluginTests {
       ),
       mailbox: mailbox
     ) { value in messages.withLock { $0.append(value.text) } }
+
     #expect(messages.withLock { $0 } == ["drained"])
   }
 

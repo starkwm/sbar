@@ -17,18 +17,21 @@ struct Plugin: Codable, Equatable, Sendable {
         reason: "Must not be blank."
       )
     }
+
     if let maxLength, !(1...4096).contains(maxLength) {
       throw ConfigurationError.invalidValue(
         path: path + ".maxLength",
         reason: "Must be between 1 and 4096."
       )
     }
+
     try symbols?.validate(path: path + ".symbols")
     try tints?.validate(path: path + ".tints")
   }
 
   func sameExecution(as other: Self?) -> Bool {
     guard let other else { return false }
+
     return executable == other.executable && arguments == other.arguments
       && restart == other.restart
   }
