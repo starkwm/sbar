@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Centers content on unobstructed displays; beside a notch, center and right share the right-hand area.
+/// Centers the middle region. On notched displays, center and right share the area right of the notch.
 struct BarRegionLayout: Layout {
   static func lengths(available: CGFloat, centerIdeal: CGFloat, spacing: CGFloat = 10) -> [CGFloat]
   {
