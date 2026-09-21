@@ -47,7 +47,6 @@ struct AerospaceState: Equatable, Sendable {
       )
     }
     let label = current.name
-    let selected = rows
     func entry(_ row: AerospaceWorkspace) -> WorkspaceText.Entry {
       WorkspaceText.Entry(
         name: row.name,
@@ -62,7 +61,7 @@ struct AerospaceState: Equatable, Sendable {
         emphasized: row.focused
       )
     }
-    return WorkspaceText(current: entry(current), entries: selected.map(entry)).apply(
+    return WorkspaceText(current: entry(current), entries: rows.map(entry)).apply(
       to: WidgetPresentation(
         text: label,
         symbol: settings.showSymbol == false

@@ -104,22 +104,23 @@ final class ProviderRuntime {
   }
 
   func configure(_ configuration: Configuration) {
+    let items = configuration.items.active
     let disks = Dictionary(
-      uniqueKeysWithValues: configuration.items.active.filter { $0.type == .disk }.map {
+      uniqueKeysWithValues: items.filter { $0.type == .disk }.map {
         ($0.id, ($0.disk ?? DiskConfiguration()).resolvedPath)
       }
     )
     diskItems = disks
     diskStates = diskStates.filter { disks.values.contains($0.key) }
-    configureWeather(configuration.items.active.filter { $0.type == .weather })
-    configureRefresh(configuration.items.active)
-    configurePlugins(configuration.items.active.filter { $0.type == .plugin })
-    configureCommands(configuration.items.active.filter { $0.enabled && $0.type == .command })
+    configureWeather(items.filter { $0.type == .weather })
+    configureRefresh(items)
+    configurePlugins(items.filter { $0.type == .plugin })
+    configureCommands(items.filter { $0.type == .command })
 
-    let requested = Set(configuration.items.active.map(\.type)).subtracting([
+    let requested = Set(items.map(\.type)).subtracting([
       .command, .plugin, .text, .spacer, .divider, .group, .popup,
     ])
-    let mailInterval = configuration.items.active
+    let mailInterval = items
       .filter { $0.type == .mail }
       .map { ($0.mail ?? MailConfiguration()).resolvedPollInterval }
       .min()
@@ -653,11 +654,11 @@ final class ProviderRuntime {
 
     commandItems = items
     commandStates = commandStates.filter { ids.contains($0.key) }
-    itemValues = itemValues.filter { key, _ in (items + pluginItems).contains { $0.id == key } }
+    let valueIDs = ids.union(pluginItems.map(\.id))
+    itemValues = itemValues.filter { valueIDs.contains($0.key) }
 
     for item in items
-    where previous[item.id] == nil
-      || item.command?.sameExecution(as: previous[item.id]?.command) != true
+    where item.command?.sameExecution(as: previous[item.id]?.command) != true
       || previous[item.id]?.refresh != item.refresh
     {
       commandStates[item.id] = nil

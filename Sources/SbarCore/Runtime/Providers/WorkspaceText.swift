@@ -52,18 +52,19 @@ struct WorkspaceText {
     if runs.contains(where: { $0.entry != nil || $0.field != nil }) {
       if runs.contains(where: { $0.entry != nil }) { result.tint = nil }
 
+      let inactiveTint: String?
+
+      switch item.type {
+      case .spaces: inactiveTint = item.spaces?.tints?.inactive
+      case .aerospace: inactiveTint = item.aerospace?.tints?.inactive
+      case .yabai: inactiveTint = item.yabai?.tints?.inactive
+      default: inactiveTint = nil
+      }
+
       result.segmentSpacing = 0
       result.segments = runs.map { run in
         let entry = run.entry.map { entries[$0] }
         let nameSymbol = run.field == nil ? nil : (entry ?? current)?.nameSymbol
-        let inactiveTint: String?
-
-        switch item.type {
-        case .spaces: inactiveTint = item.spaces?.tints?.inactive
-        case .aerospace: inactiveTint = item.aerospace?.tints?.inactive
-        case .yabai: inactiveTint = item.yabai?.tints?.inactive
-        default: inactiveTint = nil
-        }
 
         return WidgetSegment(
           text: nameSymbol == nil ? run.text : "",
