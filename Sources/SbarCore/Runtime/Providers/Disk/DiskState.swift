@@ -23,9 +23,6 @@ struct DiskState: Equatable, Sendable {
     case .free: return ByteCountFormatter.string(fromByteCount: freeBytes, countStyle: .file)
     case .used: return ByteCountFormatter.string(fromByteCount: used, countStyle: .file)
     case .total: return ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)
-    case .usedTotal:
-      return
-        "\(ByteCountFormatter.string(fromByteCount: used, countStyle: .file)) / \(ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file))"
     case .percentage: return "\(Int((Double(used) / Double(totalBytes) * 100).rounded()))%"
     }
   }
@@ -59,5 +56,5 @@ struct DiskState: Equatable, Sendable {
 }
 
 enum DiskFormat: Sendable {
-  case free, used, total, usedTotal, percentage
+  case free, used, total, percentage
 }

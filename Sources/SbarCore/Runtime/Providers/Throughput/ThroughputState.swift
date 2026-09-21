@@ -1,7 +1,7 @@
 import Foundation
 
 struct ThroughputState: Equatable, Sendable {
-  static func format(_ bytesPerSecond: Double, unit: ThroughputUnit, showUnits: Bool = true)
+  static func format(_ bytesPerSecond: Double, unit: ThroughputUnit)
     -> String
   {
     let base: Double = unit == .bytes ? 1024 : 1000
@@ -24,7 +24,7 @@ struct ThroughputState: Equatable, Sendable {
       locale: Locale(identifier: "en_US_POSIX"),
       rounded
     )
-    return showUnits ? "\(number) \(units[index])" : number
+    return "\(number) \(units[index])"
   }
 
   var histories: [String: [ThroughputRate]] = [:]

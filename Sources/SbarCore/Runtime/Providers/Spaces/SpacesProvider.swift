@@ -39,10 +39,6 @@ final class SpacesProvider {
     )
   }()
 
-  static func label(displays: [[String: Any]], activeSpaceID: UInt64) -> String {
-    SpacesState.parse(displays: displays, activeSpaceID: activeSpaceID).text
-  }
-
   static func currentState() -> SpacesState {
     guard let api else { return SpacesState() }
     let connection = api.connection()
