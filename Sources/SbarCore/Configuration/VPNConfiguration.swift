@@ -34,15 +34,7 @@ struct VPNSymbols: Codable, Equatable, Sendable {
   var unavailable: WidgetSymbol?
 
   func validate(path: String) throws {
-    if let font, font.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-      throw ConfigurationError.invalidValue(path: "\(path).font", reason: "Must not be blank.")
-    }
-    if let size, !(8...72).contains(size) {
-      throw ConfigurationError.invalidValue(
-        path: "\(path).size",
-        reason: "Must be between 8 and 72."
-      )
-    }
+    try WidgetSymbol.validateDefaults(font: font, size: size, path: path)
     for status in VPNStatus.allCases {
       try symbol(for: status)?.validate(font: font, path: "\(path).\(status.rawValue)")
     }
