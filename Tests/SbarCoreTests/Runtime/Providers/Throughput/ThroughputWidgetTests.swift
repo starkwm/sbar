@@ -135,7 +135,6 @@ struct ThroughputWidgetTests {
     #expect(ThroughputState.format(1024 * 1024, unit: .bytes) == "1 MiB/s")
     #expect(ThroughputState.format(1023.99, unit: .bytes) == "1 KiB/s")
     #expect(ThroughputState.format(125_000, unit: .bits) == "1 Mbit/s")
-    #expect(ThroughputState.format(1536, unit: .bytes, showUnits: false) == "1.5")
   }
 
   @Test("direction visibility, glyphs, units, and overrides retain accessible rates")

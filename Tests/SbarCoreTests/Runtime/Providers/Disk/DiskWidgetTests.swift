@@ -18,9 +18,6 @@ struct DiskWidgetTests {
     #expect(state.value(format: .free) == formatted(200_000_000))
     #expect(state.value(format: .used) == formatted(800_000_000))
     #expect(state.value(format: .total) == formatted(1_000_000_000))
-    #expect(
-      state.value(format: .usedTotal) == "\(formatted(800_000_000)) / \(formatted(1_000_000_000))"
-    )
     #expect(DiskState(freeBytes: 871, totalBytes: 1000).value(format: .percentage) == "13%")
     #expect(DiskState(freeBytes: 0, totalBytes: 100).value(format: .percentage) == "100%")
     #expect(DiskState(freeBytes: 100, totalBytes: 100).value(format: .percentage) == "0%")
@@ -30,7 +27,7 @@ struct DiskWidgetTests {
     ] {
       #expect(!state.available)
       #expect(state.text == "Disk —")
-      for format in [DiskFormat.free, .used, .total, .usedTotal, .percentage] {
+      for format in [DiskFormat.free, .used, .total, .percentage] {
         #expect(state.value(format: format) == "—")
       }
     }

@@ -6,28 +6,28 @@ import Testing
 @Suite("SpacesProvider")
 @MainActor
 struct SpacesProviderTests {
-  @Test("label: numbers Spaces across displays including fullscreen Spaces")
+  @Test("numbers Spaces across displays including fullscreen Spaces")
   func labelNumbersSpacesAcrossDisplays() {
     let displays: [[String: Any]] = [
       ["Spaces": [["ManagedSpaceID": 10, "type": 0], ["ManagedSpaceID": 20, "type": 4]]],
       ["Spaces": [["ManagedSpaceID": 30, "type": 0]]],
     ]
 
-    #expect(SpacesProvider.label(displays: displays, activeSpaceID: 10) == "1")
-    #expect(SpacesProvider.label(displays: displays, activeSpaceID: 20) == "2")
-    #expect(SpacesProvider.label(displays: displays, activeSpaceID: 30) == "3")
+    #expect(SpacesState.parse(displays: displays, activeSpaceID: 10).text == "1")
+    #expect(SpacesState.parse(displays: displays, activeSpaceID: 20).text == "2")
+    #expect(SpacesState.parse(displays: displays, activeSpaceID: 30).text == "3")
   }
 
-  @Test("label: follows reordered Spaces without treating IDs as indexes")
+  @Test("follows reordered Spaces without treating IDs as indexes")
   func labelFollowsReorderedSpaces() {
     let displays: [[String: Any]] = [
       ["Spaces": [["ManagedSpaceID": 70], ["ManagedSpaceID": 10]]]
     ]
 
-    #expect(SpacesProvider.label(displays: displays, activeSpaceID: 10) == "2")
+    #expect(SpacesState.parse(displays: displays, activeSpaceID: 10).text == "2")
   }
 
-  @Test("label: ignores duplicate IDs and malformed entries")
+  @Test("ignores duplicate IDs and malformed entries")
   func labelIgnoresDuplicateAndMalformedEntries() {
     let displays: [[String: Any]] = [
       [:],
@@ -35,14 +35,14 @@ struct SpacesProviderTests {
       ["Spaces": [["ManagedSpaceID": 10], ["ManagedSpaceID": 20]]],
     ]
 
-    #expect(SpacesProvider.label(displays: displays, activeSpaceID: 20) == "2")
+    #expect(SpacesState.parse(displays: displays, activeSpaceID: 20).text == "2")
   }
 
-  @Test("label: reports unavailable for missing active Spaces")
+  @Test("reports unavailable for missing active Spaces")
   func labelReportsMissingActiveSpace() {
-    #expect(SpacesProvider.label(displays: [], activeSpaceID: 0) == "Spaces unavailable")
+    #expect(SpacesState.parse(displays: [], activeSpaceID: 0).text == "Spaces unavailable")
     #expect(
-      SpacesProvider.label(displays: [["Spaces": [["ManagedSpaceID": 10]]]], activeSpaceID: 20)
+      SpacesState.parse(displays: [["Spaces": [["ManagedSpaceID": 10]]]], activeSpaceID: 20).text
         == "Spaces unavailable"
     )
   }
