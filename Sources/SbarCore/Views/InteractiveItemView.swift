@@ -7,7 +7,7 @@ struct InteractiveItemView: View {
 
   var body: some View {
     if providers.isVisible(item, displayUUID: barDisplayUUID) {
-      decoratedContent
+      content
     }
   }
 
@@ -16,7 +16,12 @@ struct InteractiveItemView: View {
 
   @Environment(ProviderRuntime.self) private var providers
 
-  private var resolvedStyle: ItemStyle {
+  @Environment(ActionRunner.self) private var actions
+
+  @State private var hovering = false
+  @State private var showingPopup = false
+
+  private var style: ItemStyle {
     var style = (item.style ?? ItemStyle()).resolved(over: defaultStyle)
     if let tint = providers.presentation(for: item, displayUUID: barDisplayUUID)?.tint {
       style.tint = tint
@@ -24,12 +29,21 @@ struct InteractiveItemView: View {
     return style
   }
 
-  private var decoratedContent: some View {
+  private var itemView: some View {
+    BarItemView(
+      configuration: item,
+      symbolFontSize: style.fontSize ?? 13,
+      symbolFontWeight: style.symbolFontWeight,
+      tintOverride: hovering && interactive ? style.hoverTint : nil
+    )
+  }
+
+  private var content: some View {
     Group {
       if item.type == .group {
         let layout = barPosition.stack(spacing: item.itemSpacing ?? 4)
         layout {
-          ForEach(displayedChildren) { child in
+          ForEach(visibleChildren) { child in
             AnyView(
               InteractiveItemView(
                 item: child,
@@ -44,24 +58,14 @@ struct InteractiveItemView: View {
           if let action = item.primaryAction { actions.run(action) }
           if item.popup != nil || item.type == .popup { showingPopup.toggle() }
         } label: {
-          BarItemView(
-            configuration: item,
-            symbolFontSize: resolvedStyle.fontSize ?? 13,
-            symbolFontWeight: resolvedStyle.symbolFontWeight,
-            tintOverride: hovering && interactive ? resolvedStyle.hoverTint : nil
-          )
+          itemView
         }
         .buttonStyle(ItemButtonStyle())
       } else {
-        BarItemView(
-          configuration: item,
-          symbolFontSize: resolvedStyle.fontSize ?? 13,
-          symbolFontWeight: resolvedStyle.symbolFontWeight,
-          tintOverride: hovering && interactive ? resolvedStyle.hoverTint : nil
-        )
+        itemView
       }
     }
-    .modifier(ItemStyleModifier(style: resolvedStyle, hovering: hovering && interactive))
+    .modifier(ItemStyleModifier(style: style, hovering: hovering && interactive))
     .modifier(HitRegionModifier(enabled: tracksHitRegion))
     .contentShape(Rectangle())
     .onHover { hovering = $0 }
@@ -74,7 +78,7 @@ struct InteractiveItemView: View {
       VStack(alignment: .leading, spacing: 8) {
         if let popup = item.popup { Text(popup).textSelection(.enabled) }
 
-        ForEach(displayedChildren) { child in
+        ForEach(visibleChildren) { child in
           AnyView(
             InteractiveItemView(
               item: child,
@@ -96,12 +100,7 @@ struct InteractiveItemView: View {
     )
   }
 
-  @Environment(ActionRunner.self) private var actions
-
-  @State private var hovering = false
-  @State private var showingPopup = false
-
-  private var displayedChildren: [Item] {
+  private var visibleChildren: [Item] {
     (item.children ?? []).filter { providers.isVisible($0, displayUUID: barDisplayUUID) }
   }
 
