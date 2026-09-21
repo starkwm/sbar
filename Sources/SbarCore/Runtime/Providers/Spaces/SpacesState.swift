@@ -91,30 +91,24 @@ struct SpacesState: Equatable, Sendable {
 
     let visible = entries.filter { settings.includeFullscreen != false || !$0.fullscreen }
     let index = visible.firstIndex { $0.id == active }
+
     func name(at index: Int?) -> SpaceName? {
-      guard let index else { return nil }
+      guard let index, let names = settings.names, names.indices.contains(index) else { return nil }
 
-      if let names = settings.names, names.indices.contains(index),
-        let name = names[index]
-      {
-        return name
-      }
-
-      return nil
+      return names[index]
     }
-    func entry(_ space: SpaceEntry, index: Int?) -> WorkspaceText.Entry {
-      let override = name(at: index)
-      let label: String
-      let symbol: ItemSymbol?
 
-      switch override {
+    func entry(_ space: SpaceEntry, index: Int?) -> WorkspaceText.Entry {
+      var label = index.map { String($0 + 1) } ?? "Fullscreen"
+      var symbol: ItemSymbol?
+
+      switch name(at: index) {
       case .text(let text) where !text.isEmpty:
         label = text
-        symbol = nil
+      case .symbol(let value):
+        symbol = value
       default:
-        label = index.map { String($0 + 1) } ?? "Fullscreen"
-
-        if case .symbol(let value) = override { symbol = value } else { symbol = nil }
+        break
       }
 
       return WorkspaceText.Entry(
@@ -130,18 +124,19 @@ struct SpacesState: Equatable, Sendable {
         nameSymbol: symbol
       )
     }
-    let workspaceText = WorkspaceText(
-      current: entry(activeEntry, index: index),
+
+    let current = entry(activeEntry, index: index)
+    let text = WorkspaceText(
+      current: current,
       entries: visible.enumerated().map { entry($0.element, index: $0.offset) }
     )
-    let label = workspaceText.current?.name ?? "Fullscreen"
     let accessible =
-      index.map { "Space \(label), \($0 + 1) of \(visible.count)" }
+      index.map { "Space \(current.name), \($0 + 1) of \(visible.count)" }
       ?? (activeEntry.fullscreen ? "Fullscreen Space active" : "Spaces unavailable")
 
-    return workspaceText.apply(
+    return text.apply(
       to: WidgetPresentation(
-        text: label,
+        text: current.name,
         symbol: settings.showSymbol == false
           ? nil
           : item.symbol ?? settings.symbols?.resolve(settings.symbols?.available)

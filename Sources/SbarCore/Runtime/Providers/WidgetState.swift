@@ -85,11 +85,10 @@ enum WidgetState: Equatable, Sendable {
     case .network(let connection):
       let settings = item.network ?? NetworkConfiguration()
       let state = settings.interface.map { $0 == connection ? connection : .offline } ?? connection
-      let defaultLabel =
+      let label =
         settings.interface.map {
           "\($0 == .wifi ? "Wi-Fi" : $0.rawValue.capitalized) \(state == .offline ? "disconnected" : "connected")"
         } ?? state.text
-      let label = defaultLabel
       let symbol =
         item.symbol ?? settings.symbols?.resolve(state)
         ?? (state == .offline && settings.interface == .wifi ? "wifi.slash" : state.defaultSymbol)
