@@ -5,7 +5,7 @@ import Testing
 @Suite("ProcessRunner")
 struct ProcessRunnerTests {
   @Test("ProcessRunner.run: captures command output and exit status")
-  func runCapturesCommandOutputAndExitStatus() async throws {
+  func outputAndExitStatus() async throws {
     let result = try await ProcessRunner.run(
       executable: "/bin/sh",
       arguments: ["-c", "printf hello; exit 7"]
@@ -42,7 +42,7 @@ struct ProcessRunnerTests {
   }
 
   @Test("ProcessRunner.run: observes exit without waiting for inherited pipe writers")
-  func runObservesExitWithInheritedOutput() async throws {
+  func inheritedOutput() async throws {
     let start = ContinuousClock.now
     let result = try await ProcessRunner.run(
       executable: "/bin/sh",

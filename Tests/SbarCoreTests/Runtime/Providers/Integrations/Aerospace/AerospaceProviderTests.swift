@@ -136,16 +136,14 @@ struct AerospaceProviderTests {
     )
     runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
     defer { runtime.stop() }
-    try await Task.sleep(for: .milliseconds(120))
-    #expect(runtime.presentation(for: item)?.text == "Code")
+    try await waitUntil { runtime.presentation(for: item)?.text == "Code" }
     current.workspaces[0].focused = false
     current.workspaces[0].visible = false
     current.workspaces[1].focused = true
     current.workspaces[1].visible = true
     runtime.trigger("aero")
     #expect(runtime.presentation(for: item)?.text == "Code")
-    try await Task.sleep(for: .milliseconds(120))
-    #expect(runtime.presentation(for: item)?.text == "Web")
+    try await waitUntil { runtime.presentation(for: item)?.text == "Web" }
   }
 
   @Test("provider stdout excludes stderr while existing process callers retain merged output")

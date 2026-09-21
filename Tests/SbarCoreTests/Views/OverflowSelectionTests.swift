@@ -118,7 +118,7 @@ struct OverflowSelectionTests {
     arguments: [0, 200]
   )
   @MainActor
-  func hiddenItemsDoNotDisplaceVisibleContent(measuredWidth: Int) {
+  func hiddenItems(measuredWidth: Int) {
     let runtime = ProviderRuntime()
     let media = Item(
       id: "media",
@@ -162,7 +162,7 @@ struct OverflowSelectionTests {
   }
 
   @Test("OverflowSelection.visibleItemIDs: preserves priority under constrained width")
-  func visibleItemIDsPreservesPriorityUnderConstrainedWidth() {
+  func priority() {
     let items: [Item] = [
       .init(id: "a", type: .text), .init(id: "b", type: .text, priority: 10),
       .init(id: "c", type: .text),

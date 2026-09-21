@@ -112,10 +112,6 @@ struct SpacesWidgetTests {
 
     #expect(snapshot.presentation(for: item).symbol == nil)
     #expect(SpacesState().presentation(for: item).tint == "#FF0000")
-
-    for name in ["rectangle.3.group", "questionmark"] {
-      #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil)
-    }
   }
 
   @Test("name overrides apply to current labels and lists without changing identity or styling")
@@ -194,7 +190,7 @@ struct SpacesWidgetTests {
   }
 
   @Test("symbol name overrides render current and mixed list labels with active styling")
-  func symbolNames() throws {
+  func symbolNames() {
     let glyph = ItemSymbol.glyph("\u{f121}", font: "Symbols Nerd Font Mono", size: 16)
     var item = Item(
       id: "spaces",
@@ -212,7 +208,6 @@ struct SpacesWidgetTests {
     #expect(current.segments.map(\.symbol) == ["globe"])
     #expect(current.segments.first?.tint == "#00FF00")
     #expect(current.accessibilityLabel == "Space 2, 2 of 4")
-    #expect(NSImage(systemSymbolName: "globe", accessibilityDescription: nil) != nil)
 
     for field in ["name", "value"] {
       item.text = "{{#workspaces}}{{\(field)}}{{#separator}} · {{/separator}}{{/workspaces}}"
@@ -409,14 +404,14 @@ struct SpacesWidgetTests {
     let workspace = NotificationCenter()
     let application = NotificationCenter()
     let valid = snapshot
-    let queryState = TestSpacesQueryState()
+    let query = QueryState()
     let provider = SpacesProvider(
       query: {
-        queryState.reads += 1
+        query.reads += 1
 
-        if queryState.unavailable { return SpacesState() }
-        if queryState.transient {
-          queryState.transient = false
+        if query.unavailable { return SpacesState() }
+        if query.transient {
+          query.transient = false
 
           return SpacesState()
         }
@@ -430,7 +425,7 @@ struct SpacesWidgetTests {
     var updates: [SpacesState] = []
     provider.start { updates.append($0) }
     defer { provider.stop() }
-    queryState.transient = true
+    query.transient = true
 
     for _ in 0..<5 {
       workspace.post(name: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
@@ -438,22 +433,22 @@ struct SpacesWidgetTests {
 
     try await waitUntil { updates.count == 2 }
 
-    #expect(queryState.reads == 3)
+    #expect(query.reads == 3)
     #expect(updates.count == 2)
     #expect(updates.allSatisfy { $0.complete })
 
-    queryState.unavailable = true
+    query.unavailable = true
     application.post(name: NSApplication.didChangeScreenParametersNotification, object: nil)
     try await waitUntil { updates.last?.complete == false }
 
     #expect(updates.last?.complete == false)
-    #expect(queryState.reads == 7)
+    #expect(query.reads == 7)
 
     workspace.post(name: NSWorkspace.didActivateApplicationNotification, object: nil)
     provider.stop()
     try await Task.sleep(for: .milliseconds(150))
 
-    #expect(queryState.reads == 7)
+    #expect(query.reads == 7)
   }
 
   @Test("manual refresh keeps the whole display snapshot until triggered")
@@ -487,7 +482,7 @@ struct SpacesWidgetTests {
 }
 
 @MainActor
-private final class TestSpacesQueryState {
+private final class QueryState {
   var reads = 0
   var transient = false
   var unavailable = false

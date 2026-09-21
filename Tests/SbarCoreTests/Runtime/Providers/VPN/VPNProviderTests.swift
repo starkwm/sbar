@@ -56,10 +56,9 @@ struct VPNProviderTests {
     monitor.changed?()
     monitor.changed?()
     monitor.changed?()
-    try await Task.sleep(for: .milliseconds(150))
+    try await waitUntil { states.last == monitor.state }
     #expect(oldUpdates == 1)
     #expect(states.count == 2)
-    #expect(states.last == monitor.state)
     let reads = monitor.reads
     stale?()
     try await Task.sleep(for: .milliseconds(100))

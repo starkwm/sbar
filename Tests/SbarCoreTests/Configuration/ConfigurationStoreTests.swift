@@ -7,7 +7,7 @@ import Testing
 @Suite("ConfigurationStore")
 struct ConfigurationStoreTests {
   @Test("load: retains valid configuration and reports the coding path after an invalid reload")
-  func loadRetainsConfigurationAfterInvalidReload() throws {
+  func invalidReload() throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
     let url = directory.appending(path: "config.json")
@@ -33,7 +33,7 @@ struct ConfigurationStoreTests {
   }
 
   @Test("load: uses defaults when the configuration file is missing")
-  func loadUsesDefaultsWhenFileIsMissing() throws {
+  func missingFile() throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
     let store = ConfigurationStore(configurationURL: directory.appending(path: "missing.json"))
@@ -45,7 +45,7 @@ struct ConfigurationStoreTests {
   }
 
   @Test("ConfigurationValidator.validate: reports errors without writing the file")
-  func validateReportsErrorsWithoutWritingFile() throws {
+  func validation() throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
     let url = directory.appending(path: "config.json")
@@ -74,7 +74,7 @@ struct ConfigurationStoreTests {
   }
 
   @Test("configurationDidChange: notifies only for changed valid configurations")
-  func configurationDidChangeNotifiesOnlyForValidChanges() throws {
+  func changeNotifications() throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
     let url = directory.appending(path: "config.json")
