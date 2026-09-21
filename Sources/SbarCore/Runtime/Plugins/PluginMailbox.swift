@@ -1,6 +1,6 @@
 import Foundation
 
-/// A bounded cross-thread mailbox; the worker is the only reader.
+/// Queues up to 32 messages for the plugin worker. Callers may send from any thread.
 final class PluginMailbox: @unchecked Sendable {
   private let lock = NSLock()
   private var messages: [Data] = []
