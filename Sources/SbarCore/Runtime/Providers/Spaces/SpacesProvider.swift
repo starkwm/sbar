@@ -23,6 +23,7 @@ final class SpacesProvider {
       let displaySpaces = dlsym(handle, "SLSCopyManagedDisplaySpaces")
     else {
       dlclose(handle)
+
       return nil
     }
 
@@ -41,18 +42,22 @@ final class SpacesProvider {
 
   static func currentState() -> SpacesState {
     guard let api else { return SpacesState() }
+
     let connection = api.connection()
     guard let data = api.displaySpaces(connection)?.takeRetainedValue(),
       var displays = data as? [[String: Any]]
     else { return SpacesState() }
+
     if let currentSpace = api.currentSpace {
       for index in displays.indices {
         if let identifier = displays[index]["Display Identifier"] as? String {
           let current = currentSpace(connection, identifier as CFString)
+
           if current != 0 { displays[index]["Current Space"] = ["ManagedSpaceID": current] }
         }
       }
     }
+
     return SpacesState.parse(displays: displays, activeSpaceID: api.activeSpace(connection))
   }
 
@@ -82,8 +87,11 @@ final class SpacesProvider {
     self.update = update
     let initial = query()
     update(initial)
+
     if !initial.complete { scheduleRefresh() }
+
     let generation = generation
+
     for (center, name) in [
       (workspace, NSWorkspace.activeSpaceDidChangeNotification),
       (workspace, NSWorkspace.didActivateApplicationNotification),
@@ -92,6 +100,7 @@ final class SpacesProvider {
       let observer = center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
         MainActor.assumeIsolated {
           guard let self, self.generation == generation else { return }
+
           self.scheduleRefresh()
         }
       }
@@ -103,7 +112,9 @@ final class SpacesProvider {
     generation = UUID()
     refreshTask?.cancel()
     refreshTask = nil
+
     for (center, observer) in observers { center.removeObserver(observer) }
+
     observers = []
     update = nil
   }
@@ -114,9 +125,12 @@ final class SpacesProvider {
       do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
       for attempt in 0..<4 {
         guard let self, !Task.isCancelled else { return }
+
         let state = self.query()
+
         if state.complete || attempt == 3 {
           self.update?(state)
+
           return
         }
         do { try await Task.sleep(for: self.retryInterval) } catch { return }

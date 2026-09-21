@@ -26,6 +26,7 @@ struct ThroughputConfiguration: Codable, Equatable, Sendable {
         reason: "Must be between 1 and 30."
       )
     }
+
     try symbols?.validate(path: "\(path).symbols")
   }
 }
@@ -43,6 +44,7 @@ struct ThroughputSymbols: Codable, Equatable, Sendable {
 
   func validate(path: String) throws {
     try WidgetSymbol.validateDefaults(font: font, size: size, path: path)
+
     for (key, symbol) in [("download", download), ("upload", upload), ("unavailable", unavailable)]
     {
       try symbol?.validate(font: font, path: "\(path).\(key)")

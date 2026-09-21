@@ -56,6 +56,7 @@ struct Configuration: Codable, Equatable, Sendable {
     ] {
       try ItemStyle.validateNumber(value, range: 0...4096, path: "bar.margin.\(edge)")
     }
+
     try theme?.validate()
 
     var identifiers = Set<String>()
@@ -67,6 +68,7 @@ struct Configuration: Codable, Equatable, Sendable {
           reason: "An interval needs a duration."
         )
       }
+
       try ItemStyle.validateNumber(
         item.refresh?.seconds,
         range: 1...86400,
@@ -86,6 +88,7 @@ struct Configuration: Codable, Equatable, Sendable {
             reason: "This item has no text."
           )
         }
+
         _ = try TextTemplate(
           text,
           fields: TextTemplate.fields(for: item.type),
@@ -93,6 +96,7 @@ struct Configuration: Codable, Equatable, Sendable {
           path: "\(location).text"
         )
       }
+
       try item.plugin?.validate(path: "\(location).plugin")
 
       if item.type == .command && item.command == nil {
@@ -101,6 +105,7 @@ struct Configuration: Codable, Equatable, Sendable {
           reason: "Command settings are required."
         )
       }
+
       try item.command?.validate(path: "\(location).command")
 
       try item.yabai?.validate(path: "\(location).yabai")
@@ -112,12 +117,14 @@ struct Configuration: Codable, Equatable, Sendable {
       try item.memory?.validate(path: "\(location).memory")
       try item.cpu?.validate(path: "\(location).cpu")
       try item.network?.validate(path: "\(location).network")
+
       if item.type == .weather && item.weather == nil {
         throw ConfigurationError.invalidValue(
           path: "\(location).weather",
           reason: "Weather coordinates are required."
         )
       }
+
       try item.weather?.validate(path: "\(location).weather")
       try item.mail?.validate(path: "\(location).mail")
       try item.vpn?.validate(path: "\(location).vpn")
@@ -125,6 +132,7 @@ struct Configuration: Codable, Equatable, Sendable {
       try item.audioDevice?.validate(path: "\(location).audioDevice")
       try item.battery?.validate(path: "\(location).battery")
       try item.volume?.validate(path: "\(location).volume")
+
       if (item.plugin != nil && item.type != .plugin)
         || (item.command != nil && item.type != .command)
         || (item.battery != nil && item.type != .battery)
@@ -156,17 +164,20 @@ struct Configuration: Codable, Equatable, Sendable {
           reason: "Only group items support itemSpacing."
         )
       }
+
       try ItemStyle.validateNumber(
         item.itemSpacing,
         range: 0...96,
         path: "\(location).itemSpacing"
       )
+
       if item.childStyle != nil && item.type != .group {
         throw ConfigurationError.invalidValue(
           path: "\(location).childStyle",
           reason: "Only group items support childStyle."
         )
       }
+
       try item.childStyle?.validate(path: "\(location).childStyle")
       try item.style?.validate(path: "\(location).style")
 
@@ -193,9 +204,11 @@ struct Configuration: Codable, Equatable, Sendable {
           reason: "Groups may nest at most eight levels."
         )
       }
+
       for (index, item) in entries.enumerated() {
         let location = "\(path)[\(index)]"
         try validateItem(item, path: location)
+
         if let children = item.children {
           try validateItems(children, path: "\(location).children", depth: depth + 1)
         }

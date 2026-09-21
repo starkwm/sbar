@@ -24,6 +24,7 @@ struct RegionStyle: Codable, Equatable, Sendable {
   func validate(path: String) throws {
     try ItemStyle.validateColor(background, path: "\(path).background")
     try ItemStyle.validateColor(borderColor, path: "\(path).borderColor")
+
     for (name, value, maximum) in [
       ("cornerRadius", cornerRadius, 48.0),
       ("horizontalPadding", horizontalPadding, 96.0),

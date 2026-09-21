@@ -27,6 +27,7 @@ struct MediaSymbols: Codable, Equatable, Sendable {
 
   func validate(path: String) throws {
     try WidgetSymbol.validateDefaults(font: font, size: size, path: path)
+
     for (key, symbol) in [
       ("playing", playing), ("paused", paused), ("stopped", stopped), ("unavailable", unavailable),
     ] {

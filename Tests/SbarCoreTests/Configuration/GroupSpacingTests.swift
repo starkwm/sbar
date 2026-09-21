@@ -15,6 +15,7 @@ struct GroupSpacingTests {
       )
     )
     try Configuration(bar: .init(), items: .init(left: [item])).validate()
+
     #expect(item.itemSpacing == 0)
     #expect(item.childStyle?.horizontalPadding == 0)
     #expect(item.children?[0].itemSpacing == 2.5)
@@ -28,6 +29,7 @@ struct GroupSpacingTests {
       bar: .init(),
       items: .init(left: [Item(id: "group", type: .group, itemSpacing: spacing)])
     )
+
     if (0...96).contains(spacing) {
       try configuration.validate()
     } else {
@@ -43,13 +45,16 @@ struct GroupSpacingTests {
   @Test("validates child styles and rejects them on non-group items")
   func childStyleValidation() throws {
     let group = Item(id: "group", type: .group, childStyle: ItemStyle(horizontalPadding: -1))
+
     #expect(
       throws: ConfigurationError.invalidValue(
         path: "items.left[0].childStyle.horizontalPadding",
         reason: "Must be between 0.0 and 96.0."
       )
     ) { try Configuration(bar: .init(), items: .init(left: [group])).validate() }
+
     let text = Item(id: "text", type: .text, childStyle: ItemStyle(horizontalPadding: 0))
+
     #expect(
       throws: ConfigurationError.invalidValue(
         path: "items.left[0].childStyle",
@@ -64,6 +69,7 @@ struct GroupSpacingTests {
       bar: .init(),
       items: .init(left: [Item(id: "item", type: type, itemSpacing: 2)])
     )
+
     #expect(
       throws: ConfigurationError.invalidValue(
         path: "items.left[0].itemSpacing",

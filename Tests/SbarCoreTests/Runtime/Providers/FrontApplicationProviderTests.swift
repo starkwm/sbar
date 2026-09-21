@@ -14,15 +14,18 @@ struct FrontApplicationProviderTests {
     defer { provider.stop() }
     var updates: [FrontApplicationState] = []
     provider.start { updates.append($0) }
+
     #expect(updates.count == 1)
     #expect(updates.last?.name == NSRunningApplication.current.localizedName ?? "")
 
     source.application = nil
+
     #expect(updates.count == 2)
     #expect(updates.last?.name == "")
     #expect(updates.last?.icon == nil)
 
     source.application = .current
+
     #expect(updates.count == 3)
     #expect(updates.last?.name == NSRunningApplication.current.localizedName ?? "")
   }
@@ -45,21 +48,34 @@ struct FrontApplicationProviderTests {
     let second = NSImage(size: NSSize(width: 16, height: 16))
     runtime.updateFrontApplication(.init(name: "App", icon: first))
     runtime.trigger("app")
+
     #expect(runtime.applicationIcon(for: item) === first)
+
     runtime.updateFrontApplication(.init(name: "App", icon: second))
+
     #expect(runtime.applicationIcon(for: item) === first)
+
     runtime.trigger("app")
+
     #expect(runtime.applicationIcon(for: item) === second)
+
     var live = item
     live.refresh = nil
+
     #expect(runtime.applicationIcon(for: live) === second)
+
     live.frontApplication = nil
+
     #expect(runtime.applicationIcon(for: live) == nil)
+
     runtime.updateFrontApplication(.init(name: "", icon: nil))
     runtime.trigger("app")
+
     #expect(runtime.applicationIcon(for: item) == nil)
     #expect(runtime.itemSnapshots[item.id] == "")
+
     runtime.stop()
+
     #expect(runtime.frontApplication == nil)
     #expect(runtime.applicationSnapshots.isEmpty)
   }
@@ -109,6 +125,7 @@ struct FrontApplicationProviderTests {
     provider?.start { _ in updates += 1 }
     provider = nil
     source.application = .current
+
     #expect(updates == 1)
   }
 }

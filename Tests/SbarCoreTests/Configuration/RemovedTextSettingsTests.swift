@@ -50,7 +50,9 @@ struct RemovedTextSettingsTests {
   func migration(provider: String, field: String) throws {
     for value in [JSONValue.null, .bool(false)] {
       var item: [String: JSONValue] = ["id": .string("old"), "type": .string(provider)]
+
       if field == "label" { item[field] = value } else { item[provider] = .object([field: value]) }
+
       let json: JSONValue = .object([
         "schemaVersion": .number(1), "bar": .object([:]),
         "items": .object([
@@ -61,12 +63,14 @@ struct RemovedTextSettingsTests {
           ])
         ]),
       ])
+
       do {
         _ = try JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(json))
         Issue.record("Retired field was accepted: \(provider).\(field)")
       } catch {
         let message = ConfigurationStore.describe(error)
         let suffix = field == "label" ? field : "\(provider).\(field)"
+
         #expect(message.hasPrefix("items.left[0].children[0].\(suffix):"))
         #expect(message.contains("top-level 'text'"))
       }
@@ -90,6 +94,7 @@ struct RemovedTextSettingsTests {
         .utf8
     ).write(to: url)
     store.load()
+
     #expect(store.configuration == previous)
     #expect(store.errorMessage?.contains("items.right[0].cpu.showLabel") == true)
   }

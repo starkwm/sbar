@@ -22,6 +22,7 @@ struct BluetoothProviderTests {
     #expect(
       SystemBluetoothMonitor.status(.unauthorized, authorization: .allowedAlways) == .unauthorized
     )
+
     for state in [CBManagerState.unknown, .poweredOn, .poweredOff] {
       for authorization in [CBManagerAuthorization.denied, .restricted] {
         #expect(SystemBluetoothMonitor.status(state, authorization: authorization) == .unauthorized)
@@ -37,10 +38,13 @@ struct BluetoothProviderTests {
     defer { provider.stop() }
     var states: [BluetoothState] = []
     provider.start { states.append($0) }
+
     #expect(states.isEmpty)
+
     monitor.state = BluetoothState(status: .connected, devices: [.init(id: "1", name: "Keyboard")])
     monitor.changed?()
     try await waitUntil { states == [monitor.state] }
+
     #expect(states == [monitor.state])
   }
 
@@ -52,10 +56,13 @@ struct BluetoothProviderTests {
     defer { provider.stop() }
     var states: [BluetoothState] = []
     provider.start { states.append($0) }
+
     #expect(states == [BluetoothState()])
     #expect(monitor.reads == 0)
+
     monitor.canStart = true
     try await waitUntil { states.last == BluetoothState(status: .on) }
+
     #expect(monitor.starts == 2)
     #expect(states.last == BluetoothState(status: .on))
   }
@@ -75,18 +82,23 @@ struct BluetoothProviderTests {
     monitor.changed?()
     monitor.changed?()
     try await Task.sleep(for: .milliseconds(150))
+
     #expect(oldUpdates == 1)
     #expect(states.count == 2)
     #expect(states.last == monitor.state)
+
     let reads = monitor.reads
     stale?()
     try await Task.sleep(for: .milliseconds(100))
+
     #expect(monitor.reads == reads)
+
     let stopped = monitor.changed
     monitor.changed?()
     provider.stop()
     stopped?()
     try await Task.sleep(for: .milliseconds(100))
+
     #expect(monitor.reads == reads)
     #expect(states.count == 2)
     #expect(monitor.changed == nil)
@@ -110,23 +122,31 @@ struct BluetoothProviderTests {
     let configuration = Configuration(bar: .init(), items: .init(right: [event, manual, interval]))
     runtime.configure(configuration)
     runtime.configure(configuration)
+
     #expect(monitor.starts == 1)
     #expect(runtime.presentation(for: manual) == nil)
+
     monitor.state = BluetoothState(status: .connected, devices: [.init(id: "1", name: "Keyboard")])
     monitor.changed?()
     try await waitUntil { runtime.presentation(for: manual)?.text == "Keyboard connected" }
+
     #expect(runtime.presentation(for: manual)?.text == "Keyboard connected")
+
     monitor.state = BluetoothState(status: .connected, devices: [.init(id: "2", name: "Mouse")])
     monitor.changed?()
     try await waitUntil { runtime.sharedValues[.bluetooth] == "Mouse connected" }
+
     #expect(runtime.sharedValues[.bluetooth] == "Mouse connected")
     #expect(runtime.presentation(for: event)?.text == "Mouse connected")
     #expect(runtime.presentation(for: manual)?.text == "Keyboard connected")
     #expect(runtime.presentation(for: interval)?.text == "Keyboard connected")
+
     runtime.trigger(manual.id)
     runtime.trigger(interval.id)
+
     #expect(runtime.presentation(for: manual)?.text == "Mouse connected")
     #expect(runtime.presentation(for: interval)?.text == "Mouse connected")
+
     runtime.configure(
       Configuration(
         bar: .init(),
@@ -135,8 +155,11 @@ struct BluetoothProviderTests {
         ])
       )
     )
+
     #expect(monitor.changed == nil)
+
     runtime.configure(configuration)
+
     #expect(monitor.starts == 2)
   }
 }
@@ -152,11 +175,13 @@ private final class TestBluetoothMonitor: BluetoothMonitoring {
   func start(changed: @escaping @MainActor () -> Void) -> Bool {
     starts += 1
     self.changed = canStart ? changed : nil
+
     return canStart
   }
 
   func read() -> BluetoothState? {
     reads += 1
+
     return state
   }
 

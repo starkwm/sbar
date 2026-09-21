@@ -19,7 +19,6 @@ struct ProviderTests {
   }
 
   @MainActor
-
   @Test("ProviderRuntime.trigger: updates a manual clock snapshot only when triggered")
   func manualClock() async throws {
     let providers = ProviderRuntime()
@@ -32,9 +31,11 @@ struct ProviderTests {
 
     let initial = providers.itemDates["clock"]
     try await Task.sleep(for: .milliseconds(30))
+
     #expect(providers.itemDates["clock"] == initial)
 
     providers.trigger("clock")
+
     #expect(try #require(providers.itemDates["clock"]) > #require(initial))
   }
 

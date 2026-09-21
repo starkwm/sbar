@@ -11,9 +11,11 @@ struct NetworkWidgetTests {
   func hiddenLabel() throws {
     let item = Item(id: "net", type: .network, text: "")
     let runtime = ProviderRuntime()
+
     for connection in NetworkConnection.allCases {
       runtime.updateWidgetState(.network(connection), for: .network)
       let result = try #require(runtime.presentation(for: item))
+
       #expect(result.text.isEmpty)
       #expect(!result.accessibilityLabel.isEmpty)
       #expect(result.symbol == connection.defaultSymbol)
@@ -28,9 +30,11 @@ struct NetworkWidgetTests {
         type: .network,
         network: NetworkConfiguration(interface: interface, hideWhenDisconnected: true)
       )
+
       for connection in NetworkConnection.allCases {
         let result = WidgetState.network(connection).presentation(for: item)
         let connected = interface == connection
+
         #expect(result.hidden == !connected)
         #expect(result.text.hasSuffix(connected ? " connected" : " disconnected"))
         #expect(result.accessibilityLabel == result.text)
@@ -57,12 +61,15 @@ struct NetworkWidgetTests {
         )
       )
       let result = WidgetState.network(connection).presentation(for: item)
+
       #expect(result.text == connection.text)
       #expect(result.symbol == nil)
       #expect(result.tint == "#123456")
       #expect(result.accessibilityLabel == connection.text)
       #expect(result.hidden == (connection == .offline))
+
       item.network?.showSymbol = true
+
       #expect(WidgetState.network(connection).presentation(for: item).symbol == "star")
     }
   }
@@ -79,6 +86,7 @@ struct NetworkWidgetTests {
         try settings.validate(path: "network")
       }
     }
+
     #expect(throws: DecodingError.self) {
       try JSONDecoder().decode(Item.self, from: Data(#"{"id":"old","type":"wifi"}"#.utf8))
     }
@@ -102,14 +110,18 @@ struct NetworkWidgetTests {
       let item = try #require(configuration.items.active.first)
       runtime.updateWidgetState(.network(.wifi), for: .network)
       runtime.updateWidgetState(.network(.ethernet), for: .network)
+
       #expect(runtime.presentation(for: item)?.hidden == (mode == "event"))
+
       if mode == "manual" {
         #expect(runtime.presentation(for: item)?.text == "Wi-Fi connected")
         #expect(runtime.presentation(for: item)?.symbol == "wifi")
         #expect(runtime.presentation(for: item)?.tint == nil)
       }
+
       runtime.trigger("net")
       let result = try #require(runtime.presentation(for: item))
+
       #expect(result.hidden)
       #expect(result.text == "Unavailable")
       #expect(result.symbol == "wifi.slash")
@@ -150,12 +162,14 @@ struct NetworkWidgetTests {
           .utf8
       )
     )
+
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
     #expect(WidgetState.network(.wifi).presentation(for: item).symbol == "custom")
     #expect(
       WidgetState.network(.ethernet).presentation(for: item).symbol
         == .glyph("E", font: "Test", size: 18)
     )
+
     for connection in NetworkConnection.allCases {
       let state = WidgetState.network(connection)
       let defaults = Item(
@@ -163,10 +177,13 @@ struct NetworkWidgetTests {
         type: .network,
         network: NetworkConfiguration(symbols: NetworkSymbols())
       )
+
       #expect(state.presentation(for: defaults).symbol == connection.defaultSymbol)
+
       if case .system(let name) = connection.defaultSymbol {
         #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil)
       }
+
       #expect(
         state.presentation(for: Item(id: "net", type: .network)).symbol == connection.defaultSymbol
       )
@@ -191,6 +208,7 @@ struct NetworkWidgetTests {
         try settings.validate(path: "network")
       }
     }
+
     let configuration = Configuration(
       bar: .init(),
       items: .init(
@@ -199,6 +217,7 @@ struct NetworkWidgetTests {
         ]
       )
     )
+
     #expect(throws: ConfigurationError.self) { try configuration.validate() }
   }
 
@@ -220,13 +239,16 @@ struct NetworkWidgetTests {
       let item = try #require(configuration.items.active.first)
       runtime.updateWidgetState(.network(.ethernet), for: .network)
       runtime.updateWidgetState(.network(.cellular), for: .network)
+
       #expect(runtime.sharedValues[.network] == "Connected")
       #expect(
         runtime.presentation(for: item)?.symbol
           == (mode == "event"
             ? NetworkConnection.cellular.defaultSymbol : NetworkConnection.ethernet.defaultSymbol)
       )
+
       runtime.trigger("net")
+
       #expect(runtime.presentation(for: item)?.symbol == NetworkConnection.cellular.defaultSymbol)
     }
   }

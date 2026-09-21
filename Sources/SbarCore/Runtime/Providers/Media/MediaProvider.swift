@@ -30,6 +30,7 @@ final class MediaProvider {
     self.update = update
     update(state)
     let generation = generation
+
     for source in MediaSource.allCases {
       let token = playbackCenter.addObserver(
         forName: source.notificationName,
@@ -42,6 +43,7 @@ final class MediaProvider {
         }
         MainActor.assumeIsolated {
           guard let self, self.generation == generation else { return }
+
           self.sequence += 1
           self.state.players[source] = MediaPlayerState.parse(
             metadata,
@@ -54,6 +56,7 @@ final class MediaProvider {
       }
       observers.append(token)
     }
+
     let terminatedBundle = terminatedBundle
     terminationObserver = workspaceCenter.addObserver(
       forName: NSWorkspace.didTerminateApplicationNotification,
@@ -66,6 +69,7 @@ final class MediaProvider {
           let identifier,
           let source = MediaSource.allCases.first(where: { $0.bundleIdentifier == identifier })
         else { return }
+
         self.sequence += 1
         self.state.players[source] = MediaPlayerState(
           source: source,
@@ -79,9 +83,13 @@ final class MediaProvider {
 
   func stop() {
     generation = UUID()
+
     for observer in observers { playbackCenter.removeObserver(observer) }
+
     observers = []
+
     if let terminationObserver { workspaceCenter.removeObserver(terminationObserver) }
+
     terminationObserver = nil
     update = nil
     state = MediaState()

@@ -8,6 +8,7 @@ struct VPNConfiguration: Codable, Equatable, Sendable {
 
   func validate(path: String) throws {
     try symbols?.validate(path: "\(path).symbols")
+
     for (key, value) in tints ?? [:] {
       guard VPNStatus(rawValue: key) != nil else {
         throw ConfigurationError.invalidValue(
@@ -15,6 +16,7 @@ struct VPNConfiguration: Codable, Equatable, Sendable {
           reason: "Unknown VPN status."
         )
       }
+
       try ItemStyle.validateColor(value, path: "\(path).tints.\(key)")
     }
   }
@@ -35,6 +37,7 @@ struct VPNSymbols: Codable, Equatable, Sendable {
 
   func validate(path: String) throws {
     try WidgetSymbol.validateDefaults(font: font, size: size, path: path)
+
     for status in VPNStatus.allCases {
       try symbol(for: status)?.validate(font: font, path: "\(path).\(status.rawValue)")
     }
@@ -63,6 +66,7 @@ extension VPNSymbols {
         .init(codingPath: decoder.codingPath, debugDescription: "Unknown VPN symbol key.")
       )
     }
+
     let container = try decoder.container(keyedBy: CodingKeys.self)
     font = try container.decodeIfPresent(String.self, forKey: .font)
     size = try container.decodeIfPresent(Double.self, forKey: .size)

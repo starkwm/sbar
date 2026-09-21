@@ -14,6 +14,7 @@ struct MediaState: Equatable, Sendable {
         if $0.status.priority != $1.status.priority {
           return $0.status.priority < $1.status.priority
         }
+
         return $0.sequence < $1.sequence
       }
     }
@@ -26,6 +27,7 @@ struct MediaState: Equatable, Sendable {
     let fallback: String
     let symbol: ItemSymbol
     let selectedSymbol: WidgetSymbol?
+
     switch status {
     case .playing:
       fallback = "Playing"
@@ -44,11 +46,13 @@ struct MediaState: Equatable, Sendable {
       symbol = "questionmark"
       selectedSymbol = settings.symbols?.unavailable
     }
+
     let metadata = [player?.title ?? "", player?.artist ?? ""].filter { !$0.isEmpty }
     let label =
       ([player?.source.name ?? "", status == .unknown ? fallback : status.rawValue.capitalized]
       + metadata)
       .filter { !$0.isEmpty }.joined(separator: ", ")
+
     return WidgetPresentation(
       text: metadata.isEmpty ? fallback : metadata.joined(separator: " — "),
       symbol: settings.showSymbol == false
@@ -99,9 +103,11 @@ struct MediaPlayerState: Equatable, Sendable {
     guard status == .playing || status == .paused else {
       return Self(source: source, status: status, sequence: sequence)
     }
+
     let title = info?["Name"]?.trimmingCharacters(in: .whitespacesAndNewlines)
     let artist = info?["Artist"]?.trimmingCharacters(in: .whitespacesAndNewlines)
     let sameTrack = title == previous?.title || (status == .paused && title == nil)
+
     return Self(
       source: source,
       status: status,

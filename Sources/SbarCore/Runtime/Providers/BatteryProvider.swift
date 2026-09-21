@@ -25,6 +25,7 @@ final class BatteryProvider {
 
   func stop() {
     if let source { CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes) }
+
     source = nil
     update = nil
   }
@@ -51,6 +52,7 @@ final class BatteryProvider {
           pluggedIn: pluggedIn
         )
       )
+
       return
     }
 

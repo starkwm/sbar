@@ -18,12 +18,14 @@ struct CPUConfiguration: Codable, Equatable, Sendable {
           "CPU thresholds must be between 0 and 100, with warningThreshold below highThreshold."
       )
     }
+
     if let smoothingSamples, !(1...30).contains(smoothingSamples) {
       throw ConfigurationError.invalidValue(
         path: "\(path).smoothingSamples",
         reason: "Must be between 1 and 30."
       )
     }
+
     try symbols?.validate(path: "\(path).symbols")
     try tints?.validate(path: "\(path).tints")
   }
@@ -39,6 +41,7 @@ struct CPUSymbols: Codable, Equatable, Sendable {
 
   func validate(path: String) throws {
     try WidgetSymbol.validateDefaults(font: font, size: size, path: path)
+
     for (key, symbol) in [
       ("low", low), ("medium", medium), ("high", high), ("unavailable", unavailable),
     ] {

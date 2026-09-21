@@ -14,6 +14,7 @@ struct BarRegionLayoutTests {
       notch: CGRect(x: 10, y: 0, width: 20, height: 20),
       isVertical: true
     )
+
     #expect(
       frames == [
         CGRect(x: 8, y: 12, width: 48, height: 90),
@@ -21,13 +22,16 @@ struct BarRegionLayoutTests {
         CGRect(x: 8, y: 222, width: 48, height: 90),
       ]
     )
+
     let noCenter = BarRegionLayout.frames(
       in: bounds,
       hasCenter: false,
       notch: nil,
       isVertical: true
     )
+
     #expect(noCenter.map(\.height) == [150, 0, 150])
+
     for height in [0.0, 1.0, 10.0] {
       let small = BarRegionLayout.frames(
         in: CGRect(x: 0, y: 0, width: 32, height: height),
@@ -35,6 +39,7 @@ struct BarRegionLayoutTests {
         notch: nil,
         isVertical: true
       )
+
       #expect(small.allSatisfy { $0.minY >= 0 && $0.maxY <= height && $0.height >= 0 })
     }
   }

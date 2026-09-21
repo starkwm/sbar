@@ -40,6 +40,7 @@ struct ProcessRunner {
   {
     var descriptors: [Int32] = [0, 0]
     guard pipe(&descriptors) == 0 else { throw ProcessError.launch(errno) }
+
     defer {
       close(descriptors[0])
       close(descriptors[1])
@@ -54,11 +55,13 @@ struct ProcessRunner {
     defer { posix_spawn_file_actions_destroy(&actions) }
     posix_spawn_file_actions_addopen(&actions, STDIN_FILENO, "/dev/null", O_RDONLY, 0)
     posix_spawn_file_actions_adddup2(&actions, descriptors[1], STDOUT_FILENO)
+
     if mergeStandardError {
       posix_spawn_file_actions_adddup2(&actions, descriptors[1], STDERR_FILENO)
     } else {
       posix_spawn_file_actions_addopen(&actions, STDERR_FILENO, "/dev/null", O_WRONLY, 0)
     }
+
     posix_spawn_file_actions_addclose(&actions, descriptors[0])
     posix_spawn_file_actions_addclose(&actions, descriptors[1])
 
@@ -91,6 +94,7 @@ struct ProcessRunner {
     defer {
       // Includes shell children that inherited the command's process group.
       kill(-pid, SIGKILL)
+
       if !finished { while waitpid(pid, &status, 0) < 0 && errno == EINTR {} }
     }
 
@@ -102,17 +106,21 @@ struct ProcessRunner {
       if ContinuousClock.now >= deadline { throw ProcessError.timeout }
 
       let count = outputClosed ? 0 : read(descriptors[0], &buffer, buffer.count)
+
       if count == 0 { outputClosed = true }
       if count < 0 && errno != EAGAIN && errno != EINTR { throw ProcessError.launch(errno) }
       if count > 0 {
         output.append(contentsOf: buffer.prefix(count))
+
         if output.count > 65_536 { throw ProcessError.outputLimit }
+
         continue
       }
 
       if !finished {
         let waited = waitpid(pid, &status, WNOHANG)
         finished = waited == pid
+
         if waited < 0 && errno != EINTR { throw ProcessError.launch(errno) }
       }
 
@@ -128,6 +136,7 @@ struct ProcessRunner {
       }
 
       if Task.isCancelled { throw ProcessError.cancelled }
+
       try events.wait(
         read: outputClosed ? nil : descriptors[0],
         timeout: ContinuousClock.now.duration(to: deadline)

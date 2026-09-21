@@ -14,9 +14,11 @@ struct BluetoothState: Equatable, Sendable {
       status == .connected && !devices.isEmpty
       ? devices.sorted { $0.name == $1.name ? $0.id < $1.id : $0.name < $1.name }.map { device in
         let name = device.name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+
         return "\(name.isEmpty ? "Unnamed device" : name) \(label)"
       }.joined(separator: ", ")
       : summary
+
     return WidgetPresentation(
       text: details,
       symbol: settings.showSymbol == false

@@ -8,6 +8,7 @@ struct BarBackgroundView: NSViewRepresentable {
     view.blendingMode = .behindWindow
     // The bar never becomes key, including after a Space transition.
     view.state = .active
+
     return view
   }
 

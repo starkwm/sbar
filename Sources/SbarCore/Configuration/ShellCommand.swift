@@ -15,7 +15,9 @@ struct ShellCommand: Codable, Equatable, Sendable {
     guard !script.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
       throw ConfigurationError.invalidValue(path: path + ".script", reason: "Must not be blank.")
     }
+
     try ItemStyle.validateNumber(timeout, range: 0.1...60, path: path + ".timeout")
+
     if let maxLength, !(1...4096).contains(maxLength) {
       throw ConfigurationError.invalidValue(
         path: path + ".maxLength",
@@ -28,12 +30,14 @@ struct ShellCommand: Codable, Equatable, Sendable {
         reason: "JSON output requires stdout."
       )
     }
+
     try symbols?.validate(path: path + ".symbols")
     try tints?.validate(path: path + ".tints")
   }
 
   func sameExecution(as other: Self?) -> Bool {
     guard let other else { return false }
+
     return script == other.script && timeout == other.timeout && output == other.output
       && format == other.format
   }

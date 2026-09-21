@@ -34,12 +34,16 @@ final class AudioDeviceProvider {
 
   private func refresh() {
     guard let update else { return }
+
     var required = Set(AudioDeviceProperty.systemProperties)
     var observing = true
+
     for property in required {
       if !observe(property) { observing = false }
     }
+
     let state: AudioDeviceState
+
     if observing {
       state = AudioDeviceState(
         output: read(.output, required: &required),
@@ -51,7 +55,9 @@ final class AudioDeviceProvider {
     for property in observers.keys.filter({ !required.contains($0) }) {
       observers.removeValue(forKey: property)?()
     }
+
     update(state)
+
     if state.output.status == .unavailable || state.input.status == .unavailable {
       scheduleRefresh(after: retryInterval)
     }
@@ -65,6 +71,7 @@ final class AudioDeviceProvider {
       ? kAudioHardwarePropertyDefaultInputDevice : kAudioHardwarePropertyDefaultOutputDevice
     guard let device = access.readUInt32(.init(selector: selector)) else { return .init() }
     guard device != kAudioObjectUnknown else { return .init(status: .disconnected) }
+
     let alive = AudioDeviceProperty(object: device, selector: kAudioDevicePropertyDeviceIsAlive)
     let name = AudioDeviceProperty(object: device, selector: kAudioObjectPropertyName)
     required.formUnion([alive, name])
@@ -74,11 +81,13 @@ final class AudioDeviceProvider {
     }
     guard isAlive != 0 else { return .init(status: .disconnected) }
     guard let value = access.readName(device) else { return .init() }
+
     return AudioDeviceEndpoint(status: .available, id: device, name: value)
   }
 
   private func observe(_ property: AudioDeviceProperty) -> Bool {
     if observers[property] != nil { return true }
+
     let generation = generation
     guard
       let cancel = access.observe(
@@ -87,16 +96,20 @@ final class AudioDeviceProvider {
           guard let self, self.generation == generation, self.observers[property] != nil else {
             return
           }
+
           if property.selector == kAudioHardwarePropertyServiceRestarted {
             // Core Audio discards device IDs and listeners when its service restarts.
             self.generation = UUID()
             self.removeObservers()
           }
+
           self.scheduleRefresh()
         }
       )
     else { return false }
+
     observers[property] = cancel
+
     return true
   }
 
@@ -104,7 +117,9 @@ final class AudioDeviceProvider {
     refreshTask?.cancel()
     refreshTask = Task { [weak self] in
       do { try await Task.sleep(for: delay) } catch { return }
+
       guard let self, !Task.isCancelled else { return }
+
       self.refreshTask = nil
       self.refresh()
     }
@@ -113,6 +128,7 @@ final class AudioDeviceProvider {
   private func removeObservers() {
     let cancellations = Array(observers.values)
     observers.removeAll()
+
     for cancel in cancellations { cancel() }
   }
 }
@@ -155,6 +171,7 @@ private final class SystemAudioDeviceAccess: AudioDeviceAccess {
       AudioObjectGetPropertyData(property.object, &address, 0, nil, &size, &value) == noErr,
       size == MemoryLayout<UInt32>.size
     else { return nil }
+
     return value
   }
 
@@ -166,6 +183,7 @@ private final class SystemAudioDeviceAccess: AudioDeviceAccess {
       AudioObjectGetPropertyData(device, &address, 0, nil, &size, &value) == noErr,
       let value
     else { return nil }
+
     // kAudioObjectPropertyName transfers ownership of its CFString to the caller.
     return value.takeRetainedValue() as String
   }
@@ -179,6 +197,7 @@ private final class SystemAudioDeviceAccess: AudioDeviceAccess {
     }
     guard AudioObjectAddPropertyListenerBlock(property.object, &address, .main, listener) == noErr
     else { return nil }
+
     return {
       var address = property.address
       AudioObjectRemovePropertyListenerBlock(property.object, &address, .main, listener)

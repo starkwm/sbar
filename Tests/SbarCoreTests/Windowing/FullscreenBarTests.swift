@@ -22,10 +22,13 @@ struct FullscreenBarTests {
       ],
       focusedID: 3
     )
+
     #expect(state.isFullscreen(displayUUID: "DISPLAY-A"))
     #expect(!state.isFullscreen(displayUUID: "display-b"))
+
     state.displays[0].activeID = 1
     state.displays[1].activeID = 4
+
     #expect(!state.isFullscreen(displayUUID: "display-a"))
     #expect(state.isFullscreen(displayUUID: "display-b"))
   }
@@ -35,9 +38,11 @@ struct FullscreenBarTests {
     let state = SpacesState(displays: [
       SpaceDisplay(identifier: "main", spaces: [SpaceEntry(id: 10, fullscreen: true)], activeID: 10)
     ])
+
     #expect(state.isFullscreen(displayUUID: "display-a"))
     #expect(state.isFullscreen(displayUUID: "display-b"))
     #expect(!SpacesState().isFullscreen(displayUUID: "display-a"))
+
     let unknown = SpacesState(displays: [
       SpaceDisplay(
         identifier: "display-a",
@@ -45,6 +50,7 @@ struct FullscreenBarTests {
         activeID: nil
       )
     ])
+
     #expect(!unknown.isFullscreen(displayUUID: "display-a"))
     #expect(!unknown.isFullscreen(displayUUID: "unmatched"))
   }
@@ -54,6 +60,7 @@ struct FullscreenBarTests {
   func panelBehavior() {
     let panel = BarPanel(contentRect: CGRect(x: 0, y: 0, width: 32, height: 100))
     defer { panel.close() }
+
     #expect(panel.collectionBehavior.contains(.fullScreenNone))
     #expect(!panel.collectionBehavior.contains(.fullScreenAuxiliary))
     #expect(panel.collectionBehavior.contains(.canJoinAllSpaces))

@@ -73,6 +73,7 @@ final class ControlRouter {
 
       case "reload":
         store.load()
+
         if let error = store.errorMessage { return ControlResponse(ok: false, error: error) }
 
         return ControlResponse()
@@ -124,6 +125,7 @@ final class ControlRouter {
 
             if var children = items[index].children, try update(&children) {
               items[index].children = children
+
               return true
             }
           }

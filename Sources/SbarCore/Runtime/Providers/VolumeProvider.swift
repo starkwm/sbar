@@ -17,6 +17,7 @@ final class VolumeProvider {
     for (object, var address, listener) in audioListeners {
       AudioObjectRemovePropertyListenerBlock(object, &address, .main, listener)
     }
+
     audioListeners.removeAll()
     update = nil
   }
@@ -27,6 +28,7 @@ final class VolumeProvider {
     for (object, var address, listener) in audioListeners {
       AudioObjectRemovePropertyListenerBlock(object, &address, .main, listener)
     }
+
     audioListeners.removeAll()
 
     var device = AudioDeviceID(0)
@@ -58,6 +60,7 @@ final class VolumeProvider {
 
     guard device != 0 else {
       update?(.volume(percentage: nil, muted: false, available: false))
+
       return
     }
 
@@ -73,6 +76,7 @@ final class VolumeProvider {
       let listener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
         Task { @MainActor [weak self] in self?.updateVolume(device) }
       }
+
       if AudioObjectAddPropertyListenerBlock(device, &property, .main, listener) == noErr {
         audioListeners.append((device, property, listener))
       }
@@ -91,11 +95,14 @@ final class VolumeProvider {
       mElement: kAudioObjectPropertyElementMain
     )
     var result = AudioObjectGetPropertyData(device, &address, 0, nil, &size, &volume)
+
     if result != noErr {
       var channels: [Float32] = []
+
       for element: UInt32 in [1, 2] {
         address.mElement = element
         var channel: Float32 = 0
+
         if AudioObjectGetPropertyData(device, &address, 0, nil, &size, &channel) == noErr {
           channels.append(channel)
         }

@@ -8,6 +8,7 @@ struct BluetoothConfiguration: Codable, Equatable, Sendable {
 
   func validate(path: String) throws {
     try symbols?.validate(path: "\(path).symbols")
+
     for (key, value) in tints ?? [:] {
       guard BluetoothStatus(rawValue: key) != nil else {
         throw ConfigurationError.invalidValue(
@@ -15,6 +16,7 @@ struct BluetoothConfiguration: Codable, Equatable, Sendable {
           reason: "Unknown Bluetooth status."
         )
       }
+
       try ItemStyle.validateColor(value, path: "\(path).tints.\(key)")
     }
   }
@@ -35,6 +37,7 @@ struct BluetoothSymbols: Codable, Equatable, Sendable {
 
   func validate(path: String) throws {
     try WidgetSymbol.validateDefaults(font: font, size: size, path: path)
+
     for status in BluetoothStatus.allCases {
       try symbol(for: status)?.validate(font: font, path: "\(path).\(status.rawValue)")
     }
@@ -63,6 +66,7 @@ extension BluetoothSymbols {
         .init(codingPath: decoder.codingPath, debugDescription: "Unknown Bluetooth symbol key.")
       )
     }
+
     let container = try decoder.container(keyedBy: CodingKeys.self)
     font = try container.decodeIfPresent(String.self, forKey: .font)
     size = try container.decodeIfPresent(Double.self, forKey: .size)

@@ -21,6 +21,7 @@ struct DiskConfiguration: Codable, Equatable, Sendable {
         reason: "Provide an absolute path or a path starting with ~."
       )
     }
+
     let warning = warningThreshold ?? 20
     let critical = criticalThreshold ?? 10
     guard (0...100).contains(warning), (0...100).contains(critical), critical < warning else {
@@ -30,6 +31,7 @@ struct DiskConfiguration: Codable, Equatable, Sendable {
           "Free-space thresholds must be between 0 and 100, with criticalThreshold below warningThreshold."
       )
     }
+
     try symbols?.validate(path: "\(location).symbols")
     try tints?.validate(path: "\(location).tints")
   }

@@ -24,25 +24,32 @@ struct MediaWidgetTests {
       object: nil,
       userInfo: ["Player State": "Paused", "Name": "Spotify track"]
     )
+
     #expect(state.selected(source: .automatic)?.source == .music)
     #expect(state.selected(source: .spotify)?.title == "Spotify track")
+
     playback.post(
       name: MediaSource.spotify.notificationName,
       object: nil,
       userInfo: ["Player State": "Playing", "Name": "Spotify track"]
     )
+
     #expect(state.selected(source: nil)?.source == .spotify)
+
     playback.post(
       name: MediaSource.music.notificationName,
       object: nil,
       userInfo: ["Player State": "Playing", "Name": "Music track"]
     )
+
     #expect(state.selected(source: nil)?.source == .music)
+
     playback.post(
       name: MediaSource.music.notificationName,
       object: nil,
       userInfo: ["Player State": "Paused"]
     )
+
     #expect(state.selected(source: nil)?.source == .spotify)
     #expect(state.selected(source: .music)?.title == "Music track")
   }
@@ -55,39 +62,49 @@ struct MediaWidgetTests {
       previous: nil,
       sequence: 1
     )
+
     #expect(playing.status == .playing)
     #expect(playing.title == "Title")
     #expect(playing.artist == "Artist")
+
     let paused = MediaPlayerState.parse(
       ["Player State": "Paused"],
       source: .music,
       previous: playing,
       sequence: 2
     )
+
     #expect(paused.title == "Title")
     #expect(paused.artist == "Artist")
+
     let changed = MediaPlayerState.parse(
       ["Player State": "Playing", "Name": "New"],
       source: .music,
       previous: paused,
       sequence: 3
     )
+
     #expect(changed.artist.isEmpty)
+
     let missing = MediaPlayerState.parse(
       ["Player State": "Playing"],
       source: .music,
       previous: changed,
       sequence: 4
     )
+
     #expect(missing.title.isEmpty)
+
     for info in [nil, ["Player State": "Stopped"], ["Player State": "Unexpected"]]
       as [[String: String]?]
     {
       let state = MediaPlayerState.parse(info, source: .music, previous: playing, sequence: 5)
+
       #expect(state.title.isEmpty)
       #expect(state.artist.isEmpty)
       #expect(state.status == (info?["Player State"] == "Stopped" ? .stopped : .unknown))
     }
+
     let playback = NotificationCenter()
     let provider = MediaProvider(playbackCenter: playback, workspaceCenter: NotificationCenter())
     var result = MediaState()
@@ -98,12 +115,15 @@ struct MediaWidgetTests {
       object: nil,
       userInfo: ["Player State": "Playing", "Name": 123, "Artist": ["invalid"]]
     )
+
     #expect(result.text == "Playing")
+
     playback.post(
       name: MediaSource.music.notificationName,
       object: nil,
       userInfo: ["Name": "No state"]
     )
+
     #expect(result.text == "Playback unavailable")
   }
 
@@ -127,21 +147,30 @@ struct MediaWidgetTests {
       )
     )
     let playing = state.presentation(for: item)
+
     #expect(playing.text == "Title — Artist")
     #expect(playing.symbol == .glyph("P", font: "Shared", size: 18))
     #expect(playing.accessibilityLabel == "Music, Playing, Title, Artist")
     #expect(!playing.hidden)
+
     state.players[.music]?.status = .paused
+
     #expect(state.presentation(for: item).hidden)
     #expect(state.presentation(for: item).text == "Title — Artist")
     #expect(state.presentation(for: item).symbol == "pause")
 
     #expect(state.presentation(for: item).accessibilityLabel.contains("Artist"))
+
     item.symbol = "star"
+
     #expect(state.presentation(for: item).symbol == "star")
+
     item.media?.showSymbol = false
+
     #expect(state.presentation(for: item).symbol == nil)
+
     state.players[.music] = MediaPlayerState(source: .music, status: .stopped)
+
     #expect(state.presentation(for: item).hidden)
     #expect(MediaState().text == "Waiting for playback")
     #expect(
@@ -152,8 +181,11 @@ struct MediaWidgetTests {
       MediaState(players: [.music: MediaPlayerState(source: .music, status: .stopped)]).text
         == "Stopped"
     )
+
     item.media?.source = .spotify
+
     #expect(!state.presentation(for: item).hidden)
+
     for name in ["play.fill", "pause.fill", "stop.fill", "questionmark"] {
       #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil)
     }
@@ -171,29 +203,38 @@ struct MediaWidgetTests {
       type: .media,
       media: MediaConfiguration(hideWhenNotPlaying: true)
     )
+
     #expect(state.presentation(for: item).hidden)
+
     for status in ["Playing", "Paused", "Playing", "Stopped", "Unexpected"] {
       playback.post(
         name: MediaSource.music.notificationName,
         object: nil,
         userInfo: ["Player State": status]
       )
+
       #expect(state.presentation(for: item).hidden == (status != "Playing"))
     }
+
     playback.post(
       name: MediaSource.music.notificationName,
       object: nil,
       userInfo: ["Player State": "Playing", "Name": "Music track"]
     )
     item.media?.source = .spotify
+
     #expect(state.presentation(for: item).hidden)
+
     playback.post(
       name: MediaSource.spotify.notificationName,
       object: nil,
       userInfo: ["Player State": "Paused", "Name": "Spotify track"]
     )
+
     #expect(state.presentation(for: item).hidden)
+
     item.media?.source = .automatic
+
     #expect(!state.presentation(for: item).hidden)
     #expect(state.presentation(for: item).text == "Music track")
   }
@@ -225,15 +266,18 @@ struct MediaWidgetTests {
       object: nil,
       userInfo: ["bundle": "com.spotify.client"]
     )
+
     #expect(state.players[.spotify]?.status == .stopped)
     #expect(state.players[.spotify]?.title.isEmpty == true)
     #expect(state.selected(source: nil)?.source == .music)
+
     let previous = state
     workspace.post(
       name: NSWorkspace.didTerminateApplicationNotification,
       object: nil,
       userInfo: ["bundle": "unrelated"]
     )
+
     #expect(state == previous)
   }
 
@@ -255,8 +299,10 @@ struct MediaWidgetTests {
       object: nil,
       userInfo: ["Player State": "Playing", "Name": "Track"]
     )
+
     #expect(oldUpdates == 1)
     #expect(updates.count == 2)
+
     provider.stop()
     playback.post(
       name: MediaSource.music.notificationName,
@@ -268,15 +314,21 @@ struct MediaWidgetTests {
       object: nil,
       userInfo: ["bundle": "com.apple.Music"]
     )
+
     #expect(updates.count == 2)
+
     provider.start { updates.append($0) }
+
     #expect(updates.last?.players.isEmpty == true)
+
     workspace.post(
       name: NSWorkspace.didTerminateApplicationNotification,
       object: nil,
       userInfo: ["bundle": "com.apple.Music"]
     )
+
     #expect(updates.count == 4)
+
     provider.stop()
   }
 
@@ -290,11 +342,14 @@ struct MediaWidgetTests {
       )
     )
     try item.media?.validate(path: "media")
+
     #expect(item.media?.hideWhenNotPlaying == true)
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+
     for json in ["{}", #"{"hideWhenNotPlaying":null}"#, #"{"hideWhenNotPlaying":false}"#] {
       let settings = try JSONDecoder().decode(MediaConfiguration.self, from: Data(json.utf8))
       let defaultItem = Item(id: "media", type: .media, media: settings)
+
       #expect(!MediaState().presentation(for: defaultItem).hidden)
     }
     for json in [
@@ -308,6 +363,7 @@ struct MediaWidgetTests {
         try settings.validate(path: "media")
       }
     }
+
     #expect(throws: ConfigurationError.self) {
       try Configuration(
         bar: .init(),
@@ -336,12 +392,17 @@ struct MediaWidgetTests {
       ])
       runtime.updateWidgetState(.media(state), for: .media)
       runtime.trigger("media")
+
       #expect(runtime.presentation(for: item)?.symbol == "play.fill")
+
       state.players[.music]?.status = .paused
       state.players[.spotify] = MediaPlayerState(source: .spotify, status: .playing, title: "Other")
       runtime.updateWidgetState(.media(state), for: .media)
+
       #expect(runtime.presentation(for: item)?.hidden == (mode == "event"))
+
       runtime.trigger("media")
+
       #expect(runtime.presentation(for: item)?.symbol == "pause.fill")
       #expect(runtime.presentation(for: item)?.text == "Track")
       #expect(runtime.presentation(for: item)?.hidden == true)

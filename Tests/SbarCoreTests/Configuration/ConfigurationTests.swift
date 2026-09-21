@@ -9,6 +9,7 @@ struct ConfigurationTests {
   func datetimeStyles() throws {
     let data = Data(#"{"id":"date","type":"datetime","dateStyle":"full","timeStyle":"none"}"#.utf8)
     let item = try JSONDecoder().decode(Item.self, from: data)
+
     #expect(item.type == .datetime)
     #expect(item.dateStyle == .full)
     #expect(item.timeStyle == DateTimeStyle.none)
@@ -53,6 +54,7 @@ struct ConfigurationTests {
       #"{"schemaVersion":1,"bar":{"margin":{"top":44,"left":12}},"theme":{"verticalPadding":4,"cornerRadius":12},"items":{}}"#
     let configuration = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
     try configuration.validate()
+
     #expect(configuration.bar.margin == BarMargin(top: 44, left: 12))
     #expect(configuration.theme?.verticalPadding == 4)
     #expect(configuration.theme?.cornerRadius == 12)
@@ -83,12 +85,14 @@ struct ConfigurationTests {
   func initDefaultsShadow(bar: String) throws {
     let json = "{\"schemaVersion\":1,\"bar\":\(bar),\"items\":{}}"
     let configuration = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
+
     #expect(configuration.bar.shadow == nil)
   }
 
   @Test("init: rejects nonboolean shadows", arguments: ["\"true\"", "1", "{}"])
   func initRejectsNonbooleanShadow(value: String) {
     let json = "{\"schemaVersion\":1,\"bar\":{\"shadow\":\(value)},\"items\":{}}"
+
     #expect(throws: DecodingError.self) {
       try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
     }
@@ -104,6 +108,7 @@ struct ConfigurationTests {
       BarMargin(right: value),
     ] {
       let configuration = Configuration(bar: .init(margin: margin), items: .init())
+
       #expect(throws: (any Error).self) { try configuration.validate() }
     }
   }
@@ -112,6 +117,7 @@ struct ConfigurationTests {
   func invalidDimensions(value: Double) {
     for theme in [Theme(verticalPadding: value), Theme(cornerRadius: value)] {
       let configuration = Configuration(bar: .init(), items: .init(), theme: theme)
+
       #expect(throws: (any Error).self) { try configuration.validate() }
     }
   }

@@ -14,6 +14,7 @@ struct MemoryProvider {
     }
 
     guard result == KERN_SUCCESS else { return MemoryState() }
+
     return state(
       active: info.active_count,
       wired: info.wire_count,
@@ -31,10 +32,13 @@ struct MemoryProvider {
     totalBytes: UInt64
   ) -> MemoryState {
     guard pageSize > 0 else { return MemoryState() }
+
     let pages = UInt64(active) + UInt64(wired) + UInt64(compressed)
     let (used, overflow) = pages.multipliedReportingOverflow(by: pageSize)
     guard !overflow else { return MemoryState() }
+
     let state = MemoryState(usedBytes: used, totalBytes: totalBytes)
+
     return state.available ? state : MemoryState()
   }
 }

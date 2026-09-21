@@ -124,6 +124,7 @@ final class BarCoordinator: NSObject {
 
     spacesProvider.start { [weak self] state in
       guard let self, self.spacesState != state else { return }
+
       self.spacesState = state
       self.updatePanels()
     }
@@ -136,6 +137,7 @@ final class BarCoordinator: NSObject {
 
     if let localMouseMonitor { NSEvent.removeMonitor(localMouseMonitor) }
     if let globalMouseMonitor { NSEvent.removeMonitor(globalMouseMonitor) }
+
     localMouseMonitor = nil
     globalMouseMonitor = nil
 
@@ -152,6 +154,7 @@ final class BarCoordinator: NSObject {
     store.configurationDidChange = nil
 
     for panel in panels.values { panel.close() }
+
     panels.removeAll()
     barSpace.stop()
     isStarted = false
@@ -180,6 +183,7 @@ final class BarCoordinator: NSObject {
 
     // The first screen is the primary display; NSScreen.main follows the key window.
     let screens: [NSScreen]
+
     switch configuration.bar.displays {
     case .all: screens = NSScreen.screens
     case .main: screens = Array(NSScreen.screens.prefix(1))
@@ -224,11 +228,13 @@ final class BarCoordinator: NSObject {
       let panel = remaining.removeValue(forKey: identifier) ?? BarPanel(contentRect: layout.frame)
       panel.barLayout = layout
       panel.setFrame(layout.frame, display: true)
+
       switch configuration.bar.windowLevel ?? .floating {
       case .floating: panel.level = .floating
       case .statusBar: panel.level = .statusBar
       case .screenSaver: panel.level = .screenSaver
       }
+
       panel.passesThroughEmptyRegions = configuration.bar.mousePassThrough ?? false
 
       let notch = BarPlacement.notch(
@@ -252,17 +258,20 @@ final class BarCoordinator: NSObject {
       panel.contentView = hostingView
       panel.hasShadow = layout.hasNativeShadow
       panel.orderFrontRegardless()
+
       if panel.hasShadow {
         // Recompute the native shadow after rendering a new background or corner radius.
         panel.displayIfNeeded()
         panel.invalidateShadow()
       }
+
       barSpace.addWindow(panel.windowNumber)
       panel.updateMousePassthrough()
       updated[identifier] = panel
     }
 
     for panel in remaining.values { panel.close() }
+
     panels = updated
   }
 }

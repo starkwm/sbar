@@ -32,6 +32,7 @@ struct WeatherSymbols: Codable, Equatable, Sendable {
 
   func validate(path: String) throws {
     try WidgetSymbol.validateDefaults(font: font, size: size, path: path)
+
     for status in WeatherSymbolCondition.allCases {
       try symbol(for: status)?.validate(font: font, path: "\(path).\(status.rawValue)")
     }
@@ -41,6 +42,7 @@ struct WeatherSymbols: Codable, Equatable, Sendable {
     let selected =
       symbol(for: status)
       ?? (status == .overcastDay || status == .overcastNight ? overcast : nil)
+
     return selected?.resolve(font: font, size: size)
   }
 
@@ -77,6 +79,7 @@ extension WeatherSymbols {
         .init(codingPath: decoder.codingPath, debugDescription: "Unknown weather symbol key.")
       )
     }
+
     let container = try decoder.container(keyedBy: CodingKeys.self)
     font = try container.decodeIfPresent(String.self, forKey: .font)
     size = try container.decodeIfPresent(Double.self, forKey: .size)

@@ -28,6 +28,7 @@ struct ProviderRuntimeTests {
 
     configuration.items.right[2].refresh = .init(mode: .interval, seconds: 60)
     runtime.configure(configuration)
+
     #expect(runtime.presentation(for: manual)?.text == "CPU 10%")
     #expect(runtime.itemSnapshots[manual.id] == "CPU 10%")
     #expect(runtime.itemDates[clock.id] == date)
@@ -35,6 +36,7 @@ struct ProviderRuntimeTests {
 
     configuration.items.right.removeLast()
     runtime.configure(configuration)
+
     #expect(runtime.presentation(for: manual)?.text == "CPU 10%")
     #expect(runtime.itemDates[clock.id] == date)
     #expect(runtime.itemSnapshots["other"] == nil)
@@ -42,6 +44,7 @@ struct ProviderRuntimeTests {
 
     configuration.items.right[0].refresh = nil
     runtime.configure(configuration)
+
     #expect(runtime.presentation(for: configuration.items.right[0])?.text == "CPU 90%")
     #expect(runtime.itemSnapshots[manual.id] == nil)
     #expect(runtime.widgetSnapshots[manual.id] == nil)
@@ -80,6 +83,7 @@ struct ProviderRuntimeTests {
 
     configuration.items.right[1].disk?.path = "/c"
     runtime.configure(configuration)
+
     #expect(runtime.presentation(for: first)?.text == "10% used")
     #expect(runtime.presentation(for: configuration.items.right[1])?.symbol == "questionmark")
     #expect(runtime.diskStates["/b"] == nil)
@@ -105,16 +109,19 @@ struct ProviderRuntimeTests {
 
     configuration.items.right.append(Item(id: "clock", type: .datetime))
     runtime.configure(configuration)
+
     #expect(runtime.presentation(for: media)?.text == "Playing track")
     #expect(runtime.widgetStates[.cpu] == .cpu(CPUState(samples: [10, 20])))
 
     configuration.items.right.removeLast()
     runtime.configure(configuration)
+
     #expect(runtime.presentation(for: media)?.text == "Playing track")
     #expect(runtime.widgetStates[.cpu] == .cpu(CPUState(samples: [10, 20])))
 
     runtime.stop()
     runtime.configure(configuration)
+
     #expect(runtime.presentation(for: media)?.text == "Waiting for playback")
     #expect(runtime.widgetStates[.cpu] == .cpu(CPUState()))
   }
@@ -132,9 +139,11 @@ struct ProviderRuntimeTests {
 
     runtime.updateSharedValues([.cpu: "10%"])
     runtime.updateSharedValues([.cpu: "10%", .memory: "50%"])
+
     #expect(changes.withLock { $0 } == 0)
 
     runtime.updateSharedValues([.cpu: "11%"])
+
     #expect(changes.withLock { $0 } == 1)
     #expect(runtime.sharedValues[.memory] == "50%")
   }
@@ -151,9 +160,11 @@ struct ProviderRuntimeTests {
     }
 
     runtime.updateItemValue("Ready", for: "status")
+
     #expect(changes.withLock { $0 } == 0)
 
     runtime.updateItemValue("Busy", for: "status")
+
     #expect(changes.withLock { $0 } == 1)
     #expect(runtime.itemValues["status"] == "Busy")
   }
@@ -166,6 +177,7 @@ struct ProviderRuntimeTests {
     runtime.onValueChange = { events[$0] = $1 }
 
     runtime.updateSharedValues([.cpu: "11%", .memory: "50%"])
+
     #expect(events == ["cpu": "11%"])
   }
 }

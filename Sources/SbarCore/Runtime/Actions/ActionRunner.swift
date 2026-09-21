@@ -36,6 +36,7 @@ final class ActionRunner {
         ["https", "http", "mailto"].contains(url.scheme?.lowercased() ?? "")
       else {
         errorMessage = "Invalid URL action."
+
         return
       }
 
@@ -49,6 +50,7 @@ final class ActionRunner {
         : NSWorkspace.shared.urlForApplication(withBundleIdentifier: value)
       guard let url else {
         errorMessage = "Application not found."
+
         return
       }
 
@@ -77,6 +79,7 @@ final class ActionRunner {
 
   func stop() {
     for task in tasks.values { task.cancel() }
+
     tasks.removeAll()
   }
 }

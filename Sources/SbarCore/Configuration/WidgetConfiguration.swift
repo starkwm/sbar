@@ -9,6 +9,7 @@ struct BatteryConfiguration: Codable, Equatable, Sendable {
   func validate(path: String) throws {
     try symbols?.validate(path: "\(path).symbols")
     try tints?.validate(path: "\(path).tints")
+
     if let lowThreshold, !(0...100).contains(lowThreshold) {
       throw ConfigurationError.invalidValue(
         path: "\(path).lowThreshold",
@@ -32,7 +33,9 @@ struct NetworkConfiguration: Codable, Equatable, Sendable {
         reason: "Select a connected interface type."
       )
     }
+
     try symbols?.validate(path: "\(path).symbols")
+
     for (key, value) in tints ?? [:] {
       guard NetworkConnection(rawValue: key) != nil else {
         throw ConfigurationError.invalidValue(
@@ -40,6 +43,7 @@ struct NetworkConfiguration: Codable, Equatable, Sendable {
           reason: "Unknown network connection type."
         )
       }
+
       try ItemStyle.validateColor(value, path: "\(path).tints.\(key)")
     }
   }
@@ -66,6 +70,7 @@ struct BatterySymbols: Codable, Equatable, Sendable {
 
   func validate(path: String) throws {
     try WidgetSymbol.validateDefaults(font: font, size: size, path: path)
+
     for (name, values) in [("levels", levels), ("chargingLevels", chargingLevels)] {
       if let values, values.count != 5 {
         throw ConfigurationError.invalidValue(
@@ -77,6 +82,7 @@ struct BatterySymbols: Codable, Equatable, Sendable {
         try symbol.validate(font: font, path: "\(path).\(name)[\(index)]")
       }
     }
+
     try charging?.validate(font: font, path: "\(path).charging")
     try pluggedIn?.validate(font: font, path: "\(path).pluggedIn")
   }
@@ -113,6 +119,7 @@ struct NetworkSymbols: Codable, Equatable, Sendable {
 
   func validate(path: String) throws {
     try WidgetSymbol.validateDefaults(font: font, size: size, path: path)
+
     for (key, symbol) in [
       ("wifi", wifi), ("ethernet", ethernet), ("cellular", cellular),
       ("other", other), ("offline", offline),
@@ -123,6 +130,7 @@ struct NetworkSymbols: Codable, Equatable, Sendable {
 
   func resolve(_ connection: NetworkConnection) -> ItemSymbol? {
     let symbol: WidgetSymbol?
+
     switch connection {
     case .wifi: symbol = wifi
     case .ethernet: symbol = ethernet
@@ -130,6 +138,7 @@ struct NetworkSymbols: Codable, Equatable, Sendable {
     case .other: symbol = other
     case .offline: symbol = offline
     }
+
     return symbol?.resolve(font: font, size: size)
   }
 }
@@ -143,6 +152,7 @@ extension NetworkSymbols {
         .init(codingPath: decoder.codingPath, debugDescription: "Unknown network symbol key.")
       )
     }
+
     let container = try decoder.container(keyedBy: CodingKeys.self)
     font = try container.decodeIfPresent(String.self, forKey: .font)
     size = try container.decodeIfPresent(Double.self, forKey: .size)
@@ -164,6 +174,7 @@ struct VolumeSymbols: Codable, Equatable, Sendable {
 
   func validate(path: String) throws {
     try WidgetSymbol.validateDefaults(font: font, size: size, path: path)
+
     if let levels, levels.count != 4 {
       throw ConfigurationError.invalidValue(
         path: "\(path).levels",
@@ -173,6 +184,7 @@ struct VolumeSymbols: Codable, Equatable, Sendable {
     for (index, symbol) in (levels ?? []).enumerated() {
       try symbol.validate(font: font, path: "\(path).levels[\(index)]")
     }
+
     try muted?.validate(font: font, path: "\(path).muted")
     try fixed?.validate(font: font, path: "\(path).fixed")
     try unavailable?.validate(font: font, path: "\(path).unavailable")
@@ -216,8 +228,10 @@ enum WidgetSymbol: Codable, Equatable, Sendable {
   init(from decoder: any Decoder) throws {
     if let name = try? decoder.singleValueContainer().decode(String.self) {
       self = .system(name)
+
       return
     }
+
     let container = try decoder.container(keyedBy: CodingKeys.self)
     self = .glyph(
       try container.decode(String.self, forKey: .glyph),
@@ -260,6 +274,7 @@ enum WidgetSymbol: Codable, Equatable, Sendable {
       return .system(name)
     case .glyph(let glyph, let font, let size):
       guard let font = font ?? inheritedFont else { return nil }
+
       return .glyph(glyph, font: font, size: size ?? inheritedSize)
     }
   }

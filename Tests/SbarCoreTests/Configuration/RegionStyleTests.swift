@@ -16,12 +16,15 @@ struct RegionStyleTests {
     )
     try theme.validate()
     let right = try #require(theme.regions?.right).resolved(over: theme.regionStyle)
+
     #expect(right.background == "#00000000")
     #expect(right.cornerRadius == 0)
     #expect(right.horizontalPadding == 10)
     #expect(right.itemSpacing == 6)
     #expect(try JSONDecoder().decode(Theme.self, from: JSONEncoder().encode(theme)) == theme)
+
     let old = try JSONDecoder().decode(Theme.self, from: Data("{}".utf8))
+
     #expect(old.regionStyle == nil)
     #expect(old.regions == nil)
   }
@@ -34,16 +37,19 @@ struct RegionStyleTests {
     let definitions = try #require(schema["$defs"] as? [String: Any])
     let style = try #require(definitions["regionStyle"] as? [String: Any])
     let properties = try #require(style["properties"] as? [String: Any])
+
     for key in [
       "cornerRadius", "horizontalPadding", "verticalPadding", "borderWidth", "itemSpacing",
     ] {
       let field = try #require(properties[key] as? [String: Any])
       let upper = try #require(field["maximum"] as? Double)
+
       for value in [0, upper, -1, upper + 1] {
         let decoded = try JSONDecoder().decode(
           RegionStyle.self,
           from: JSONSerialization.data(withJSONObject: [key: value])
         )
+
         if (0...upper).contains(value) {
           try decoded.validate(path: "theme.regions.right")
         } else {
@@ -63,6 +69,7 @@ struct RegionStyleTests {
         Theme.self,
         from: JSONSerialization.data(withJSONObject: ["regions": ["left": [key: "red"]]])
       )
+
       #expect(
         throws: ConfigurationError.invalidValue(
           path: "theme.regions.left.\(key)",

@@ -9,20 +9,31 @@ struct PluginStateTests {
   @Test("line boundaries apply per message, including a full line followed by another message")
   func framing() throws {
     let line = "{\"text\":\"" + String(repeating: "a", count: 65_525) + "\"}"
+
     #expect(line.utf8.count == 65_536)
+
     var framer = PluginOutputFramer()
+
     #expect(try framer.append(Data(line.prefix(65_000).utf8)) == nil)
+
     let result = try framer.append(Data((line.dropFirst(65_000) + "\n{\"text\":\"last\"}\n").utf8))
+
     #expect(result?.text == "last")
+
     try framer.finish()
     var oversized = PluginOutputFramer()
+
     #expect(throws: PluginProtocolError.lineLimit) {
       try oversized.append(Data(repeating: 97, count: 65_537))
     }
+
     var unfinished = PluginOutputFramer()
     _ = try unfinished.append(Data("{\"text\":\"x\"}".utf8))
+
     #expect(throws: PluginProtocolError.unterminatedMessage) { try unfinished.finish() }
+
     var invalid = PluginOutputFramer()
+
     #expect(throws: PluginProtocolError.invalidMessage) { try invalid.append(Data([255, 10])) }
   }
 
@@ -42,17 +53,26 @@ struct PluginStateTests {
       plugin: Plugin(executable: "/bin/sh", maxLength: 8, onError: .keepLast)
     )
     let state = PluginState(status: .success, lastSuccess: value)
+
     #expect(state.presentation(for: item).text == "hello w…")
     #expect(state.presentation(for: item).hidden)
     #expect(state.presentation(for: item).symbol == .glyph("X", font: "Menlo"))
+
     item.symbol = "star"
+
     #expect(state.presentation(for: item).symbol == "star")
+
     let failed = PluginState(status: .failure, lastSuccess: value, error: "failed")
+
     #expect(failed.presentation(for: item).text == "hello w…")
+
     item.plugin?.onError = .show
+
     #expect(failed.presentation(for: item).text == "failed")
     #expect(!failed.presentation(for: item).hidden)
+
     item.plugin?.onError = .hide
+
     #expect(failed.presentation(for: item).hidden)
   }
 
@@ -60,11 +80,17 @@ struct PluginStateTests {
   func mailbox() throws {
     let box = PluginMailbox()
     box.send(PluginInput(event: "start", value: nil))
+
     for _ in 0..<100 { box.send(PluginInput(event: "trigger", value: nil)) }
+
     let first = try #require(box.take())
+
     #expect(try JSONDecoder().decode(PluginInput.self, from: first).event == "start")
+
     var remaining = 0
+
     while box.take() != nil { remaining += 1 }
+
     #expect(remaining == 31)
   }
 
@@ -86,20 +112,26 @@ struct PluginStateTests {
     let runtime = ProviderRuntime()
     runtime.configure(Configuration(bar: .init(), items: .init(right: [first, second])))
     defer { runtime.stop() }
+
     for _ in 0..<100 where runtime.pluginStates["first"]?.status != .success {
       try await Task.sleep(for: .milliseconds(10))
     }
+
     first.plugin?.maxLength = 3
     second.plugin?.arguments = ["-c", "printf '{\"text\":\"changed\"}\\n'"]
     runtime.configure(Configuration(bar: .init(), items: .init(right: [first, second])))
+
     for _ in 0..<100 where runtime.pluginStates["second"]?.status != .success {
       try await Task.sleep(for: .milliseconds(10))
     }
+
     #expect(try String(contentsOf: file, encoding: .utf8) == "x")
     #expect(runtime.presentation(for: first)?.text == "re…")
     #expect(runtime.itemValues["second"] == "changed")
+
     runtime.configure(Configuration(bar: .init(), items: .init()))
     try await Task.sleep(for: .milliseconds(50))
+
     #expect(runtime.pluginStates.isEmpty)
     #expect(runtime.itemValues["first"] == nil)
   }
@@ -129,14 +161,18 @@ struct PluginStateTests {
       pendingRestart?.resume(throwing: CancellationError())
     }
     try await waitUntil { pendingRestart != nil }
+
     #expect(delays == [.seconds(1)])
     #expect(runtime.pluginStates[item.id]?.status == .failure)
     #expect(runtime.pluginStates[item.id]?.lastSuccess?.text == "started")
+
     for _ in 0..<40 { runtime.trigger("queued") }
+
     let restart = try #require(pendingRestart)
     pendingRestart = nil
     restart.resume()
     try await waitUntil { pendingRestart != nil }
+
     #expect(delays == [.seconds(1), .seconds(2)])
     #expect(runtime.pluginStates[item.id]?.lastSuccess?.text == "started")
     #expect(runtime.pluginStates[item.id]?.status == .failure)

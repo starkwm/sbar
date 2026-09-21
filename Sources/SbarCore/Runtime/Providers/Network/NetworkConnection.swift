@@ -8,9 +8,11 @@ enum NetworkConnection: String, Codable, CaseIterable, Sendable {
     cellular: Bool
   ) -> Self {
     guard connected else { return .offline }
+
     if wifi { return .wifi }
     if ethernet { return .ethernet }
     if cellular { return .cellular }
+
     return .other
   }
 

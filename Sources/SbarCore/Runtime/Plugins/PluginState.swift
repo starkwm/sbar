@@ -20,6 +20,7 @@ struct PluginState: Equatable, Sendable {
       tints: settings?.tints,
       showSymbol: settings?.showSymbol
     )
+
     return CommandState(status: status, lastSuccess: lastSuccess, error: error).presentation(
       for: adapted
     )

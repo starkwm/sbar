@@ -13,8 +13,10 @@ enum ItemSymbol: Codable, Equatable, Sendable, ExpressibleByStringLiteral {
   init(from decoder: any Decoder) throws {
     if let name = try? decoder.singleValueContainer().decode(String.self) {
       self = .system(name)
+
       return
     }
+
     let container = try decoder.container(keyedBy: CodingKeys.self)
     let glyph = try container.decode(String.self, forKey: .glyph)
     let font = try container.decode(String.self, forKey: .font)
@@ -30,6 +32,7 @@ enum ItemSymbol: Codable, Equatable, Sendable, ExpressibleByStringLiteral {
         )
       )
     }
+
     self = .glyph(glyph, font: font, size: size)
   }
 

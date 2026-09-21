@@ -17,10 +17,12 @@ struct MemoryWidgetTests {
         pageSize: pageSize,
         totalBytes: 16 * 1024 * 1024
       )
+
       #expect(state.usedBytes == 150 * pageSize)
       #expect(state.totalBytes == 16 * 1024 * 1024)
       #expect(state.available)
     }
+
     #expect(
       MemoryProvider.state(active: 0, wired: 0, compressed: 0, pageSize: 4096, totalBytes: 4096)
         .value(format: .percentage) == "0%"
@@ -34,6 +36,7 @@ struct MemoryWidgetTests {
   @Test("failed reads and invalid byte counts produce an unavailable reading")
   func unavailable() {
     #expect(!MemoryProvider.sample(host: mach_port_t(MACH_PORT_NULL)).available)
+
     for state in [
       MemoryProvider.state(active: 1, wired: 0, compressed: 0, pageSize: 0, totalBytes: 4096),
       MemoryProvider.state(active: 1, wired: 0, compressed: 0, pageSize: 4096, totalBytes: 0),
@@ -49,6 +52,7 @@ struct MemoryWidgetTests {
     ] {
       #expect(!state.available)
       #expect(state.text == "RAM —")
+
       for format in [MemoryFormat.used, .percentage, .usedTotal] {
         #expect(state.value(format: format) == "—")
       }
@@ -63,16 +67,19 @@ struct MemoryWidgetTests {
       fromByteCount: 16 * 1024 * 1024 * 1024,
       countStyle: .memory
     )
+
     #expect(state.value(format: .used) == used)
     #expect(state.value(format: .usedTotal) == "\(used) / \(total)")
     #expect(state.value(format: .percentage) == "50%")
     #expect(MemoryState(usedBytes: 129, totalBytes: 1000).value(format: .percentage) == "13%")
+
     var item = Item(
       id: "ram",
       type: .memory,
       memory: MemoryConfiguration()
     )
     let result = state.presentation(for: item)
+
     #expect(result.text == "RAM \(used)")
     #expect(result.symbol == "memorychip")
     #expect(result.accessibilityLabel.contains(used))
@@ -80,10 +87,14 @@ struct MemoryWidgetTests {
     #expect(result.accessibilityLabel.contains("50%"))
 
     item.symbol = "star"
+
     #expect(state.presentation(for: item).symbol == "star")
+
     item.memory?.showSymbol = false
+
     #expect(state.presentation(for: item).symbol == nil)
     #expect(MemoryState().presentation(for: item).accessibilityLabel == "Memory usage unavailable")
+
     for name in ["memorychip", "questionmark"] {
       #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil)
     }
@@ -99,14 +110,18 @@ struct MemoryWidgetTests {
       )
     )
     try item.memory?.validate(path: "memory")
+
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+
     let state = MemoryState(usedBytes: 1, totalBytes: 2)
+
     #expect(state.presentation(for: item).symbol == .glyph("M", font: "Shared", size: 18))
     #expect(MemoryState().presentation(for: item).symbol == .glyph("?", font: "Other", size: 24))
     #expect(
       state.presentation(for: Item(id: "ram", type: .memory))
         == state.presentation(for: Item(id: "ram", type: .memory, memory: MemoryConfiguration()))
     )
+
     for json in [
       #"{"symbols":{"font":" "}}"#, #"{"symbols":{"size":73}}"#,
       #"{"symbols":{"available":{"glyph":"M"}}}"#,
@@ -120,12 +135,14 @@ struct MemoryWidgetTests {
         try configuration.validate(path: "memory")
       }
     }
+
     let invalid = Configuration(
       bar: .init(),
       items: .init(right: [
         Item(id: "text", type: .text, memory: MemoryConfiguration())
       ])
     )
+
     #expect(throws: ConfigurationError.self) { try invalid.validate() }
   }
 
@@ -147,15 +164,22 @@ struct MemoryWidgetTests {
       let item = try #require(configuration.items.active.first)
       runtime.updateWidgetState(.memory(MemoryState(usedBytes: 1, totalBytes: 2)), for: .memory)
       runtime.trigger("ram")
+
       #expect(runtime.presentation(for: item)?.text == "RAM 50%")
+
       runtime.updateWidgetState(.memory(MemoryState()), for: .memory)
+
       #expect(runtime.sharedValues[.memory] == "RAM —")
       #expect(runtime.presentation(for: item)?.text == (mode == "event" ? "RAM —" : "RAM 50%"))
+
       runtime.trigger("ram")
+
       #expect(runtime.presentation(for: item)?.symbol == "questionmark")
       #expect(runtime.presentation(for: item)?.accessibilityLabel == "Memory usage unavailable")
+
       runtime.updateWidgetState(.memory(MemoryState(usedBytes: 3, totalBytes: 4)), for: .memory)
       runtime.trigger("ram")
+
       #expect(runtime.presentation(for: item)?.text == "RAM 75%")
     }
   }

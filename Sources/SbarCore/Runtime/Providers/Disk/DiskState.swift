@@ -6,6 +6,7 @@ struct DiskState: Equatable, Sendable {
 
   var available: Bool {
     guard let freeBytes, let totalBytes else { return false }
+
     return totalBytes > 0 && freeBytes >= 0 && freeBytes <= totalBytes
   }
 
@@ -13,12 +14,15 @@ struct DiskState: Equatable, Sendable {
 
   var freePercentage: Double? {
     guard available, let freeBytes, let totalBytes else { return nil }
+
     return Double(freeBytes) / Double(totalBytes) * 100
   }
 
   func value(format: DiskFormat) -> String {
     guard available, let freeBytes, let totalBytes else { return "—" }
+
     let used = totalBytes - freeBytes
+
     switch format {
     case .free: return ByteCountFormatter.string(fromByteCount: freeBytes, countStyle: .file)
     case .used: return ByteCountFormatter.string(fromByteCount: used, countStyle: .file)
@@ -30,6 +34,7 @@ struct DiskState: Equatable, Sendable {
   func presentation(for item: Item) -> WidgetPresentation {
     let settings = item.disk ?? DiskConfiguration()
     let tint: String?
+
     if let free = freePercentage {
       tint =
         free <= Double(settings.criticalThreshold ?? 10)
@@ -39,6 +44,7 @@ struct DiskState: Equatable, Sendable {
     } else {
       tint = settings.tints?.unavailable
     }
+
     return WidgetPresentation(
       text: available ? "\(value(format: .free)) free" : "— unavailable",
       symbol: settings.showSymbol == false

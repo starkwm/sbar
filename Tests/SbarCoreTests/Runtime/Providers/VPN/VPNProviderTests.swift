@@ -11,9 +11,11 @@ struct VPNProviderTests {
     #expect(SystemVPNMonitor.isVPN(interfaceType: "VPN", underlyingType: "vendor.app"))
     #expect(SystemVPNMonitor.isVPN(interfaceType: "IPSec", underlyingType: nil))
     #expect(SystemVPNMonitor.isVPN(interfaceType: "PPP", underlyingType: "L2TP"))
+
     for type in ["IEEE80211", "Ethernet", "utun", "PPP", "Bridge"] {
       #expect(!SystemVPNMonitor.isVPN(interfaceType: type, underlyingType: nil))
     }
+
     #expect(!SystemVPNMonitor.isVPN(interfaceType: "PPP", underlyingType: "Modem"))
     #expect(!SystemVPNMonitor.isVPN(interfaceType: "PPP", underlyingType: "PPPoE"))
   }
@@ -35,6 +37,7 @@ struct VPNProviderTests {
     defer { provider.stop() }
     var result: VPNState?
     provider.start { result = $0 }
+
     #expect(result == VPNState())
     #expect(monitor.reads == 0)
   }
@@ -57,17 +60,22 @@ struct VPNProviderTests {
     monitor.changed?()
     monitor.changed?()
     try await waitUntil { states.last == monitor.state }
+
     #expect(oldUpdates == 1)
     #expect(states.count == 2)
+
     let reads = monitor.reads
     stale?()
     try await Task.sleep(for: .milliseconds(100))
+
     #expect(monitor.reads == reads)
+
     let stopped = monitor.changed
     monitor.changed?()
     provider.stop()
     stopped?()
     try await Task.sleep(for: .milliseconds(100))
+
     #expect(monitor.reads == reads)
     #expect(states.count == 2)
     #expect(monitor.changed == nil)
@@ -88,22 +96,28 @@ struct VPNProviderTests {
     let configuration = Configuration(bar: .init(), items: .init(right: [event, manual, interval]))
     runtime.configure(configuration)
     runtime.configure(configuration)
+
     #expect(monitor.starts == 1)
     #expect(runtime.presentation(for: manual)?.text == "VPN disconnected")
+
     monitor.state = VPNState(
       services: [.init(id: "x", name: "Work", status: .connected)],
       available: true
     )
     monitor.changed?()
     try await waitUntil { runtime.sharedValues[.vpn] == "Work connected" }
+
     #expect(runtime.sharedValues[.vpn] == "Work connected")
     #expect(runtime.presentation(for: event)?.text == "Work connected")
     #expect(runtime.presentation(for: manual)?.text == "VPN disconnected")
     #expect(runtime.presentation(for: interval)?.text == "VPN disconnected")
+
     runtime.trigger(manual.id)
     runtime.trigger(interval.id)
+
     #expect(runtime.presentation(for: manual)?.text == "Work connected")
     #expect(runtime.presentation(for: interval)?.text == "Work connected")
+
     runtime.configure(
       Configuration(
         bar: .init(),
@@ -112,8 +126,11 @@ struct VPNProviderTests {
         ])
       )
     )
+
     #expect(monitor.changed == nil)
+
     runtime.configure(configuration)
+
     #expect(monitor.starts == 2)
   }
 
@@ -129,14 +146,18 @@ struct VPNProviderTests {
     runtime.configure(configuration)
     configuration.items.right.removeLast()
     runtime.configure(configuration)
+
     #expect(monitor.starts == 1)
     #expect(monitor.changed != nil)
 
     configuration.items.right = [Item(id: "clock", type: .datetime)]
     runtime.configure(configuration)
+
     #expect(monitor.changed == nil)
+
     configuration.items.right.append(vpn)
     runtime.configure(configuration)
+
     #expect(monitor.starts == 2)
     #expect(monitor.changed != nil)
   }
@@ -153,11 +174,13 @@ private final class TestVPNMonitor: VPNMonitoring {
   func start(changed: @escaping @MainActor () -> Void) -> Bool {
     starts += 1
     self.changed = canStart ? changed : nil
+
     return canStart
   }
 
   func read() -> VPNState {
     reads += 1
+
     return state
   }
 

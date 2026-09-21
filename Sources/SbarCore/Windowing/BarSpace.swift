@@ -29,6 +29,7 @@ final class BarSpace {
       let destroySymbol = dlsym(handle, "SLSSpaceDestroy")
     else {
       dlclose(handle)
+
       return nil
     }
 
@@ -68,10 +69,12 @@ final class BarSpace {
         // https://github.com/FelixKratz/SketchyBar/blob/master/src/window.c
         let space = create(cid, 1, nil)
         guard space != 0 else { return nil }
+
         // These operations are asynchronous and return void on macOS 26.
         // Reading a CGError return value here would read an undefined register.
         setLevel(cid, space, 0)
         show(cid, [NSNumber(value: space)] as CFArray)
+
         return space
       },
       addWindow: { window, space in
@@ -98,15 +101,20 @@ final class BarSpace {
   func addWindow(_ windowNumber: Int) -> Bool {
     guard let window = CGWindowID(exactly: windowNumber), window != 0 else { return false }
     guard let access else { return fallback() }
+
     if spaceID == nil { spaceID = access.create() }
+
     guard let spaceID else { return fallback() }
+
     access.addWindow(window, spaceID)
+
     return true
   }
 
   // Close all panels before destroying their Space.
   func stop() {
     if let spaceID { access?.destroy(spaceID) }
+
     spaceID = nil
   }
 
@@ -115,6 +123,7 @@ final class BarSpace {
       Self.logger.warning("Persistent bar Space unavailable; using AppKit Spaces behavior")
       reportedFailure = true
     }
+
     return false
   }
 }

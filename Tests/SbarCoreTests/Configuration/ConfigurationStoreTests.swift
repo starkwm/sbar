@@ -60,11 +60,13 @@ struct ConfigurationStoreTests {
     #expect(try Data(contentsOf: url) == original)
 
     try write(height: 1, to: url)
+
     #expect(throws: (any Error).self) { try ConfigurationValidator.validate(url: url) }
 
     try Data(
       #"{"schemaVersion": 1, "bar": {}, "items": {"right": [{"id": "clock", "type": 42}]}}"#.utf8
     ).write(to: url)
+
     do {
       try ConfigurationValidator.validate(url: url)
       Issue.record("Invalid configuration passed validation")
@@ -115,6 +117,7 @@ struct ConfigurationStoreTests {
     let store = ConfigurationStore(configurationURL: url)
     store.startObserving()
     defer { store.stopObserving() }
+
     #expect(store.configuration.bar.height == 40)
 
     try write(height: 48, to: url)
@@ -124,6 +127,7 @@ struct ConfigurationStoreTests {
     #expect(store.configuration.bar.height == 40)
 
     store.startObserving()
+
     #expect(store.configuration.bar.height == 48)
 
     try write(height: 56, to: url)
@@ -144,19 +148,24 @@ struct ConfigurationStoreTests {
     try original.write(to: url)
     let store = ConfigurationStore(configurationURL: url)
     store.load()
+
     #expect(store.configuration.bar.height == 48)
     #expect(store.errorMessage == nil)
+
     try ConfigurationValidator.validate(url: url)
+
     #expect(try Data(contentsOf: url) == original)
 
     try Data("/* unfinished".utf8).write(to: url)
     store.load()
+
     #expect(store.configuration.bar.height == 48)
     #expect(store.errorMessage?.contains("Unterminated block comment") == true)
     #expect(throws: (any Error).self) { try ConfigurationValidator.validate(url: url) }
 
     try Data("{\"schemaVersion\":1,\"bar\":{\"height\":52,},\"items\":{},}".utf8).write(to: url)
     store.load()
+
     #expect(store.configuration.bar.height == 52)
     #expect(store.errorMessage == nil)
   }

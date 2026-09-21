@@ -12,11 +12,13 @@ struct AudioDeviceState: Equatable, Sendable {
     let endpoint = kind == .input ? input : output
     let name = endpoint.name?.split(whereSeparator: \.isWhitespace).joined(separator: " ") ?? ""
     let label: String
+
     switch endpoint.status {
     case .available: label = name.isEmpty ? "Unnamed device" : name
     case .disconnected: label = "No \(kind.rawValue)"
     case .unavailable: label = "\(kind.label) unavailable"
     }
+
     return WidgetPresentation(
       text: label,
       symbol: settings.showSymbol == false

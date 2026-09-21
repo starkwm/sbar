@@ -11,13 +11,16 @@ struct BluetoothWidgetTests {
       .on: "Bluetooth on", .off: "Bluetooth off", .connected: "Bluetooth connected",
       .unauthorized: "Bluetooth access denied", .unavailable: "Bluetooth unavailable",
     ]
+
     for status in BluetoothStatus.allCases {
       let presentation = BluetoothState(status: status).presentation(
         for: Item(id: "bt", type: .bluetooth)
       )
+
       #expect(presentation.text == labels[status])
       #expect(presentation.accessibilityLabel == presentation.text)
       #expect(presentation.symbol == status.defaultSymbol)
+
       if case .system(let name) = status.defaultSymbol {
         #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil)
       }
@@ -32,15 +35,22 @@ struct BluetoothWidgetTests {
         .init(id: "2", name: "Mouse"), .init(id: "1", name: "Keyboard"),
       ]
     )
+
     #expect(state.text == "Keyboard connected, Mouse connected")
+
     state.devices.reverse()
+
     #expect(state.text == "Keyboard connected, Mouse connected")
+
     for status in [BluetoothStatus.off, .unauthorized, .unavailable] {
       state.status = status
+
       #expect(!state.text.contains("Keyboard"))
       #expect(!state.text.contains("Mouse"))
     }
+
     state = BluetoothState(status: .connected, devices: [.init(id: "1", name: " \n ")])
+
     #expect(state.text == "Unnamed device connected")
   }
 
@@ -54,12 +64,15 @@ struct BluetoothWidgetTests {
       )
     )
     try Configuration(bar: .init(), items: .init(right: [item])).validate()
+
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+
     let state = BluetoothState(
       status: .connected,
       devices: [.init(id: "1", name: " Magic\n Keyboard ")]
     )
     let presentation = state.presentation(for: item)
+
     #expect(presentation.text == "Magic Keyboard connected")
     #expect(presentation.accessibilityLabel == "Magic Keyboard connected")
     #expect(presentation.symbol == .glyph("B", font: "Test", size: 18))
@@ -68,9 +81,13 @@ struct BluetoothWidgetTests {
 
     #expect(state.presentation(for: item).text == "Magic Keyboard connected")
     #expect(state.presentation(for: item).accessibilityLabel == "Magic Keyboard connected")
+
     item.symbol = "star"
+
     #expect(state.presentation(for: item).symbol == "star")
+
     item.bluetooth?.showSymbol = false
+
     #expect(state.presentation(for: item).symbol == nil)
   }
 
@@ -84,8 +101,10 @@ struct BluetoothWidgetTests {
         hideWhenDisconnected: true
       )
     )
+
     for status in BluetoothStatus.allCases {
       let presentation = BluetoothState(status: status).presentation(for: item)
+
       #expect(presentation.hidden == (status == .on || status == .off))
       #expect(presentation.symbol == status.defaultSymbol)
     }
@@ -106,12 +125,14 @@ struct BluetoothWidgetTests {
         try value.validate(path: "bluetooth")
       }
     }
+
     let configuration = Configuration(
       bar: .init(),
       items: .init(right: [
         Item(id: "text", type: .text, bluetooth: BluetoothConfiguration())
       ])
     )
+
     #expect(throws: ConfigurationError.self) { try configuration.validate() }
   }
 
@@ -123,14 +144,17 @@ struct BluetoothWidgetTests {
     let definitions = try #require(schema["$defs"] as? [String: Any])
     let settings = try #require(definitions["bluetooth"] as? [String: Any])
     let properties = try #require(settings["properties"] as? [String: Any])
+
     #expect(
       Set(properties.keys) == [
         "symbols", "tints", "showSymbol", "hideWhenDisconnected",
       ]
     )
+
     for field in ["tints"] {
       let map = try #require(properties[field] as? [String: Any])
       let states = try #require(map["properties"] as? [String: Any])
+
       #expect(Set(states.keys) == Set(BluetoothStatus.allCases.map(\.rawValue)))
       #expect(map["additionalProperties"] as? Bool == false)
     }

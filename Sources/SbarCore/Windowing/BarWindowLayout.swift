@@ -23,12 +23,14 @@ struct BarWindowLayout {
       : barFrame.minX <= screenFrame.minX && barFrame.maxX >= screenFrame.maxX
     let usesEdgeShadow = shadow && edgeToEdge && cornerRadius == 0
     let available: CGFloat
+
     switch position {
     case .top: available = barFrame.minY - screenFrame.minY
     case .bottom: available = screenFrame.maxY - barFrame.maxY
     case .left: available = screenFrame.maxX - barFrame.maxX
     case .right: available = barFrame.minX - screenFrame.minX
     }
+
     shadowExtent = usesEdgeShadow ? min(Self.edgeShadowExtent, max(0, available)) : 0
     hasNativeShadow = shadow && !usesEdgeShadow
 
@@ -51,7 +53,9 @@ struct BarWindowLayout {
     -> Bool
   {
     guard contentFrame.contains(point) else { return true }
+
     let contentPoint = CGPoint(x: point.x - contentFrame.minX, y: point.y - contentFrame.minY)
+
     return passingThroughEmptyRegions && !hitRegions.contains { $0.contains(contentPoint) }
   }
 }

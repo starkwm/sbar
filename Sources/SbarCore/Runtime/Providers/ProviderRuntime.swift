@@ -120,18 +120,22 @@ final class ProviderRuntime {
     let requested = Set(items.map(\.type)).subtracting([
       .command, .plugin, .text, .spacer, .divider, .group, .popup,
     ])
-    let mailInterval = items
+    let mailInterval =
+      items
       .filter { $0.type == .mail }
       .map { ($0.mail ?? MailConfiguration()).resolvedPollInterval }
       .min()
+
     if let mailInterval {
       let interval = Duration.seconds(mailInterval)
+
       if !activeTypes.contains(.mail) || mail.interval != interval {
         mail.start(interval: interval) { [weak self] in
           self?.updateWidgetState(.mail($0), for: .mail)
         }
       }
     }
+
     guard requested != activeTypes else { return }
 
     let added = requested.subtracting(activeTypes)
@@ -182,10 +186,13 @@ final class ProviderRuntime {
     if added.contains(.aerospace) {
       aerospace.start { [weak self] state in
         guard let self else { return }
+
         self.updateWidgetState(.aerospace(state), for: .aerospace)
+
         for item in self.refreshItems where self.aerospaceCaptures.contains(item.id) {
           self.capture(item)
         }
+
         self.aerospaceCaptures.removeAll()
       }
     }
@@ -193,21 +200,26 @@ final class ProviderRuntime {
     if added.contains(.yabai) {
       yabai.start { [weak self] state in
         guard let self else { return }
+
         self.updateWidgetState(.yabai(state), for: .yabai)
+
         for item in self.refreshItems where self.yabaiCaptures.contains(item.id) {
           self.capture(item)
         }
+
         self.yabaiCaptures.removeAll()
       }
     }
 
     let samplingTypes: Set<ItemType> = [.cpu, .memory, .disk, .throughput, .datetime]
     guard !added.union(removed).isDisjoint(with: samplingTypes) else { return }
+
     samplingTask?.cancel()
     samplingTask = nil
 
     let sampled = activeTypes.intersection([.cpu, .memory, .disk, .throughput])
     let needsClock = activeTypes.contains(.datetime)
+
     if added.contains(.throughput) {
       updateWidgetState(.throughput(ThroughputState()), for: .throughput)
     }
@@ -229,13 +241,16 @@ final class ProviderRuntime {
             if let memory = snapshot.memory {
               self?.updateWidgetState(.memory(memory), for: .memory)
             }
+
             self?.updateDiskStates(snapshot.disks)
+
             if let throughput = snapshot.throughput {
               self?.updateWidgetState(.throughput(throughput), for: .throughput)
             }
           }
 
           tick += 1
+
           do { try await Task.sleep(for: .seconds(needsClock ? 1 : 2)) } catch { return }
         }
       }
@@ -246,6 +261,7 @@ final class ProviderRuntime {
     var presentation: WidgetPresentation?
     var values: [String: String] = [:]
     var entries: [[String: String]] = []
+
     if item.type == .plugin {
       let state = pluginStates[item.id] ?? PluginState()
       presentation = state.presentation(for: item)
@@ -256,6 +272,7 @@ final class ProviderRuntime {
       values = ["status": String(describing: state.status), "error": state.error ?? ""]
     } else {
       let state: WidgetState?
+
       if item.type == .weather {
         let current = item.weather.flatMap { weatherStates[$0.location] } ?? WeatherState()
         state =
@@ -268,19 +285,25 @@ final class ProviderRuntime {
       } else {
         state = item.refresh == nil ? widgetStates[item.type] : widgetSnapshots[item.id]
       }
+
       presentation = (state ?? (item.type == .throughput ? .throughput(ThroughputState()) : nil))?
         .presentation(for: item, displayUUID: displayUUID)
+
       if item.text != nil {
         values = state?.textValues(for: item) ?? [:]
         entries = state?.textEntries ?? []
+
         if item.type == .vpn || item.type == .bluetooth { values["total"] = String(entries.count) }
       }
     }
     if [.spaces, .aerospace, .yabai, .throughput].contains(item.type), let presentation {
       return presentation
     }
+
     guard let source = item.text else { return presentation }
+
     let fallback: String
+
     switch item.type {
     case .datetime:
       fallback = DateTimeFormatter.string(
@@ -297,6 +320,7 @@ final class ProviderRuntime {
     case .group, .popup: fallback = item.id
     default: fallback = itemSnapshots[item.id] ?? sharedValues[item.type] ?? "—"
     }
+
     var resolved =
       presentation
       ?? WidgetPresentation(text: fallback, symbol: item.symbol, accessibilityLabel: fallback)
@@ -311,11 +335,15 @@ final class ProviderRuntime {
     else {
       return resolved
     }
+
     let runs = template.renderRuns(values, entries: entries)
     resolved.text = runs.map(\.text).joined()
+
     if template.containsSymbol && !runs.contains(where: \.symbol) { resolved.symbol = nil }
     if presentation == nil { resolved.accessibilityLabel = resolved.text }
+
     resolved.segments = []
+
     return resolved
   }
 
@@ -323,9 +351,11 @@ final class ProviderRuntime {
     guard item.enabled, presentation(for: item, displayUUID: displayUUID)?.hidden != true else {
       return false
     }
+
     if item.type == .group {
       return (item.children ?? []).contains { isVisible($0, displayUUID: displayUUID) }
     }
+
     return true
   }
 
@@ -333,6 +363,7 @@ final class ProviderRuntime {
     guard item.type == .frontApplication, item.frontApplication?.showIcon == true else {
       return nil
     }
+
     if let source = item.text,
       let template = try? TextTemplate(source, fields: TextTemplate.fields(for: item.type)),
       template.containsSymbol
@@ -342,12 +373,14 @@ final class ProviderRuntime {
         template.renderRuns(["id": item.id, "name": name, "value": name]).contains(where: \.symbol)
       else { return nil }
     }
+
     return (item.refresh == nil ? frontApplication : applicationSnapshots[item.id])?.icon
   }
 
   func updateFrontApplication(_ state: FrontApplicationState) {
     frontApplication = state
     updateSharedValues([.frontApplication: state.name])
+
     for item in refreshItems
     where item.type == .frontApplication
       && (item.refresh?.mode == .event || applicationSnapshots[item.id] == nil)
@@ -358,8 +391,10 @@ final class ProviderRuntime {
 
   func updateWidgetState(_ state: WidgetState, for type: ItemType) {
     guard widgetStates[type] != state else { return }
+
     widgetStates[type] = state
     updateSharedValues([type: state.text])
+
     for item in refreshItems
     where item.type == type
       && (item.refresh?.mode == .event || widgetSnapshots[item.id] == nil)
@@ -371,8 +406,10 @@ final class ProviderRuntime {
   func updateDiskStates(_ states: [String: DiskState]) {
     let previous = diskStates
     diskStates = states.filter { diskItems.values.contains($0.key) }
+
     for (id, path) in diskItems {
       let state = diskStates[path] ?? DiskState()
+
       if previous[path] != state { onValueChange?(id, state.text) }
     }
     for item in refreshItems
@@ -439,12 +476,15 @@ final class ProviderRuntime {
     pluginGenerations = [:]
     pluginStates = [:]
     pluginHadOutput = [:]
+
     for task in pluginTasks.values { task.cancel() }
+
     pluginTasks.removeAll()
     pluginInputs.removeAll()
     pluginItems = []
 
     for task in commandTasks.values { task.cancel() }
+
     commandTasks.removeAll()
     commandStates = [:]
     commandItems = []
@@ -458,18 +498,23 @@ final class ProviderRuntime {
   private func configureWeather(_ items: [Item]) {
     weatherItems = items
     var intervals: [WeatherLocation: Double] = [:]
+
     for item in items {
       guard let settings = item.weather else { continue }
+
       intervals[settings.location] = min(
         intervals[settings.location] ?? settings.resolvedPollInterval,
         settings.resolvedPollInterval
       )
     }
+
     weatherStates = weatherStates.filter { intervals[$0.key] != nil }
     weather.configure(intervals) { [weak self] location, state in
       guard let self else { return }
+
       let previous = self.weatherStates[location]
       self.weatherStates[location] = state
+
       for item in self.weatherItems where item.weather?.location == location {
         if previous != state { self.onValueChange?(item.id, state.text) }
         if item.refresh != nil && (item.refresh?.mode == .event || previous?.reading == nil) {
@@ -485,13 +530,16 @@ final class ProviderRuntime {
     let unchanged = Set(
       requested.filter { item in
         guard let old = previous[item.id] else { return false }
+
         return old.type == item.type && old.refresh == item.refresh
           && old.disk?.path == item.disk?.path
           && old.weather?.location == item.weather?.location
       }.map(\.id)
     )
+
     if unchanged.count == requested.count && requested.count == refreshItems.count {
       refreshItems = requested
+
       return
     }
 
@@ -503,11 +551,13 @@ final class ProviderRuntime {
     lastRefresh = lastRefresh.filter { unchanged.contains($0.key) }
     aerospaceCaptures.formIntersection(unchanged)
     yabaiCaptures.formIntersection(unchanged)
+
     for item in requested where !unchanged.contains(item.id) { capture(item) }
 
     guard requested.contains(where: { $0.refresh?.mode == .interval }) else {
       refreshTask?.cancel()
       refreshTask = nil
+
       return
     }
     guard refreshTask == nil else { return }
@@ -518,6 +568,7 @@ final class ProviderRuntime {
 
         for item in self.refreshItems {
           let previous = self.lastRefresh[item.id]
+
           if item.refresh?.mode == .interval
             && (previous == nil
               || Date().timeIntervalSince(previous ?? .distantPast) >= (item.refresh?.seconds ?? 1))
@@ -537,6 +588,7 @@ final class ProviderRuntime {
       widgetSnapshots[item.id] = .weather(state)
       itemSnapshots[item.id] = state.text
       lastRefresh[item.id] = Date()
+
       return
     }
     if item.type == .disk {
@@ -544,6 +596,7 @@ final class ProviderRuntime {
       widgetSnapshots[item.id] = .disk(state)
       itemSnapshots[item.id] = state.text
       lastRefresh[item.id] = Date()
+
       return
     }
     if item.type == .frontApplication, let frontApplication {
@@ -552,6 +605,7 @@ final class ProviderRuntime {
     if let state = widgetStates[item.type] { widgetSnapshots[item.id] = state }
     if let value = sharedValues[item.type] {
       if itemSnapshots[item.id] != value { itemSnapshots[item.id] = value }
+
       lastRefresh[item.id] = Date()
     }
 
@@ -564,14 +618,17 @@ final class ProviderRuntime {
   private func configurePlugins(_ items: [Item]) {
     let previous = Dictionary(uniqueKeysWithValues: pluginItems.map { ($0.id, $0) })
     let ids = Set(items.map(\.id))
+
     for id in pluginTasks.keys.filter({ !ids.contains($0) }) {
       pluginGenerations[id] = nil
       pluginInputs[id] = nil
       pluginTasks.removeValue(forKey: id)?.cancel()
     }
+
     pluginItems = items
     pluginStates = pluginStates.filter { ids.contains($0.key) }
     pluginHadOutput = pluginHadOutput.filter { ids.contains($0.key) }
+
     for item in items where item.plugin?.sameExecution(as: previous[item.id]?.plugin) != true {
       pluginGenerations[item.id] = nil
       pluginInputs[item.id] = nil
@@ -593,12 +650,15 @@ final class ProviderRuntime {
 
   private func startPlugin(_ item: Item) {
     guard var configuration = item.plugin else { return }
+
     configuration.executable = ActionRunner.expand(configuration.executable)
     let sleep = pluginRestartSleep
     pluginTasks[item.id] = Task { [weak self, configuration] in
       var delay = 1.0
+
       repeat {
         guard !Task.isCancelled else { return }
+
         let generation = UUID()
         let input = PluginMailbox()
         input.send(PluginInput(event: "start", value: nil))
@@ -610,6 +670,7 @@ final class ProviderRuntime {
         state.error = nil
         self?.publishPlugin(state, item: item)
         let started = ContinuousClock.now
+
         do {
           try await PluginRunner.run(configuration: configuration, mailbox: input) {
             [weak self] value in
@@ -617,22 +678,28 @@ final class ProviderRuntime {
           }
         } catch {
           guard !Task.isCancelled, self?.pluginGenerations[item.id] == generation else { return }
+
           var failed = self?.pluginStates[item.id] ?? PluginState()
           failed.status = .failure
           failed.error = error.localizedDescription
           self?.publishPlugin(failed, item: item)
         }
+
         guard !Task.isCancelled, self?.pluginGenerations[item.id] == generation else { return }
+
         let receivedOutput = self?.pluginHadOutput[item.id] == true
         self?.pluginGenerations[item.id] = nil
         self?.pluginInputs[item.id] = nil
         guard configuration.restart ?? true else { return }
+
         delay = PluginState.restartDelay(
           delay,
           uptime: started.duration(to: .now),
           receivedOutput: receivedOutput
         )
+
         do { try await sleep(.seconds(delay)) } catch { return }
+
         delay = min(30, delay * 2)
       } while !Task.isCancelled
     }
@@ -640,6 +707,7 @@ final class ProviderRuntime {
 
   private func receivePlugin(_ value: PluginOutput, item: Item, generation: UUID) {
     guard pluginGenerations[item.id] == generation else { return }
+
     pluginHadOutput[item.id] = true
     publishPlugin(PluginState(status: .success, lastSuccess: value), item: item)
   }
@@ -679,6 +747,7 @@ final class ProviderRuntime {
 
   private func startCommand(_ item: Item, coalesce: Bool = false) {
     guard let command = item.command else { return }
+
     commandTasks[item.id]?.cancel()
     commandTasks[item.id] = Task { [weak self] in
       if coalesce {
@@ -686,10 +755,12 @@ final class ProviderRuntime {
       }
       repeat {
         guard !Task.isCancelled else { return }
+
         var state = self?.commandStates[item.id] ?? CommandState()
         state.status = .running
         state.error = nil
         self?.publishCommand(state, item: item)
+
         do {
           let result = try await ProcessRunner.run(
             executable: "/bin/sh",
@@ -698,6 +769,7 @@ final class ProviderRuntime {
             mergeStandardError: command.format != .json && command.output != .stdout
           )
           guard !Task.isCancelled else { return }
+
           if result.exitCode == 0 {
             state.lastSuccess = try CommandState.decode(result.output, configuration: command)
             state.status = .success
@@ -707,13 +779,17 @@ final class ProviderRuntime {
           }
         } catch {
           guard !Task.isCancelled else { return }
+
           state.status = .failure
           state.error = error is DecodingError ? "Invalid command JSON" : error.localizedDescription
         }
+
         guard !Task.isCancelled else { return }
+
         self?.publishCommand(state, item: item)
         let duration = item.refresh?.mode == .interval ? item.refresh?.seconds : nil
         guard let interval = duration else { return }
+
         do { try await Task.sleep(for: .seconds(interval)) } catch { return }
       } while !Task.isCancelled
     }

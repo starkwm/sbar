@@ -123,7 +123,9 @@ private struct SymbolContentView<Symbol: View, Content: View>: View {
   var body: some View {
     HStack(spacing: 4) {
       if position == .left { symbol }
+
       content
+
       if position == .right { symbol }
     }
   }

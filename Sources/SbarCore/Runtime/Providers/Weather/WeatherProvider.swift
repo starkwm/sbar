@@ -22,23 +22,30 @@ final class WeatherProvider {
     for location in tasks.keys where requested[location] != intervals[location] {
       tasks.removeValue(forKey: location)?.cancel()
     }
+
     states = states.filter { requested[$0.key] != nil }
     intervals = requested
+
     for (location, interval) in requested where tasks[location] == nil {
       let read = read
       tasks[location] = Task { [weak self] in
         while !Task.isCancelled {
           let state: WeatherState
+
           do {
             let reading = try await read(location)
             state = WeatherState(reading: reading)
           } catch {
             guard !Task.isCancelled else { return }
+
             state = WeatherState(reading: self?.states[location]?.reading, stale: true)
           }
+
           guard !Task.isCancelled else { return }
+
           self?.states[location] = state
           update(location, state)
+
           do { try await Task.sleep(for: .seconds(interval)) } catch { return }
         }
       }
@@ -47,6 +54,7 @@ final class WeatherProvider {
 
   func stop() {
     for task in tasks.values { task.cancel() }
+
     tasks = [:]
     intervals = [:]
     states = [:]
@@ -71,17 +79,20 @@ enum OpenMeteoReader {
       URLQueryItem(name: "timeformat", value: "unixtime"),
     ]
     guard let url = components.url else { throw MessageError.message("Invalid weather URL.") }
+
     return URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
   }
 
   static func read(_ location: WeatherLocation) async throws -> WeatherReading {
     let (data, response) = try await URLSession.shared.data(for: request(for: location))
+
     return try decode(data, response: response)
   }
 
   static func decode(_ data: Data, response: URLResponse) throws -> WeatherReading {
     guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode)
     else { throw MessageError.message("Weather request failed.") }
+
     let current = try JSONDecoder().decode(OpenMeteoResponse.self, from: data).current
     guard current.time.isFinite, current.temperature.isFinite,
       current.isDay == 0 || current.isDay == 1,
@@ -89,6 +100,7 @@ enum OpenMeteoReader {
       current.humidity.map({ $0.isFinite && (0...100).contains($0) }) ?? true,
       current.windSpeed.map({ $0.isFinite && $0 >= 0 }) ?? true
     else { throw MessageError.message("Invalid weather data.") }
+
     return WeatherReading(
       temperature: current.temperature,
       apparentTemperature: current.apparentTemperature,
