@@ -2,7 +2,7 @@
 
 [Documentation index](index.md)
 
-Set an item's `text` to control its label. Omit it to keep the existing provider presentation. An empty string hides the text while retaining the item's symbol. For throughput it also removes the directional icons. Groups, dividers, and spacers have no label and do not accept `text`.
+Set an item's `text` to control its label. Omit it to keep the existing provider presentation. An empty string hides the label while retaining the item's separate symbol. It also hides throughput direction icons and Spaces name icons. Groups, dividers, and spacers have no label and do not accept `text`.
 
 ```json
 { "id": "cpu", "type": "cpu", "text": "CPU {{percentage}}%" }
@@ -104,7 +104,7 @@ they describe the current workspace selected by the provider's `scope`. Inside
 ```
 
 The example renames the first Space to Code and retains per-Space highlighting.
-For positional names without conditions, set [`spaces.names`](providers/spaces.md). These names become the default label and the `name` and `value` template fields; `index` remains numeric.
+For names assigned by position, set [`spaces.names`](providers/spaces.md#name-overrides). Text entries become the default label and the `name` and `value` fields. Symbol objects render an icon at each `{{name}}` or `{{value}}` insertion. Comparisons use the default Space number for name icons. `index` remains numeric.
 Use `{{#separator}} · {{/separator}}` inside the loop for a separator between entries. It uses the provider's inactive tint and is never bold. Without an inactive tint it inherits the item colour. Ordinary literal text inside the loop still inherits that entry's styling. No extra spacing is inserted between template runs.
 `{{^workspaces}}` supplies a fallback when the list is empty or unavailable.
 Workspace loops cannot nest and cannot be compared or inserted as a scalar value.
@@ -248,9 +248,9 @@ that tag renders. For example, this shows the battery icon only while charging:
 }
 ```
 
-`showSymbol: false` still hides symbols. Native application icons follow the same
+`showSymbol: false` hides provider symbols, including those requested by `{{symbol}}`. Spaces name icons remain part of the label. Native application icons follow the same
 template conditions and still require `frontApplication.showIcon`. Workspace,
-VPN, and Bluetooth loops use the aggregate icon; they do not gain per-entry icons.
+VPN, and Bluetooth loops use the aggregate icon for `{{symbol}}`. Spaces can separately replace entry names with icons through `spaces.names` symbol objects.
 `{{#symbol}}` conditions are not supported. Use provider state conditions around
 `{{symbol}}` instead.
 
@@ -270,7 +270,7 @@ Command and plugin result `text` is input data exposed through `{{value}}`, not 
 
 ## Template limits
 
-Workspace loops preserve each entry's colour and emphasis. Throughput loops preserve native direction symbols through `{{symbol}}`. Other providers retain one aggregate item symbol. Existing symbol, colour, and hide rules still apply. Native provider accessibility descriptions remain intact; static and clock labels use the rendered text.
+Workspace loops preserve each entry's colour and emphasis, including Spaces name icons. Throughput loops render direction icons through `{{symbol}}`. For other providers, `{{symbol}}` controls the single item icon. Existing colour and hide rules still apply. Native provider accessibility descriptions remain intact; static and clock labels use the rendered text.
 
 There is no custom number formatter, arbitrary command JSON field lookup, or literal `{{` escape yet. Date formatting still uses the clock's `format`, `dateStyle`, and `timeStyle` fields. Command and plugin `value` retains the existing truncation and error policy. Templates affect presentation only; CLI values and subscription events retain their existing output.
 

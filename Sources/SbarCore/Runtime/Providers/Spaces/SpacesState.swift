@@ -6,6 +6,7 @@ struct SpacesState: Equatable, Sendable {
       CFGetTypeID(number) != CFBooleanGetTypeID(),
       let id = UInt64(number.stringValue), id > 0
     else { return nil }
+
     return id
   }
 
@@ -17,9 +18,11 @@ struct SpacesState: Equatable, Sendable {
         guard let id = identifier(value["ManagedSpaceID"]), seen.insert(id).inserted else {
           return nil
         }
+
         return SpaceEntry(id: id, fullscreen: (value["type"] as? NSNumber)?.intValue == 4)
       }
       let current = display["Current Space"] as? [String: Any]
+
       return SpaceDisplay(
         identifier: (display["Display Identifier"] as? String)?.lowercased() ?? "unknown-\(index)",
         spaces: spaces,
@@ -28,6 +31,7 @@ struct SpacesState: Equatable, Sendable {
             && activeSpaceID > 0 ? activeSpaceID : nil)
       )
     }
+
     return Self(displays: parsed, focusedID: activeSpaceID)
   }
 
@@ -49,6 +53,7 @@ struct SpacesState: Equatable, Sendable {
       displays.first { $0.identifier == displayUUID?.lowercased() }
       ?? displays.first { $0.identifier == "main" }
     guard let display, let activeID = display.activeID else { return false }
+
     return display.spaces.first { $0.id == activeID }?.fullscreen ?? false
   }
 
@@ -56,6 +61,7 @@ struct SpacesState: Equatable, Sendable {
     let settings = item.spaces ?? SpacesConfiguration()
     let entries: [SpaceEntry]
     let active: UInt64?
+
     if settings.scope == .display {
       let display =
         displays.first { $0.identifier == displayUUID?.lowercased() }
@@ -67,6 +73,7 @@ struct SpacesState: Equatable, Sendable {
       entries = displays.flatMap(\.spaces).filter { seen.insert($0.id).inserted }
       active = focusedID
     }
+
     guard let active, let activeEntry = entries.first(where: { $0.id == active }) else {
       return WorkspaceText().apply(
         to: WidgetPresentation(
@@ -81,21 +88,37 @@ struct SpacesState: Equatable, Sendable {
         for: item
       )
     }
+
     let visible = entries.filter { settings.includeFullscreen != false || !$0.fullscreen }
     let index = visible.firstIndex { $0.id == active }
-    func name(at index: Int?) -> String {
-      guard let index else { return "Fullscreen" }
+    func name(at index: Int?) -> SpaceName? {
+      guard let index else { return nil }
+
       if let names = settings.names, names.indices.contains(index),
-        let name = names[index], !name.isEmpty
+        let name = names[index]
       {
         return name
       }
-      return String(index + 1)
+
+      return nil
     }
-    let label = name(at: index)
     func entry(_ space: SpaceEntry, index: Int?) -> WorkspaceText.Entry {
-      WorkspaceText.Entry(
-        name: name(at: index),
+      let override = name(at: index)
+      let label: String
+      let symbol: ItemSymbol?
+
+      switch override {
+      case .text(let text) where !text.isEmpty:
+        label = text
+        symbol = nil
+      default:
+        label = index.map { String($0 + 1) } ?? "Fullscreen"
+
+        if case .symbol(let value) = override { symbol = value } else { symbol = nil }
+      }
+
+      return WorkspaceText.Entry(
+        name: label,
         index: index.map { $0 + 1 },
         identifier: String(space.id),
         active: space.id == active,
@@ -103,16 +126,19 @@ struct SpacesState: Equatable, Sendable {
         visible: displays.contains { $0.activeID == space.id },
         fullscreen: space.fullscreen,
         tint: space.id == active ? settings.tints?.active : settings.tints?.inactive,
-        emphasized: space.id == active
+        emphasized: space.id == active,
+        nameSymbol: symbol
       )
     }
     let workspaceText = WorkspaceText(
       current: entry(activeEntry, index: index),
       entries: visible.enumerated().map { entry($0.element, index: $0.offset) }
     )
+    let label = workspaceText.current?.name ?? "Fullscreen"
     let accessible =
       index.map { "Space \(label), \($0 + 1) of \(visible.count)" }
       ?? (activeEntry.fullscreen ? "Fullscreen Space active" : "Spaces unavailable")
+
     return workspaceText.apply(
       to: WidgetPresentation(
         text: label,

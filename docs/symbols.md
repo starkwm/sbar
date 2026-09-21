@@ -40,8 +40,8 @@ or a glyph object. Install the font on your Mac first and use its font name:
 }
 ```
 
-`glyph` is literal text (JSON Unicode escapes work too), `font` selects the installed font,
-and optional `size` accepts 8–72 points. Without `size`, glyphs use the resolved item/theme
+`glyph` is literal text and also accepts JSON Unicode escapes. `font` selects the installed font,
+and optional `size` accepts 8 to 72 points. Without `size`, glyphs use the resolved item/theme
 font size. Only the symbol uses the custom font; item text retains its normal font. Missing
 fonts or glyphs use macOS font fallback, which may display a missing-character box.
 SF Symbol strings continue to work, and can be mixed with glyph objects.
@@ -68,7 +68,7 @@ Battery `symbols.levels` and optional `symbols.chargingLevels` each accept exact
 }
 ```
 
-Every provider `symbols` block supports shared `font` and optional `size` (8–72 points), including workspace, command, and plugin symbols.
+Every provider `symbols` block supports shared `font` and optional `size` from 8 to 72 points, including workspace, command, and plugin symbols.
 Each glyph can override either value. A font must be provided locally or inherited;
 without either size, the resolved item/theme font size is used. Strings remain SF Symbol
 names and do not inherit glyph font settings. Omitted state symbols use the built-in defaults.
@@ -78,3 +78,11 @@ An item-level `symbol` overrides provider state symbols. Set `showSymbol: false`
 The transient [`set` command](cli.md#update-items) also accepts a glyph object for the item-level `symbol`.
 
 See [item styling](styling.md) for text and SF Symbol weights, and each [provider's documentation](index.md#providers) for its state symbols.
+
+## Workspace name icons
+
+Entries in [`spaces.names`](providers/spaces.md#name-overrides) can replace individual workspace labels with icons. Use `{ "symbol": "globe" }` for an SF Symbol or `{ "symbol": { "glyph": "\uf121", "font": "Symbols Nerd Font Mono" } }` for a Nerd Font glyph. A plain string such as `"globe"` displays as text.
+
+Name icons appear in the default current label and at `{{name}}` or `{{value}}` in workspace templates. They keep each entry's tint and active highlighting. `symbolPosition` does not move them away from the template insertion point.
+
+`spaces.showSymbol` and the item's top-level `symbol` control the separate provider icon. Name icons remain visible when `spaces.showSymbol` is `false`; an empty `text` hides them with the rest of the label. Each glyph object in `spaces.names` needs its own `font` and can set `size`. It does not inherit the font from `spaces.symbols`.

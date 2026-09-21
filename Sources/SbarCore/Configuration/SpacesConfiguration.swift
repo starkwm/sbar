@@ -2,7 +2,7 @@ import Foundation
 
 struct SpacesConfiguration: Codable, Equatable, Sendable {
   var scope: SpacesScope?
-  var names: [String?]?
+  var names: [SpaceName?]?
   var symbols: AvailabilitySymbols?
   var tints: SpacesTints?
   var includeFullscreen: Bool?

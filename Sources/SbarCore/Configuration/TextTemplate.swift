@@ -12,6 +12,7 @@ struct TextTemplate {
     var entry: Int?
     var separator = false
     var symbol = false
+    var field: String?
   }
 
   private static let collections: Set<String> = ["workspaces", "services", "devices", "transfers"]
@@ -19,6 +20,7 @@ struct TextTemplate {
   static func fields(for type: ItemType) -> Set<String> {
     let common: Set<String> = ["value", "id", "symbol"]
     let fields: [String]
+
     switch type {
     case .spaces, .aerospace, .yabai:
       fields = [
@@ -61,11 +63,13 @@ struct TextTemplate {
     case .command, .plugin: fields = ["status", "error"]
     default: fields = []
     }
+
     return common.union(fields)
   }
 
   static func allowedValues(for type: ItemType) -> [String: Set<String>] {
     let statuses: Set<String>
+
     switch type {
     case .battery: statuses = ["charging", "pluggedIn", "onBattery", "noBattery"]
     case .volume: statuses = ["available", "muted", "fixed", "unavailable"]
@@ -79,7 +83,9 @@ struct TextTemplate {
     case .command, .plugin: statuses = ["running", "success", "failure"]
     default: statuses = []
     }
+
     var values: [String: Set<String>] = [:]
+
     if !statuses.isEmpty { values["status"] = statuses }
     for name in fields(for: type).intersection([
       "available", "charging", "pluggedIn", "muted", "playing", "connected",
@@ -89,6 +95,7 @@ struct TextTemplate {
     }
     if type == .throughput { values["direction"] = ["download", "upload"] }
     if type == .media { values["source"] = ["Music", "Spotify"] }
+
     return values
   }
 
@@ -102,6 +109,7 @@ struct TextTemplate {
         }
       }
     }
+
     return contains(parts)
   }
 
@@ -120,21 +128,27 @@ struct TextTemplate {
     func parse(closing: String? = nil, depth: Int = 0, inCollection: Bool = false) throws -> [Part]
     {
       guard depth <= 8 else { throw fail("Text sections may nest at most eight levels.") }
+
       var result: [Part] = []
+
       while let start = remaining.range(of: "{{") {
         result.append(.literal(String(remaining[..<start.lowerBound])))
         remaining = remaining[start.upperBound...]
         guard let end = remaining.range(of: "}}") else {
           throw fail("Unclosed text template tag.")
         }
+
         let tag = remaining[..<end.lowerBound].trimmingCharacters(in: .whitespacesAndNewlines)
         remaining = remaining[end.upperBound...]
+
         if tag.hasPrefix("/") {
           guard String(tag.dropFirst()) == closing else {
             throw fail("Unexpected closing tag '\(tag)'.")
           }
+
           return result
         }
+
         let section = tag.hasPrefix("#") || tag.hasPrefix("^")
         let expression = section ? String(tag.dropFirst()) : tag
         let components =
@@ -147,6 +161,7 @@ struct TextTemplate {
           components.count == 2
           ? components[1].trimmingCharacters(in: .whitespacesAndNewlines) : nil
         guard fields.contains(name) else { throw fail("Unknown text template value '\(name)'.") }
+
         if name == "symbol", section {
           throw fail("Use {{symbol}} as a value, not a section.")
         }
@@ -164,6 +179,7 @@ struct TextTemplate {
         }
         if let expected {
           guard !expected.isEmpty else { throw fail("An equality condition needs a value.") }
+
           if let allowed = allowedValues[name], !allowed.contains(expected) {
             throw fail(
               "Unknown value '\(expected)' for '\(name)'. Expected one of: \(allowed.sorted().joined(separator: ", "))."
@@ -187,9 +203,12 @@ struct TextTemplate {
           result.append(.value(name))
         }
       }
+
       guard closing == nil else { throw fail("Unclosed text section '\(closing!)'.") }
+
       result.append(.literal(String(remaining)))
       remaining = ""[...]
+
       return result
     }
     parts = try parse()
@@ -199,16 +218,30 @@ struct TextTemplate {
     renderRuns(values).map(\.text).joined()
   }
 
-  func renderRuns(_ values: [String: String], entries: [[String: String]] = []) -> [Run] {
+  func renderRuns(
+    _ values: [String: String],
+    entries: [[String: String]] = [],
+    preserveField: (_ name: String, _ entry: Int?) -> Bool = { _, _ in false }
+  ) -> [Run] {
     var runs: [Run] = []
-    func append(_ text: String, entry: Int?, separator: Bool, symbol: Bool = false) {
+    func append(
+      _ text: String,
+      entry: Int?,
+      separator: Bool,
+      symbol: Bool = false,
+      field: String? = nil
+    ) {
       guard !text.isEmpty || symbol else { return }
-      if let last = runs.indices.last, runs[last].entry == entry, runs[last].separator == separator
+
+      if let last = runs.indices.last, runs[last].entry == entry, runs[last].separator == separator,
+        field == nil, runs[last].field == nil
       {
         runs[last].text += text
         runs[last].symbol = runs[last].symbol || symbol
       } else {
-        runs.append(Run(text: text, entry: entry, separator: separator, symbol: symbol))
+        runs.append(
+          Run(text: text, entry: entry, separator: separator, symbol: symbol, field: field)
+        )
       }
     }
     func render(
@@ -221,7 +254,13 @@ struct TextTemplate {
         switch part {
         case .literal(let text): append(text, entry: entry, separator: separator)
         case .value(let name):
-          append(values[name] ?? "", entry: entry, separator: separator, symbol: name == "symbol")
+          append(
+            values[name] ?? "",
+            entry: entry,
+            separator: separator,
+            symbol: name == "symbol",
+            field: preserveField(name, entry) ? name : nil
+          )
         case .section(let name, let expected, let inverted, let children):
           if name == "separator" {
             if let entry, entry < entries.count - 1 {
@@ -236,16 +275,20 @@ struct TextTemplate {
               let preceding = runs
               runs = []
               var rendered: [[Run]] = []
+
               for (index, fields) in entries.enumerated() {
                 var local = values.merging(fields) { _, value in value }
                 local["first"] = String(index == 0)
                 local["last"] = String(index == entries.count - 1)
                 render(children, values: local, entry: index)
+
                 if runs.contains(where: { !$0.separator && (!$0.text.isEmpty || $0.symbol) }) {
                   rendered.append(runs)
                 }
+
                 runs = []
               }
+
               runs =
                 preceding
                 + rendered.enumerated().flatMap { index, entryRuns in
@@ -256,6 +299,7 @@ struct TextTemplate {
             let value = values[name] ?? ""
             let present =
               expected.map { values[name] == $0 } ?? (!value.isEmpty && value != "false")
+
             if present != inverted {
               render(children, values: values, entry: entry, separator: separator)
             }
@@ -264,6 +308,7 @@ struct TextTemplate {
       }
     }
     render(parts, values: values)
+
     return runs
   }
 }
