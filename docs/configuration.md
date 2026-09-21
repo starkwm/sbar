@@ -156,7 +156,7 @@ See the [vertical example](../examples/vertical/README.md) for app shortcuts, st
 | [`disk`](providers/disk.md) | Capacity of a selected volume (home volume by default) |
 | [`throughput`](providers/throughput.md) | Network transfer rates |
 | [`media`](providers/media.md) | Music or Spotify playback information |
-| [`spaces`](providers/spaces.md) | Focused native macOS Space |
+| [`spaces`](providers/spaces.md) | Native macOS Spaces with optional text or icon name overrides |
 | [`aerospace`](providers/aerospace.md), [`yabai`](providers/yabai.md) | Focused workspace from the corresponding window manager |
 | [`command`](providers/command.md) | Output from a shell command |
 | [`plugin`](providers/plugin.md) | Text streamed by an external process |
@@ -168,6 +168,8 @@ See the [vertical example](../examples/vertical/README.md) for app shortcuts, st
 Optional properties include `enabled`, [`text`](text-templates.md), [`symbol` and `symbolPosition`](symbols.md), `priority`, [`style`](styling.md), [`refresh`](#refresh-policies), [`primaryAction` and `secondaryAction`](actions.md), and [`popup` text](layout.md). `enabled` defaults to `true` and `priority` defaults to `0`.
 
 Symbols accept SF Symbol names or font glyph objects and appear beside item content except for groups, dividers, and spacers. `symbolPosition` accepts `left` or `right` and defaults to `left`. It also controls provider state symbols and frontmost application icons. Follow the provider links in the table for type-specific settings.
+
+For macOS Spaces, [`spaces.names`](providers/spaces.md#name-overrides) sets a label for each position. Use a string for text, `{ "symbol": "globe" }` for an SF Symbol, or `{ "symbol": { "glyph": "\uf121", "font": "Symbols Nerd Font Mono" } }` for a font glyph. Missing, `null`, and empty entries keep the default number. These labels also appear in workspace templates.
 
 ## Refresh policies
 

@@ -1955,12 +1955,25 @@
             "null"
           ],
           "items": {
-            "type": [
-              "string",
-              "null"
+            "oneOf": [
+              {
+                "type": ["string", "null"]
+              },
+              {
+                "type": "object",
+                "required": ["symbol"],
+                "properties": {
+                  "symbol": {
+                    "$ref": "#/$defs/symbol",
+                    "type": ["string", "object"],
+                    "pattern": "\\S"
+                  }
+                },
+                "additionalProperties": false
+              }
             ]
           },
-          "description": "Display names by position after scope and fullscreen filtering. The first entry names Space 1. Missing, null, or empty entries retain the default number. Supports literal text and font glyphs."
+          "description": "Display names by position after scope and fullscreen filtering. The first entry names Space 1. Missing, null, or empty entries retain the default number. Strings are literal text; objects with a symbol field render an SF Symbol name or a font glyph object in place of the name."
         },
         "symbols": {
           "$ref": "#/$defs/spacesSymbols"

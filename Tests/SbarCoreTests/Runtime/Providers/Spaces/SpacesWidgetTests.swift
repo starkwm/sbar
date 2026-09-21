@@ -32,19 +32,24 @@ struct SpacesWidgetTests {
         "{{#available}}{{index}} / {{total}}{{/available}}{{^available}}{{value}}{{/available}}",
       spaces: SpacesConfiguration()
     )
+
     #expect(snapshot.complete)
     #expect(snapshot.presentation(for: focused).text == "2 / 4")
+
     var local = focused
     local.spaces?.scope = .display
+
     #expect(snapshot.presentation(for: local, displayUUID: "display-a").text == "2 / 2")
     #expect(snapshot.presentation(for: local, displayUUID: "DISPLAY-B").text == "2 / 2")
     #expect(snapshot.presentation(for: local, displayUUID: "missing").text == "Spaces unavailable")
+
     let shared = SpacesState.parse(
       displays: [
         ["Display Identifier": "Main", "Spaces": [["ManagedSpaceID": 50], ["ManagedSpaceID": 60]]]
       ],
       activeSpaceID: 60
     )
+
     #expect(shared.presentation(for: local, displayUUID: "any").text == "2 / 2")
   }
 
@@ -56,15 +61,20 @@ struct SpacesWidgetTests {
       text: "{{#index}}{{index}} / {{total}}{{/index}}{{^index}}{{value}}{{/index}}",
       spaces: SpacesConfiguration(includeFullscreen: false)
     )
+
     #expect(snapshot.presentation(for: item).text == "Fullscreen")
+
     item.text = "{{#workspaces}}{{name}}{{/workspaces}}"
     let result = snapshot.presentation(for: item)
+
     #expect(result.segments.map(\.text) == ["1", "2", "3"])
     #expect(result.segments.allSatisfy { !$0.emphasized })
     #expect(result.accessibilityLabel.contains("Fullscreen Space active"))
+
     var state = snapshot
     state.focusedID = 40
     item.text = "{{#index}}{{index}} / {{total}}{{/index}}{{^index}}{{value}}{{/index}}"
+
     #expect(state.presentation(for: item).text == "3 / 3")
   }
 
@@ -81,20 +91,28 @@ struct SpacesWidgetTests {
       )
     )
     let result = snapshot.presentation(for: item)
+
     #expect(result.symbol == .glyph("S", font: "Shared", size: 18))
     #expect(result.segments.map(\.text) == ["Code", "Video", "3", "4"])
     #expect(result.segments[1].emphasized)
     #expect(result.segments[1].tint == "#00FF00")
     #expect(result.segments[0].tint == "#888888")
+
     item.text = ""
+
     #expect(snapshot.presentation(for: item).text.isEmpty)
     #expect(snapshot.presentation(for: item).segments.isEmpty)
     #expect(snapshot.presentation(for: item).accessibilityLabel.contains("Space 2"))
+
     item.symbol = "star"
+
     #expect(snapshot.presentation(for: item).symbol == "star")
+
     item.spaces?.showSymbol = false
+
     #expect(snapshot.presentation(for: item).symbol == nil)
     #expect(SpacesState().presentation(for: item).tint == "#FF0000")
+
     for name in ["rectangle.3.group", "questionmark"] {
       #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil)
     }
@@ -110,18 +128,27 @@ struct SpacesWidgetTests {
         tints: SpacesTints(active: "#00FF00", inactive: "#888888")
       )
     )
+
     #expect(snapshot.presentation(for: item).text == "\u{f121}")
+
     item.text = "{{name}}|{{value}}|{{index}}|{{workspaceId}}"
+
     #expect(snapshot.presentation(for: item).text == "\u{f121}|\u{f121}|2|20")
+
     item.text = "{{#workspaces}}{{name}}{{/workspaces}}"
     let result = snapshot.presentation(for: item)
+
     #expect(result.segments.map(\.text) == ["Code", "\u{f121}", "{{index}}", "4"])
     #expect(result.segments[1].emphasized)
     #expect(result.segments[1].tint == "#00FF00")
     #expect(result.segments[0].tint == "#888888")
+
     item.text = "{{#workspaces}}{{value}}{{/workspaces}}"
+
     #expect(snapshot.presentation(for: item).text == result.text)
+
     item.text = "{{#index=2}}Custom{{/index}}"
+
     #expect(snapshot.presentation(for: item).text == "Custom")
   }
 
@@ -132,13 +159,20 @@ struct SpacesWidgetTests {
       type: .spaces,
       spaces: SpacesConfiguration(names: ["Code", "Web", "Chat"], includeFullscreen: false)
     )
+
     #expect(snapshot.presentation(for: item).text == "Fullscreen")
+
     item.text = "{{#workspaces}}{{name}}:{{workspaceId}};{{/workspaces}}"
+
     #expect(snapshot.presentation(for: item).text == "Code:10;Web:30;Chat:40;")
+
     item.spaces?.scope = .display
+
     #expect(snapshot.presentation(for: item, displayUUID: "display-b").text == "Code:30;Web:40;")
+
     item.text = nil
     let local = snapshot.presentation(for: item, displayUUID: "display-b")
+
     #expect(local.text == "Web")
     #expect(local.accessibilityLabel == "Space Web, 2 of 2")
     #expect(SpacesState().presentation(for: item).text == "Spaces unavailable")
@@ -151,9 +185,165 @@ struct SpacesWidgetTests {
       type: .spaces,
       text: "{{#workspaces}}{{name}}{{#separator}},{{/separator}}{{/workspaces}}"
     )
-    for names: [String?]? in [nil, [], [nil, ""], ["", nil, "", nil, "Unused"]] {
+
+    for names: [SpaceName?]? in [nil, [], [nil, ""], ["", nil, "", nil, "Unused"]] {
       item.spaces = SpacesConfiguration(names: names)
+
       #expect(snapshot.presentation(for: item).text == "1,2,3,4")
+    }
+  }
+
+  @Test("symbol name overrides render current and mixed list labels with active styling")
+  func symbolNames() throws {
+    let glyph = ItemSymbol.glyph("\u{f121}", font: "Symbols Nerd Font Mono", size: 16)
+    var item = Item(
+      id: "spaces",
+      type: .spaces,
+      spaces: SpacesConfiguration(
+        names: ["Code", .symbol("globe"), nil, .symbol(glyph)],
+        tints: SpacesTints(active: "#00FF00", inactive: "#888888"),
+        showSymbol: false
+      )
+    )
+    let current = snapshot.presentation(for: item)
+
+    #expect(current.symbol == nil)
+    #expect(current.segments.map(\.text) == [""])
+    #expect(current.segments.map(\.symbol) == ["globe"])
+    #expect(current.segments.first?.tint == "#00FF00")
+    #expect(current.accessibilityLabel == "Space 2, 2 of 4")
+    #expect(NSImage(systemSymbolName: "globe", accessibilityDescription: nil) != nil)
+
+    for field in ["name", "value"] {
+      item.text = "{{#workspaces}}{{\(field)}}{{#separator}} · {{/separator}}{{/workspaces}}"
+      let list = snapshot.presentation(for: item)
+
+      #expect(list.segments.map(\.text) == ["Code", " · ", "", " · ", "3", " · ", ""])
+      #expect(list.segments.map(\.symbol) == [nil, nil, "globe", nil, nil, nil, glyph])
+      #expect(list.segments.map(\.emphasized) == [false, false, true, false, false, false, false])
+      #expect(list.segments[2].tint == "#00FF00")
+      #expect(list.segments[1].tint == "#888888")
+      #expect(list.segments[6].tint == "#888888")
+      #expect(list.segmentSpacing == 0)
+    }
+
+    item.spaces?.showSymbol = true
+    item.symbol = "star"
+
+    #expect(snapshot.presentation(for: item).symbol == "star")
+
+    item.text = nil
+
+    #expect(snapshot.presentation(for: item).tint == "#00FF00")
+    #expect(snapshot.presentation(for: item).segments.first?.symbol == "globe")
+
+    item.text = ""
+
+    #expect(snapshot.presentation(for: item).segments.isEmpty)
+    #expect(snapshot.presentation(for: item).symbol == "star")
+  }
+
+  @Test("symbol substitutions preserve template literals, identity fields, conditions, and order")
+  func symbolTemplates() {
+    var item = Item(
+      id: "spaces",
+      type: .spaces,
+      text: "2[{{name}}]{{index}}/{{workspaceId}}={{value}}",
+      spaces: SpacesConfiguration(names: [nil, .symbol("globe")])
+    )
+    let current = snapshot.presentation(for: item)
+
+    #expect(current.segments.map(\.text) == ["2[", "", "]2/20=", ""])
+    #expect(current.segments.map(\.symbol) == [nil, "globe", nil, "globe"])
+
+    item.text =
+      "{{#workspaces}}{{#active}}{{name}}{{/active}}{{#separator}} · {{/separator}}{{/workspaces}}"
+    let filtered = snapshot.presentation(for: item)
+
+    #expect(filtered.segments.count == 1)
+    #expect(filtered.segments.first?.symbol == "globe")
+
+    item.text = "{{#name=2}}{{name}}{{/name}}{{^name=2}}Other{{/name}}"
+
+    #expect(snapshot.presentation(for: item).segments.first?.symbol == "globe")
+
+    item.text = "{{index}}"
+
+    #expect(snapshot.presentation(for: item).text == "2")
+    #expect(snapshot.presentation(for: item).segments.isEmpty)
+
+    item.text = "{{#index=99}}{{name}}{{/index}}"
+
+    #expect(snapshot.presentation(for: item).segments.isEmpty)
+    #expect(snapshot.presentation(for: item).text.isEmpty)
+
+    item.spaces?.names = ["Code", .symbol("globe")]
+    item.text = "{{#workspaces}}[{{name}}]{{/workspaces}}"
+    let mixed = snapshot.presentation(for: item)
+
+    #expect(mixed.segments.map(\.text) == ["[Code]", "[", "", "]", "[3]", "[4]"])
+    #expect(mixed.segments.map(\.symbol) == [nil, nil, "globe", nil, nil, nil])
+  }
+
+  @Test("symbol overrides follow scoped filtered positions and unavailable fallbacks")
+  func scopedSymbolNames() {
+    var item = Item(
+      id: "spaces",
+      type: .spaces,
+      spaces: SpacesConfiguration(
+        names: [.symbol("terminal"), .symbol("globe")],
+        includeFullscreen: false
+      )
+    )
+
+    #expect(snapshot.presentation(for: item).text == "Fullscreen")
+    #expect(snapshot.presentation(for: item).segments.isEmpty)
+
+    item.text = "{{#workspaces}}{{name}}{{/workspaces}}{{^workspaces}}{{value}}{{/workspaces}}"
+
+    #expect(snapshot.presentation(for: item).segments.map(\.symbol) == ["terminal", "globe", nil])
+
+    item.spaces?.scope = .display
+
+    #expect(
+      snapshot.presentation(for: item, displayUUID: "display-b").segments.map(\.symbol) == [
+        "terminal", "globe",
+      ]
+    )
+
+    let unavailable = SpacesState().presentation(for: item)
+
+    #expect(unavailable.text == "Spaces unavailable")
+    #expect(unavailable.segments.isEmpty)
+  }
+
+  @Test("symbol names decode and roundtrip alongside text and reject malformed symbols")
+  func symbolNameConfiguration() throws {
+    let json =
+      #"{"names":["globe",{"symbol":"globe"},{"symbol":{"glyph":"\uf121","font":"Symbols Nerd Font Mono","size":16}},null,""]}"#
+    let settings = try JSONDecoder().decode(SpacesConfiguration.self, from: Data(json.utf8))
+
+    #expect(
+      settings.names == [
+        .text("globe"), .symbol("globe"),
+        .symbol(.glyph("\u{f121}", font: "Symbols Nerd Font Mono", size: 16)), nil, .text(""),
+      ]
+    )
+    #expect(
+      try JSONDecoder().decode(SpacesConfiguration.self, from: JSONEncoder().encode(settings))
+        == settings
+    )
+
+    for value in [
+      "{}", #"{"symbol":null}"#, #"{"symbol":1}"#, #"{"symbol":" "}"#,
+      #"{"symbol":{"glyph":"x"}}"#, #"{"symbol":{"glyph":"x","font":"Mono","size":1}}"#,
+    ] {
+      #expect(throws: (any Error).self) {
+        try JSONDecoder().decode(
+          SpacesConfiguration.self,
+          from: Data("{\"names\":[\(value)]}".utf8)
+        )
+      }
     }
   }
 
@@ -162,7 +352,9 @@ struct SpacesWidgetTests {
     for value: Any in [true, false, -1, 1.5, "10", 0, Double.nan, Double.infinity] {
       #expect(SpacesState.identifier(value) == nil)
     }
+
     #expect(SpacesState.identifier(NSNumber(value: UInt64.max)) == UInt64.max)
+
     let state = SpacesState.parse(
       displays: [
         [
@@ -173,6 +365,7 @@ struct SpacesWidgetTests {
       ],
       activeSpaceID: 20
     )
+
     #expect(state.displays[0].spaces.count == 1)
     #expect(state.text == "2")
     #expect(!state.complete)
@@ -188,8 +381,10 @@ struct SpacesWidgetTests {
       )
     )
     try item.spaces?.validate(path: "spaces")
+
     #expect(item.spaces?.names == ["Code", nil, "", "\u{f121}"])
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+
     for json in [
       #"{"scope":"invalid"}"#, #"{"tints":{"active":"red"}}"#,
       #"{"symbols":{"available":{"glyph":"S"}}}"#,
@@ -200,6 +395,7 @@ struct SpacesWidgetTests {
         try settings.validate(path: "spaces")
       }
     }
+
     #expect(throws: ConfigurationError.self) {
       try Configuration(
         bar: .init(),
@@ -217,11 +413,14 @@ struct SpacesWidgetTests {
     let provider = SpacesProvider(
       query: {
         queryState.reads += 1
+
         if queryState.unavailable { return SpacesState() }
         if queryState.transient {
           queryState.transient = false
+
           return SpacesState()
         }
+
         return valid
       },
       workspace: workspace,
@@ -232,21 +431,28 @@ struct SpacesWidgetTests {
     provider.start { updates.append($0) }
     defer { provider.stop() }
     queryState.transient = true
+
     for _ in 0..<5 {
       workspace.post(name: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
     }
+
     try await waitUntil { updates.count == 2 }
+
     #expect(queryState.reads == 3)
     #expect(updates.count == 2)
     #expect(updates.allSatisfy { $0.complete })
+
     queryState.unavailable = true
     application.post(name: NSApplication.didChangeScreenParametersNotification, object: nil)
     try await waitUntil { updates.last?.complete == false }
+
     #expect(updates.last?.complete == false)
     #expect(queryState.reads == 7)
+
     workspace.post(name: NSWorkspace.didActivateApplicationNotification, object: nil)
     provider.stop()
     try await Task.sleep(for: .milliseconds(150))
+
     #expect(queryState.reads == 7)
   }
 
@@ -265,12 +471,17 @@ struct SpacesWidgetTests {
     let item = try #require(configuration.items.active.first)
     runtime.updateWidgetState(.spaces(snapshot), for: .spaces)
     runtime.trigger("spaces")
+
     #expect(runtime.presentation(for: item, displayUUID: "display-b")?.text == "2 / 2")
+
     var changed = snapshot
     changed.displays[1].activeID = 30
     runtime.updateWidgetState(.spaces(changed), for: .spaces)
+
     #expect(runtime.presentation(for: item, displayUUID: "display-b")?.text == "2 / 2")
+
     runtime.trigger("spaces")
+
     #expect(runtime.presentation(for: item, displayUUID: "display-b")?.text == "1 / 2")
   }
 }
