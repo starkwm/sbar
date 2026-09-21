@@ -43,7 +43,7 @@ struct ControlTests {
   @MainActor
 
   @Test("ControlRouter.handle: retains file errors in diagnostics after runtime edits")
-  func handleRetainsFileErrorsAfterRuntimeEdits() throws {
+  func diagnostics() throws {
     let url = FileManager.default.temporaryDirectory.appending(
       path: "sbar-\(UUID().uuidString).json"
     )
@@ -96,7 +96,7 @@ struct ControlTests {
   @MainActor
 
   @Test("ControlRouter.handle: validates transient edits and retains trigger payloads")
-  func handleValidatesTransientEditsAndRetainsTriggerPayloads() {
+  func runtimeEdits() {
     let store = ConfigurationStore(
       configurationURL: URL(fileURLWithPath: "/tmp/not-created-\(UUID().uuidString).json")
     )

@@ -6,7 +6,7 @@ import Testing
 @Suite("Theme")
 struct ThemeTests {
   @Test("ItemStyle.resolved: applies item overrides and inherits omitted fields")
-  func resolvedAppliesOverridesAndInheritsOmittedFields() {
+  func overrides() {
     let theme = ItemStyle(
       tint: "#112233",
       background: "#223344",
@@ -30,7 +30,7 @@ struct ThemeTests {
   }
 
   @Test("ItemStyle.resolved: uses built-in defaults without styling")
-  func resolvedUsesBuiltInDefaultsWithoutStyling() throws {
+  func defaults() throws {
     let config = try JSONDecoder().decode(
       Configuration.self,
       from: Data(#"{"schemaVersion":1,"bar":{},"items":{}}"#.utf8)
@@ -133,7 +133,7 @@ struct ThemeTests {
   @Test(
     "Configuration.init: preserves partial theme and item styling through round trips"
   )
-  func initPreservesPartialStylingThroughRoundTrips() throws {
+  func roundTrip() throws {
     let json =
       ##"{"schemaVersion":1,"bar":{},"theme":{"itemSpacing":5,"itemStyle":{"tint":"#aabbcc","fontWeight":"semibold"}},"items":{"right":[{"id":"clock","type":"datetime","style":{"fontSize":16,"background":"#11223380"}}]}}"##
 
@@ -236,7 +236,7 @@ struct ThemeTests {
     "Configuration.validate: rejects malformed theme colors",
     arguments: ["red", "#fff", "#gg0000", "#1234567", "123456", "#１２３４５６"]
   )
-  func validateRejectsMalformedThemeColors(value: String) {
+  func invalidColors(value: String) {
     #expect(RGBA(hex: value) == nil)
 
     var config = Configuration.default
@@ -253,7 +253,7 @@ struct ThemeTests {
   }
 
   @Test("Configuration.validate: reports the exact location of invalid item styles")
-  func validateReportsInvalidItemStyleLocation() {
+  func errorPath() {
     var config = Configuration.default
     config.items.right[1].style = ItemStyle(fontSize: 0)
 
@@ -271,7 +271,7 @@ struct ThemeTests {
     "Configuration.validate: rejects nonfinite and negative theme spacing",
     arguments: [-1.0, Double.infinity, Double.nan]
   )
-  func validateRejectsNonfiniteAndNegativeSpacing(value: Double) {
+  func invalidSpacing(value: Double) {
     var config = Configuration.default
     config.theme = Theme(itemSpacing: value)
 

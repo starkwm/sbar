@@ -138,13 +138,12 @@ struct YabaiProviderTests {
   @Test("bursts coalesce, transient reads retry and persistent failures replace the snapshot")
   func retries() async throws {
     let valid = state
-    var reads = 0
-    var fail = false
+    let queryState = TestYabaiQueryState()
     let provider = YabaiProvider(
       retryInterval: .milliseconds(5),
       read: {
-        reads += 1
-        return fail || reads == 1 ? YabaiState() : valid
+        queryState.reads += 1
+        return queryState.fail || queryState.reads == 1 ? YabaiState() : valid
       }
     )
     var updates: [YabaiState] = []
@@ -152,17 +151,17 @@ struct YabaiProviderTests {
     defer { provider.stop() }
     for _ in 0..<5 { provider.requestRefresh() }
     try await waitUntil { updates == [valid] }
-    #expect(reads == 2)
+    #expect(queryState.reads == 2)
     #expect(updates == [valid])
-    fail = true
+    queryState.fail = true
     provider.requestRefresh()
     try await waitUntil { updates.last?.unavailable != nil }
-    #expect(reads == 5)
+    #expect(queryState.reads == 5)
     #expect(updates.last?.unavailable != nil)
     provider.requestRefresh()
     provider.stop()
     try await Task.sleep(for: .milliseconds(100))
-    #expect(reads == 5)
+    #expect(queryState.reads == 5)
   }
 
   @Test("superseded in-flight reads cannot publish, and providers restart")
@@ -223,4 +222,10 @@ struct YabaiProviderTests {
     #expect(runtime.presentation(for: manual)?.text == "Work")
     #expect(runtime.presentation(for: event)?.text == "Work")
   }
+}
+
+@MainActor
+private final class TestYabaiQueryState {
+  var reads = 0
+  var fail = false
 }

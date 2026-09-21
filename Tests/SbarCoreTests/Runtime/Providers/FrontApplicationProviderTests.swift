@@ -81,7 +81,7 @@ struct FrontApplicationProviderTests {
   }
 
   @Test("stop: removes the observer and allows a later restart")
-  func stopRemovesObserverAndAllowsRestart() {
+  func restart() {
     let source = TestApplicationSource()
     let provider = FrontApplicationProvider(observeApplication: source.observeApplication)
     defer { provider.stop() }

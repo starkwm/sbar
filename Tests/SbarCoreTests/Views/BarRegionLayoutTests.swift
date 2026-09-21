@@ -40,12 +40,12 @@ struct BarRegionLayoutTests {
   }
 
   @Test("BarRegionLayout.lengths: leaves equal sides around wide center content")
-  func lengthsLeaveEqualSidesAroundWideCenter() {
+  func wideCenter() {
     #expect(BarRegionLayout.lengths(available: 300, centerIdeal: 500) == [90, 100, 90])
   }
 
   @Test("BarRegionLayout.lengths: gives empty center space to the sides")
-  func lengthsGiveEmptyCenterSpaceToSides() {
+  func emptyCenter() {
     #expect(BarRegionLayout.lengths(available: 300, centerIdeal: 0) == [150, 0, 150])
   }
 
@@ -53,7 +53,7 @@ struct BarRegionLayoutTests {
     "BarRegionLayout.lengths: keeps narrow layouts nonnegative and within bounds",
     arguments: [0.0, 1.0, 10.0, 20.0]
   )
-  func lengthsKeepNarrowLayoutsWithinBounds(width: Double) {
+  func narrowBounds(width: Double) {
     let lengths = BarRegionLayout.lengths(available: width, centerIdeal: 100)
 
     #expect(lengths.allSatisfy { $0 >= 0 })

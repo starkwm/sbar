@@ -96,7 +96,7 @@ struct BarPlacementTests {
   }
 
   @Test("BarPlacement.frame: uses the physical top edge and respects the Dock at the bottom")
-  func frameUsesPhysicalTopEdgeAndRespectsDock() {
+  func screenEdges() {
     let screen = CGRect(x: -1440, y: 0, width: 1440, height: 900)
     let visible = CGRect(x: -1440, y: 40, width: 1440, height: 836)
 
@@ -160,7 +160,7 @@ struct BarPlacementTests {
   }
 
   @Test("BarPlacement.notch: handles offset screens and ignores bottom bars")
-  func notchHandlesOffsetScreensAndIgnoresBottomBars() {
+  func notchCoordinates() {
     let screen = CGRect(x: -1710, y: 100, width: 1710, height: 1112)
     let left = CGRect(x: -1710, y: 1174, width: 751, height: 38)
     let right = CGRect(x: -750, y: 1174, width: 750, height: 38)

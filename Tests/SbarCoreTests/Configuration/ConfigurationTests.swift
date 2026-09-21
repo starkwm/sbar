@@ -37,7 +37,7 @@ struct ConfigurationTests {
   }
 
   @Test("init: defaults omitted bar settings and item sections")
-  func initDefaultsOmittedSettingsAndSections() throws {
+  func defaults() throws {
     let configuration = try JSONDecoder().decode(
       Configuration.self,
       from: Data(#"{"schemaVersion":1,"bar":{},"items":{}}"#.utf8)
@@ -109,7 +109,7 @@ struct ConfigurationTests {
   }
 
   @Test("validate: rejects invalid bar padding and radius", arguments: [-1.0, 49.0])
-  func validateRejectsInvalidThemeDimensions(value: Double) {
+  func invalidDimensions(value: Double) {
     for theme in [Theme(verticalPadding: value), Theme(cornerRadius: value)] {
       let configuration = Configuration(bar: .init(), items: .init(), theme: theme)
       #expect(throws: (any Error).self) { try configuration.validate() }
@@ -117,7 +117,7 @@ struct ConfigurationTests {
   }
 
   @Test("init: decodes version-one refresh policies in groups")
-  func initDecodesVersionOneRefreshPoliciesInGroups() throws {
+  func groupRefresh() throws {
     let json =
       #"{"schemaVersion":1,"bar":{},"items":{"left":[{"id":"group","type":"group","children":[{"id":"c","type":"command","command":{"script":"date"},"refresh":{"mode":"interval","seconds":12,"event":"refresh"}}]}]}}"#
 
@@ -132,7 +132,7 @@ struct ConfigurationTests {
   }
 
   @Test("validate: rejects unsupported schema versions", arguments: [0, 2, 3])
-  func validateRejectsUnsupportedSchemaVersions(version: Int) throws {
+  func schemaVersion(version: Int) throws {
     let json = "{\"schemaVersion\":\(version),\"bar\":{},\"items\":{}}"
     let configuration = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
 
@@ -159,7 +159,7 @@ struct ConfigurationTests {
   }
 
   @Test("validate: rejects unsupported bar heights")
-  func validateRejectsUnsupportedHeights() {
+  func invalidHeights() {
     let configuration = Configuration(
       schemaVersion: Configuration.currentSchemaVersion,
       bar: .init(height: 10),
@@ -170,7 +170,7 @@ struct ConfigurationTests {
   }
 
   @Test("validate: reports the location of whitespace-only item IDs")
-  func validateReportsWhitespaceOnlyItemIDs() {
+  func blankIDs() {
     let configuration = Configuration(
       schemaVersion: Configuration.currentSchemaVersion,
       bar: .init(),
@@ -188,7 +188,7 @@ struct ConfigurationTests {
   }
 
   @Test("validate: requires selected display IDs and interval refresh durations")
-  func validateRequiresDisplayIDsAndRefreshDurations() {
+  func requiredSettings() {
     var config = Configuration.default
     config.bar.displays = .selected
 

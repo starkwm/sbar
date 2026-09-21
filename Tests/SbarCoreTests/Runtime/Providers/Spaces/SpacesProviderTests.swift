@@ -7,7 +7,7 @@ import Testing
 @MainActor
 struct SpacesProviderTests {
   @Test("numbers Spaces across displays including fullscreen Spaces")
-  func labelNumbersSpacesAcrossDisplays() {
+  func spaceNumbers() {
     let displays: [[String: Any]] = [
       ["Spaces": [["ManagedSpaceID": 10, "type": 0], ["ManagedSpaceID": 20, "type": 4]]],
       ["Spaces": [["ManagedSpaceID": 30, "type": 0]]],
@@ -19,7 +19,7 @@ struct SpacesProviderTests {
   }
 
   @Test("follows reordered Spaces without treating IDs as indexes")
-  func labelFollowsReorderedSpaces() {
+  func reorderedSpaces() {
     let displays: [[String: Any]] = [
       ["Spaces": [["ManagedSpaceID": 70], ["ManagedSpaceID": 10]]]
     ]
@@ -28,7 +28,7 @@ struct SpacesProviderTests {
   }
 
   @Test("ignores duplicate IDs and malformed entries")
-  func labelIgnoresDuplicateAndMalformedEntries() {
+  func invalidEntries() {
     let displays: [[String: Any]] = [
       [:],
       ["Spaces": [["ManagedSpaceID": 0], [:], ["ManagedSpaceID": 10]]],
@@ -39,7 +39,7 @@ struct SpacesProviderTests {
   }
 
   @Test("reports unavailable for missing active Spaces")
-  func labelReportsMissingActiveSpace() {
+  func missingSpace() {
     #expect(SpacesState.parse(displays: [], activeSpaceID: 0).text == "Spaces unavailable")
     #expect(
       SpacesState.parse(displays: [["Spaces": [["ManagedSpaceID": 10]]]], activeSpaceID: 20).text
@@ -48,7 +48,7 @@ struct SpacesProviderTests {
   }
 
   @Test("start: replaces observers and stops delivering updates after stop")
-  func startReplacesObserversAndStopsUpdates() async throws {
+  func observers() async throws {
     let workspace = NotificationCenter()
     let application = NotificationCenter()
     let state = SpacesState.parse(

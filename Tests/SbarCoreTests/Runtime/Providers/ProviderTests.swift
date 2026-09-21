@@ -8,7 +8,7 @@ struct ProviderTests {
   @Test(
     "CPUProvider.usage: uses sample deltas and rejects missing or unchanged samples"
   )
-  func cpuUsageUsesSampleDeltas() {
+  func cpuDeltas() {
     #expect(
       CPUProvider.usage(previous: [100, 100, 800, 0], current: [120, 110, 870, 0])
         == 0.3
@@ -21,7 +21,7 @@ struct ProviderTests {
   @MainActor
 
   @Test("ProviderRuntime.trigger: updates a manual clock snapshot only when triggered")
-  func triggerUpdatesManualClockSnapshot() async throws {
+  func manualClock() async throws {
     let providers = ProviderRuntime()
     var config = Configuration.default
     config.items.left = []
@@ -39,7 +39,7 @@ struct ProviderTests {
   }
 
   @MainActor @Test("ProviderRuntime.configure: does not rerun commands after cosmetic edits")
-  func configureDoesNotRerunCommandsAfterCosmeticEdits() async throws {
+  func cosmeticEdits() async throws {
     let url = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
     let providers = ProviderRuntime()
     defer {
@@ -55,12 +55,7 @@ struct ProviderTests {
 
     providers.configure(config)
 
-    let deadline = ContinuousClock.now.advanced(by: .seconds(2))
-    while providers.itemValues["cmd"] != "ready" && ContinuousClock.now < deadline {
-      try await Task.sleep(for: .milliseconds(20))
-    }
-
-    #expect(providers.itemValues["cmd"] == "ready")
+    try await waitUntil { providers.itemValues["cmd"] == "ready" }
 
     config.items.left[0].style = ItemStyle(tint: "#112233")
     providers.configure(config)

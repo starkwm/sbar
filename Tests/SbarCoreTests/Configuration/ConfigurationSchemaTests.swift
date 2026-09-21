@@ -68,7 +68,7 @@ struct ConfigurationSchemaTests {
   }
 
   @Test("data: matches the supported schema version and item types")
-  func dataMatchesSupportedVersionAndItemTypes() throws {
+  func schema() throws {
     let schema = try #require(
       JSONSerialization.jsonObject(with: ConfigurationSchema.data()) as? [String: Any]
     )

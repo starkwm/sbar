@@ -7,7 +7,7 @@ import os
 @Suite("Plugins")
 struct PluginTests {
   @Test("PluginRunner.run: receives events and reconstructs fragmented JSON output")
-  func runReceivesEventsAndReconstructsFragmentedOutput() async throws {
+  func fragmentedOutput() async throws {
     let messages = OSAllocatedUnfairLock(initialState: [String]())
     let mailbox = PluginMailbox()
     mailbox.send(PluginInput(event: "refresh", value: nil))
@@ -40,7 +40,7 @@ struct PluginTests {
   }
 
   @Test("PluginRunner.run: stops a quiet process when cancelled")
-  func runStopsQuietProcessWhenCancelled() async throws {
+  func cancellation() async throws {
     let task = Task {
       try await PluginRunner.run(
         configuration: .init(executable: "/bin/sh", arguments: ["-c", "sleep 10"], restart: false),
@@ -99,7 +99,7 @@ struct PluginTests {
   }
 
   @Test("PluginRunner.run: observes exit after stdout closes", .timeLimit(.minutes(1)))
-  func runObservesExitAfterOutputCloses() async throws {
+  func closedOutput() async throws {
     try await PluginRunner.run(
       configuration: .init(
         executable: "/bin/sh",

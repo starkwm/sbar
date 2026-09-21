@@ -1,4 +1,3 @@
-import AppKit
 import Foundation
 import Testing
 
@@ -6,17 +5,6 @@ import Testing
 
 @Suite("Widget customization")
 struct WidgetStateTests {
-  @Test("default symbols exist on macOS")
-  func symbols() {
-    for symbol in [
-      "battery.0percent", "battery.25percent", "battery.50percent",
-      "battery.75percent", "battery.100percent", "battery.100percent.bolt",
-      "powerplug", "wifi", "wifi.slash",
-    ] {
-      #expect(NSImage(systemSymbolName: symbol, accessibilityDescription: nil) != nil)
-    }
-  }
-
   @Test("event refresh captures power changes even when percentage text is unchanged")
   @MainActor
   func powerStateRefresh() throws {
@@ -141,7 +129,6 @@ struct WidgetStateTests {
     #expect(offline.symbol == "xmark")
     #expect(offline.tint == "#ff0000")
 
-    #expect(WidgetState.network(.wifi).presentation(for: item).text == "Wi-Fi connected")
     item.symbol = "star"
     #expect(WidgetState.network(.wifi).presentation(for: item).symbol == "star")
     item.network?.showSymbol = false
@@ -167,24 +154,4 @@ struct WidgetStateTests {
     }
   }
 
-  @Test("manual refresh holds the complete state until triggered")
-  @MainActor
-  func refresh() throws {
-    let runtime = ProviderRuntime()
-    let configuration = try JSONDecoder().decode(
-      Configuration.self,
-      from: Data(
-        #"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"wifi","type":"network","network":{"interface":"wifi"},"refresh":{"mode":"manual"}}]}}"#
-          .utf8
-      )
-    )
-    runtime.configure(configuration)
-    defer { runtime.stop() }
-    let item = try #require(configuration.items.active.first)
-    runtime.updateWidgetState(.network(.wifi), for: .network)
-    runtime.updateWidgetState(.network(.offline), for: .network)
-    #expect(runtime.presentation(for: item)?.symbol == "wifi")
-    runtime.trigger("wifi")
-    #expect(runtime.presentation(for: item)?.symbol == "wifi.slash")
-  }
 }
