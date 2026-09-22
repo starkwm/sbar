@@ -6,26 +6,6 @@ import Testing
 @Suite("MailProvider")
 @MainActor
 struct MailProviderTests {
-  @Test("SystemMailReader.state: failed and malformed reads never become zero unread")
-  func results() {
-    #expect(
-      SystemMailReader.state(count: 0, error: nil) == MailState(status: .available, unreadCount: 0)
-    )
-    #expect(SystemMailReader.state(count: 12, error: nil).hasUnread)
-    #expect(SystemMailReader.state(count: -1, error: nil).status == .unavailable)
-    #expect(SystemMailReader.state(count: nil, error: nil).unreadCount == nil)
-    #expect(SystemMailReader.state(count: 0, error: -1743).status == .unauthorized)
-    #expect(SystemMailReader.state(count: 0, error: -1712).status == .unavailable)
-
-    let item = Item(id: "mail", type: .mail)
-
-    #expect(MailState(status: .closed).presentation(for: item).text == "Mail closed")
-    #expect(
-      MailState(status: .available, unreadCount: 0).presentation(for: item).accessibilityLabel
-        == "Inbox, 0 unread"
-    )
-  }
-
   @Test("start: polling updates the runtime and stops when the item is removed")
   func lifecycle() async throws {
     var reads = 0
@@ -48,6 +28,74 @@ struct MailProviderTests {
     try await Task.sleep(for: .milliseconds(50))
 
     #expect(reads == stopped)
+  }
+
+  @Test("start: provider repeats queries at its supplied interval")
+  func polling() async throws {
+    var reads = 0
+    let provider = MailProvider(interval: .milliseconds(10)) {
+      reads += 1
+
+      return MailState()
+    }
+    defer { provider.stop() }
+    provider.start { _ in }
+    try await Task.sleep(for: .milliseconds(100))
+
+    #expect(reads > 1)
+  }
+
+  @Test("SystemMailReader.state: failed and malformed reads never become zero unread")
+  func results() {
+    #expect(
+      SystemMailReader.state(count: 0, error: nil) == MailState(status: .available, unreadCount: 0)
+    )
+    #expect(SystemMailReader.state(count: 12, error: nil).hasUnread)
+    #expect(SystemMailReader.state(count: -1, error: nil).status == .unavailable)
+    #expect(SystemMailReader.state(count: nil, error: nil).unreadCount == nil)
+    #expect(SystemMailReader.state(count: 0, error: -1743).status == .unauthorized)
+    #expect(SystemMailReader.state(count: 0, error: -1712).status == .unavailable)
+
+    let item = Item(id: "mail", type: .mail)
+
+    #expect(MailState(status: .closed).presentation(for: item).text == "Mail closed")
+    #expect(
+      MailState(status: .available, unreadCount: 0).presentation(for: item).accessibilityLabel
+        == "Inbox, 0 unread"
+    )
+  }
+
+  @Test("MailConfiguration.validate: mail settings decode, round trip, and validate")
+  func configuration() throws {
+    for settings in [
+      "", #","mail":{}"#, #","mail":{"pollInterval":5}"#,
+      #","mail":{"pollInterval":10.5}"#,
+    ] {
+      let item = try JSONDecoder().decode(
+        Item.self,
+        from: Data(("{\"id\":\"mail\",\"type\":\"mail\"" + settings + "}").utf8)
+      )
+      try Configuration(bar: .init(), items: .init(right: [item])).validate()
+
+      #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+      #expect((item.mail ?? MailConfiguration()).resolvedPollInterval >= 5)
+    }
+
+    #expect(MailConfiguration().resolvedPollInterval == 30)
+
+    for interval in [0, 4.9, -1, Double.infinity, Double.nan] {
+      let item = Item(id: "mail", type: .mail, mail: .init(pollInterval: interval))
+
+      #expect(throws: ConfigurationError.self) {
+        try Configuration(bar: .init(), items: .init(right: [item])).validate()
+      }
+    }
+
+    let wrongType = Item(id: "text", type: .text, mail: .init(pollInterval: 10))
+
+    #expect(throws: ConfigurationError.self) {
+      try Configuration(bar: .init(), items: .init(right: [wrongType])).validate()
+    }
   }
 
   @Test("ProviderRuntime.configure: shared interval follows enabled items and config reloads")
@@ -83,54 +131,6 @@ struct MailProviderTests {
     configure([first])
 
     #expect(provider.interval == .seconds(10))
-  }
-
-  @Test("start: provider repeats queries at its supplied interval")
-  func polling() async throws {
-    var reads = 0
-    let provider = MailProvider(interval: .milliseconds(10)) {
-      reads += 1
-
-      return MailState()
-    }
-    defer { provider.stop() }
-    provider.start { _ in }
-    try await Task.sleep(for: .milliseconds(100))
-
-    #expect(reads > 1)
-  }
-
-  @Test("MailConfiguration.validate: mail settings decode, round trip, and validate")
-  func configuration() throws {
-    for settings in [
-      "", #","mail":{}"#, #","mail":{"pollInterval":5}"#,
-      #","mail":{"pollInterval":10.5}"#,
-    ] {
-      let item = try JSONDecoder().decode(
-        Item.self,
-        from: Data(("{\"id\":\"mail\",\"type\":\"mail\"" + settings + "}").utf8)
-      )
-      try Configuration(bar: .init(), items: .init(right: [item])).validate()
-
-      #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
-      #expect((item.mail ?? MailConfiguration()).resolvedPollInterval >= 5)
-    }
-
-    #expect(MailConfiguration().resolvedPollInterval == 30)
-
-    for interval in [0, 4.9, -1, Double.infinity, Double.nan] {
-      let item = Item(id: "mail", type: .mail, mail: .init(pollInterval: interval))
-
-      #expect(throws: ConfigurationError.self) {
-        try Configuration(bar: .init(), items: .init(right: [item])).validate()
-      }
-    }
-
-    let wrongType = Item(id: "text", type: .text, mail: .init(pollInterval: 10))
-
-    #expect(throws: ConfigurationError.self) {
-      try Configuration(bar: .init(), items: .init(right: [wrongType])).validate()
-    }
   }
 
   @Test("ProviderRuntime.configure: an in-flight read cannot publish after stop or restart")

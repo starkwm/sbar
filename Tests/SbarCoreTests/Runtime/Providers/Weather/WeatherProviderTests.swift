@@ -20,6 +20,67 @@ struct WeatherProviderTests {
     )
   }
 
+  @Test("WeatherProvider.configure: polling retains readings on failure and recovers")
+  func polling() async throws {
+    var reads = 0
+    var states: [WeatherState] = []
+    let provider = WeatherProvider { _ in
+      reads += 1
+
+      if reads == 1 || reads == 3 { throw URLError(.notConnectedToInternet) }
+
+      return Self.reading(Double(reads))
+    }
+    defer { provider.stop() }
+    provider.configure([Self.location: 0.01]) { _, state in states.append(state) }
+
+    for _ in 0..<100 where states.count < 4 { try await Task.sleep(for: .milliseconds(10)) }
+
+    #expect(states.count >= 4)
+
+    guard states.count >= 4 else { return }
+
+    #expect(states[0].status == "unavailable")
+    #expect(states[1].reading?.temperature == 2)
+    #expect(states[2].status == "stale")
+    #expect(states[2].reading == states[1].reading)
+    #expect(states[3].status == "available")
+    #expect(states[3].reading?.temperature == 4)
+
+    provider.stop()
+    let stopped = reads
+    try await Task.sleep(for: .milliseconds(30))
+
+    #expect(reads == stopped)
+  }
+
+  @Test("WeatherProvider.configure: a cancelled request cannot publish into a restarted location")
+  func cancellation() async throws {
+    var reads = 0
+    var temperatures: [Double] = []
+    let provider = WeatherProvider { _ in
+      reads += 1
+      let count = reads
+      await Task.detached { try? await Task.sleep(for: .milliseconds(60)) }.value
+
+      return Self.reading(Double(count))
+    }
+    defer { provider.stop() }
+    provider.configure([Self.location: 900]) { _, state in
+      temperatures.append(state.reading!.temperature)
+    }
+
+    for _ in 0..<100 where reads == 0 { try await Task.sleep(for: .milliseconds(5)) }
+
+    provider.configure([Self.location: 600]) { _, state in
+      temperatures.append(state.reading!.temperature)
+    }
+
+    for _ in 0..<100 where temperatures.isEmpty { try await Task.sleep(for: .milliseconds(5)) }
+
+    #expect(temperatures == [2])
+  }
+
   @Test(
     "OpenMeteoReader.request: request uses current conditions with explicit canonical units and a timeout"
   )
@@ -85,45 +146,6 @@ struct WeatherProviderTests {
   }
 
   @Test(
-    "WeatherConfiguration.validate: configuration round trips and validates coordinates, intervals, and item type"
-  )
-  func configuration() throws {
-    let data = Data(
-      #"{"id":"weather","type":"weather","weather":{"latitude":51.5074,"longitude":-0.1278,"temperatureUnit":"fahrenheit","windSpeedUnit":"mph"}}"#
-        .utf8
-    )
-    let item = try JSONDecoder().decode(Item.self, from: data)
-    try Configuration(bar: .init(), items: .init(right: [item])).validate()
-
-    #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
-    #expect(item.weather?.resolvedPollInterval == 900)
-
-    for settings in [
-      WeatherConfiguration(latitude: 91, longitude: 0),
-      WeatherConfiguration(latitude: 0, longitude: -181),
-      WeatherConfiguration(latitude: .nan, longitude: 0),
-      WeatherConfiguration(latitude: 0, longitude: .infinity),
-      WeatherConfiguration(latitude: 0, longitude: 0, pollInterval: 59),
-      WeatherConfiguration(latitude: 0, longitude: 0, pollInterval: 86401),
-      WeatherConfiguration(latitude: 0, longitude: 0, pollInterval: .nan),
-    ] {
-      #expect(throws: ConfigurationError.self) { try settings.validate(path: "weather") }
-    }
-    for badItem in [
-      Item(id: "weather", type: .weather),
-      Item(id: "text", type: .text, weather: item.weather),
-    ] {
-      #expect(throws: ConfigurationError.self) {
-        try Configuration(bar: .init(), items: .init(right: [badItem])).validate()
-      }
-    }
-    for coordinates in [(-90.0, -180.0), (90.0, 180.0)] {
-      try WeatherConfiguration(latitude: coordinates.0, longitude: coordinates.1)
-        .validate(path: "weather")
-    }
-  }
-
-  @Test(
     "WeatherState.presentation(for:): presentation converts units before rounding and maps day, night, and unknown codes"
   )
   func presentation() throws {
@@ -180,65 +202,194 @@ struct WeatherProviderTests {
     #expect(WeatherState().presentation(for: item).text == "Weather unavailable")
   }
 
-  @Test("WeatherProvider.configure: polling retains readings on failure and recovers")
-  func polling() async throws {
-    var reads = 0
-    var states: [WeatherState] = []
-    let provider = WeatherProvider { _ in
-      reads += 1
+  @Test(
+    "WeatherState.presentation(for:): weather symbols inherit glyph settings and preserve precedence and defaults"
+  )
+  func customSymbols() throws {
+    let json =
+      #"{"latitude":0,"longitude":0,"symbols":{"font":"Symbols Nerd Font Mono","size":16,"clearDay":"sun.max","clearNight":{"glyph":"☾"},"rain":{"glyph":"R","font":"Other Font","size":20},"unavailable":"wifi.slash","unknown":"questionmark.circle"}}"#
+    let settings = try JSONDecoder().decode(WeatherConfiguration.self, from: Data(json.utf8))
+    try settings.validate(path: "weather")
 
-      if reads == 1 || reads == 3 { throw URLError(.notConnectedToInternet) }
+    #expect(
+      try JSONDecoder().decode(WeatherConfiguration.self, from: JSONEncoder().encode(settings))
+        == settings
+    )
 
-      return Self.reading(Double(reads))
-    }
-    defer { provider.stop() }
-    provider.configure([Self.location: 0.01]) { _, state in states.append(state) }
+    var item = Item(id: "weather", type: .weather, weather: settings)
+    var state = WeatherState(reading: Self.reading())
 
-    for _ in 0..<100 where states.count < 4 { try await Task.sleep(for: .milliseconds(10)) }
+    #expect(state.presentation(for: item).symbol == .system("cloud.sun.fill"))
 
-    #expect(states.count >= 4)
+    state.reading?.weatherCode = 0
 
-    guard states.count >= 4 else { return }
+    #expect(state.presentation(for: item).symbol == .system("sun.max"))
 
-    #expect(states[0].status == "unavailable")
-    #expect(states[1].reading?.temperature == 2)
-    #expect(states[2].status == "stale")
-    #expect(states[2].reading == states[1].reading)
-    #expect(states[3].status == "available")
-    #expect(states[3].reading?.temperature == 4)
+    state.reading?.isDay = false
 
-    provider.stop()
-    let stopped = reads
-    try await Task.sleep(for: .milliseconds(30))
+    #expect(
+      state.presentation(for: item).symbol == .glyph("☾", font: "Symbols Nerd Font Mono", size: 16)
+    )
 
-    #expect(reads == stopped)
+    state.reading?.weatherCode = 65
+    state.stale = true
+
+    #expect(state.presentation(for: item).symbol == .glyph("R", font: "Other Font", size: 20))
+
+    state.reading?.weatherCode = 999
+
+    #expect(state.presentation(for: item).symbol == .system("questionmark.circle"))
+
+    state.reading = nil
+
+    #expect(state.presentation(for: item).symbol == .system("wifi.slash"))
+
+    item.symbol = .system("star")
+
+    #expect(state.presentation(for: item).symbol == .system("star"))
+
+    item.weather?.showSymbol = false
+
+    #expect(state.presentation(for: item).symbol == nil)
   }
 
-  @Test("WeatherProvider.configure: a cancelled request cannot publish into a restarted location")
-  func cancellation() async throws {
-    var reads = 0
-    var temperatures: [Double] = []
-    let provider = WeatherProvider { _ in
-      reads += 1
-      let count = reads
-      await Task.detached { try? await Task.sleep(for: .milliseconds(60)) }.value
+  @Test(
+    "WeatherState.presentation(for:): overcast day and night symbols override the shared fallback"
+  )
+  func overcastSymbols() throws {
+    let json =
+      #"{"font":"Example Font","overcast":"cloud","overcastDay":"cloud.sun","overcastNight":{"glyph":"N"}}"#
+    var symbols = try JSONDecoder().decode(WeatherSymbols.self, from: Data(json.utf8))
+    try symbols.validate(path: "weather.symbols")
 
-      return Self.reading(Double(count))
+    #expect(
+      try JSONDecoder().decode(WeatherSymbols.self, from: JSONEncoder().encode(symbols)) == symbols
+    )
+
+    var state = WeatherState(reading: Self.reading())
+    state.reading?.weatherCode = 3
+    var item = Item(
+      id: "weather",
+      type: .weather,
+      weather: .init(latitude: 0, longitude: 0, symbols: symbols)
+    )
+
+    #expect(state.presentation(for: item).symbol == .system("cloud.sun"))
+
+    state.reading?.isDay = false
+
+    #expect(state.presentation(for: item).symbol == .glyph("N", font: "Example Font"))
+
+    symbols.overcastNight = nil
+    item.weather?.symbols = symbols
+
+    #expect(state.presentation(for: item).symbol == .system("cloud"))
+
+    symbols.overcastDay = nil
+    item.weather?.symbols = symbols
+    state.reading?.isDay = true
+
+    #expect(state.presentation(for: item).symbol == .system("cloud"))
+
+    item.weather?.symbols = nil
+
+    #expect(state.presentation(for: item).symbol == .system("cloud.fill"))
+
+    for key in ["overcastDay", "overcastNight"] {
+      let invalid = "{\"\(key)\":{\"glyph\":\"N\"}}"
+
+      #expect(throws: (any Error).self) {
+        let decoded = try JSONDecoder().decode(WeatherSymbols.self, from: Data(invalid.utf8))
+        try decoded.validate(path: "weather.symbols")
+      }
     }
-    defer { provider.stop() }
-    provider.configure([Self.location: 900]) { _, state in
-      temperatures.append(state.reading!.temperature)
+  }
+
+  @Test("WeatherReading.symbolCondition: every weather code selects the documented symbol key")
+  func symbolConditions() {
+    let groups: [(WeatherSymbolCondition, [Int])] = [
+      (.clearDay, [0, 1]), (.partlyCloudyDay, [2]), (.overcastDay, [3]),
+      (.fog, [45, 48]), (.drizzle, [51, 53, 55]), (.freezingDrizzle, [56, 57]),
+      (.rain, [61, 63, 65]), (.freezingRain, [66, 67]), (.snow, [71, 73, 75, 77]),
+      (.rainShowers, [80, 81, 82]), (.snowShowers, [85, 86]),
+      (.thunderstorm, [95]), (.thunderstormHail, [96, 99]), (.unknown, [999]),
+    ]
+
+    for (condition, codes) in groups {
+      for code in codes {
+        var reading = Self.reading()
+        reading.weatherCode = code
+
+        #expect(reading.symbolCondition == condition)
+
+        reading.isDay = false
+        let night =
+          condition == .clearDay
+          ? WeatherSymbolCondition.clearNight
+          : condition == .partlyCloudyDay
+            ? .partlyCloudyNight
+            : condition == .overcastDay ? .overcastNight : condition
+
+        #expect(reading.symbolCondition == night)
+      }
     }
+  }
 
-    for _ in 0..<100 where reads == 0 { try await Task.sleep(for: .milliseconds(5)) }
-
-    provider.configure([Self.location: 600]) { _, state in
-      temperatures.append(state.reading!.temperature)
+  @Test(
+    "WeatherSymbols.validate: weather symbol validation rejects unknown keys and incomplete glyph settings"
+  )
+  func invalidSymbols() throws {
+    for symbols in [
+      #"{"rani":"cloud.rain"}"#,
+      #"{"rain":{"glyph":"R"}}"#,
+      #"{"font":" ","rain":{"glyph":"R"}}"#,
+      #"{"size":73}"#,
+      #"{"rain":{"glyph":"","font":"Example"}}"#,
+    ] {
+      #expect(throws: (any Error).self) {
+        let settings = try JSONDecoder().decode(WeatherSymbols.self, from: Data(symbols.utf8))
+        try settings.validate(path: "weather.symbols")
+      }
     }
+  }
 
-    for _ in 0..<100 where temperatures.isEmpty { try await Task.sleep(for: .milliseconds(5)) }
+  @Test(
+    "WeatherConfiguration.validate: configuration round trips and validates coordinates, intervals, and item type"
+  )
+  func configuration() throws {
+    let data = Data(
+      #"{"id":"weather","type":"weather","weather":{"latitude":51.5074,"longitude":-0.1278,"temperatureUnit":"fahrenheit","windSpeedUnit":"mph"}}"#
+        .utf8
+    )
+    let item = try JSONDecoder().decode(Item.self, from: data)
+    try Configuration(bar: .init(), items: .init(right: [item])).validate()
 
-    #expect(temperatures == [2])
+    #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+    #expect(item.weather?.resolvedPollInterval == 900)
+
+    for settings in [
+      WeatherConfiguration(latitude: 91, longitude: 0),
+      WeatherConfiguration(latitude: 0, longitude: -181),
+      WeatherConfiguration(latitude: .nan, longitude: 0),
+      WeatherConfiguration(latitude: 0, longitude: .infinity),
+      WeatherConfiguration(latitude: 0, longitude: 0, pollInterval: 59),
+      WeatherConfiguration(latitude: 0, longitude: 0, pollInterval: 86401),
+      WeatherConfiguration(latitude: 0, longitude: 0, pollInterval: .nan),
+    ] {
+      #expect(throws: ConfigurationError.self) { try settings.validate(path: "weather") }
+    }
+    for badItem in [
+      Item(id: "weather", type: .weather),
+      Item(id: "text", type: .text, weather: item.weather),
+    ] {
+      #expect(throws: ConfigurationError.self) {
+        try Configuration(bar: .init(), items: .init(right: [badItem])).validate()
+      }
+    }
+    for coordinates in [(-90.0, -180.0), (90.0, 180.0)] {
+      try WeatherConfiguration(latitude: coordinates.0, longitude: coordinates.1)
+        .validate(path: "weather")
+    }
   }
 
   @Test(
@@ -321,6 +472,7 @@ struct WeatherProviderTests {
     #expect(provider.intervals.isEmpty)
     #expect(runtime.weatherStates.isEmpty)
   }
+
   @Test(
     "ProviderRuntime.presentation(for:): manual and event snapshots behave independently of shared polling"
   )
@@ -369,157 +521,6 @@ struct WeatherProviderTests {
     for _ in 0..<100 where reads == captured { try await Task.sleep(for: .milliseconds(5)) }
 
     #expect(runtime.presentation(for: manual)?.text == snapshot)
-  }
-
-  @Test(
-    "WeatherState.presentation(for:): weather symbols inherit glyph settings and preserve precedence and defaults"
-  )
-  func customSymbols() throws {
-    let json =
-      #"{"latitude":0,"longitude":0,"symbols":{"font":"Symbols Nerd Font Mono","size":16,"clearDay":"sun.max","clearNight":{"glyph":"☾"},"rain":{"glyph":"R","font":"Other Font","size":20},"unavailable":"wifi.slash","unknown":"questionmark.circle"}}"#
-    let settings = try JSONDecoder().decode(WeatherConfiguration.self, from: Data(json.utf8))
-    try settings.validate(path: "weather")
-
-    #expect(
-      try JSONDecoder().decode(WeatherConfiguration.self, from: JSONEncoder().encode(settings))
-        == settings
-    )
-
-    var item = Item(id: "weather", type: .weather, weather: settings)
-    var state = WeatherState(reading: Self.reading())
-
-    #expect(state.presentation(for: item).symbol == .system("cloud.sun.fill"))
-
-    state.reading?.weatherCode = 0
-
-    #expect(state.presentation(for: item).symbol == .system("sun.max"))
-
-    state.reading?.isDay = false
-
-    #expect(
-      state.presentation(for: item).symbol == .glyph("☾", font: "Symbols Nerd Font Mono", size: 16)
-    )
-
-    state.reading?.weatherCode = 65
-    state.stale = true
-
-    #expect(state.presentation(for: item).symbol == .glyph("R", font: "Other Font", size: 20))
-
-    state.reading?.weatherCode = 999
-
-    #expect(state.presentation(for: item).symbol == .system("questionmark.circle"))
-
-    state.reading = nil
-
-    #expect(state.presentation(for: item).symbol == .system("wifi.slash"))
-
-    item.symbol = .system("star")
-
-    #expect(state.presentation(for: item).symbol == .system("star"))
-
-    item.weather?.showSymbol = false
-
-    #expect(state.presentation(for: item).symbol == nil)
-  }
-
-  @Test(
-    "WeatherSymbols.validate: weather symbol validation rejects unknown keys and incomplete glyph settings"
-  )
-  func invalidSymbols() throws {
-    for symbols in [
-      #"{"rani":"cloud.rain"}"#,
-      #"{"rain":{"glyph":"R"}}"#,
-      #"{"font":" ","rain":{"glyph":"R"}}"#,
-      #"{"size":73}"#,
-      #"{"rain":{"glyph":"","font":"Example"}}"#,
-    ] {
-      #expect(throws: (any Error).self) {
-        let settings = try JSONDecoder().decode(WeatherSymbols.self, from: Data(symbols.utf8))
-        try settings.validate(path: "weather.symbols")
-      }
-    }
-  }
-
-  @Test("WeatherReading.symbolCondition: every weather code selects the documented symbol key")
-  func symbolConditions() {
-    let groups: [(WeatherSymbolCondition, [Int])] = [
-      (.clearDay, [0, 1]), (.partlyCloudyDay, [2]), (.overcastDay, [3]),
-      (.fog, [45, 48]), (.drizzle, [51, 53, 55]), (.freezingDrizzle, [56, 57]),
-      (.rain, [61, 63, 65]), (.freezingRain, [66, 67]), (.snow, [71, 73, 75, 77]),
-      (.rainShowers, [80, 81, 82]), (.snowShowers, [85, 86]),
-      (.thunderstorm, [95]), (.thunderstormHail, [96, 99]), (.unknown, [999]),
-    ]
-
-    for (condition, codes) in groups {
-      for code in codes {
-        var reading = Self.reading()
-        reading.weatherCode = code
-
-        #expect(reading.symbolCondition == condition)
-
-        reading.isDay = false
-        let night =
-          condition == .clearDay
-          ? WeatherSymbolCondition.clearNight
-          : condition == .partlyCloudyDay
-            ? .partlyCloudyNight
-            : condition == .overcastDay ? .overcastNight : condition
-
-        #expect(reading.symbolCondition == night)
-      }
-    }
-  }
-
-  @Test(
-    "WeatherState.presentation(for:): overcast day and night symbols override the shared fallback"
-  )
-  func overcastSymbols() throws {
-    let json =
-      #"{"font":"Example Font","overcast":"cloud","overcastDay":"cloud.sun","overcastNight":{"glyph":"N"}}"#
-    var symbols = try JSONDecoder().decode(WeatherSymbols.self, from: Data(json.utf8))
-    try symbols.validate(path: "weather.symbols")
-
-    #expect(
-      try JSONDecoder().decode(WeatherSymbols.self, from: JSONEncoder().encode(symbols)) == symbols
-    )
-
-    var state = WeatherState(reading: Self.reading())
-    state.reading?.weatherCode = 3
-    var item = Item(
-      id: "weather",
-      type: .weather,
-      weather: .init(latitude: 0, longitude: 0, symbols: symbols)
-    )
-
-    #expect(state.presentation(for: item).symbol == .system("cloud.sun"))
-
-    state.reading?.isDay = false
-
-    #expect(state.presentation(for: item).symbol == .glyph("N", font: "Example Font"))
-
-    symbols.overcastNight = nil
-    item.weather?.symbols = symbols
-
-    #expect(state.presentation(for: item).symbol == .system("cloud"))
-
-    symbols.overcastDay = nil
-    item.weather?.symbols = symbols
-    state.reading?.isDay = true
-
-    #expect(state.presentation(for: item).symbol == .system("cloud"))
-
-    item.weather?.symbols = nil
-
-    #expect(state.presentation(for: item).symbol == .system("cloud.fill"))
-
-    for key in ["overcastDay", "overcastNight"] {
-      let invalid = "{\"\(key)\":{\"glyph\":\"N\"}}"
-
-      #expect(throws: (any Error).self) {
-        let decoded = try JSONDecoder().decode(WeatherSymbols.self, from: Data(invalid.utf8))
-        try decoded.validate(path: "weather.symbols")
-      }
-    }
   }
 
 }

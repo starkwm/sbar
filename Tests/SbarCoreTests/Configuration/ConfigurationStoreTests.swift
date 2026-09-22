@@ -6,75 +6,6 @@ import Testing
 @MainActor
 @Suite("ConfigurationStore")
 struct ConfigurationStoreTests {
-  @Test("load: retains valid configuration and reports the coding path after an invalid reload")
-  func invalidReload() throws {
-    let directory = try temporaryDirectory()
-    defer { try? FileManager.default.removeItem(at: directory) }
-    let url = directory.appending(path: "config.json")
-    let store = ConfigurationStore(configurationURL: url)
-
-    try write(height: 48, to: url)
-    store.load()
-
-    #expect(store.configuration.bar.height == 48)
-
-    try Data(#"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"clock","type":42}]}}"#.utf8)
-      .write(to: url)
-    store.load()
-
-    #expect(store.configuration.bar.height == 48)
-    #expect(store.errorMessage?.hasPrefix("items.right[0].type:") == true)
-
-    try write(height: 40, to: url)
-    store.load()
-
-    #expect(store.configuration.bar.height == 40)
-    #expect(store.errorMessage == nil)
-  }
-
-  @Test("load: uses defaults when the configuration file is missing")
-  func missingFile() throws {
-    let directory = try temporaryDirectory()
-    defer { try? FileManager.default.removeItem(at: directory) }
-    let store = ConfigurationStore(configurationURL: directory.appending(path: "missing.json"))
-
-    store.load()
-
-    #expect(store.configuration == .default)
-    #expect(store.errorMessage == nil)
-  }
-
-  @Test("ConfigurationValidator.validate: reports errors without writing the file")
-  func validation() throws {
-    let directory = try temporaryDirectory()
-    defer { try? FileManager.default.removeItem(at: directory) }
-    let url = directory.appending(path: "config.json")
-
-    #expect(throws: (any Error).self) { try ConfigurationValidator.validate(url: url) }
-
-    try write(height: 48, to: url)
-    let original = try Data(contentsOf: url)
-
-    try ConfigurationValidator.validate(url: url)
-
-    #expect(try Data(contentsOf: url) == original)
-
-    try write(height: 1, to: url)
-
-    #expect(throws: (any Error).self) { try ConfigurationValidator.validate(url: url) }
-
-    try Data(
-      #"{"schemaVersion": 1, "bar": {}, "items": {"right": [{"id": "clock", "type": 42}]}}"#.utf8
-    ).write(to: url)
-
-    do {
-      try ConfigurationValidator.validate(url: url)
-      Issue.record("Invalid configuration passed validation")
-    } catch {
-      #expect(error.localizedDescription.hasPrefix("items.right[0].type:"))
-    }
-  }
-
   @Test("configurationDidChange: notifies only for changed valid configurations")
   func changeNotifications() throws {
     let directory = try temporaryDirectory()
@@ -136,6 +67,44 @@ struct ConfigurationStoreTests {
     try await waitUntil { store.configuration.bar.height == 56 }
   }
 
+  @Test("load: retains valid configuration and reports the coding path after an invalid reload")
+  func invalidReload() throws {
+    let directory = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let url = directory.appending(path: "config.json")
+    let store = ConfigurationStore(configurationURL: url)
+
+    try write(height: 48, to: url)
+    store.load()
+
+    #expect(store.configuration.bar.height == 48)
+
+    try Data(#"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"clock","type":42}]}}"#.utf8)
+      .write(to: url)
+    store.load()
+
+    #expect(store.configuration.bar.height == 48)
+    #expect(store.errorMessage?.hasPrefix("items.right[0].type:") == true)
+
+    try write(height: 40, to: url)
+    store.load()
+
+    #expect(store.configuration.bar.height == 40)
+    #expect(store.errorMessage == nil)
+  }
+
+  @Test("load: uses defaults when the configuration file is missing")
+  func missingFile() throws {
+    let directory = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = ConfigurationStore(configurationURL: directory.appending(path: "missing.json"))
+
+    store.load()
+
+    #expect(store.configuration == .default)
+    #expect(store.errorMessage == nil)
+  }
+
   @Test(
     "load: JSONC loads, validates, and retains the last valid configuration",
     arguments: ["json", "jsonc"]
@@ -170,6 +139,37 @@ struct ConfigurationStoreTests {
 
     #expect(store.configuration.bar.height == 52)
     #expect(store.errorMessage == nil)
+  }
+
+  @Test("ConfigurationValidator.validate: reports errors without writing the file")
+  func validation() throws {
+    let directory = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let url = directory.appending(path: "config.json")
+
+    #expect(throws: (any Error).self) { try ConfigurationValidator.validate(url: url) }
+
+    try write(height: 48, to: url)
+    let original = try Data(contentsOf: url)
+
+    try ConfigurationValidator.validate(url: url)
+
+    #expect(try Data(contentsOf: url) == original)
+
+    try write(height: 1, to: url)
+
+    #expect(throws: (any Error).self) { try ConfigurationValidator.validate(url: url) }
+
+    try Data(
+      #"{"schemaVersion": 1, "bar": {}, "items": {"right": [{"id": "clock", "type": 42}]}}"#.utf8
+    ).write(to: url)
+
+    do {
+      try ConfigurationValidator.validate(url: url)
+      Issue.record("Invalid configuration passed validation")
+    } catch {
+      #expect(error.localizedDescription.hasPrefix("items.right[0].type:"))
+    }
   }
 
   private func temporaryDirectory() throws -> URL {

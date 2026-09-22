@@ -6,23 +6,6 @@ import Testing
 
 @Suite("ControlServer and ControlRouter")
 struct ControlTests {
-  @Test("ControlServer.publish: subscriptions receive published events")
-  func subscriptionReceivesEvents() throws {
-    let path = "/tmp/sbar-\(UUID().uuidString).sock"
-    defer { try? FileManager.default.removeItem(atPath: path + ".lock") }
-    let server = ControlServer(path: path) { _ in ControlResponse() }
-    try server.start()
-    defer { server.stop() }
-    let client = try SocketClient(path: path, serviceName: "sbar")
-    try client.send(ControlRequest(command: "subscribe"))
-
-    #expect(try client.receive(ControlResponse.self).ok)
-
-    server.publish(ControlResponse(value: .string("changed")))
-
-    #expect(try client.receive(ControlResponse.self).value == .string("changed"))
-  }
-
   @Test(
     "ControlServer.start: only successful stop replies invoke the stop callback",
     arguments: [false, true]
@@ -47,6 +30,23 @@ struct ControlTests {
     server.stop()
 
     #expect(stopped.wait(timeout: .now()) == (ok ? .success : .timedOut))
+  }
+
+  @Test("ControlServer.publish: subscriptions receive published events")
+  func subscriptionReceivesEvents() throws {
+    let path = "/tmp/sbar-\(UUID().uuidString).sock"
+    defer { try? FileManager.default.removeItem(atPath: path + ".lock") }
+    let server = ControlServer(path: path) { _ in ControlResponse() }
+    try server.start()
+    defer { server.stop() }
+    let client = try SocketClient(path: path, serviceName: "sbar")
+    try client.send(ControlRequest(command: "subscribe"))
+
+    #expect(try client.receive(ControlResponse.self).ok)
+
+    server.publish(ControlResponse(value: .string("changed")))
+
+    #expect(try client.receive(ControlResponse.self).value == .string("changed"))
   }
 
   @MainActor

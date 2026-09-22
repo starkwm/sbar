@@ -154,6 +154,42 @@ struct CommandProviderTests {
   }
 
   @Test(
+    "ProviderRuntime.configure: timeouts recover on replacement and removed commands cannot publish"
+  )
+  func cancellation() async throws {
+    var item = Item(
+      id: "cmd",
+      type: .command,
+      command: ShellCommand(script: "sleep 1; printf stale", timeout: 0.1)
+    )
+    let runtime = ProviderRuntime()
+    runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
+    defer { runtime.stop() }
+
+    for _ in 0..<100 where runtime.commandStates[item.id]?.status != .failure {
+      try await Task.sleep(for: .milliseconds(10))
+    }
+
+    #expect(runtime.itemValues[item.id] == "Command timed out.")
+
+    item.command?.script = "printf recovered"
+    runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
+
+    for _ in 0..<100 where runtime.commandStates[item.id]?.status != .success {
+      try await Task.sleep(for: .milliseconds(10))
+    }
+
+    #expect(runtime.itemValues[item.id] == "recovered")
+
+    item.command?.script = "sleep 0.1; printf stale"
+    runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
+    runtime.configure(Configuration(bar: .init(), items: .init()))
+    try await Task.sleep(for: .milliseconds(180))
+
+    #expect(runtime.itemValues[item.id] == nil)
+  }
+
+  @Test(
     "ProviderRuntime.trigger: triggers coalesce and failed reruns retain success without cosmetic reexecution"
   )
   func retention() async throws {
@@ -199,41 +235,5 @@ struct CommandProviderTests {
     runtime.configure(Configuration(bar: .init(), items: .init()))
 
     #expect(runtime.commandStates.isEmpty)
-  }
-
-  @Test(
-    "ProviderRuntime.configure: timeouts recover on replacement and removed commands cannot publish"
-  )
-  func cancellation() async throws {
-    var item = Item(
-      id: "cmd",
-      type: .command,
-      command: ShellCommand(script: "sleep 1; printf stale", timeout: 0.1)
-    )
-    let runtime = ProviderRuntime()
-    runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
-    defer { runtime.stop() }
-
-    for _ in 0..<100 where runtime.commandStates[item.id]?.status != .failure {
-      try await Task.sleep(for: .milliseconds(10))
-    }
-
-    #expect(runtime.itemValues[item.id] == "Command timed out.")
-
-    item.command?.script = "printf recovered"
-    runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
-
-    for _ in 0..<100 where runtime.commandStates[item.id]?.status != .success {
-      try await Task.sleep(for: .milliseconds(10))
-    }
-
-    #expect(runtime.itemValues[item.id] == "recovered")
-
-    item.command?.script = "sleep 0.1; printf stale"
-    runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
-    runtime.configure(Configuration(bar: .init(), items: .init()))
-    try await Task.sleep(for: .milliseconds(180))
-
-    #expect(runtime.itemValues[item.id] == nil)
   }
 }

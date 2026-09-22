@@ -161,6 +161,41 @@ struct BarWindowLayoutTests {
     }
   }
 
+  @Test("init: disabled shadows restore the exact bar frame and small displays clip the decoration")
+  func constrainedShadow() {
+    let screen = CGRect(x: 0, y: 0, width: 100, height: 40)
+
+    for position in [BarPosition.top, .bottom] {
+      let bar = BarPlacement.frame(
+        screenFrame: screen,
+        visibleFrame: screen,
+        settings: .init(position: position)
+      )
+      let enabled = BarWindowLayout(
+        screenFrame: screen,
+        barFrame: bar,
+        position: position,
+        shadow: true,
+        cornerRadius: 0
+      )
+
+      #expect(enabled.shadowExtent == 8)
+      #expect(enabled.frame == screen)
+
+      let disabled = BarWindowLayout(
+        screenFrame: screen,
+        barFrame: bar,
+        position: position,
+        shadow: false,
+        cornerRadius: 0
+      )
+
+      #expect(disabled.frame == bar)
+      #expect(disabled.shadowExtent == 0)
+      #expect(!disabled.hasNativeShadow)
+    }
+  }
+
   @Test(
     "ignoresMouse(at:passingThroughEmptyRegions:hitRegions:): shadow decorations never intercept clicks, and bottom-bar item coordinates stay aligned"
   )
@@ -198,41 +233,6 @@ struct BarWindowLayoutTests {
           hitRegions: regions
         ) == passthrough
       )
-    }
-  }
-
-  @Test("init: disabled shadows restore the exact bar frame and small displays clip the decoration")
-  func constrainedShadow() {
-    let screen = CGRect(x: 0, y: 0, width: 100, height: 40)
-
-    for position in [BarPosition.top, .bottom] {
-      let bar = BarPlacement.frame(
-        screenFrame: screen,
-        visibleFrame: screen,
-        settings: .init(position: position)
-      )
-      let enabled = BarWindowLayout(
-        screenFrame: screen,
-        barFrame: bar,
-        position: position,
-        shadow: true,
-        cornerRadius: 0
-      )
-
-      #expect(enabled.shadowExtent == 8)
-      #expect(enabled.frame == screen)
-
-      let disabled = BarWindowLayout(
-        screenFrame: screen,
-        barFrame: bar,
-        position: position,
-        shadow: false,
-        cornerRadius: 0
-      )
-
-      #expect(disabled.frame == bar)
-      #expect(disabled.shadowExtent == 0)
-      #expect(!disabled.hasNativeShadow)
     }
   }
 }

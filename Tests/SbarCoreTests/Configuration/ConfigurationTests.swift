@@ -98,6 +98,21 @@ struct ConfigurationTests {
     }
   }
 
+  @Test("init: decodes version-one refresh policies in groups")
+  func groupRefresh() throws {
+    let json =
+      #"{"schemaVersion":1,"bar":{},"items":{"left":[{"id":"group","type":"group","children":[{"id":"c","type":"command","command":{"script":"date"},"refresh":{"mode":"interval","seconds":12,"event":"refresh"}}]}]}}"#
+
+    let configuration = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
+    try configuration.validate()
+
+    let item = try #require(configuration.items.left.first?.children?.first)
+
+    #expect(configuration.schemaVersion == 1)
+    #expect(item.refresh == RefreshPolicy(mode: .interval, seconds: 12, event: "refresh"))
+    #expect(item.command?.script == "date")
+  }
+
   @Test(
     "validate: rejects invalid floating bar dimensions",
     arguments: [-1.0, 4097.0, Double.infinity, Double.nan]
@@ -120,21 +135,6 @@ struct ConfigurationTests {
 
       #expect(throws: (any Error).self) { try configuration.validate() }
     }
-  }
-
-  @Test("init: decodes version-one refresh policies in groups")
-  func groupRefresh() throws {
-    let json =
-      #"{"schemaVersion":1,"bar":{},"items":{"left":[{"id":"group","type":"group","children":[{"id":"c","type":"command","command":{"script":"date"},"refresh":{"mode":"interval","seconds":12,"event":"refresh"}}]}]}}"#
-
-    let configuration = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
-    try configuration.validate()
-
-    let item = try #require(configuration.items.left.first?.children?.first)
-
-    #expect(configuration.schemaVersion == 1)
-    #expect(item.refresh == RefreshPolicy(mode: .interval, seconds: 12, event: "refresh"))
-    #expect(item.command?.script == "date")
   }
 
   @Test("validate: rejects unsupported schema versions", arguments: [0, 2, 3])

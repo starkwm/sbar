@@ -89,6 +89,25 @@ struct DiskWidgetTests {
   }
 
   @Test(
+    "DiskProvider.volume: native sampling rejects absent paths and shares existing directories on a volume"
+  )
+  func nativePaths() throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+    let child = root.appendingPathComponent("child")
+    try FileManager.default.createDirectory(at: child, withIntermediateDirectories: true)
+
+    #expect(DiskProvider.volume(for: root.appendingPathComponent("missing").path) == nil)
+
+    let first = try #require(DiskProvider.volume(for: root.path))
+    let second = try #require(DiskProvider.volume(for: child.path))
+
+    #expect(first.identity == second.identity)
+    #expect(DiskProvider.read(first).available)
+  }
+
+  @Test(
     "DiskProvider.sample: paths on the same volume share a read; missing paths stay unavailable and recover"
   )
   func sharedVolumes() {
@@ -157,25 +176,6 @@ struct DiskWidgetTests {
     )
 
     #expect(result["/drive"]?.available == false)
-  }
-
-  @Test(
-    "DiskProvider.volume: native sampling rejects absent paths and shares existing directories on a volume"
-  )
-  func nativePaths() throws {
-    let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-    defer { try? FileManager.default.removeItem(at: root) }
-    let child = root.appendingPathComponent("child")
-    try FileManager.default.createDirectory(at: child, withIntermediateDirectories: true)
-
-    #expect(DiskProvider.volume(for: root.appendingPathComponent("missing").path) == nil)
-
-    let first = try #require(DiskProvider.volume(for: root.path))
-    let second = try #require(DiskProvider.volume(for: child.path))
-
-    #expect(first.identity == second.identity)
-    #expect(DiskProvider.read(first).available)
   }
 
   @Test(

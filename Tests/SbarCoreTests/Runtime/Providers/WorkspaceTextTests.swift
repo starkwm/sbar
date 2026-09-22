@@ -73,40 +73,6 @@ struct WorkspaceTextTests {
     #expect(fallback.render(["value": "Unavailable"]) == "Unavailable")
   }
 
-  @Test(
-    "Configuration.validate: invalid workspace sections fail validation",
-    arguments: [
-      "{{workspaces}}", "{{#separator}}x{{/separator}}",
-      "{{#workspaces}}{{separator}}{{/workspaces}}",
-      "{{#workspaces}}{{^separator}}x{{/separator}}{{/workspaces}}",
-      "{{#workspaces}}{{#separator=x}}x{{/separator}}{{/workspaces}}",
-      "{{#workspaces=yes}}x{{/workspaces}}",
-      "{{#workspaces}}{{#workspaces}}x{{/workspaces}}{{/workspaces}}",
-      "{{#workspaces}}{{^workspaces}}x{{/workspaces}}{{/workspaces}}",
-      "{{#workspaces}}{{#active=yes}}x{{/active}}{{/workspaces}}",
-    ]
-  )
-  func invalid(text: String) {
-    #expect(throws: ConfigurationError.self) {
-      try Configuration(
-        bar: .init(),
-        items: .init(left: [Item(id: "spaces", type: .spaces, text: text)])
-      ).validate()
-    }
-  }
-
-  @Test("Configuration.validate: collections are rejected on other providers")
-  func otherProviders() {
-    #expect(throws: ConfigurationError.self) {
-      try Configuration(
-        bar: .init(),
-        items: .init(left: [
-          Item(id: "cpu", type: .cpu, text: "{{#workspaces}}{{value}}{{/workspaces}}")
-        ])
-      ).validate()
-    }
-  }
-
   @Test("presentation(for:): display scope preserves active emphasis separately from global focus")
   func displayScope() {
     let state = SpacesState(
@@ -212,5 +178,39 @@ struct WorkspaceTextTests {
     )
 
     #expect(yabai.presentation(for: y, displayUUID: nil).text == "2:Code/2,4:4/2")
+  }
+
+  @Test(
+    "Configuration.validate: invalid workspace sections fail validation",
+    arguments: [
+      "{{workspaces}}", "{{#separator}}x{{/separator}}",
+      "{{#workspaces}}{{separator}}{{/workspaces}}",
+      "{{#workspaces}}{{^separator}}x{{/separator}}{{/workspaces}}",
+      "{{#workspaces}}{{#separator=x}}x{{/separator}}{{/workspaces}}",
+      "{{#workspaces=yes}}x{{/workspaces}}",
+      "{{#workspaces}}{{#workspaces}}x{{/workspaces}}{{/workspaces}}",
+      "{{#workspaces}}{{^workspaces}}x{{/workspaces}}{{/workspaces}}",
+      "{{#workspaces}}{{#active=yes}}x{{/active}}{{/workspaces}}",
+    ]
+  )
+  func invalid(text: String) {
+    #expect(throws: ConfigurationError.self) {
+      try Configuration(
+        bar: .init(),
+        items: .init(left: [Item(id: "spaces", type: .spaces, text: text)])
+      ).validate()
+    }
+  }
+
+  @Test("Configuration.validate: collections are rejected on other providers")
+  func otherProviders() {
+    #expect(throws: ConfigurationError.self) {
+      try Configuration(
+        bar: .init(),
+        items: .init(left: [
+          Item(id: "cpu", type: .cpu, text: "{{#workspaces}}{{value}}{{/workspaces}}")
+        ])
+      ).validate()
+    }
   }
 }

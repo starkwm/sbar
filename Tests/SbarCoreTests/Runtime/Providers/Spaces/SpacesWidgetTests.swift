@@ -23,6 +23,30 @@ struct SpacesWidgetTests {
     )
   }
 
+  @Test("SpacesState.parse: parser rejects booleans, negative, fractional, string, and zero IDs")
+  func malformedIDs() {
+    for value: Any in [true, false, -1, 1.5, "10", 0, Double.nan, Double.infinity] {
+      #expect(SpacesState.identifier(value) == nil)
+    }
+
+    #expect(SpacesState.identifier(NSNumber(value: UInt64.max)) == UInt64.max)
+
+    let state = SpacesState.parse(
+      displays: [
+        [
+          "Display Identifier": "A", "Current Space": ["ManagedSpaceID": 999],
+          "Spaces": [["ManagedSpaceID": 10], ["ManagedSpaceID": 10], ["ManagedSpaceID": -1]],
+        ],
+        ["Display Identifier": "B", "Spaces": [["ManagedSpaceID": 10], ["ManagedSpaceID": 20]]],
+      ],
+      activeSpaceID: 20
+    )
+
+    #expect(state.displays[0].spaces.count == 1)
+    #expect(state.text == "2")
+    #expect(!state.complete)
+  }
+
   @Test("presentation(for:): scope preserves global order and each display's current Space")
   func scopes() {
     let focused = Item(
@@ -356,30 +380,6 @@ struct SpacesWidgetTests {
         )
       }
     }
-  }
-
-  @Test("SpacesState.parse: parser rejects booleans, negative, fractional, string, and zero IDs")
-  func malformedIDs() {
-    for value: Any in [true, false, -1, 1.5, "10", 0, Double.nan, Double.infinity] {
-      #expect(SpacesState.identifier(value) == nil)
-    }
-
-    #expect(SpacesState.identifier(NSNumber(value: UInt64.max)) == UInt64.max)
-
-    let state = SpacesState.parse(
-      displays: [
-        [
-          "Display Identifier": "A", "Current Space": ["ManagedSpaceID": 999],
-          "Spaces": [["ManagedSpaceID": 10], ["ManagedSpaceID": 10], ["ManagedSpaceID": -1]],
-        ],
-        ["Display Identifier": "B", "Spaces": [["ManagedSpaceID": 10], ["ManagedSpaceID": 20]]],
-      ],
-      activeSpaceID: 20
-    )
-
-    #expect(state.displays[0].spaces.count == 1)
-    #expect(state.text == "2")
-    #expect(!state.complete)
   }
 
   @Test(

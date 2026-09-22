@@ -6,6 +6,16 @@ import Testing
 
 @Suite("CPUState")
 struct CPUWidgetTests {
+  @Test("CPUProvider.usage: counter wraparound preserves a valid delta")
+  func wraparound() {
+    #expect(
+      CPUProvider.usage(
+        previous: [UInt32.max - 4, 0, 100, 0],
+        current: [5, 0, 110, 0]
+      ) == 0.5
+    )
+  }
+
   @Test(
     "CPUProvider.record: sampling rounds, resets after failure and pauses, and bounds retained history"
   )
@@ -33,16 +43,6 @@ struct CPUWidgetTests {
     provider.reset()
 
     #expect(provider.record(ticks: [1000, 0, 2000, 0], at: 106).samples.isEmpty)
-  }
-
-  @Test("CPUProvider.usage: counter wraparound preserves a valid delta")
-  func wraparound() {
-    #expect(
-      CPUProvider.usage(
-        previous: [UInt32.max - 4, 0, 100, 0],
-        current: [5, 0, 110, 0]
-      ) == 0.5
-    )
   }
 
   @Test(

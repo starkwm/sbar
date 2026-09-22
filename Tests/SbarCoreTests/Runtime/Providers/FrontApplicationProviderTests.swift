@@ -30,6 +30,55 @@ struct FrontApplicationProviderTests {
     #expect(updates.last?.name == NSRunningApplication.current.localizedName ?? "")
   }
 
+  @Test("start: replaces the previous observer when restarted")
+  func startReplacesPreviousObserver() {
+    let source = TestApplicationSource()
+    let provider = FrontApplicationProvider(observeApplication: source.observeApplication)
+    defer { provider.stop() }
+    var previousUpdates = 0
+    var currentUpdates = 0
+
+    provider.start { _ in previousUpdates += 1 }
+    provider.start { _ in currentUpdates += 1 }
+    source.application = .current
+
+    #expect(previousUpdates == 1)
+    #expect(currentUpdates == 2)
+  }
+
+  @Test("stop: removes the observer and allows a later restart")
+  func restart() {
+    let source = TestApplicationSource()
+    let provider = FrontApplicationProvider(observeApplication: source.observeApplication)
+    defer { provider.stop() }
+    var updates = 0
+
+    provider.start { _ in updates += 1 }
+    provider.stop()
+    source.application = .current
+
+    #expect(updates == 1)
+
+    provider.start { _ in updates += 1 }
+    source.application = nil
+
+    #expect(updates == 3)
+  }
+
+  @Test("stop: deallocation removes the observation")
+  func deallocationRemovesObservation() {
+    let source = TestApplicationSource()
+    var provider: FrontApplicationProvider? = FrontApplicationProvider(
+      observeApplication: source.observeApplication
+    )
+    var updates = 0
+    provider?.start { _ in updates += 1 }
+    provider = nil
+    source.application = .current
+
+    #expect(updates == 1)
+  }
+
   @Test(
     "ProviderRuntime.applicationIcon: application icons respect opt-in and manual refresh, including same-name switches"
   )
@@ -80,55 +129,6 @@ struct FrontApplicationProviderTests {
 
     #expect(runtime.frontApplication == nil)
     #expect(runtime.applicationSnapshots.isEmpty)
-  }
-
-  @Test("start: replaces the previous observer when restarted")
-  func startReplacesPreviousObserver() {
-    let source = TestApplicationSource()
-    let provider = FrontApplicationProvider(observeApplication: source.observeApplication)
-    defer { provider.stop() }
-    var previousUpdates = 0
-    var currentUpdates = 0
-
-    provider.start { _ in previousUpdates += 1 }
-    provider.start { _ in currentUpdates += 1 }
-    source.application = .current
-
-    #expect(previousUpdates == 1)
-    #expect(currentUpdates == 2)
-  }
-
-  @Test("stop: removes the observer and allows a later restart")
-  func restart() {
-    let source = TestApplicationSource()
-    let provider = FrontApplicationProvider(observeApplication: source.observeApplication)
-    defer { provider.stop() }
-    var updates = 0
-
-    provider.start { _ in updates += 1 }
-    provider.stop()
-    source.application = .current
-
-    #expect(updates == 1)
-
-    provider.start { _ in updates += 1 }
-    source.application = nil
-
-    #expect(updates == 3)
-  }
-
-  @Test("stop: deallocation removes the observation")
-  func deallocationRemovesObservation() {
-    let source = TestApplicationSource()
-    var provider: FrontApplicationProvider? = FrontApplicationProvider(
-      observeApplication: source.observeApplication
-    )
-    var updates = 0
-    provider?.start { _ in updates += 1 }
-    provider = nil
-    source.application = .current
-
-    #expect(updates == 1)
   }
 }
 

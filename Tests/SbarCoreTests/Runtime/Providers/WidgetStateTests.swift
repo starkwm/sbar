@@ -5,38 +5,6 @@ import Testing
 
 @Suite("WidgetState")
 struct WidgetStateTests {
-  @Test(
-    "ProviderRuntime.updateWidgetState: event refresh captures power changes even when percentage text is unchanged"
-  )
-  @MainActor
-  func powerStateRefresh() throws {
-    let runtime = ProviderRuntime()
-    let configuration = try JSONDecoder().decode(
-      Configuration.self,
-      from: Data(
-        #"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"battery","type":"battery","battery":{},"refresh":{"mode":"event"}}]}}"#
-          .utf8
-      )
-    )
-    runtime.configure(configuration)
-    defer { runtime.stop() }
-    let item = try #require(configuration.items.active.first)
-    runtime.updateWidgetState(
-      .battery(percentage: 50, charging: false, pluggedIn: false),
-      for: .battery
-    )
-
-    #expect(runtime.presentation(for: item)?.symbol == "battery.50percent")
-
-    runtime.updateWidgetState(
-      .battery(percentage: 50, charging: false, pluggedIn: true),
-      for: .battery
-    )
-
-    #expect(runtime.presentation(for: item)?.symbol == "powerplug")
-    #expect(runtime.sharedValues[.battery] == "50%")
-  }
-
   @Test("presentation(for:): static symbols override automatic state symbols")
   func staticSymbols() {
     let item = Item(id: "battery", type: .battery, symbol: "bolt")
@@ -156,6 +124,38 @@ struct WidgetStateTests {
     item.network?.showSymbol = false
 
     #expect(WidgetState.network(.wifi).presentation(for: item).symbol == nil)
+  }
+
+  @Test(
+    "ProviderRuntime.updateWidgetState: event refresh captures power changes even when percentage text is unchanged"
+  )
+  @MainActor
+  func powerStateRefresh() throws {
+    let runtime = ProviderRuntime()
+    let configuration = try JSONDecoder().decode(
+      Configuration.self,
+      from: Data(
+        #"{"schemaVersion":1,"bar":{},"items":{"right":[{"id":"battery","type":"battery","battery":{},"refresh":{"mode":"event"}}]}}"#
+          .utf8
+      )
+    )
+    runtime.configure(configuration)
+    defer { runtime.stop() }
+    let item = try #require(configuration.items.active.first)
+    runtime.updateWidgetState(
+      .battery(percentage: 50, charging: false, pluggedIn: false),
+      for: .battery
+    )
+
+    #expect(runtime.presentation(for: item)?.symbol == "battery.50percent")
+
+    runtime.updateWidgetState(
+      .battery(percentage: 50, charging: false, pluggedIn: true),
+      for: .battery
+    )
+
+    #expect(runtime.presentation(for: item)?.symbol == "powerplug")
+    #expect(runtime.sharedValues[.battery] == "50%")
   }
 
   @Test("Configuration.init(from:): settings decode with defaults, round trip, and validate")

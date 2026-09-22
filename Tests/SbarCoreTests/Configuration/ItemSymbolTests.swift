@@ -31,6 +31,64 @@ struct ItemSymbolTests {
     }
   }
 
+  @Test("Item.init(from:): glyphs decode in item and Wi-Fi state symbols")
+  func wifiGlyphs() throws {
+    let json =
+      #"{"id":"wifi","type":"network","network":{"interface":"wifi","symbols":{"font":"Symbols Nerd Font Mono","wifi":{"glyph":"\uf1eb"}}}}"#
+    var item = try JSONDecoder().decode(Item.self, from: Data(json.utf8))
+    try item.network?.validate(path: "wifi")
+    let glyph = ItemSymbol.glyph("\u{f1eb}", font: "Symbols Nerd Font Mono")
+
+    #expect(WidgetState.network(.wifi).presentation(for: item).symbol == glyph)
+    #expect(WidgetState.network(.offline).presentation(for: item).symbol == "wifi.slash")
+
+    item.symbol = glyph
+
+    #expect(WidgetState.network(.offline).presentation(for: item).symbol == glyph)
+    #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
+  }
+
+  @Test(
+    "BatteryConfiguration.validate: grouped battery configuration validates inherited glyphs and tints"
+  )
+  func invalidGroupedBatterySettings() throws {
+    for json in [
+      #"{"symbols":{"charging":{"glyph":"x"}}}"#,
+      #"{"symbols":{"font":" "}}"#,
+      #"{"symbols":{"size":73}}"#,
+      #"{"symbols":{"levels":["battery.0percent"]}}"#,
+      #"{"symbols":{"font":"Shared","charging":{"glyph":" "}}}"#,
+      #"{"symbols":{"font":"Shared","charging":{"glyph":"x","font":" "}}}"#,
+      #"{"symbols":{"font":"Shared","charging":{"glyph":"x","size":7}}}"#,
+      #"{"tints":{"low":"red"}}"#,
+      #"{"tints":{"charging":"red"}}"#,
+      #"{"tints":{"pluggedIn":"red"}}"#,
+    ] {
+      let settings = try JSONDecoder().decode(BatteryConfiguration.self, from: Data(json.utf8))
+
+      #expect(throws: ConfigurationError.self) { try settings.validate(path: "battery") }
+    }
+    for json in [
+      #"{"symbols":{},"tints":{}}"#,
+      #"{"symbols":{"charging":{"glyph":"x","font":"Local"}}}"#,
+      #"{"symbols":{"font":"Shared","size":8,"charging":{"glyph":"x","size":72}}}"#,
+    ] {
+      let settings = try JSONDecoder().decode(BatteryConfiguration.self, from: Data(json.utf8))
+      try settings.validate(path: "battery")
+    }
+
+    let item = Item(
+      id: "battery",
+      type: .battery,
+      battery: BatteryConfiguration(symbols: BatterySymbols())
+    )
+
+    #expect(
+      WidgetState.battery(percentage: 50, charging: false, pluggedIn: false)
+        .presentation(for: item).symbol == "battery.50percent"
+    )
+  }
+
   @Test("WidgetState.presentation(for:): battery levels can mix glyphs and SF Symbols")
   func batteryLevels() throws {
     let glyph = ItemSymbol.glyph("\u{f240}", font: "Symbols Nerd Font Mono")
@@ -178,47 +236,6 @@ struct ItemSymbolTests {
   }
 
   @Test(
-    "BatteryConfiguration.validate: grouped battery configuration validates inherited glyphs and tints"
-  )
-  func invalidGroupedBatterySettings() throws {
-    for json in [
-      #"{"symbols":{"charging":{"glyph":"x"}}}"#,
-      #"{"symbols":{"font":" "}}"#,
-      #"{"symbols":{"size":73}}"#,
-      #"{"symbols":{"levels":["battery.0percent"]}}"#,
-      #"{"symbols":{"font":"Shared","charging":{"glyph":" "}}}"#,
-      #"{"symbols":{"font":"Shared","charging":{"glyph":"x","font":" "}}}"#,
-      #"{"symbols":{"font":"Shared","charging":{"glyph":"x","size":7}}}"#,
-      #"{"tints":{"low":"red"}}"#,
-      #"{"tints":{"charging":"red"}}"#,
-      #"{"tints":{"pluggedIn":"red"}}"#,
-    ] {
-      let settings = try JSONDecoder().decode(BatteryConfiguration.self, from: Data(json.utf8))
-
-      #expect(throws: ConfigurationError.self) { try settings.validate(path: "battery") }
-    }
-    for json in [
-      #"{"symbols":{},"tints":{}}"#,
-      #"{"symbols":{"charging":{"glyph":"x","font":"Local"}}}"#,
-      #"{"symbols":{"font":"Shared","size":8,"charging":{"glyph":"x","size":72}}}"#,
-    ] {
-      let settings = try JSONDecoder().decode(BatteryConfiguration.self, from: Data(json.utf8))
-      try settings.validate(path: "battery")
-    }
-
-    let item = Item(
-      id: "battery",
-      type: .battery,
-      battery: BatteryConfiguration(symbols: BatterySymbols())
-    )
-
-    #expect(
-      WidgetState.battery(percentage: 50, charging: false, pluggedIn: false)
-        .presentation(for: item).symbol == "battery.50percent"
-    )
-  }
-
-  @Test(
     "WidgetState.presentation(for:): Wi-Fi glyphs inherit shared defaults and allow local overrides"
   )
   func wifiSymbolDefaults() throws {
@@ -257,22 +274,5 @@ struct ItemSymbolTests {
 
       #expect(throws: ConfigurationError.self) { try settings.validate(path: "wifi") }
     }
-  }
-
-  @Test("Item.init(from:): glyphs decode in item and Wi-Fi state symbols")
-  func wifiGlyphs() throws {
-    let json =
-      #"{"id":"wifi","type":"network","network":{"interface":"wifi","symbols":{"font":"Symbols Nerd Font Mono","wifi":{"glyph":"\uf1eb"}}}}"#
-    var item = try JSONDecoder().decode(Item.self, from: Data(json.utf8))
-    try item.network?.validate(path: "wifi")
-    let glyph = ItemSymbol.glyph("\u{f1eb}", font: "Symbols Nerd Font Mono")
-
-    #expect(WidgetState.network(.wifi).presentation(for: item).symbol == glyph)
-    #expect(WidgetState.network(.offline).presentation(for: item).symbol == "wifi.slash")
-
-    item.symbol = glyph
-
-    #expect(WidgetState.network(.offline).presentation(for: item).symbol == glyph)
-    #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
   }
 }

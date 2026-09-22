@@ -150,6 +150,18 @@ struct ProviderRuntimeTests {
     #expect(runtime.sharedValues[.memory] == "50%")
   }
 
+  @Test("updateSharedValues: batched shared updates emit events only for changed values")
+  func changedValueEvents() {
+    let runtime = ProviderRuntime()
+    runtime.updateSharedValues([.cpu: "10%", .memory: "50%"])
+    var events: [String: String] = [:]
+    runtime.onValueChange = { events[$0] = $1 }
+
+    runtime.updateSharedValues([.cpu: "11%", .memory: "50%"])
+
+    #expect(events == ["cpu": "11%"])
+  }
+
   @Test("updateItemValue: unchanged command and plugin values do not invalidate observation")
   func unchangedItemValues() {
     let runtime = ProviderRuntime()
@@ -169,17 +181,5 @@ struct ProviderRuntimeTests {
 
     #expect(changes.withLock { $0 } == 1)
     #expect(runtime.itemValues["status"] == "Busy")
-  }
-
-  @Test("updateSharedValues: batched shared updates emit events only for changed values")
-  func changedValueEvents() {
-    let runtime = ProviderRuntime()
-    runtime.updateSharedValues([.cpu: "10%", .memory: "50%"])
-    var events: [String: String] = [:]
-    runtime.onValueChange = { events[$0] = $1 }
-
-    runtime.updateSharedValues([.cpu: "11%", .memory: "50%"])
-
-    #expect(events == ["cpu": "11%"])
   }
 }
