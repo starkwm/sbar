@@ -18,6 +18,26 @@ struct AerospaceProviderTests {
     )
   }
 
+  @Test("AerospaceState.parse: JSON rejects malformed, empty, duplicate and inconsistent snapshots")
+  func parsing() throws {
+    let row =
+      #"{"workspace":"Code","workspace-is-focused":true,"workspace-is-visible":true,"monitor-appkit-nsscreen-screens-id":1}"#
+
+    #expect(try AerospaceState.parse(Data("[\(row)]".utf8), displays: [1: "A"]).text == "Code")
+
+    for json in [
+      "[]", "[\(row),\(row)]", "[" + row.replacingOccurrences(of: "Code", with: " ") + "]",
+    ] {
+      #expect(try AerospaceState.parse(Data(json.utf8), displays: [:]).unavailable != nil)
+    }
+    for json in [
+      "", "warning\n[\(row)]", "[{}]",
+      "[" + row.replacingOccurrences(of: ":1", with: ":true") + "]",
+    ] {
+      #expect(throws: (any Error).self) { try AerospaceState.parse(Data(json.utf8), displays: [:]) }
+    }
+  }
+
   @Test(
     "AerospaceState.presentation(for:): named workspaces preserve focus, visibility, labels and display scope"
   )
@@ -52,26 +72,6 @@ struct AerospaceProviderTests {
     item.aerospace?.showSymbol = false
 
     #expect(state.presentation(for: item, displayUUID: "A").symbol == nil)
-  }
-
-  @Test("AerospaceState.parse: JSON rejects malformed, empty, duplicate and inconsistent snapshots")
-  func parsing() throws {
-    let row =
-      #"{"workspace":"Code","workspace-is-focused":true,"workspace-is-visible":true,"monitor-appkit-nsscreen-screens-id":1}"#
-
-    #expect(try AerospaceState.parse(Data("[\(row)]".utf8), displays: [1: "A"]).text == "Code")
-
-    for json in [
-      "[]", "[\(row),\(row)]", "[" + row.replacingOccurrences(of: "Code", with: " ") + "]",
-    ] {
-      #expect(try AerospaceState.parse(Data(json.utf8), displays: [:]).unavailable != nil)
-    }
-    for json in [
-      "", "warning\n[\(row)]", "[{}]",
-      "[" + row.replacingOccurrences(of: ":1", with: ":true") + "]",
-    ] {
-      #expect(throws: (any Error).self) { try AerospaceState.parse(Data(json.utf8), displays: [:]) }
-    }
   }
 
   @Test(
@@ -153,6 +153,26 @@ struct AerospaceProviderTests {
     #expect(reads == 3)
   }
 
+  @Test(
+    "AerospaceProvider.start: provider stdout excludes stderr while existing process callers retain merged output"
+  )
+  func standardError() async throws {
+    let result = try await ProcessRunner.run(
+      executable: "/bin/sh",
+      arguments: ["-c", "printf 'Code'; printf 'diagnostic' >&2"],
+      mergeStandardError: false
+    )
+
+    #expect(result.output == "Code")
+
+    let merged = try await ProcessRunner.run(
+      executable: "/bin/sh",
+      arguments: ["-c", "printf 'diagnostic' >&2"]
+    )
+
+    #expect(merged.output == "diagnostic")
+  }
+
   @Test("ProviderRuntime.trigger: manual triggers capture a newly queried snapshot")
   func trigger() async throws {
     var current = state
@@ -174,25 +194,5 @@ struct AerospaceProviderTests {
     #expect(runtime.presentation(for: item)?.text == "Code")
 
     try await waitUntil { runtime.presentation(for: item)?.text == "Web" }
-  }
-
-  @Test(
-    "AerospaceProvider.start: provider stdout excludes stderr while existing process callers retain merged output"
-  )
-  func standardError() async throws {
-    let result = try await ProcessRunner.run(
-      executable: "/bin/sh",
-      arguments: ["-c", "printf 'Code'; printf 'diagnostic' >&2"],
-      mergeStandardError: false
-    )
-
-    #expect(result.output == "Code")
-
-    let merged = try await ProcessRunner.run(
-      executable: "/bin/sh",
-      arguments: ["-c", "printf 'diagnostic' >&2"]
-    )
-
-    #expect(merged.output == "diagnostic")
   }
 }

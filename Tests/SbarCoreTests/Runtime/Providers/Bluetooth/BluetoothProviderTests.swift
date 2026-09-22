@@ -6,32 +6,6 @@ import Testing
 @Suite("BluetoothProvider")
 @MainActor
 struct BluetoothProviderTests {
-  @Test(
-    "SystemBluetoothMonitor.status: native state mapping distinguishes power, denied access and pending initialization"
-  )
-  func states() {
-    #expect(SystemBluetoothMonitor.status(.unknown, authorization: .notDetermined) == nil)
-    #expect(SystemBluetoothMonitor.status(.poweredOn, authorization: .notDetermined) == .on)
-    #expect(SystemBluetoothMonitor.status(.poweredOff, authorization: .notDetermined) == .off)
-    #expect(SystemBluetoothMonitor.status(.poweredOn, authorization: .allowedAlways) == .on)
-    #expect(SystemBluetoothMonitor.status(.poweredOff, authorization: .allowedAlways) == .off)
-    #expect(
-      SystemBluetoothMonitor.status(.resetting, authorization: .allowedAlways) == .unavailable
-    )
-    #expect(
-      SystemBluetoothMonitor.status(.unsupported, authorization: .allowedAlways) == .unavailable
-    )
-    #expect(
-      SystemBluetoothMonitor.status(.unauthorized, authorization: .allowedAlways) == .unauthorized
-    )
-
-    for state in [CBManagerState.unknown, .poweredOn, .poweredOff] {
-      for authorization in [CBManagerAuthorization.denied, .restricted] {
-        #expect(SystemBluetoothMonitor.status(state, authorization: authorization) == .unauthorized)
-      }
-    }
-  }
-
   @Test("start: pending initialization does not publish a false off or disconnected snapshot")
   func pending() async throws {
     let monitor = TestBluetoothMonitor()
@@ -104,6 +78,32 @@ struct BluetoothProviderTests {
     #expect(monitor.reads == reads)
     #expect(states.count == 2)
     #expect(monitor.changed == nil)
+  }
+
+  @Test(
+    "SystemBluetoothMonitor.status: native state mapping distinguishes power, denied access and pending initialization"
+  )
+  func states() {
+    #expect(SystemBluetoothMonitor.status(.unknown, authorization: .notDetermined) == nil)
+    #expect(SystemBluetoothMonitor.status(.poweredOn, authorization: .notDetermined) == .on)
+    #expect(SystemBluetoothMonitor.status(.poweredOff, authorization: .notDetermined) == .off)
+    #expect(SystemBluetoothMonitor.status(.poweredOn, authorization: .allowedAlways) == .on)
+    #expect(SystemBluetoothMonitor.status(.poweredOff, authorization: .allowedAlways) == .off)
+    #expect(
+      SystemBluetoothMonitor.status(.resetting, authorization: .allowedAlways) == .unavailable
+    )
+    #expect(
+      SystemBluetoothMonitor.status(.unsupported, authorization: .allowedAlways) == .unavailable
+    )
+    #expect(
+      SystemBluetoothMonitor.status(.unauthorized, authorization: .allowedAlways) == .unauthorized
+    )
+
+    for state in [CBManagerState.unknown, .poweredOn, .poweredOff] {
+      for authorization in [CBManagerAuthorization.denied, .restricted] {
+        #expect(SystemBluetoothMonitor.status(state, authorization: authorization) == .unauthorized)
+      }
+    }
   }
 
   @Test(

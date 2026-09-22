@@ -18,27 +18,6 @@ struct ProviderTests {
     #expect(CPUProvider.usage(previous: [1, 2, 3, 4], current: [1, 2, 3, 4]) == nil)
   }
 
-  @MainActor
-  @Test("ProviderRuntime.trigger: updates a manual clock snapshot only when triggered")
-  func manualClock() async throws {
-    let providers = ProviderRuntime()
-    var config = Configuration.default
-    config.items.left = []
-    config.items.right = [.init(id: "clock", type: .datetime, refresh: .init(mode: .manual))]
-
-    providers.configure(config)
-    defer { providers.stop() }
-
-    let initial = providers.itemDates["clock"]
-    try await Task.sleep(for: .milliseconds(30))
-
-    #expect(providers.itemDates["clock"] == initial)
-
-    providers.trigger("clock")
-
-    #expect(try #require(providers.itemDates["clock"]) > #require(initial))
-  }
-
   @MainActor @Test("ProviderRuntime.configure: does not rerun commands after cosmetic edits")
   func cosmeticEdits() async throws {
     let url = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
@@ -63,5 +42,26 @@ struct ProviderTests {
     try await Task.sleep(for: .milliseconds(100))
 
     #expect(try String(contentsOf: url, encoding: .utf8) == "x")
+  }
+
+  @MainActor
+  @Test("ProviderRuntime.trigger: updates a manual clock snapshot only when triggered")
+  func manualClock() async throws {
+    let providers = ProviderRuntime()
+    var config = Configuration.default
+    config.items.left = []
+    config.items.right = [.init(id: "clock", type: .datetime, refresh: .init(mode: .manual))]
+
+    providers.configure(config)
+    defer { providers.stop() }
+
+    let initial = providers.itemDates["clock"]
+    try await Task.sleep(for: .milliseconds(30))
+
+    #expect(providers.itemDates["clock"] == initial)
+
+    providers.trigger("clock")
+
+    #expect(try #require(providers.itemDates["clock"]) > #require(initial))
   }
 }

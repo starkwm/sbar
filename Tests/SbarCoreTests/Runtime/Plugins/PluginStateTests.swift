@@ -6,37 +6,11 @@ import Testing
 @Suite("PluginState")
 @MainActor
 struct PluginStateTests {
-  @Test(
-    "PluginOutputFramer.append: line boundaries apply per message, including a full line followed by another message"
-  )
-  func framing() throws {
-    let line = "{\"text\":\"" + String(repeating: "a", count: 65_525) + "\"}"
-
-    #expect(line.utf8.count == 65_536)
-
-    var framer = PluginOutputFramer()
-
-    #expect(try framer.append(Data(line.prefix(65_000).utf8)) == nil)
-
-    let result = try framer.append(Data((line.dropFirst(65_000) + "\n{\"text\":\"last\"}\n").utf8))
-
-    #expect(result?.text == "last")
-
-    try framer.finish()
-    var oversized = PluginOutputFramer()
-
-    #expect(throws: PluginProtocolError.lineLimit) {
-      try oversized.append(Data(repeating: 97, count: 65_537))
-    }
-
-    var unfinished = PluginOutputFramer()
-    _ = try unfinished.append(Data("{\"text\":\"x\"}".utf8))
-
-    #expect(throws: PluginProtocolError.unterminatedMessage) { try unfinished.finish() }
-
-    var invalid = PluginOutputFramer()
-
-    #expect(throws: PluginProtocolError.invalidMessage) { try invalid.append(Data([255, 10])) }
+  @Test("PluginState.restartDelay: only sustained runs with valid output reset backoff")
+  func backoff() {
+    #expect(PluginState.restartDelay(30, uptime: .seconds(30), receivedOutput: true) == 1)
+    #expect(PluginState.restartDelay(30, uptime: .seconds(29), receivedOutput: true) == 30)
+    #expect(PluginState.restartDelay(30, uptime: .seconds(60), receivedOutput: false) == 30)
   }
 
   @Test(
@@ -78,6 +52,39 @@ struct PluginStateTests {
     item.plugin?.onError = .hide
 
     #expect(failed.presentation(for: item).hidden)
+  }
+
+  @Test(
+    "PluginOutputFramer.append: line boundaries apply per message, including a full line followed by another message"
+  )
+  func framing() throws {
+    let line = "{\"text\":\"" + String(repeating: "a", count: 65_525) + "\"}"
+
+    #expect(line.utf8.count == 65_536)
+
+    var framer = PluginOutputFramer()
+
+    #expect(try framer.append(Data(line.prefix(65_000).utf8)) == nil)
+
+    let result = try framer.append(Data((line.dropFirst(65_000) + "\n{\"text\":\"last\"}\n").utf8))
+
+    #expect(result?.text == "last")
+
+    try framer.finish()
+    var oversized = PluginOutputFramer()
+
+    #expect(throws: PluginProtocolError.lineLimit) {
+      try oversized.append(Data(repeating: 97, count: 65_537))
+    }
+
+    var unfinished = PluginOutputFramer()
+    _ = try unfinished.append(Data("{\"text\":\"x\"}".utf8))
+
+    #expect(throws: PluginProtocolError.unterminatedMessage) { try unfinished.finish() }
+
+    var invalid = PluginOutputFramer()
+
+    #expect(throws: PluginProtocolError.invalidMessage) { try invalid.append(Data([255, 10])) }
   }
 
   @Test("PluginMailbox.send: mailbox retains its first start event under saturation")
@@ -185,13 +192,6 @@ struct PluginStateTests {
     #expect(runtime.pluginStates[item.id]?.lastSuccess?.text == "started")
     #expect(runtime.pluginStates[item.id]?.status == .failure)
     #expect(runtime.itemValues[item.id] == "Process exited with status 7.")
-  }
-
-  @Test("PluginState.restartDelay: only sustained runs with valid output reset backoff")
-  func backoff() {
-    #expect(PluginState.restartDelay(30, uptime: .seconds(30), receivedOutput: true) == 1)
-    #expect(PluginState.restartDelay(30, uptime: .seconds(29), receivedOutput: true) == 30)
-    #expect(PluginState.restartDelay(30, uptime: .seconds(60), receivedOutput: false) == 30)
   }
 
   @Test("Plugin.validate: plugin configuration rejects blank executables and mismatched item types")

@@ -113,52 +113,6 @@ struct ThemeTests {
     }
   }
 
-  @Test(
-    "Configuration.validate: rejects invalid item widths at their exact locations",
-    arguments: [-1.0, 4097, Double.infinity, -Double.infinity, Double.nan],
-    ["minWidth", "width"]
-  )
-  func invalidItemWidths(value: Double, field: String) {
-    let style = field == "minWidth" ? ItemStyle(minWidth: value) : ItemStyle(width: value)
-    var config = Configuration.default
-    config.items.right[1].style = style
-
-    #expect(
-      throws: ConfigurationError.invalidValue(
-        path: "items.right[1].style.\(field)",
-        reason: "Must be between 0.0 and 4096.0."
-      )
-    ) { try config.validate() }
-
-    config.items.right[1].style = nil
-    config.theme = Theme(itemStyle: style)
-
-    #expect(
-      throws: ConfigurationError.invalidValue(
-        path: "theme.itemStyle.\(field)",
-        reason: "Must be between 0.0 and 4096.0."
-      )
-    ) { try config.validate() }
-  }
-
-  @Test(
-    "Configuration.init: preserves partial theme and item styling through round trips"
-  )
-  func roundTrip() throws {
-    let json =
-      ##"{"schemaVersion":1,"bar":{},"theme":{"itemSpacing":5,"itemStyle":{"tint":"#aabbcc","fontWeight":"semibold"}},"items":{"right":[{"id":"clock","type":"datetime","style":{"fontSize":16,"background":"#11223380"}}]}}"##
-
-    let config = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
-    try config.validate()
-
-    #expect(config.theme?.horizontalPadding == nil)
-    #expect(config.items.right[0].style?.fontSize == 16)
-
-    #expect(
-      try JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(config)) == config
-    )
-  }
-
   @Test("ItemStyle.resolved: Symbol weight inherits independently and round trips")
   func symbolWeight() throws {
     let theme = ItemStyle(fontWeight: .bold, symbolFontWeight: .medium)
@@ -209,6 +163,52 @@ struct ThemeTests {
   }
 
   @Test(
+    "Configuration.init: preserves partial theme and item styling through round trips"
+  )
+  func roundTrip() throws {
+    let json =
+      ##"{"schemaVersion":1,"bar":{},"theme":{"itemSpacing":5,"itemStyle":{"tint":"#aabbcc","fontWeight":"semibold"}},"items":{"right":[{"id":"clock","type":"datetime","style":{"fontSize":16,"background":"#11223380"}}]}}"##
+
+    let config = try JSONDecoder().decode(Configuration.self, from: Data(json.utf8))
+    try config.validate()
+
+    #expect(config.theme?.horizontalPadding == nil)
+    #expect(config.items.right[0].style?.fontSize == 16)
+
+    #expect(
+      try JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(config)) == config
+    )
+  }
+
+  @Test(
+    "Configuration.validate: rejects invalid item widths at their exact locations",
+    arguments: [-1.0, 4097, Double.infinity, -Double.infinity, Double.nan],
+    ["minWidth", "width"]
+  )
+  func invalidItemWidths(value: Double, field: String) {
+    let style = field == "minWidth" ? ItemStyle(minWidth: value) : ItemStyle(width: value)
+    var config = Configuration.default
+    config.items.right[1].style = style
+
+    #expect(
+      throws: ConfigurationError.invalidValue(
+        path: "items.right[1].style.\(field)",
+        reason: "Must be between 0.0 and 4096.0."
+      )
+    ) { try config.validate() }
+
+    config.items.right[1].style = nil
+    config.theme = Theme(itemStyle: style)
+
+    #expect(
+      throws: ConfigurationError.invalidValue(
+        path: "theme.itemStyle.\(field)",
+        reason: "Must be between 0.0 and 4096.0."
+      )
+    ) { try config.validate() }
+  }
+
+  @Test(
     "init(from:): hover colour validation reports the exact item or theme field",
     arguments: ["hoverTint", "hoverBackground"],
     ["red", "#fff", "#gg0000", "#1234567"]
@@ -237,21 +237,6 @@ struct ThemeTests {
         reason: "Use #RRGGBB or #RRGGBBAA."
       )
     ) { try config.validate() }
-  }
-
-  @Test("RGBA.init: accepts RGB and RGBA with an alpha suffix")
-  func initAcceptsRGBAndRGBA() throws {
-    let rgb = try #require(RGBA(hex: "#FF0080"))
-
-    #expect(rgb.red == 1)
-    #expect(rgb.green == 0)
-    #expect(rgb.blue == Double(128) / 255)
-    #expect(rgb.alpha == 1)
-
-    let rgba = try #require(RGBA(hex: "#ff008000"))
-
-    #expect(rgba.alpha == 0)
-    #expect(rgba.red == rgb.red)
   }
 
   @Test(
@@ -298,5 +283,20 @@ struct ThemeTests {
     config.theme = Theme(itemSpacing: value)
 
     #expect(throws: (any Error).self) { try config.validate() }
+  }
+
+  @Test("RGBA.init: accepts RGB and RGBA with an alpha suffix")
+  func initAcceptsRGBAndRGBA() throws {
+    let rgb = try #require(RGBA(hex: "#FF0080"))
+
+    #expect(rgb.red == 1)
+    #expect(rgb.green == 0)
+    #expect(rgb.blue == Double(128) / 255)
+    #expect(rgb.alpha == 1)
+
+    let rgba = try #require(RGBA(hex: "#ff008000"))
+
+    #expect(rgba.alpha == 0)
+    #expect(rgba.red == rgb.red)
   }
 }

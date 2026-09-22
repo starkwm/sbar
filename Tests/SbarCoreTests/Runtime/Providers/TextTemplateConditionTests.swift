@@ -5,6 +5,27 @@ import Testing
 
 @Suite("TextTemplate")
 struct TextTemplateConditionTests {
+  @Test(
+    "allowedValues(for:): every declared status is accepted by its provider",
+    arguments: [
+      ItemType.battery, .volume, .network, .vpn, .bluetooth, .audioDevice, .media, .mail, .command,
+      .plugin,
+    ]
+  )
+  func statusVocabulary(type: ItemType) throws {
+    let allowed = TextTemplate.allowedValues(for: type)
+
+    for status in try #require(allowed["status"]) {
+      let template = try TextTemplate(
+        "{{#status=\(status)}}yes{{/status}}",
+        fields: TextTemplate.fields(for: type),
+        allowedValues: allowed
+      )
+
+      #expect(template.render(["status": status]) == "yes")
+    }
+  }
+
   @Test("render: equality, inverse, nested same-field sections, and fallback labels")
   func conditions() throws {
     let template = try TextTemplate(
@@ -40,27 +61,6 @@ struct TextTemplateConditionTests {
         bar: .init(),
         items: .init(right: [Item(id: "vpn", type: .vpn, text: text)])
       ).validate()
-    }
-  }
-
-  @Test(
-    "allowedValues(for:): every declared status is accepted by its provider",
-    arguments: [
-      ItemType.battery, .volume, .network, .vpn, .bluetooth, .audioDevice, .media, .mail, .command,
-      .plugin,
-    ]
-  )
-  func statusVocabulary(type: ItemType) throws {
-    let allowed = TextTemplate.allowedValues(for: type)
-
-    for status in try #require(allowed["status"]) {
-      let template = try TextTemplate(
-        "{{#status=\(status)}}yes{{/status}}",
-        fields: TextTemplate.fields(for: type),
-        allowedValues: allowed
-      )
-
-      #expect(template.render(["status": status]) == "yes")
     }
   }
 

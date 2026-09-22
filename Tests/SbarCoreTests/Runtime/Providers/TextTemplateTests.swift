@@ -25,19 +25,6 @@ struct TextTemplateTests {
     #expect(nested.render(["a": "0"]) == "yes")
   }
 
-  @Test(
-    "Configuration.validate: invalid templates fail validation",
-    arguments: [
-      "{{unknown}}", "{{percentage", "{{/percentage}}", "{{#available}}x",
-      "{{#available}}{{/percentage}}", "{{}}",
-    ]
-  )
-  func invalid(source: String) {
-    #expect(throws: ConfigurationError.self) {
-      _ = try TextTemplate(source, fields: TextTemplate.fields(for: .cpu))
-    }
-  }
-
   @Test("Configuration.init(from:): configuration round trips text and validates provider fields")
   func configuration() throws {
     let item = Item(id: "cpu", type: .cpu, text: "{{percentage}}%")
@@ -50,6 +37,19 @@ struct TextTemplateTests {
 
     #expect(throws: ConfigurationError.self) {
       try Configuration(bar: .init(), items: .init(right: [invalid])).validate()
+    }
+  }
+
+  @Test(
+    "Configuration.validate: invalid templates fail validation",
+    arguments: [
+      "{{unknown}}", "{{percentage", "{{/percentage}}", "{{#available}}x",
+      "{{#available}}{{/percentage}}", "{{}}",
+    ]
+  )
+  func invalid(source: String) {
+    #expect(throws: ConfigurationError.self) {
+      _ = try TextTemplate(source, fields: TextTemplate.fields(for: .cpu))
     }
   }
 

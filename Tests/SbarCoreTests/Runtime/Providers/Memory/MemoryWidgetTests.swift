@@ -8,34 +8,6 @@ import Testing
 @Suite("MemoryState")
 struct MemoryWidgetTests {
   @Test(
-    "MemoryProvider.state: used memory sums active, wired, and compressed pages using the host page size"
-  )
-  func calculation() {
-    for pageSize: UInt64 in [4096, 16384] {
-      let state = MemoryProvider.state(
-        active: 100,
-        wired: 20,
-        compressed: 30,
-        pageSize: pageSize,
-        totalBytes: 16 * 1024 * 1024
-      )
-
-      #expect(state.usedBytes == 150 * pageSize)
-      #expect(state.totalBytes == 16 * 1024 * 1024)
-      #expect(state.available)
-    }
-
-    #expect(
-      MemoryProvider.state(active: 0, wired: 0, compressed: 0, pageSize: 4096, totalBytes: 4096)
-        .value(format: .percentage) == "0%"
-    )
-    #expect(
-      MemoryProvider.state(active: 1, wired: 0, compressed: 0, pageSize: 4096, totalBytes: 4096)
-        .value(format: .percentage) == "100%"
-    )
-  }
-
-  @Test(
     "MemoryProvider.sample: failed reads and invalid byte counts produce an unavailable reading"
   )
   func unavailable() {
@@ -61,6 +33,34 @@ struct MemoryWidgetTests {
         #expect(state.value(format: format) == "—")
       }
     }
+  }
+
+  @Test(
+    "MemoryProvider.state: used memory sums active, wired, and compressed pages using the host page size"
+  )
+  func calculation() {
+    for pageSize: UInt64 in [4096, 16384] {
+      let state = MemoryProvider.state(
+        active: 100,
+        wired: 20,
+        compressed: 30,
+        pageSize: pageSize,
+        totalBytes: 16 * 1024 * 1024
+      )
+
+      #expect(state.usedBytes == 150 * pageSize)
+      #expect(state.totalBytes == 16 * 1024 * 1024)
+      #expect(state.available)
+    }
+
+    #expect(
+      MemoryProvider.state(active: 0, wired: 0, compressed: 0, pageSize: 4096, totalBytes: 4096)
+        .value(format: .percentage) == "0%"
+    )
+    #expect(
+      MemoryProvider.state(active: 1, wired: 0, compressed: 0, pageSize: 4096, totalBytes: 4096)
+        .value(format: .percentage) == "100%"
+    )
   }
 
   @Test(

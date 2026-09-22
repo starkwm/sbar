@@ -25,6 +25,30 @@ struct ItemSymbolPositionTests {
     #expect(encoded["symbolPosition"] as? String == "left")
   }
 
+  @Test(
+    "init(from:): invalid positions fail at the item setting",
+    arguments: ["\"top\"", "\"leading\"", "\"Left\"", "\"\"", "1", "true", "{}", "[]"]
+  )
+  func invalidValues(value: String) throws {
+    let data = Data(
+      """
+      {"schemaVersion":1,"bar":{},"items":{"left":[
+        {"id":"text","type":"text","symbolPosition":\(value)}
+      ]}}
+      """.utf8
+    )
+
+    #expect(throws: DecodingError.self) {
+      try JSONDecoder().decode(Configuration.self, from: data)
+    }
+
+    do {
+      _ = try JSONDecoder().decode(Configuration.self, from: data)
+    } catch {
+      #expect(ConfigurationStore.describe(error).contains("items.left[0].symbolPosition"))
+    }
+  }
+
   @Test("encode(to:): both positions decode and encode", arguments: ItemSymbolPosition.allCases)
   func roundTrip(position: ItemSymbolPosition) throws {
     let item = try JSONDecoder().decode(
@@ -66,29 +90,5 @@ struct ItemSymbolPositionTests {
       try JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(configuration))
         == configuration
     )
-  }
-
-  @Test(
-    "init(from:): invalid positions fail at the item setting",
-    arguments: ["\"top\"", "\"leading\"", "\"Left\"", "\"\"", "1", "true", "{}", "[]"]
-  )
-  func invalidValues(value: String) throws {
-    let data = Data(
-      """
-      {"schemaVersion":1,"bar":{},"items":{"left":[
-        {"id":"text","type":"text","symbolPosition":\(value)}
-      ]}}
-      """.utf8
-    )
-
-    #expect(throws: DecodingError.self) {
-      try JSONDecoder().decode(Configuration.self, from: data)
-    }
-
-    do {
-      _ = try JSONDecoder().decode(Configuration.self, from: data)
-    } catch {
-      #expect(ConfigurationStore.describe(error).contains("items.left[0].symbolPosition"))
-    }
   }
 }

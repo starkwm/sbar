@@ -57,6 +57,72 @@ struct MediaWidgetTests {
   }
 
   @Test(
+    "presentation(for:): title, artist, separator, state symbols, and hidden states retain accessible metadata"
+  )
+  func appearance() {
+    var state = MediaState(players: [
+      .music: MediaPlayerState(source: .music, status: .playing, title: "Title", artist: "Artist")
+    ])
+    var item = Item(
+      id: "media",
+      type: .media,
+      media: MediaConfiguration(
+        symbols: MediaSymbols(
+          font: "Shared",
+          size: 18,
+          playing: .glyph("P"),
+          paused: .system("pause")
+        ),
+        hideWhenPaused: true,
+        hideWhenStopped: true
+      )
+    )
+    let playing = state.presentation(for: item)
+
+    #expect(playing.text == "Title — Artist")
+    #expect(playing.symbol == .glyph("P", font: "Shared", size: 18))
+    #expect(playing.accessibilityLabel == "Music, Playing, Title, Artist")
+    #expect(!playing.hidden)
+
+    state.players[.music]?.status = .paused
+
+    #expect(state.presentation(for: item).hidden)
+    #expect(state.presentation(for: item).text == "Title — Artist")
+    #expect(state.presentation(for: item).symbol == "pause")
+
+    #expect(state.presentation(for: item).accessibilityLabel.contains("Artist"))
+
+    item.symbol = "star"
+
+    #expect(state.presentation(for: item).symbol == "star")
+
+    item.media?.showSymbol = false
+
+    #expect(state.presentation(for: item).symbol == nil)
+
+    state.players[.music] = MediaPlayerState(source: .music, status: .stopped)
+
+    #expect(state.presentation(for: item).hidden)
+    #expect(MediaState().text == "Waiting for playback")
+    #expect(
+      MediaState(players: [.music: MediaPlayerState(source: .music, status: .paused)]).text
+        == "Paused"
+    )
+    #expect(
+      MediaState(players: [.music: MediaPlayerState(source: .music, status: .stopped)]).text
+        == "Stopped"
+    )
+
+    item.media?.source = .spotify
+
+    #expect(!state.presentation(for: item).hidden)
+
+    for name in ["play.fill", "pause.fill", "stop.fill", "questionmark"] {
+      #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil)
+    }
+  }
+
+  @Test(
     "MediaPlayerState.parse: preserves paused metadata, clears stopped tracks, and handles malformed fields"
   )
   func parsing() {
@@ -129,122 +195,6 @@ struct MediaWidgetTests {
     )
 
     #expect(result.text == "Playback unavailable")
-  }
-
-  @Test(
-    "presentation(for:): title, artist, separator, state symbols, and hidden states retain accessible metadata"
-  )
-  func appearance() {
-    var state = MediaState(players: [
-      .music: MediaPlayerState(source: .music, status: .playing, title: "Title", artist: "Artist")
-    ])
-    var item = Item(
-      id: "media",
-      type: .media,
-      media: MediaConfiguration(
-        symbols: MediaSymbols(
-          font: "Shared",
-          size: 18,
-          playing: .glyph("P"),
-          paused: .system("pause")
-        ),
-        hideWhenPaused: true,
-        hideWhenStopped: true
-      )
-    )
-    let playing = state.presentation(for: item)
-
-    #expect(playing.text == "Title — Artist")
-    #expect(playing.symbol == .glyph("P", font: "Shared", size: 18))
-    #expect(playing.accessibilityLabel == "Music, Playing, Title, Artist")
-    #expect(!playing.hidden)
-
-    state.players[.music]?.status = .paused
-
-    #expect(state.presentation(for: item).hidden)
-    #expect(state.presentation(for: item).text == "Title — Artist")
-    #expect(state.presentation(for: item).symbol == "pause")
-
-    #expect(state.presentation(for: item).accessibilityLabel.contains("Artist"))
-
-    item.symbol = "star"
-
-    #expect(state.presentation(for: item).symbol == "star")
-
-    item.media?.showSymbol = false
-
-    #expect(state.presentation(for: item).symbol == nil)
-
-    state.players[.music] = MediaPlayerState(source: .music, status: .stopped)
-
-    #expect(state.presentation(for: item).hidden)
-    #expect(MediaState().text == "Waiting for playback")
-    #expect(
-      MediaState(players: [.music: MediaPlayerState(source: .music, status: .paused)]).text
-        == "Paused"
-    )
-    #expect(
-      MediaState(players: [.music: MediaPlayerState(source: .music, status: .stopped)]).text
-        == "Stopped"
-    )
-
-    item.media?.source = .spotify
-
-    #expect(!state.presentation(for: item).hidden)
-
-    for name in ["play.fill", "pause.fill", "stop.fill", "questionmark"] {
-      #expect(NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil)
-    }
-  }
-
-  @Test(
-    "ProviderRuntime.presentation(for:): hideWhenNotPlaying follows playback notifications and the selected source"
-  )
-  func playbackVisibility() {
-    let playback = NotificationCenter()
-    let provider = MediaProvider(playbackCenter: playback, workspaceCenter: NotificationCenter())
-    var state = MediaState()
-    provider.start { state = $0 }
-    defer { provider.stop() }
-    var item = Item(
-      id: "media",
-      type: .media,
-      media: MediaConfiguration(hideWhenNotPlaying: true)
-    )
-
-    #expect(state.presentation(for: item).hidden)
-
-    for status in ["Playing", "Paused", "Playing", "Stopped", "Unexpected"] {
-      playback.post(
-        name: MediaSource.music.notificationName,
-        object: nil,
-        userInfo: ["Player State": status]
-      )
-
-      #expect(state.presentation(for: item).hidden == (status != "Playing"))
-    }
-
-    playback.post(
-      name: MediaSource.music.notificationName,
-      object: nil,
-      userInfo: ["Player State": "Playing", "Name": "Music track"]
-    )
-    item.media?.source = .spotify
-
-    #expect(state.presentation(for: item).hidden)
-
-    playback.post(
-      name: MediaSource.spotify.notificationName,
-      object: nil,
-      userInfo: ["Player State": "Paused", "Name": "Spotify track"]
-    )
-
-    #expect(state.presentation(for: item).hidden)
-
-    item.media?.source = .automatic
-
-    #expect(!state.presentation(for: item).hidden)
-    #expect(state.presentation(for: item).text == "Music track")
   }
 
   @Test("MediaProvider.start: termination clears a player's track and restores the other source")
@@ -382,6 +332,56 @@ struct MediaWidgetTests {
         items: .init(right: [Item(id: "text", type: .text, media: MediaConfiguration())])
       ).validate()
     }
+  }
+
+  @Test(
+    "ProviderRuntime.presentation(for:): hideWhenNotPlaying follows playback notifications and the selected source"
+  )
+  func playbackVisibility() {
+    let playback = NotificationCenter()
+    let provider = MediaProvider(playbackCenter: playback, workspaceCenter: NotificationCenter())
+    var state = MediaState()
+    provider.start { state = $0 }
+    defer { provider.stop() }
+    var item = Item(
+      id: "media",
+      type: .media,
+      media: MediaConfiguration(hideWhenNotPlaying: true)
+    )
+
+    #expect(state.presentation(for: item).hidden)
+
+    for status in ["Playing", "Paused", "Playing", "Stopped", "Unexpected"] {
+      playback.post(
+        name: MediaSource.music.notificationName,
+        object: nil,
+        userInfo: ["Player State": status]
+      )
+
+      #expect(state.presentation(for: item).hidden == (status != "Playing"))
+    }
+
+    playback.post(
+      name: MediaSource.music.notificationName,
+      object: nil,
+      userInfo: ["Player State": "Playing", "Name": "Music track"]
+    )
+    item.media?.source = .spotify
+
+    #expect(state.presentation(for: item).hidden)
+
+    playback.post(
+      name: MediaSource.spotify.notificationName,
+      object: nil,
+      userInfo: ["Player State": "Paused", "Name": "Spotify track"]
+    )
+
+    #expect(state.presentation(for: item).hidden)
+
+    item.media?.source = .automatic
+
+    #expect(!state.presentation(for: item).hidden)
+    #expect(state.presentation(for: item).text == "Music track")
   }
 
   @Test(

@@ -43,6 +43,38 @@ struct YabaiProviderTests {
   }
 
   @Test(
+    "YabaiState.parse: JSON validates identifiers, focus, display joins and whitespace label fallback"
+  )
+  func parsing() throws {
+    let row =
+      #"{"id":10,"index":3,"label":" ","has-focus":true,"is-visible":true,"display":2,"is-native-fullscreen":false}"#
+    let displays = [YabaiDisplay(uuid: "A", index: 2)]
+
+    #expect(try YabaiState.parse(Data("[\(row)]".utf8), displays: displays).text == "3")
+
+    for json in [
+      "[]", "[\(row),\(row)]",
+      "[" + row.replacingOccurrences(of: "\"index\":3", with: "\"index\":0") + "]",
+      "[" + row.replacingOccurrences(of: "\"display\":2", with: "\"display\":1") + "]",
+    ] {
+      #expect(try YabaiState.parse(Data(json.utf8), displays: displays).unavailable != nil)
+    }
+    for json in [
+      "", "warning\n[\(row)]", "[{}]",
+      "[" + row.replacingOccurrences(of: "\"id\":10", with: "\"id\":true") + "]",
+      "[" + row.replacingOccurrences(of: "\"id\":10", with: "\"id\":-1") + "]",
+    ] {
+      #expect(throws: (any Error).self) {
+        try YabaiState.parse(Data(json.utf8), displays: displays)
+      }
+    }
+
+    #expect(
+      try YabaiState.parse(Data("[\(row)]".utf8), displays: displays + displays).unavailable != nil
+    )
+  }
+
+  @Test(
     "YabaiState.presentation(for:): display mapping, native labels and fullscreen filtering retain Mission Control indexes"
   )
   func presentation() {
@@ -92,38 +124,6 @@ struct YabaiProviderTests {
     item.yabai?.showSymbol = false
 
     #expect(state.presentation(for: item, displayUUID: "A").symbol == nil)
-  }
-
-  @Test(
-    "YabaiState.parse: JSON validates identifiers, focus, display joins and whitespace label fallback"
-  )
-  func parsing() throws {
-    let row =
-      #"{"id":10,"index":3,"label":" ","has-focus":true,"is-visible":true,"display":2,"is-native-fullscreen":false}"#
-    let displays = [YabaiDisplay(uuid: "A", index: 2)]
-
-    #expect(try YabaiState.parse(Data("[\(row)]".utf8), displays: displays).text == "3")
-
-    for json in [
-      "[]", "[\(row),\(row)]",
-      "[" + row.replacingOccurrences(of: "\"index\":3", with: "\"index\":0") + "]",
-      "[" + row.replacingOccurrences(of: "\"display\":2", with: "\"display\":1") + "]",
-    ] {
-      #expect(try YabaiState.parse(Data(json.utf8), displays: displays).unavailable != nil)
-    }
-    for json in [
-      "", "warning\n[\(row)]", "[{}]",
-      "[" + row.replacingOccurrences(of: "\"id\":10", with: "\"id\":true") + "]",
-      "[" + row.replacingOccurrences(of: "\"id\":10", with: "\"id\":-1") + "]",
-    ] {
-      #expect(throws: (any Error).self) {
-        try YabaiState.parse(Data(json.utf8), displays: displays)
-      }
-    }
-
-    #expect(
-      try YabaiState.parse(Data("[\(row)]".utf8), displays: displays + displays).unavailable != nil
-    )
   }
 
   @Test("YabaiConfiguration.validate: configuration validates and roundtrips")

@@ -121,6 +121,19 @@ struct ThroughputWidgetTests {
     #expect(provider.record(counters: [:], at: 34).text == "Throughput —")
   }
 
+  @Test(
+    "ThroughputState.format: automatic units preserve small rates and distinguish bits from bytes"
+  )
+  func formatting() {
+    #expect(ThroughputState.format(0, unit: .bytes) == "0 B/s")
+    #expect(ThroughputState.format(0.5, unit: .bytes) == "0.5 B/s")
+    #expect(ThroughputState.format(512, unit: .bytes) == "512 B/s")
+    #expect(ThroughputState.format(1536, unit: .bytes) == "1.5 KiB/s")
+    #expect(ThroughputState.format(1024 * 1024, unit: .bytes) == "1 MiB/s")
+    #expect(ThroughputState.format(1023.99, unit: .bytes) == "1 KiB/s")
+    #expect(ThroughputState.format(125_000, unit: .bits) == "1 Mbit/s")
+  }
+
   @Test("ThroughputState.rate: history is bounded and smoothing is independently selected per item")
   func smoothing() {
     var provider = ThroughputProvider()
@@ -141,19 +154,6 @@ struct ThroughputWidgetTests {
         )
       }
     }
-  }
-
-  @Test(
-    "ThroughputState.format: automatic units preserve small rates and distinguish bits from bytes"
-  )
-  func formatting() {
-    #expect(ThroughputState.format(0, unit: .bytes) == "0 B/s")
-    #expect(ThroughputState.format(0.5, unit: .bytes) == "0.5 B/s")
-    #expect(ThroughputState.format(512, unit: .bytes) == "512 B/s")
-    #expect(ThroughputState.format(1536, unit: .bytes) == "1.5 KiB/s")
-    #expect(ThroughputState.format(1024 * 1024, unit: .bytes) == "1 MiB/s")
-    #expect(ThroughputState.format(1023.99, unit: .bytes) == "1 KiB/s")
-    #expect(ThroughputState.format(125_000, unit: .bits) == "1 Mbit/s")
   }
 
   @Test(
