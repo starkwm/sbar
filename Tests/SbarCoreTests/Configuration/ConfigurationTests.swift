@@ -5,7 +5,7 @@ import Testing
 
 @Suite("Configuration")
 struct ConfigurationTests {
-  @Test("datetime: decodes and round trips localized styles")
+  @Test("init(from:): decodes and round trips localized styles")
   func datetimeStyles() throws {
     let data = Data(#"{"id":"date","type":"datetime","dateStyle":"full","timeStyle":"none"}"#.utf8)
     let item = try JSONDecoder().decode(Item.self, from: data)

@@ -3,9 +3,9 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("VPN widget")
+@Suite("VPNState")
 struct VPNWidgetTests {
-  @Test("all connection states have distinct text and valid symbols")
+  @Test("presentation(for:): all connection states have distinct text and valid symbols")
   func states() {
     for status in VPNStatus.allCases {
       let state = VPNState(
@@ -28,7 +28,7 @@ struct VPNWidgetTests {
     }
   }
 
-  @Test("multiple services retain names and states in a stable order")
+  @Test("presentation(for:): multiple services retain names and states in a stable order")
   func multipleServices() {
     let state = VPNState(
       services: [
@@ -55,7 +55,7 @@ struct VPNWidgetTests {
     #expect(reordered.text.contains("Unknown unavailable"))
   }
 
-  @Test("failed reads stay visible while known disconnected states can hide")
+  @Test("presentation(for:): failed reads stay visible while known disconnected states can hide")
   func unavailable() {
     let item = Item(id: "vpn", type: .vpn, vpn: VPNConfiguration(hideWhenDisconnected: true))
 
@@ -78,7 +78,9 @@ struct VPNWidgetTests {
     #expect(failed.text == "VPN unavailable")
   }
 
-  @Test("appearance settings round trip and icon-only items retain accessible names")
+  @Test(
+    "presentation(for:): appearance settings round trip and icon-only items retain accessible names"
+  )
   func appearance() throws {
     var item = try JSONDecoder().decode(
       Item.self,
@@ -115,7 +117,7 @@ struct VPNWidgetTests {
     #expect(state.presentation(for: item).symbol == nil)
   }
 
-  @Test("blank names fall back to VPN and omitted symbols use defaults")
+  @Test("presentation(for:): blank names fall back to VPN and omitted symbols use defaults")
   func defaults() {
     let state = VPNState(
       services: [.init(id: "x", name: " \n ", status: .connected)],
@@ -127,7 +129,9 @@ struct VPNWidgetTests {
     #expect(state.presentation(for: item).symbol == VPNStatus.connected.defaultSymbol)
   }
 
-  @Test("invalid state keys, tints, symbols and mismatched settings are rejected")
+  @Test(
+    "VPNConfiguration.validate: invalid state keys, tints, symbols and mismatched settings are rejected"
+  )
   func validation() throws {
     for settings in [
       ##"{"tints":{"offline":"#FFFFFF"}}"##,
@@ -153,7 +157,7 @@ struct VPNWidgetTests {
     #expect(throws: ConfigurationError.self) { try configuration.validate() }
   }
 
-  @Test("schema exposes VPN settings and all five status keys")
+  @Test("ConfigurationSchema.data: schema exposes VPN settings and all five status keys")
   func schema() throws {
     let schema = try #require(
       JSONSerialization.jsonObject(with: ConfigurationSchema.data()) as? [String: Any]

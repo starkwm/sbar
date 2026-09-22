@@ -6,7 +6,7 @@ import Testing
 @Suite("BarWindowLayout")
 struct BarWindowLayoutTests {
   @Test(
-    "side shadows preserve content coordinates and pass clicks through the fade",
+    "init: side shadows preserve content coordinates and pass clicks through the fade",
     arguments: [BarPosition.left, .right]
   )
   func verticalShadows(position: BarPosition) {
@@ -100,7 +100,7 @@ struct BarWindowLayoutTests {
     #expect(inset.shadowExtent == 0)
   }
 
-  @Test("square full-width bars cast an edge shadow without moving their content")
+  @Test("init: square full-width bars cast an edge shadow without moving their content")
   func edgeShadowGeometry() {
     let screen = CGRect(x: -1440, y: 100, width: 1440, height: 900)
 
@@ -136,7 +136,7 @@ struct BarWindowLayoutTests {
     }
   }
 
-  @Test("inset and rounded bars keep native shadows, including beside a side Dock")
+  @Test("init: inset and rounded bars keep native shadows, including beside a side Dock")
   func nativeShadowGeometry() {
     let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
 
@@ -161,7 +161,9 @@ struct BarWindowLayoutTests {
     }
   }
 
-  @Test("shadow decorations never intercept clicks, and bottom-bar item coordinates stay aligned")
+  @Test(
+    "ignoresMouse(at:passingThroughEmptyRegions:hitRegions:): shadow decorations never intercept clicks, and bottom-bar item coordinates stay aligned"
+  )
   func hitTesting() {
     let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
     let bar = CGRect(x: 0, y: 0, width: 1440, height: 32)
@@ -199,7 +201,7 @@ struct BarWindowLayoutTests {
     }
   }
 
-  @Test("disabled shadows restore the exact bar frame and small displays clip the decoration")
+  @Test("init: disabled shadows restore the exact bar frame and small displays clip the decoration")
   func constrainedShadow() {
     let screen = CGRect(x: 0, y: 0, width: 100, height: 40)
 

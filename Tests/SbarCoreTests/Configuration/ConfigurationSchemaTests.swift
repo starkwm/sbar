@@ -5,7 +5,7 @@ import Testing
 
 @Suite("ConfigurationSchema")
 struct ConfigurationSchemaTests {
-  @Test("hover colour schema and decoding accept the same RGB and RGBA strings")
+  @Test("data: hover colour schema and decoding accept the same RGB and RGBA strings")
   func hoverColours() throws {
     let schema = try #require(
       JSONSerialization.jsonObject(with: ConfigurationSchema.data()) as? [String: Any]
@@ -39,7 +39,7 @@ struct ConfigurationSchemaTests {
     }
   }
 
-  @Test("item sizing schema matches the accepted width bounds and alignments")
+  @Test("data: item sizing schema matches the accepted width bounds and alignments")
   func itemSizing() throws {
     let schema = try #require(
       JSONSerialization.jsonObject(with: ConfigurationSchema.data()) as? [String: Any]
@@ -99,7 +99,7 @@ struct ConfigurationSchemaTests {
     #expect(Set(types) == Set(ItemType.allCases.map(\.rawValue)))
   }
 
-  @Test("symbol positions match decoding choices and default")
+  @Test("data: symbol positions match decoding choices and default")
   func symbolPositions() throws {
     let schema = try #require(
       JSONSerialization.jsonObject(with: ConfigurationSchema.data()) as? [String: Any]

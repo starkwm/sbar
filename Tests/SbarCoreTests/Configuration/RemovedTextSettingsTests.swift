@@ -3,10 +3,10 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Removed text settings")
+@Suite("RemovedTextSettings")
 struct RemovedTextSettingsTests {
   @Test(
-    "retired settings report their full nested item path, including null values",
+    "validate: retired settings report their full nested item path, including null values",
     arguments: [
       ("battery", "showPercentage"),
       ("throughput", "showDownload"), ("throughput", "showUpload"),
@@ -78,7 +78,7 @@ struct RemovedTextSettingsTests {
   }
 
   @MainActor
-  @Test("a retired setting retains the last valid configuration during reload")
+  @Test("validate: a retired setting retains the last valid configuration during reload")
   func reload() throws {
     let url = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString + ".json")
     defer { try? FileManager.default.removeItem(at: url) }

@@ -4,9 +4,9 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Volume widget")
+@Suite("WidgetState")
 struct VolumeWidgetTests {
-  @Test("volume levels use zero and three positive ranges")
+  @Test("presentation(for:): volume levels use zero and three positive ranges")
   func levels() {
     let item = Item(id: "volume", type: .volume)
     let symbols = [
@@ -34,7 +34,7 @@ struct VolumeWidgetTests {
     }
   }
 
-  @Test("volume state precedence, overrides, and visibility")
+  @Test("presentation(for:): volume state precedence, overrides, and visibility")
   func states() {
     var item = Item(
       id: "volume",
@@ -86,7 +86,7 @@ struct VolumeWidgetTests {
     )
   }
 
-  @Test("volume glyph defaults, overrides, and configuration round trip")
+  @Test("presentation(for:): volume glyph defaults, overrides, and configuration round trip")
   func configuration() throws {
     let json = #"""
       {"schemaVersion":1,"bar":{},"items":{"right":[{"id":"volume","type":"volume","volume":{
@@ -139,7 +139,7 @@ struct VolumeWidgetTests {
     #expect(throws: ConfigurationError.self) { try invalid.validate() }
   }
 
-  @Test("invalid volume settings are rejected")
+  @Test("VolumeConfiguration.validate: invalid volume settings are rejected")
   func invalidSettings() throws {
     for json in [
       #"{"symbols":{"levels":["speaker.fill"]}}"#,
@@ -158,7 +158,9 @@ struct VolumeWidgetTests {
     }
   }
 
-  @Test("volume refresh captures full state even while mute text is unchanged")
+  @Test(
+    "ProviderRuntime.presentation(for:): volume refresh captures full state even while mute text is unchanged"
+  )
   @MainActor
   func refresh() throws {
     let runtime = ProviderRuntime()

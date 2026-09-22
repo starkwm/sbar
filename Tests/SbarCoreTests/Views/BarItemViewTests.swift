@@ -7,7 +7,7 @@ import Testing
 @Suite("BarItemView")
 @MainActor
 struct BarItemViewTests {
-  @Test("a hover tint overrides individual provider segment colours")
+  @Test("body: a hover tint overrides individual provider segment colours")
   func segmentTintOverride() throws {
     let runtime = ProviderRuntime()
     runtime.updateWidgetState(
@@ -46,7 +46,7 @@ struct BarItemViewTests {
   }
 
   @Test(
-    "item symbols render on the requested side, including the default",
+    "body: item symbols render on the requested side, including the default",
     arguments: [nil, .left, .right] as [ItemSymbolPosition?],
     [ItemSymbol.system("star.fill"), .glyph("S", font: "Menlo", size: 24)]
   )
@@ -68,7 +68,7 @@ struct BarItemViewTests {
   }
 
   @Test(
-    "provider state symbols respect placement and visibility",
+    "body: provider state symbols respect placement and visibility",
     arguments: ItemSymbolPosition.allCases
   )
   func providerSymbols(position: ItemSymbolPosition) throws {
@@ -101,7 +101,7 @@ struct BarItemViewTests {
   }
 
   @Test(
-    "segment order stays download then upload for both positions",
+    "body: segment order stays download then upload for both positions",
     arguments: ItemSymbolPosition.allCases
   )
   func segments(position: ItemSymbolPosition) throws {
@@ -174,7 +174,7 @@ struct BarItemViewTests {
   }
 
   @Test(
-    "application icons and fallback symbols respect placement",
+    "body: application icons and fallback symbols respect placement",
     arguments: ItemSymbolPosition.allCases
   )
   func applicationIcons(position: ItemSymbolPosition) throws {

@@ -3,9 +3,11 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Fullscreen bars")
+@Suite("SpacesState")
 struct FullscreenBarTests {
-  @Test("fullscreen follows each display's active Space, independently of focus")
+  @Test(
+    "isFullscreen(displayUUID:): fullscreen follows each display's active Space, independently of focus"
+  )
   func perDisplay() {
     var state = SpacesState(
       displays: [
@@ -33,7 +35,9 @@ struct FullscreenBarTests {
     #expect(state.isFullscreen(displayUUID: "display-b"))
   }
 
-  @Test("shared Spaces use the main display entry and unknown state keeps bars available")
+  @Test(
+    "isFullscreen(displayUUID:): shared Spaces use the main display entry and unknown state keeps bars available"
+  )
   func sharedAndUnknownSpaces() {
     let state = SpacesState(displays: [
       SpaceDisplay(identifier: "main", spaces: [SpaceEntry(id: 10, fullscreen: true)], activeID: 10)
@@ -55,7 +59,7 @@ struct FullscreenBarTests {
     #expect(!unknown.isFullscreen(displayUUID: "unmatched"))
   }
 
-  @Test("panels never opt into fullscreen auxiliary windows")
+  @Test("BarPanel.collectionBehavior: panels never opt into fullscreen auxiliary windows")
   @MainActor
   func panelBehavior() {
     let panel = BarPanel(contentRect: CGRect(x: 0, y: 0, width: 32, height: 100))

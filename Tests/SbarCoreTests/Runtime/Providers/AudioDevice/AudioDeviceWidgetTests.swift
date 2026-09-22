@@ -3,9 +3,11 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Audio device widget")
+@Suite("AudioDeviceState")
 struct AudioDeviceWidgetTests {
-  @Test("items select output by default or input explicitly and keep names accessible")
+  @Test(
+    "presentation(for:): items select output by default or input explicitly and keep names accessible"
+  )
   func devices() {
     let state = AudioDeviceState(
       output: .init(status: .available, id: 1, name: " Studio\n Display "),
@@ -26,7 +28,9 @@ struct AudioDeviceWidgetTests {
     #expect(blank.text == "Unnamed device")
   }
 
-  @Test("missing devices and read errors have distinct labels without stale device names")
+  @Test(
+    "presentation(for:): missing devices and read errors have distinct labels without stale device names"
+  )
   func states() {
     for kind in AudioDeviceKind.allCases {
       for status in AudioDeviceStatus.allCases {
@@ -58,7 +62,7 @@ struct AudioDeviceWidgetTests {
   }
 
   @Test(
-    "glyphs, tints and device names round trip without losing accessible names"
+    "presentation(for:): glyphs, tints and device names round trip without losing accessible names"
   )
   func appearance() throws {
     var item = try JSONDecoder().decode(
@@ -97,7 +101,9 @@ struct AudioDeviceWidgetTests {
     #expect(state.presentation(for: item).symbol == "mic.fill")
   }
 
-  @Test("invalid device choices, appearance keys, colors and mismatched settings are rejected")
+  @Test(
+    "AudioDeviceConfiguration.validate: invalid device choices, appearance keys, colors and mismatched settings are rejected"
+  )
   func validation() {
     for settings in [
       ##"{"device":"speakers"}"##,
@@ -125,7 +131,9 @@ struct AudioDeviceWidgetTests {
     #expect(throws: ConfigurationError.self) { try configuration.validate() }
   }
 
-  @Test("schema describes both device selections and the supported state mappings")
+  @Test(
+    "ConfigurationSchema.data: schema describes both device selections and the supported state mappings"
+  )
   func schema() throws {
     let schema = try #require(
       JSONSerialization.jsonObject(with: ConfigurationSchema.data()) as? [String: Any]

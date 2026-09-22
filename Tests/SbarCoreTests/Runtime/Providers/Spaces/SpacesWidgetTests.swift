@@ -4,7 +4,7 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Spaces widget")
+@Suite("SpacesState")
 @MainActor
 struct SpacesWidgetTests {
   private var snapshot: SpacesState {
@@ -23,7 +23,7 @@ struct SpacesWidgetTests {
     )
   }
 
-  @Test("scope preserves global order and each display's current Space")
+  @Test("presentation(for:): scope preserves global order and each display's current Space")
   func scopes() {
     let focused = Item(
       id: "spaces",
@@ -53,7 +53,9 @@ struct SpacesWidgetTests {
     #expect(shared.presentation(for: local, displayUUID: "any").text == "2 / 2")
   }
 
-  @Test("fullscreen filtering never substitutes a desktop index for the active fullscreen Space")
+  @Test(
+    "presentation(for:): fullscreen filtering never substitutes a desktop index for the active fullscreen Space"
+  )
   func fullscreen() {
     var item = Item(
       id: "spaces",
@@ -78,7 +80,9 @@ struct SpacesWidgetTests {
     #expect(state.presentation(for: item).text == "3 / 3")
   }
 
-  @Test("list labels and colors distinguish the active Space and respect visibility")
+  @Test(
+    "presentation(for:): list labels and colors distinguish the active Space and respect visibility"
+  )
   func appearance() {
     var item = Item(
       id: "spaces",
@@ -114,7 +118,9 @@ struct SpacesWidgetTests {
     #expect(SpacesState().presentation(for: item).tint == "#FF0000")
   }
 
-  @Test("name overrides apply to current labels and lists without changing identity or styling")
+  @Test(
+    "presentation(for:): name overrides apply to current labels and lists without changing identity or styling"
+  )
   func names() {
     var item = Item(
       id: "spaces",
@@ -148,7 +154,7 @@ struct SpacesWidgetTests {
     #expect(snapshot.presentation(for: item).text == "Custom")
   }
 
-  @Test("name positions follow display scope and fullscreen filtering")
+  @Test("presentation(for:): name positions follow display scope and fullscreen filtering")
   func scopedNames() {
     var item = Item(
       id: "spaces",
@@ -174,7 +180,9 @@ struct SpacesWidgetTests {
     #expect(SpacesState().presentation(for: item).text == "Spaces unavailable")
   }
 
-  @Test("missing, null, and empty names retain default numbers and extra names are ignored")
+  @Test(
+    "presentation(for:): missing, null, and empty names retain default numbers and extra names are ignored"
+  )
   func nameFallbacks() {
     var item = Item(
       id: "spaces",
@@ -189,7 +197,9 @@ struct SpacesWidgetTests {
     }
   }
 
-  @Test("symbol name overrides render current and mixed list labels with active styling")
+  @Test(
+    "presentation(for:): symbol name overrides render current and mixed list labels with active styling"
+  )
   func symbolNames() {
     let glyph = ItemSymbol.glyph("\u{f121}", font: "Symbols Nerd Font Mono", size: 16)
     var item = Item(
@@ -238,7 +248,9 @@ struct SpacesWidgetTests {
     #expect(snapshot.presentation(for: item).symbol == "star")
   }
 
-  @Test("symbol substitutions preserve template literals, identity fields, conditions, and order")
+  @Test(
+    "presentation(for:): symbol substitutions preserve template literals, identity fields, conditions, and order"
+  )
   func symbolTemplates() {
     var item = Item(
       id: "spaces",
@@ -280,7 +292,9 @@ struct SpacesWidgetTests {
     #expect(mixed.segments.map(\.symbol) == [nil, nil, "globe", nil, nil, nil])
   }
 
-  @Test("symbol overrides follow scoped filtered positions and unavailable fallbacks")
+  @Test(
+    "presentation(for:): symbol overrides follow scoped filtered positions and unavailable fallbacks"
+  )
   func scopedSymbolNames() {
     var item = Item(
       id: "spaces",
@@ -312,7 +326,9 @@ struct SpacesWidgetTests {
     #expect(unavailable.segments.isEmpty)
   }
 
-  @Test("symbol names decode and roundtrip alongside text and reject malformed symbols")
+  @Test(
+    "SpacesConfiguration.init(from:): symbol names decode and roundtrip alongside text and reject malformed symbols"
+  )
   func symbolNameConfiguration() throws {
     let json =
       #"{"names":["globe",{"symbol":"globe"},{"symbol":{"glyph":"\uf121","font":"Symbols Nerd Font Mono","size":16}},null,""]}"#
@@ -342,7 +358,7 @@ struct SpacesWidgetTests {
     }
   }
 
-  @Test("parser rejects booleans, negative, fractional, string, and zero IDs")
+  @Test("SpacesState.parse: parser rejects booleans, negative, fractional, string, and zero IDs")
   func malformedIDs() {
     for value: Any in [true, false, -1, 1.5, "10", 0, Double.nan, Double.infinity] {
       #expect(SpacesState.identifier(value) == nil)
@@ -366,7 +382,9 @@ struct SpacesWidgetTests {
     #expect(!state.complete)
   }
 
-  @Test("configuration validates labels, colors, glyphs, and source type")
+  @Test(
+    "SpacesConfiguration.validate: configuration validates labels, colors, glyphs, and source type"
+  )
   func configuration() throws {
     let item = try JSONDecoder().decode(
       Item.self,
@@ -399,7 +417,9 @@ struct SpacesWidgetTests {
     }
   }
 
-  @Test("notification bursts coalesce, transient failures retry, and stop cancels pending work")
+  @Test(
+    "SpacesProvider.start: notification bursts coalesce, transient failures retry, and stop cancels pending work"
+  )
   func transitions() async throws {
     let workspace = NotificationCenter()
     let application = NotificationCenter()
@@ -451,7 +471,9 @@ struct SpacesWidgetTests {
     #expect(query.reads == 7)
   }
 
-  @Test("manual refresh keeps the whole display snapshot until triggered")
+  @Test(
+    "ProviderRuntime.presentation(for:): manual refresh keeps the whole display snapshot until triggered"
+  )
   func refresh() throws {
     let configuration = try JSONDecoder().decode(
       Configuration.self,

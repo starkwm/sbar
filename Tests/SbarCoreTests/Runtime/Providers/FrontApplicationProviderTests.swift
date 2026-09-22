@@ -6,7 +6,7 @@ import Testing
 @Suite("FrontApplicationProvider")
 @MainActor
 struct FrontApplicationProviderTests {
-  @Test("menu ownership publishes the initial application and subsequent changes")
+  @Test("start: menu ownership publishes the initial application and subsequent changes")
   func applicationChanges() {
     let source = TestApplicationSource()
     source.application = .current
@@ -30,7 +30,9 @@ struct FrontApplicationProviderTests {
     #expect(updates.last?.name == NSRunningApplication.current.localizedName ?? "")
   }
 
-  @Test("application icons respect opt-in and manual refresh, including same-name switches")
+  @Test(
+    "ProviderRuntime.applicationIcon: application icons respect opt-in and manual refresh, including same-name switches"
+  )
   func iconRefresh() throws {
     let runtime = ProviderRuntime()
     defer { runtime.stop() }
@@ -115,7 +117,7 @@ struct FrontApplicationProviderTests {
     #expect(updates == 3)
   }
 
-  @Test("deallocation removes the observation")
+  @Test("stop: deallocation removes the observation")
   func deallocationRemovesObservation() {
     let source = TestApplicationSource()
     var provider: FrontApplicationProvider? = FrontApplicationProvider(

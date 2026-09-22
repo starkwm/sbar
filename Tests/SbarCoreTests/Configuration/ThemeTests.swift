@@ -51,7 +51,7 @@ struct ThemeTests {
     #expect(style.alignment == .center)
   }
 
-  @Test("Font families inherit, override and round trip")
+  @Test("ItemStyle.resolved: Font families inherit, override and round trip")
   func fontFamilies() throws {
     let json = """
       {"schemaVersion":1,"bar":{},
@@ -82,7 +82,7 @@ struct ThemeTests {
     )
   }
 
-  @Test("Item widths and alignment inherit independently and round trip")
+  @Test("ItemStyle.resolved: Item widths and alignment inherit independently and round trip")
   func itemSizing() throws {
     let json = """
       {"schemaVersion":1,"bar":{},
@@ -159,7 +159,7 @@ struct ThemeTests {
     )
   }
 
-  @Test("Symbol weight inherits independently and round trips")
+  @Test("ItemStyle.resolved: Symbol weight inherits independently and round trips")
   func symbolWeight() throws {
     let theme = ItemStyle(fontWeight: .bold, symbolFontWeight: .medium)
     let inherited = ItemStyle(fontWeight: .regular).resolved(over: theme)
@@ -185,7 +185,9 @@ struct ThemeTests {
     }
   }
 
-  @Test("hover colours inherit independently and preserve transparent overrides")
+  @Test(
+    "ItemStyle.resolved: hover colours inherit independently and preserve transparent overrides"
+  )
   func hoverColours() throws {
     let json = ##"{"hoverTint":null,"hoverBackground":"#00000000"}"##
     let item = try JSONDecoder().decode(ItemStyle.self, from: Data(json.utf8))
@@ -207,7 +209,7 @@ struct ThemeTests {
   }
 
   @Test(
-    "hover colour validation reports the exact item or theme field",
+    "init(from:): hover colour validation reports the exact item or theme field",
     arguments: ["hoverTint", "hoverBackground"],
     ["red", "#fff", "#gg0000", "#1234567"]
   )

@@ -3,10 +3,12 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Bluetooth provider")
+@Suite("BluetoothProvider")
 @MainActor
 struct BluetoothProviderTests {
-  @Test("native state mapping distinguishes power, denied access and pending initialization")
+  @Test(
+    "SystemBluetoothMonitor.status: native state mapping distinguishes power, denied access and pending initialization"
+  )
   func states() {
     #expect(SystemBluetoothMonitor.status(.unknown, authorization: .notDetermined) == nil)
     #expect(SystemBluetoothMonitor.status(.poweredOn, authorization: .notDetermined) == .on)
@@ -30,7 +32,7 @@ struct BluetoothProviderTests {
     }
   }
 
-  @Test("pending initialization does not publish a false off or disconnected snapshot")
+  @Test("start: pending initialization does not publish a false off or disconnected snapshot")
   func pending() async throws {
     let monitor = TestBluetoothMonitor()
     monitor.state = nil
@@ -48,7 +50,7 @@ struct BluetoothProviderTests {
     #expect(states == [monitor.state])
   }
 
-  @Test("failed startup recovers without needing a Bluetooth event")
+  @Test("start: failed startup recovers without needing a Bluetooth event")
   func recovery() async throws {
     let monitor = TestBluetoothMonitor()
     monitor.canStart = false
@@ -67,7 +69,7 @@ struct BluetoothProviderTests {
     #expect(states.last == BluetoothState(status: .on))
   }
 
-  @Test("events coalesce and callbacks from stopped or replaced sessions are ignored")
+  @Test("start: events coalesce and callbacks from stopped or replaced sessions are ignored")
   func lifecycle() async throws {
     let monitor = TestBluetoothMonitor()
     let provider = BluetoothProvider(monitor: monitor)
@@ -105,7 +107,7 @@ struct BluetoothProviderTests {
   }
 
   @Test(
-    "runtime shares monitoring and captures device changes for event, manual and interval items"
+    "ProviderRuntime.configure: runtime shares monitoring and captures device changes for event, manual and interval items"
   )
   func runtime() async throws {
     let monitor = TestBluetoothMonitor()

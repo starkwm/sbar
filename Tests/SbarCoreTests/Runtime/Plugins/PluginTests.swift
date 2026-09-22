@@ -4,7 +4,7 @@ import os
 
 @testable import SbarCore
 
-@Suite("Plugins")
+@Suite("PluginRunner")
 struct PluginTests {
   @Test("PluginRunner.run: receives events and reconstructs fragmented JSON output")
   func fragmentedOutput() async throws {

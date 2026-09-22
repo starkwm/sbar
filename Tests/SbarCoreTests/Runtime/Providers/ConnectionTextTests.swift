@@ -3,9 +3,11 @@ import Testing
 @testable import SbarCore
 
 @MainActor
-@Suite("Connection text loops")
+@Suite("ProviderRuntime")
 struct ConnectionTextTests {
-  @Test("VPN loops use service status, stable ordering and local default values")
+  @Test(
+    "presentation(for:): VPN loops use service status, stable ordering and local default values"
+  )
   func vpn() throws {
     let runtime = ProviderRuntime()
     let state = VPNState(
@@ -35,7 +37,7 @@ struct ConnectionTextTests {
     #expect(result.segments.isEmpty)
   }
 
-  @Test("Bluetooth loops expose connected devices and insert data literally")
+  @Test("presentation(for:): Bluetooth loops expose connected devices and insert data literally")
   func bluetooth() throws {
     let runtime = ProviderRuntime()
     let state = BluetoothState(
@@ -63,7 +65,7 @@ struct ConnectionTextTests {
     )
   }
 
-  @Test("empty collections discard stale entries and preserve visibility rules")
+  @Test("presentation(for:): empty collections discard stale entries and preserve visibility rules")
   func empty() {
     let runtime = ProviderRuntime()
     let vpn = Item(
@@ -100,7 +102,7 @@ struct ConnectionTextTests {
     }
   }
 
-  @Test("manual snapshots retain per-service state until triggered")
+  @Test("presentation(for:): manual snapshots retain per-service state until triggered")
   func snapshots() {
     let runtime = ProviderRuntime()
     let item = Item(
@@ -129,7 +131,7 @@ struct ConnectionTextTests {
   }
 
   @Test(
-    "collection validation rejects wrong providers, nesting and invalid states",
+    "Configuration.validate: collection validation rejects wrong providers, nesting and invalid states",
     arguments: [
       "{{services}}", "{{#devices}}{{name}}{{/devices}}", "{{#services=connected}}x{{/services}}",
       "{{#services}}{{#services}}{{name}}{{/services}}{{/services}}",

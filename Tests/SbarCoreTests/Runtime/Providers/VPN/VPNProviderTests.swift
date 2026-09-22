@@ -3,10 +3,12 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("VPN provider")
+@Suite("VPNProvider")
 @MainActor
 struct VPNProviderTests {
-  @Test("recognizes registered VPNs without treating other interfaces as VPNs")
+  @Test(
+    "SystemVPNMonitor.read: recognizes registered VPNs without treating other interfaces as VPNs"
+  )
   func serviceTypes() {
     #expect(SystemVPNMonitor.isVPN(interfaceType: "VPN", underlyingType: "vendor.app"))
     #expect(SystemVPNMonitor.isVPN(interfaceType: "IPSec", underlyingType: nil))
@@ -20,7 +22,7 @@ struct VPNProviderTests {
     #expect(!SystemVPNMonitor.isVPN(interfaceType: "PPP", underlyingType: "PPPoE"))
   }
 
-  @Test("native status mapping preserves invalid reads as unavailable")
+  @Test("SystemVPNMonitor.read: native status mapping preserves invalid reads as unavailable")
   func statuses() {
     #expect(SystemVPNMonitor.status(.connected) == .connected)
     #expect(SystemVPNMonitor.status(.connecting) == .connecting)
@@ -29,7 +31,7 @@ struct VPNProviderTests {
     #expect(SystemVPNMonitor.status(.invalid) == .unavailable)
   }
 
-  @Test("start failures publish unavailable without reading a disconnected snapshot")
+  @Test("start: start failures publish unavailable without reading a disconnected snapshot")
   func startFailure() {
     let monitor = TestVPNMonitor()
     monitor.canStart = false
@@ -42,7 +44,7 @@ struct VPNProviderTests {
     #expect(monitor.reads == 0)
   }
 
-  @Test("events coalesce and callbacks from stopped or replaced sessions are ignored")
+  @Test("start: events coalesce and callbacks from stopped or replaced sessions are ignored")
   func lifecycle() async throws {
     let monitor = TestVPNMonitor()
     let provider = VPNProvider(monitor: monitor)
@@ -81,7 +83,9 @@ struct VPNProviderTests {
     #expect(monitor.changed == nil)
   }
 
-  @Test("runtime shares VPN monitoring, snapshots events and stops disabled providers")
+  @Test(
+    "ProviderRuntime.configure: runtime shares VPN monitoring, snapshots events and stops disabled providers"
+  )
   func runtime() async throws {
     let monitor = TestVPNMonitor()
     let runtime = ProviderRuntime(vpn: VPNProvider(monitor: monitor))
@@ -134,7 +138,9 @@ struct VPNProviderTests {
     #expect(monitor.starts == 2)
   }
 
-  @Test("runtime preserves existing subscriptions when another provider is toggled")
+  @Test(
+    "ProviderRuntime.configure: runtime preserves existing subscriptions when another provider is toggled"
+  )
   func unrelatedProviderChanges() {
     let monitor = TestVPNMonitor()
     let runtime = ProviderRuntime(vpn: VPNProvider(monitor: monitor))

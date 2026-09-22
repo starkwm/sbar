@@ -6,7 +6,7 @@ import Testing
 @Suite("BarPlacement")
 struct BarPlacementTests {
   @Test(
-    "side bars can reach the physical top edge while respecting the Dock",
+    "frame: side bars can reach the physical top edge while respecting the Dock",
     arguments: [BarPosition.left, .right]
   )
   func extendedTopEdge(position: BarPosition) throws {
@@ -54,7 +54,7 @@ struct BarPlacementTests {
   }
 
   @Test(
-    "side bars respect the usable frame, independent margins and display origins",
+    "frame: side bars respect the usable frame, independent margins and display origins",
     arguments: [BarPosition.left, .right]
   )
   func verticalPlacement(position: BarPosition) {
@@ -85,7 +85,10 @@ struct BarPlacementTests {
     #expect(besideDock.maxY == rightDock.maxY)
   }
 
-  @Test("side bars clamp width and excessive margins", arguments: [BarPosition.left, .right])
+  @Test(
+    "frame: side bars clamp width and excessive margins",
+    arguments: [BarPosition.left, .right]
+  )
   func verticalClamping(position: BarPosition) {
     let screen = CGRect(x: 100, y: -200, width: 24, height: 100)
 

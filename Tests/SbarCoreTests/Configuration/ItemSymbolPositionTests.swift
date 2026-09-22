@@ -3,10 +3,10 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Item symbol position")
+@Suite("ItemSymbolPosition")
 struct ItemSymbolPositionTests {
   @Test(
-    "omitted and null positions default to the left",
+    "init(from:): omitted and null positions default to the left",
     arguments: ["", ",\"symbolPosition\":null"]
   )
   func defaults(setting: String) throws {
@@ -25,7 +25,7 @@ struct ItemSymbolPositionTests {
     #expect(encoded["symbolPosition"] as? String == "left")
   }
 
-  @Test("both positions decode and encode", arguments: ItemSymbolPosition.allCases)
+  @Test("encode(to:): both positions decode and encode", arguments: ItemSymbolPosition.allCases)
   func roundTrip(position: ItemSymbolPosition) throws {
     let item = try JSONDecoder().decode(
       Item.self,
@@ -43,7 +43,7 @@ struct ItemSymbolPositionTests {
     #expect(try JSONDecoder().decode(Item.self, from: data) == item)
   }
 
-  @Test("nested items choose their own position")
+  @Test("Item.init(from:): nested items choose their own position")
   func nestedItems() throws {
     let configuration = try JSONDecoder().decode(
       Configuration.self,
@@ -69,7 +69,7 @@ struct ItemSymbolPositionTests {
   }
 
   @Test(
-    "invalid positions fail at the item setting",
+    "init(from:): invalid positions fail at the item setting",
     arguments: ["\"top\"", "\"leading\"", "\"Left\"", "\"\"", "1", "true", "{}", "[]"]
   )
   func invalidValues(value: String) throws {

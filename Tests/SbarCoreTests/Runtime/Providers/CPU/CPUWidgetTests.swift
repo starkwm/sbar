@@ -4,9 +4,11 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("CPU widget")
+@Suite("CPUState")
 struct CPUWidgetTests {
-  @Test("sampling rounds, resets after failure and pauses, and bounds retained history")
+  @Test(
+    "CPUProvider.record: sampling rounds, resets after failure and pauses, and bounds retained history"
+  )
   func sampling() {
     var provider = CPUProvider()
 
@@ -33,7 +35,7 @@ struct CPUWidgetTests {
     #expect(provider.record(ticks: [1000, 0, 2000, 0], at: 106).samples.isEmpty)
   }
 
-  @Test("counter wraparound preserves a valid delta")
+  @Test("CPUProvider.usage: counter wraparound preserves a valid delta")
   func wraparound() {
     #expect(
       CPUProvider.usage(
@@ -43,7 +45,9 @@ struct CPUWidgetTests {
     )
   }
 
-  @Test("smoothing averages available samples and rounding drives all appearance")
+  @Test(
+    "CPUState.percentage: smoothing averages available samples and rounding drives all appearance"
+  )
   func smoothing() {
     let state = CPUState(samples: [0, 59.6, 90])
 
@@ -67,7 +71,9 @@ struct CPUWidgetTests {
     #expect(state.text == "CPU 90%")
   }
 
-  @Test("threshold symbols, glyph inheritance, and visibility use a consistent state")
+  @Test(
+    "presentation(for:): threshold symbols, glyph inheritance, and visibility use a consistent state"
+  )
   func appearance() {
     var item = Item(
       id: "cpu",
@@ -120,7 +126,9 @@ struct CPUWidgetTests {
     }
   }
 
-  @Test("CPU configuration round trips and rejects invalid ranges and appearance")
+  @Test(
+    "CPUConfiguration.validate: CPU configuration round trips and rejects invalid ranges and appearance"
+  )
   func configuration() throws {
     let item = try JSONDecoder().decode(
       Item.self,
@@ -163,7 +171,9 @@ struct CPUWidgetTests {
     )
   }
 
-  @Test("manual refresh holds smoothing history and appearance until triggered")
+  @Test(
+    "ProviderRuntime.presentation(for:): manual refresh holds smoothing history and appearance until triggered"
+  )
   @MainActor
   func refresh() throws {
     let configuration = try JSONDecoder().decode(

@@ -5,7 +5,9 @@ import Testing
 
 @Suite("OverflowSelection")
 struct OverflowSelectionTests {
-  @Test("vertical overflow uses unscaled heights, preserves priority and reserves its button")
+  @Test(
+    "visibleItemIDs: vertical overflow uses unscaled heights, preserves priority and reserves its button"
+  )
   func verticalOverflow() {
     let items = [
       Item(id: "a", type: .text, priority: 10, style: ItemStyle(width: 400)),
@@ -43,7 +45,7 @@ struct OverflowSelectionTests {
   }
 
   @Test(
-    "reserved widths are respected before and after measurement, including theme defaults",
+    "visibleItemIDs: reserved widths are respected before and after measurement, including theme defaults",
     arguments: [ItemStyle(minWidth: 100), ItemStyle(width: 100)],
     [nil, 100] as [CGFloat?]
   )
@@ -81,7 +83,7 @@ struct OverflowSelectionTests {
     )
   }
 
-  @Test("fixed widths override inherited minimums and stale measurements")
+  @Test("visibleItemIDs: fixed widths override inherited minimums and stale measurements")
   func fixedWidthOverrides() {
     let item = Item(id: "item", type: .text, style: ItemStyle(width: 60))
 
@@ -96,7 +98,7 @@ struct OverflowSelectionTests {
     )
   }
 
-  @Test("minimum widths allow larger labels and preserve overflow priorities")
+  @Test("visibleItemIDs: minimum widths allow larger labels and preserve overflow priorities")
   func minimumWidthGrowth() {
     let item = Item(id: "item", type: .text, style: ItemStyle(minWidth: 100))
 
@@ -122,7 +124,7 @@ struct OverflowSelectionTests {
   }
 
   @Test(
-    "hidden items consume no overflow space, including stale measured widths",
+    "visibleItemIDs: hidden items consume no overflow space, including stale measured widths",
     arguments: [0, 200]
   )
   @MainActor

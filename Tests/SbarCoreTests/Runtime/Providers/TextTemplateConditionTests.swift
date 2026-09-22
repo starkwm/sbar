@@ -3,9 +3,9 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Text template conditions")
+@Suite("TextTemplate")
 struct TextTemplateConditionTests {
-  @Test("equality, inverse, nested same-field sections, and fallback labels")
+  @Test("render: equality, inverse, nested same-field sections, and fallback labels")
   func conditions() throws {
     let template = try TextTemplate(
       "{{#status=connected}}Secure{{/status}}{{^status=connected}}{{#status=connecting}}Wait{{/status}}{{^status=connecting}}{{value}}{{/status}}{{/status}}",
@@ -27,7 +27,7 @@ struct TextTemplateConditionTests {
   }
 
   @Test(
-    "invalid equality expressions and states fail item validation",
+    "Configuration.validate: invalid equality expressions and states fail item validation",
     arguments: [
       "{{#status=conected}}x{{/status}}", "{{^status=unknown}}x{{/status}}",
       "{{#status=}}x{{/status}}", "{{status=connected}}", "{{#missing=x}}x{{/missing}}",
@@ -44,7 +44,7 @@ struct TextTemplateConditionTests {
   }
 
   @Test(
-    "every declared status is accepted by its provider",
+    "allowedValues(for:): every declared status is accepted by its provider",
     arguments: [
       ItemType.battery, .volume, .network, .vpn, .bluetooth, .audioDevice, .media, .mail, .command,
       .plugin,
@@ -64,7 +64,7 @@ struct TextTemplateConditionTests {
     }
   }
 
-  @Test("battery and volume statuses use explicit precedence")
+  @Test("WidgetState.textValues(for:): battery and volume statuses use explicit precedence")
   func statuses() {
     let battery = Item(id: "battery", type: .battery)
 
@@ -86,7 +86,9 @@ struct TextTemplateConditionTests {
   }
 
   @MainActor
-  @Test("state templates preserve filtered states, audio selection and native accessibility")
+  @Test(
+    "ProviderRuntime.presentation(for:): state templates preserve filtered states, audio selection and native accessibility"
+  )
   func presentation() throws {
     let runtime = ProviderRuntime()
     runtime.updateWidgetState(.network(.ethernet), for: .network)

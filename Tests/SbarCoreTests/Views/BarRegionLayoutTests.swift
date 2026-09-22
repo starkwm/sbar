@@ -5,7 +5,7 @@ import Testing
 
 @Suite("BarRegionLayout")
 struct BarRegionLayoutTests {
-  @Test("vertical regions run top to bottom and centre on the available height")
+  @Test("placeSubviews: vertical regions run top to bottom and centre on the available height")
   func verticalRegions() {
     let bounds = CGRect(x: 8, y: 12, width: 48, height: 300)
     let frames = BarRegionLayout.frames(

@@ -3,9 +3,9 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Item symbols")
+@Suite("ItemSymbol")
 struct ItemSymbolTests {
-  @Test("SF Symbols and font glyphs round trip without changing representation")
+  @Test("init(from:): SF Symbols and font glyphs round trip without changing representation")
   func roundTrip() throws {
     for json in [#""wifi""#, #"{"glyph":"\uf1eb","font":"Symbols Nerd Font Mono","size":16}"#] {
       let symbol = try JSONDecoder().decode(ItemSymbol.self, from: Data(json.utf8))
@@ -19,7 +19,7 @@ struct ItemSymbolTests {
     #expect(String(decoding: encodedSystem, as: UTF8.self) == #""wifi""#)
   }
 
-  @Test("invalid glyph objects are rejected")
+  @Test("init(from:): invalid glyph objects are rejected")
   func invalidGlyphs() {
     for json in [
       #"{"glyph":"x"}"#, #"{"glyph":"","font":"Test"}"#,
@@ -31,7 +31,7 @@ struct ItemSymbolTests {
     }
   }
 
-  @Test("battery levels can mix glyphs and SF Symbols")
+  @Test("WidgetState.presentation(for:): battery levels can mix glyphs and SF Symbols")
   func batteryLevels() throws {
     let glyph = ItemSymbol.glyph("\u{f240}", font: "Symbols Nerd Font Mono")
     let configuredGlyph = WidgetSymbol.glyph("\u{f240}", font: "Symbols Nerd Font Mono")
@@ -69,7 +69,9 @@ struct ItemSymbolTests {
     #expect(throws: ConfigurationError.self) { try item.battery?.validate(path: "battery") }
   }
 
-  @Test("charging levels select the nearest level and inherit glyph defaults")
+  @Test(
+    "WidgetState.presentation(for:): charging levels select the nearest level and inherit glyph defaults"
+  )
   func chargingLevels() throws {
     let json = #"""
       {"symbols":{"font":"Shared","size":18,
@@ -120,7 +122,9 @@ struct ItemSymbolTests {
     }
   }
 
-  @Test("grouped battery symbols inherit defaults and preserve overrides on round trip")
+  @Test(
+    "WidgetState.presentation(for:): grouped battery symbols inherit defaults and preserve overrides on round trip"
+  )
   func groupedBatterySymbols() throws {
     let json = #"""
       {"id":"battery","type":"battery","battery":{
@@ -173,7 +177,9 @@ struct ItemSymbolTests {
     #expect(charging.presentation(for: item).symbol == nil)
   }
 
-  @Test("grouped battery configuration validates inherited glyphs and tints")
+  @Test(
+    "BatteryConfiguration.validate: grouped battery configuration validates inherited glyphs and tints"
+  )
   func invalidGroupedBatterySettings() throws {
     for json in [
       #"{"symbols":{"charging":{"glyph":"x"}}}"#,
@@ -212,7 +218,9 @@ struct ItemSymbolTests {
     )
   }
 
-  @Test("Wi-Fi glyphs inherit shared defaults and allow local overrides")
+  @Test(
+    "WidgetState.presentation(for:): Wi-Fi glyphs inherit shared defaults and allow local overrides"
+  )
   func wifiSymbolDefaults() throws {
     let json = #"""
       {"id":"wifi","type":"network","network":{"interface":"wifi",
@@ -251,7 +259,7 @@ struct ItemSymbolTests {
     }
   }
 
-  @Test("glyphs decode in item and Wi-Fi state symbols")
+  @Test("Item.init(from:): glyphs decode in item and Wi-Fi state symbols")
   func wifiGlyphs() throws {
     let json =
       #"{"id":"wifi","type":"network","network":{"interface":"wifi","symbols":{"font":"Symbols Nerd Font Mono","wifi":{"glyph":"\uf1eb"}}}}"#

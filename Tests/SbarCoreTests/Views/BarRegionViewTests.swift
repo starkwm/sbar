@@ -7,7 +7,7 @@ import Testing
 @Suite("BarRegionView")
 @MainActor
 struct BarRegionViewTests {
-  @Test("a hidden media item renders like an absent item in a narrow region")
+  @Test("body: a hidden media item renders like an absent item in a narrow region")
   func hiddenMedia() throws {
     let runtime = ProviderRuntime()
     runtime.updateWidgetState(.media(MediaState()), for: .media)
@@ -22,7 +22,7 @@ struct BarRegionViewTests {
     #expect(try render([text, media], runtime: runtime) == render([text], runtime: runtime))
   }
 
-  @Test("empty styled sections draw nothing, including hidden media")
+  @Test("body: empty styled sections draw nothing, including hidden media")
   func emptyStyle() throws {
     let runtime = ProviderRuntime()
     runtime.updateWidgetState(.media(MediaState()), for: .media)
@@ -41,7 +41,7 @@ struct BarRegionViewTests {
     #expect(try render([media], runtime: runtime, theme: theme) == render([], runtime: runtime))
   }
 
-  @Test("section overrides render like equivalent shared defaults")
+  @Test("body: section overrides render like equivalent shared defaults")
   func overrides() throws {
     let runtime = ProviderRuntime()
     let item = Item(id: "text", type: .text, text: "Hi")
@@ -58,7 +58,7 @@ struct BarRegionViewTests {
     )
   }
 
-  @Test("background hugs fixed items and follows section alignment")
+  @Test("body: background hugs fixed items and follows section alignment")
   func backgroundBounds() throws {
     let runtime = ProviderRuntime()
     let item = Item(id: "spacer", type: .spacer, style: ItemStyle(width: 10))
@@ -82,7 +82,7 @@ struct BarRegionViewTests {
     }
   }
 
-  @Test("padding reserves space for the overflow button")
+  @Test("body: padding reserves space for the overflow button")
   func paddedOverflow() throws {
     let runtime = ProviderRuntime()
     let item = Item(id: "wide", type: .spacer, style: ItemStyle(width: 35))
@@ -104,7 +104,7 @@ struct BarRegionViewTests {
     )
   }
 
-  @Test("rounded corners and inset borders decorate the section")
+  @Test("body: rounded corners and inset borders decorate the section")
   func borderAndCorners() throws {
     let runtime = ProviderRuntime()
     let item = Item(id: "space", type: .spacer, style: ItemStyle(width: 32))
@@ -137,7 +137,7 @@ struct BarRegionViewTests {
   }
 
   @Test(
-    "groups with only hidden children draw no section decoration",
+    "body: groups with only hidden children draw no section decoration",
     arguments: [BarPosition.top, .left, .right]
   )
   func hiddenGroups(position: BarPosition) throws {
@@ -159,7 +159,7 @@ struct BarRegionViewTests {
     }
   }
 
-  @Test("groups remain visible when a nested child is visible")
+  @Test("body: groups remain visible when a nested child is visible")
   func visibleGroups() throws {
     let runtime = ProviderRuntime()
     let text = Item(id: "text", type: .text, text: "Hi")

@@ -3,9 +3,9 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Group spacing")
+@Suite("Item")
 struct GroupSpacingTests {
-  @Test("decodes and round trips independent nested spacing")
+  @Test("init(from:): decodes and round trips independent nested spacing")
   func roundTrip() throws {
     let item = try JSONDecoder().decode(
       Item.self,
@@ -23,7 +23,10 @@ struct GroupSpacingTests {
     #expect(try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item)) == item)
   }
 
-  @Test("validates group spacing bounds", arguments: [0.0, 2.5, 96, -1, 97, .infinity, .nan])
+  @Test(
+    "Configuration.validate: validates group spacing bounds",
+    arguments: [0.0, 2.5, 96, -1, 97, .infinity, .nan]
+  )
   func bounds(spacing: Double) throws {
     let configuration = Configuration(
       bar: .init(),
@@ -42,7 +45,7 @@ struct GroupSpacingTests {
     }
   }
 
-  @Test("validates child styles and rejects them on non-group items")
+  @Test("Configuration.validate: validates child styles and rejects them on non-group items")
   func childStyleValidation() throws {
     let group = Item(id: "group", type: .group, childStyle: ItemStyle(horizontalPadding: -1))
 
@@ -63,7 +66,10 @@ struct GroupSpacingTests {
     ) { try Configuration(bar: .init(), items: .init(left: [text])).validate() }
   }
 
-  @Test("rejects spacing on non-group items", arguments: [ItemType.text, .popup])
+  @Test(
+    "Configuration.validate: rejects spacing on non-group items",
+    arguments: [ItemType.text, .popup]
+  )
   func wrongType(type: ItemType) {
     let configuration = Configuration(
       bar: .init(),

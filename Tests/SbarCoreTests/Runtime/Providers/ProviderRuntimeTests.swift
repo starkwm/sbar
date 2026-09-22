@@ -8,7 +8,7 @@ import Testing
 @Suite("ProviderRuntime")
 @MainActor
 struct ProviderRuntimeTests {
-  @Test("refresh edits preserve other items and discard removed snapshots")
+  @Test("configure: refresh edits preserve other items and discard removed snapshots")
   func independentRefreshSnapshots() {
     let manual = Item(id: "manual", type: .cpu, refresh: .init(mode: .manual))
     let clock = Item(id: "clock", type: .datetime, refresh: .init(mode: .manual))
@@ -50,7 +50,7 @@ struct ProviderRuntimeTests {
     #expect(runtime.widgetSnapshots[manual.id] == nil)
   }
 
-  @Test("disk path edits only replace the affected disk snapshot")
+  @Test("configure: disk path edits only replace the affected disk snapshot")
   func independentDiskPaths() {
     let first = Item(
       id: "first",
@@ -89,7 +89,9 @@ struct ProviderRuntimeTests {
     #expect(runtime.diskStates["/b"] == nil)
   }
 
-  @Test("adding and removing another provider preserves active playback and metric state")
+  @Test(
+    "configure: adding and removing another provider preserves active playback and metric state"
+  )
   func unrelatedProviderChanges() {
     let media = Item(id: "media", type: .media)
     let cpu = Item(id: "cpu", type: .cpu)
@@ -126,7 +128,7 @@ struct ProviderRuntimeTests {
     #expect(runtime.widgetStates[.cpu] == .cpu(CPUState()))
   }
 
-  @Test("unchanged shared values do not invalidate observation")
+  @Test("updateSharedValues: unchanged shared values do not invalidate observation")
   func unchangedSharedValues() {
     let runtime = ProviderRuntime()
     runtime.updateSharedValues([.cpu: "10%", .memory: "50%"])
@@ -148,7 +150,7 @@ struct ProviderRuntimeTests {
     #expect(runtime.sharedValues[.memory] == "50%")
   }
 
-  @Test("unchanged command and plugin values do not invalidate observation")
+  @Test("updateItemValue: unchanged command and plugin values do not invalidate observation")
   func unchangedItemValues() {
     let runtime = ProviderRuntime()
     runtime.updateItemValue("Ready", for: "status")
@@ -169,7 +171,7 @@ struct ProviderRuntimeTests {
     #expect(runtime.itemValues["status"] == "Busy")
   }
 
-  @Test("batched shared updates emit events only for changed values")
+  @Test("updateSharedValues: batched shared updates emit events only for changed values")
   func changedValueEvents() {
     let runtime = ProviderRuntime()
     runtime.updateSharedValues([.cpu: "10%", .memory: "50%"])

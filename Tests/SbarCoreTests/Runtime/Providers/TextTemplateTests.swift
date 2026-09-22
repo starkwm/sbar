@@ -3,9 +3,9 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Text templates")
+@Suite("TextTemplate")
 struct TextTemplateTests {
-  @Test("substitution is literal and sections handle missing values")
+  @Test("render: substitution is literal and sections handle missing values")
   func substitution() throws {
     let template = try TextTemplate(
       "{{#artist}}{{artist}}: {{/artist}}{{title}}{{^title}}Nothing playing{{/title}}",
@@ -26,7 +26,7 @@ struct TextTemplateTests {
   }
 
   @Test(
-    "invalid templates fail validation",
+    "Configuration.validate: invalid templates fail validation",
     arguments: [
       "{{unknown}}", "{{percentage", "{{/percentage}}", "{{#available}}x",
       "{{#available}}{{/percentage}}", "{{}}",
@@ -38,7 +38,7 @@ struct TextTemplateTests {
     }
   }
 
-  @Test("configuration round trips text and validates provider fields")
+  @Test("Configuration.init(from:): configuration round trips text and validates provider fields")
   func configuration() throws {
     let item = Item(id: "cpu", type: .cpu, text: "{{percentage}}%")
     let decoded = try JSONDecoder().decode(Item.self, from: JSONEncoder().encode(item))
@@ -53,7 +53,10 @@ struct TextTemplateTests {
     }
   }
 
-  @Test("layout-only items reject text", arguments: [ItemType.group, .divider, .spacer])
+  @Test(
+    "Configuration.validate: layout-only items reject text",
+    arguments: [ItemType.group, .divider, .spacer]
+  )
   func layoutItems(type: ItemType) {
     #expect(throws: ConfigurationError.self) {
       try Configuration(
@@ -63,7 +66,9 @@ struct TextTemplateTests {
     }
   }
 
-  @Test("template fields use selected media and metric settings")
+  @Test(
+    "ProviderRuntime.presentation(for:): template fields use selected media and metric settings"
+  )
   func selections() {
     let cpu = WidgetState.cpu(CPUState(samples: [10, 30]))
 
@@ -97,7 +102,9 @@ struct TextTemplateTests {
   }
 
   @MainActor
-  @Test("templates preserve snapshots, appearance, and default labels")
+  @Test(
+    "ProviderRuntime.presentation(for:): templates preserve snapshots, appearance, and default labels"
+  )
   func runtime() {
     let item = Item(
       id: "cpu",
@@ -133,7 +140,7 @@ struct TextTemplateTests {
   }
 
   @MainActor
-  @Test("templates replace segments and preserve hidden state")
+  @Test("ProviderRuntime.presentation(for:): templates replace segments and preserve hidden state")
   func segments() {
     let runtime = ProviderRuntime()
     runtime.updateWidgetState(
@@ -158,7 +165,9 @@ struct TextTemplateTests {
   }
 
   @MainActor
-  @Test("static, application, clock, and command labels support templates")
+  @Test(
+    "ProviderRuntime.presentation(for:): static, application, clock, and command labels support templates"
+  )
   func otherItems() {
     let runtime = ProviderRuntime()
 

@@ -6,7 +6,7 @@ import Testing
 @Suite("SpacesProvider")
 @MainActor
 struct SpacesProviderTests {
-  @Test("numbers Spaces across displays including fullscreen Spaces")
+  @Test("SpacesState.parse: numbers Spaces across displays including fullscreen Spaces")
   func spaceNumbers() {
     let displays: [[String: Any]] = [
       ["Spaces": [["ManagedSpaceID": 10, "type": 0], ["ManagedSpaceID": 20, "type": 4]]],
@@ -18,7 +18,7 @@ struct SpacesProviderTests {
     #expect(SpacesState.parse(displays: displays, activeSpaceID: 30).text == "3")
   }
 
-  @Test("follows reordered Spaces without treating IDs as indexes")
+  @Test("SpacesState.parse: follows reordered Spaces without treating IDs as indexes")
   func reorderedSpaces() {
     let displays: [[String: Any]] = [
       ["Spaces": [["ManagedSpaceID": 70], ["ManagedSpaceID": 10]]]
@@ -27,7 +27,7 @@ struct SpacesProviderTests {
     #expect(SpacesState.parse(displays: displays, activeSpaceID: 10).text == "2")
   }
 
-  @Test("ignores duplicate IDs and malformed entries")
+  @Test("SpacesState.parse: ignores duplicate IDs and malformed entries")
   func invalidEntries() {
     let displays: [[String: Any]] = [
       [:],
@@ -38,7 +38,7 @@ struct SpacesProviderTests {
     #expect(SpacesState.parse(displays: displays, activeSpaceID: 20).text == "2")
   }
 
-  @Test("reports unavailable for missing active Spaces")
+  @Test("SpacesState.parse: reports unavailable for missing active Spaces")
   func missingSpace() {
     #expect(SpacesState.parse(displays: [], activeSpaceID: 0).text == "Spaces unavailable")
     #expect(

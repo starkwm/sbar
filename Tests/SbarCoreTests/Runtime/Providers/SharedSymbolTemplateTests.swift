@@ -2,10 +2,12 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Shared symbol templates")
+@Suite("ProviderRuntime")
 @MainActor
 struct SharedSymbolTemplateTests {
-  @Test("conditional symbols follow state while ordinary templates retain defaults")
+  @Test(
+    "presentation(for:): conditional symbols follow state while ordinary templates retain defaults"
+  )
   func conditional() {
     let runtime = ProviderRuntime()
     var item = Item(
@@ -42,7 +44,7 @@ struct SharedSymbolTemplateTests {
     #expect(runtime.presentation(for: item)?.symbol == nil)
   }
 
-  @Test("explicit glyphs remain native and repeated tags do not duplicate them")
+  @Test("presentation(for:): explicit glyphs remain native and repeated tags do not duplicate them")
   func glyph() {
     let runtime = ProviderRuntime()
     let item = Item(

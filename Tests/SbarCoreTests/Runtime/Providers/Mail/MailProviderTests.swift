@@ -3,10 +3,10 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Mail provider")
+@Suite("MailProvider")
 @MainActor
 struct MailProviderTests {
-  @Test("failed and malformed reads never become zero unread")
+  @Test("SystemMailReader.state: failed and malformed reads never become zero unread")
   func results() {
     #expect(
       SystemMailReader.state(count: 0, error: nil) == MailState(status: .available, unreadCount: 0)
@@ -26,7 +26,7 @@ struct MailProviderTests {
     )
   }
 
-  @Test("polling updates the runtime and stops when the item is removed")
+  @Test("start: polling updates the runtime and stops when the item is removed")
   func lifecycle() async throws {
     var reads = 0
     let provider = MailProvider(interval: .milliseconds(10)) {
@@ -50,7 +50,7 @@ struct MailProviderTests {
     #expect(reads == stopped)
   }
 
-  @Test("shared interval follows enabled items and config reloads")
+  @Test("ProviderRuntime.configure: shared interval follows enabled items and config reloads")
   func intervals() {
     let provider = MailProvider { MailState() }
     let runtime = ProviderRuntime(mail: provider)
@@ -85,7 +85,7 @@ struct MailProviderTests {
     #expect(provider.interval == .seconds(10))
   }
 
-  @Test("provider repeats queries at its supplied interval")
+  @Test("start: provider repeats queries at its supplied interval")
   func polling() async throws {
     var reads = 0
     let provider = MailProvider(interval: .milliseconds(10)) {
@@ -100,7 +100,7 @@ struct MailProviderTests {
     #expect(reads > 1)
   }
 
-  @Test("mail settings decode, round trip, and validate")
+  @Test("MailConfiguration.validate: mail settings decode, round trip, and validate")
   func configuration() throws {
     for settings in [
       "", #","mail":{}"#, #","mail":{"pollInterval":5}"#,
@@ -133,7 +133,7 @@ struct MailProviderTests {
     }
   }
 
-  @Test("an in-flight read cannot publish after stop or restart")
+  @Test("ProviderRuntime.configure: an in-flight read cannot publish after stop or restart")
   func cancellation() async throws {
     var reads = 0
     var updates: [MailState] = []
