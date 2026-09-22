@@ -4,9 +4,9 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Control")
+@Suite("ControlServer and ControlRouter")
 struct ControlTests {
-  @Test("subscriptions receive published events")
+  @Test("ControlServer.publish: subscriptions receive published events")
   func subscriptionReceivesEvents() throws {
     let path = "/tmp/sbar-\(UUID().uuidString).sock"
     defer { try? FileManager.default.removeItem(atPath: path + ".lock") }
@@ -23,7 +23,10 @@ struct ControlTests {
     #expect(try client.receive(ControlResponse.self).value == .string("changed"))
   }
 
-  @Test("only successful stop replies invoke the stop callback", arguments: [false, true])
+  @Test(
+    "ControlServer.start: only successful stop replies invoke the stop callback",
+    arguments: [false, true]
+  )
   func stopCallback(ok: Bool) throws {
     let path = "/tmp/sbar-\(UUID().uuidString).sock"
     defer { try? FileManager.default.removeItem(atPath: path + ".lock") }

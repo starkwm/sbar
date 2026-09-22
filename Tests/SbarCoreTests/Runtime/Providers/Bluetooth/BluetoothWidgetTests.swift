@@ -3,9 +3,11 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Bluetooth widget")
+@Suite("BluetoothState")
 struct BluetoothWidgetTests {
-  @Test("power, connection and permission states have distinct labels and valid symbols")
+  @Test(
+    "presentation(for:): power, connection and permission states have distinct labels and valid symbols"
+  )
   func states() {
     let labels: [BluetoothStatus: String] = [
       .on: "Bluetooth on", .off: "Bluetooth off", .connected: "Bluetooth connected",
@@ -27,7 +29,9 @@ struct BluetoothWidgetTests {
     }
   }
 
-  @Test("connected names use a stable order and disappear when Bluetooth is off or inaccessible")
+  @Test(
+    "presentation(for:): connected names use a stable order and disappear when Bluetooth is off or inaccessible"
+  )
   func devices() {
     var state = BluetoothState(
       status: .connected,
@@ -54,7 +58,7 @@ struct BluetoothWidgetTests {
     #expect(state.text == "Unnamed device connected")
   }
 
-  @Test("icon-only appearance round trips and retains accessible device names")
+  @Test("presentation(for:): icon-only appearance round trips and retains accessible device names")
   func appearance() throws {
     var item = try JSONDecoder().decode(
       Item.self,
@@ -91,7 +95,9 @@ struct BluetoothWidgetTests {
     #expect(state.presentation(for: item).symbol == nil)
   }
 
-  @Test("hiding disconnected states keeps access failures visible and empty symbols use defaults")
+  @Test(
+    "presentation(for:): hiding disconnected states keeps access failures visible and empty symbols use defaults"
+  )
   func hiding() {
     let item = Item(
       id: "bt",
@@ -110,7 +116,9 @@ struct BluetoothWidgetTests {
     }
   }
 
-  @Test("invalid state keys, colors, glyphs and mismatched item settings are rejected")
+  @Test(
+    "BluetoothConfiguration.validate: invalid state keys, colors, glyphs and mismatched item settings are rejected"
+  )
   func validation() {
     for settings in [
       ##"{"tints":{"offline":"#FFFFFF"}}"##,
@@ -136,7 +144,7 @@ struct BluetoothWidgetTests {
     #expect(throws: ConfigurationError.self) { try configuration.validate() }
   }
 
-  @Test("schema exposes Bluetooth settings and every status key")
+  @Test("ConfigurationSchema.data: schema exposes Bluetooth settings and every status key")
   func schema() throws {
     let schema = try #require(
       JSONSerialization.jsonObject(with: ConfigurationSchema.data()) as? [String: Any]

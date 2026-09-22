@@ -4,11 +4,11 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("VerticalBarView")
+@Suite("BarView")
 @MainActor
 struct VerticalBarViewTests {
   @Test(
-    "nested groups stack upright children and preserve spacing on both edges",
+    "body: nested groups stack upright children and preserve spacing on both edges",
     arguments: [BarPosition.left, .right]
   )
   func groups(position: BarPosition) throws {
@@ -41,7 +41,7 @@ struct VerticalBarViewTests {
   }
 
   @Test(
-    "side dividers run horizontally and icon-label rows stay upright",
+    "body: side dividers run horizontally and icon-label rows stay upright",
     arguments: [BarPosition.left, .right]
   )
   func itemOrientation(position: BarPosition) throws {
@@ -70,7 +70,7 @@ struct VerticalBarViewTests {
     )
   }
 
-  @Test("segmented Spaces stack vertically with upright labels")
+  @Test("body: segmented Spaces stack vertically with upright labels")
   func segmentedProvider() throws {
     let runtime = ProviderRuntime()
     runtime.updateWidgetState(

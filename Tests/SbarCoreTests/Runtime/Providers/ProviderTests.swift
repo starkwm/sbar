@@ -3,7 +3,7 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Providers")
+@Suite("CPUProvider and ProviderRuntime")
 struct ProviderTests {
   @Test(
     "CPUProvider.usage: uses sample deltas and rejects missing or unchanged samples"

@@ -2,10 +2,12 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Template state transitions")
+@Suite("ProviderRuntime")
 @MainActor
 struct TemplateTransitionTests {
-  @Test("throughput refresh snapshots retain readings and then recover from unavailable state")
+  @Test(
+    "presentation(for:): throughput refresh snapshots retain readings and then recover from unavailable state"
+  )
   func throughput() {
     let runtime = ProviderRuntime()
     let item = Item(
@@ -45,7 +47,9 @@ struct TemplateTransitionTests {
     #expect(runtime.presentation(for: item)?.segments.compactMap(\.symbol).count == 2)
   }
 
-  @Test("VPN transitions remove filtered services and aggregate icons without stale separators")
+  @Test(
+    "presentation(for:): VPN transitions remove filtered services and aggregate icons without stale separators"
+  )
   func vpn() {
     let runtime = ProviderRuntime()
     let item = Item(

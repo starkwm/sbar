@@ -5,7 +5,7 @@ import Testing
 
 @Suite("ConfigurationPath")
 struct ConfigurationPathTests {
-  @Test("default discovery prefers JSONC and falls back to JSON")
+  @Test("defaultURL: default discovery prefers JSONC and falls back to JSON")
   func defaultDiscovery() throws {
     let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

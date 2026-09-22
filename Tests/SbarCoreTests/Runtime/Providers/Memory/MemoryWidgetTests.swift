@@ -5,9 +5,11 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Memory widget")
+@Suite("MemoryState")
 struct MemoryWidgetTests {
-  @Test("used memory sums active, wired, and compressed pages using the host page size")
+  @Test(
+    "MemoryProvider.state: used memory sums active, wired, and compressed pages using the host page size"
+  )
   func calculation() {
     for pageSize: UInt64 in [4096, 16384] {
       let state = MemoryProvider.state(
@@ -33,7 +35,9 @@ struct MemoryWidgetTests {
     )
   }
 
-  @Test("failed reads and invalid byte counts produce an unavailable reading")
+  @Test(
+    "MemoryProvider.sample: failed reads and invalid byte counts produce an unavailable reading"
+  )
   func unavailable() {
     #expect(!MemoryProvider.sample(host: mach_port_t(MACH_PORT_NULL)).available)
 
@@ -59,7 +63,9 @@ struct MemoryWidgetTests {
     }
   }
 
-  @Test("display modes format bytes, round percentages, and retain accessibility")
+  @Test(
+    "presentation(for:): display modes format bytes, round percentages, and retain accessibility"
+  )
   func displayModes() {
     let state = MemoryState(usedBytes: 8 * 1024 * 1024 * 1024, totalBytes: 16 * 1024 * 1024 * 1024)
     let used = ByteCountFormatter.string(fromByteCount: 8 * 1024 * 1024 * 1024, countStyle: .memory)
@@ -100,7 +106,9 @@ struct MemoryWidgetTests {
     }
   }
 
-  @Test("appearance decodes, validates glyph inheritance, and round trips")
+  @Test(
+    "MemoryConfiguration.validate: appearance decodes, validates glyph inheritance, and round trips"
+  )
   func configuration() throws {
     let item = try JSONDecoder().decode(
       Item.self,
@@ -146,7 +154,9 @@ struct MemoryWidgetTests {
     #expect(throws: ConfigurationError.self) { try invalid.validate() }
   }
 
-  @Test("event and manual refresh propagate or hold unavailable readings as configured")
+  @Test(
+    "ProviderRuntime.presentation(for:): event and manual refresh propagate or hold unavailable readings as configured"
+  )
   @MainActor
   func refresh() throws {
     for mode in ["event", "manual"] {

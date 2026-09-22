@@ -2,9 +2,9 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Workspace text")
+@Suite("ProviderRuntime")
 struct WorkspaceTextTests {
-  @Test("separators retain inactive styling as the active workspace changes")
+  @Test("presentation(for:): separators retain inactive styling as the active workspace changes")
   func separators() {
     let item = Item(
       id: "spaces",
@@ -48,7 +48,7 @@ struct WorkspaceTextTests {
     #expect(SpacesState().presentation(for: item).text.isEmpty)
   }
 
-  @Test("loops preserve entry identity, separators and conditions")
+  @Test("presentation(for:): loops preserve entry identity, separators and conditions")
   func loops() throws {
     let template = try TextTemplate(
       "[{{#workspaces}}{{#active}}*{{/active}}{{name}}{{^last}}, {{/last}}{{/workspaces}}]",
@@ -74,7 +74,7 @@ struct WorkspaceTextTests {
   }
 
   @Test(
-    "invalid workspace sections fail validation",
+    "Configuration.validate: invalid workspace sections fail validation",
     arguments: [
       "{{workspaces}}", "{{#separator}}x{{/separator}}",
       "{{#workspaces}}{{separator}}{{/workspaces}}",
@@ -95,7 +95,7 @@ struct WorkspaceTextTests {
     }
   }
 
-  @Test("collections are rejected on other providers")
+  @Test("Configuration.validate: collections are rejected on other providers")
   func otherProviders() {
     #expect(throws: ConfigurationError.self) {
       try Configuration(
@@ -107,7 +107,7 @@ struct WorkspaceTextTests {
     }
   }
 
-  @Test("display scope preserves active emphasis separately from global focus")
+  @Test("presentation(for:): display scope preserves active emphasis separately from global focus")
   func displayScope() {
     let state = SpacesState(
       displays: [
@@ -136,7 +136,7 @@ struct WorkspaceTextTests {
     #expect(result.tint == nil)
   }
 
-  @Test("filtered empty lists and unavailable snapshots use explicit fallbacks")
+  @Test("presentation(for:): filtered empty lists and unavailable snapshots use explicit fallbacks")
   func emptyLists() {
     let item = Item(
       id: "spaces",
@@ -160,7 +160,7 @@ struct WorkspaceTextTests {
     #expect(fullscreen.presentation(for: hidden).segments.isEmpty)
   }
 
-  @Test("Aerospace order and Yabai indexes remain provider data")
+  @Test("presentation(for:): Aerospace order and Yabai indexes remain provider data")
   func integrations() {
     let aero = AerospaceState(
       workspaces: [

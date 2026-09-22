@@ -4,9 +4,11 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Throughput widget")
+@Suite("ThroughputState")
 struct ThroughputWidgetTests {
-  @Test("interface appearance and disappearance cannot create aggregate counter spikes")
+  @Test(
+    "ThroughputProvider.record: interface appearance and disappearance cannot create aggregate counter spikes"
+  )
   func interfaceChanges() {
     var provider = ThroughputProvider()
 
@@ -55,7 +57,9 @@ struct ThroughputWidgetTests {
     #expect(removed.rate(interfaces: ["en0", "en1"], smoothingSamples: 1) == nil)
   }
 
-  @Test("counter resets, replacement, failures, and timing gaps clear stale history")
+  @Test(
+    "ThroughputProvider.record: counter resets, replacement, failures, and timing gaps clear stale history"
+  )
   func recovery() {
     var provider = ThroughputProvider()
     _ = provider.record(counters: ["en0": .init(received: 100, sent: 100)], at: 0)
@@ -117,7 +121,7 @@ struct ThroughputWidgetTests {
     #expect(provider.record(counters: [:], at: 34).text == "Throughput —")
   }
 
-  @Test("history is bounded and smoothing is independently selected per item")
+  @Test("ThroughputState.rate: history is bounded and smoothing is independently selected per item")
   func smoothing() {
     var provider = ThroughputProvider()
     var counters = ThroughputCounters(received: 0, sent: 0)
@@ -139,7 +143,9 @@ struct ThroughputWidgetTests {
     }
   }
 
-  @Test("automatic units preserve small rates and distinguish bits from bytes")
+  @Test(
+    "ThroughputState.format: automatic units preserve small rates and distinguish bits from bytes"
+  )
   func formatting() {
     #expect(ThroughputState.format(0, unit: .bytes) == "0 B/s")
     #expect(ThroughputState.format(0.5, unit: .bytes) == "0.5 B/s")
@@ -150,7 +156,9 @@ struct ThroughputWidgetTests {
     #expect(ThroughputState.format(125_000, unit: .bits) == "1 Mbit/s")
   }
 
-  @Test("direction visibility, glyphs, units, and overrides retain accessible rates")
+  @Test(
+    "presentation(for:): direction visibility, glyphs, units, and overrides retain accessible rates"
+  )
   func appearance() {
     let state = ThroughputState(histories: ["en0": [.init(download: 1536, upload: 512)]])
     var item = Item(
@@ -207,7 +215,9 @@ struct ThroughputWidgetTests {
     }
   }
 
-  @Test("templates keep scaled numbers and units aligned and handle missing readings")
+  @Test(
+    "ProviderRuntime.presentation(for:): templates keep scaled numbers and units aligned and handle missing readings"
+  )
   func templates() throws {
     let state = ThroughputState(histories: ["en0": [.init(download: 1023.99, upload: 0)]])
     var item = Item(id: "net", type: .throughput)
@@ -238,7 +248,9 @@ struct ThroughputWidgetTests {
     }
   }
 
-  @Test("configuration round trips and rejects invalid selections and settings")
+  @Test(
+    "ThroughputConfiguration.validate: configuration round trips and rejects invalid selections and settings"
+  )
   func configuration() throws {
     let item = try JSONDecoder().decode(
       Item.self,
@@ -272,7 +284,9 @@ struct ThroughputWidgetTests {
     }
   }
 
-  @Test("refresh snapshots preserve selected rates and unavailable transitions")
+  @Test(
+    "ProviderRuntime.presentation(for:): refresh snapshots preserve selected rates and unavailable transitions"
+  )
   @MainActor
   func refresh() throws {
     for mode in ["manual", "event"] {

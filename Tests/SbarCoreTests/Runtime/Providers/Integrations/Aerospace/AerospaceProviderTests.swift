@@ -3,7 +3,7 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Aerospace")
+@Suite("AerospaceProvider")
 @MainActor
 struct AerospaceProviderTests {
   private var state: AerospaceState {
@@ -18,7 +18,9 @@ struct AerospaceProviderTests {
     )
   }
 
-  @Test("named workspaces preserve focus, visibility, labels and display scope")
+  @Test(
+    "AerospaceState.presentation(for:): named workspaces preserve focus, visibility, labels and display scope"
+  )
   func presentation() {
     var item = Item(
       id: "aero",
@@ -52,7 +54,7 @@ struct AerospaceProviderTests {
     #expect(state.presentation(for: item, displayUUID: "A").symbol == nil)
   }
 
-  @Test("JSON rejects malformed, empty, duplicate and inconsistent snapshots")
+  @Test("AerospaceState.parse: JSON rejects malformed, empty, duplicate and inconsistent snapshots")
   func parsing() throws {
     let row =
       #"{"workspace":"Code","workspace-is-focused":true,"workspace-is-visible":true,"monitor-appkit-nsscreen-screens-id":1}"#
@@ -72,7 +74,9 @@ struct AerospaceProviderTests {
     }
   }
 
-  @Test("configuration roundtrips and rejects invalid provider options")
+  @Test(
+    "AerospaceConfiguration.validate: configuration roundtrips and rejects invalid provider options"
+  )
   func configuration() throws {
     let item = Item(
       id: "aero",
@@ -103,7 +107,9 @@ struct AerospaceProviderTests {
     }
   }
 
-  @Test("refresh bursts coalesce, cancellation suppresses stale results, and failures recover")
+  @Test(
+    "AerospaceProvider.start: refresh bursts coalesce, cancellation suppresses stale results, and failures recover"
+  )
   func lifecycle() async throws {
     let valid = state
     var reads = 0
@@ -147,7 +153,7 @@ struct AerospaceProviderTests {
     #expect(reads == 3)
   }
 
-  @Test("manual triggers capture a newly queried snapshot")
+  @Test("ProviderRuntime.trigger: manual triggers capture a newly queried snapshot")
   func trigger() async throws {
     var current = state
     let runtime = ProviderRuntime(aerospace: AerospaceProvider(read: { current }))
@@ -170,7 +176,9 @@ struct AerospaceProviderTests {
     try await waitUntil { runtime.presentation(for: item)?.text == "Web" }
   }
 
-  @Test("provider stdout excludes stderr while existing process callers retain merged output")
+  @Test(
+    "AerospaceProvider.start: provider stdout excludes stderr while existing process callers retain merged output"
+  )
   func standardError() async throws {
     let result = try await ProcessRunner.run(
       executable: "/bin/sh",

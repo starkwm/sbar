@@ -3,9 +3,11 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Widget customization")
+@Suite("WidgetState")
 struct WidgetStateTests {
-  @Test("event refresh captures power changes even when percentage text is unchanged")
+  @Test(
+    "ProviderRuntime.updateWidgetState: event refresh captures power changes even when percentage text is unchanged"
+  )
   @MainActor
   func powerStateRefresh() throws {
     let runtime = ProviderRuntime()
@@ -35,7 +37,7 @@ struct WidgetStateTests {
     #expect(runtime.sharedValues[.battery] == "50%")
   }
 
-  @Test("static symbols override automatic state symbols")
+  @Test("presentation(for:): static symbols override automatic state symbols")
   func staticSymbols() {
     let item = Item(id: "battery", type: .battery, symbol: "bolt")
     let state = WidgetState.battery(percentage: 80, charging: false, pluggedIn: true)
@@ -45,7 +47,7 @@ struct WidgetStateTests {
     #expect(WidgetState.network(.offline).text == "Offline")
   }
 
-  @Test("omitted widget settings use the same presentation as empty settings")
+  @Test("presentation(for:): omitted widget settings use the same presentation as empty settings")
   func defaultSettings() throws {
     let cases: [(ItemType, WidgetState, ItemSymbol, String)] = [
       (
@@ -79,7 +81,7 @@ struct WidgetStateTests {
     }
   }
 
-  @Test("battery distinguishes low, charging, plugged in, and no battery")
+  @Test("presentation(for:): battery distinguishes low, charging, plugged in, and no battery")
   func batteryStates() {
     let item = Item(
       id: "battery",
@@ -121,7 +123,7 @@ struct WidgetStateTests {
     #expect(normal.tint == nil)
   }
 
-  @Test("Wi-Fi labels, symbols, tint, and visibility follow connection state")
+  @Test("presentation(for:): Wi-Fi labels, symbols, tint, and visibility follow connection state")
   func wifiStates() {
     var item = Item(
       id: "wifi",
@@ -156,7 +158,7 @@ struct WidgetStateTests {
     #expect(WidgetState.network(.wifi).presentation(for: item).symbol == nil)
   }
 
-  @Test("settings decode with defaults, round trip, and validate")
+  @Test("Configuration.init(from:): settings decode with defaults, round trip, and validate")
   func configuration() throws {
     let item = try JSONDecoder().decode(
       Item.self,

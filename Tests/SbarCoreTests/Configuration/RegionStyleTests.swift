@@ -5,7 +5,9 @@ import Testing
 
 @Suite("RegionStyle")
 struct RegionStyleTests {
-  @Test("section fields inherit independently and explicit zero and transparency override")
+  @Test(
+    "init(from:): section fields inherit independently and explicit zero and transparency override"
+  )
   func inheritance() throws {
     let theme = try JSONDecoder().decode(
       Theme.self,
@@ -29,7 +31,7 @@ struct RegionStyleTests {
     #expect(old.regions == nil)
   }
 
-  @Test("schema and runtime agree on region style bounds")
+  @Test("validate: schema and runtime agree on region style bounds")
   func validation() throws {
     let schema = try #require(
       JSONSerialization.jsonObject(with: ConfigurationSchema.data()) as? [String: Any]

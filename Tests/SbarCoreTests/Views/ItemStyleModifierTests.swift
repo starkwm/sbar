@@ -7,7 +7,9 @@ import Testing
 @Suite("ItemStyleModifier")
 @MainActor
 struct ItemStyleModifierTests {
-  @Test("group child styles override theme padding while preserving child overrides")
+  @Test(
+    "body(content:): group child styles override theme padding while preserving child overrides"
+  )
   func groupChildStyles() throws {
     let theme = ItemStyle(fontSize: 20, horizontalPadding: 8)
     var group = Item(
@@ -36,7 +38,9 @@ struct ItemStyleModifierTests {
     #expect(try render(group, defaultStyle: theme).pixelsWide == compact.pixelsWide)
   }
 
-  @Test("Global and per-item font families render with the resolved size and weight")
+  @Test(
+    "body(content:): Global and per-item font families render with the resolved size and weight"
+  )
   func fontFamilies() throws {
     let theme = ItemStyle(fontFamily: "Menlo", fontSize: 24, fontWeight: .bold)
     var item = Item(id: "text", type: .text, text: "iiiiiiii")
@@ -57,7 +61,9 @@ struct ItemStyleModifierTests {
     #expect(overridden.pixelsWide != inherited.pixelsWide)
   }
 
-  @Test("the default hover highlight remains visible over an opaque rounded background")
+  @Test(
+    "body(content:): the default hover highlight remains visible over an opaque rounded background"
+  )
   func defaultHover() throws {
     let style = ItemStyle(background: "#0000FF", cornerRadius: 8)
     let content = Color.clear.frame(width: 40, height: 24)
@@ -74,7 +80,9 @@ struct ItemStyleModifierTests {
     #expect(hovered.pixelsHigh == normal.pixelsHigh)
   }
 
-  @Test("hover tint and background replace normal colours without changing the shape")
+  @Test(
+    "body(content:): hover tint and background replace normal colours without changing the shape"
+  )
   func hoverColours() throws {
     let style = ItemStyle(
       tint: "#0000FF",
@@ -98,7 +106,7 @@ struct ItemStyleModifierTests {
     #expect(hovered.pixelsHigh == normal.pixelsHigh)
   }
 
-  @Test("explicit transparent hover backgrounds replace the normal background")
+  @Test("body(content:): explicit transparent hover backgrounds replace the normal background")
   func transparentHoverBackground() throws {
     let style = ItemStyle(
       background: "#0000FF",
@@ -116,7 +124,7 @@ struct ItemStyleModifierTests {
     #expect(image.colorAt(x: 20, y: 12)?.alphaComponent == 1)
   }
 
-  @Test("fixed widths include symbols and padding and survive changing labels")
+  @Test("body(content:): fixed widths include symbols and padding and survive changing labels")
   func fixedWidths() throws {
     let style = ItemStyle(horizontalPadding: 8, minWidth: 200, width: 80)
 
@@ -129,7 +137,7 @@ struct ItemStyleModifierTests {
     }
   }
 
-  @Test("minimum widths reserve space for short labels and grow for long labels")
+  @Test("body(content:): minimum widths reserve space for short labels and grow for long labels")
   func minimumWidths() throws {
     var item = Item(
       id: "item",
@@ -156,7 +164,7 @@ struct ItemStyleModifierTests {
     #expect(try render(item).pixelsWide == naturalWidth)
   }
 
-  @Test("provider updates preserve inherited widths for interactive items")
+  @Test("body(content:): provider updates preserve inherited widths for interactive items")
   func providerUpdates() throws {
     let runtime = ProviderRuntime()
     let item = Item(id: "battery", type: .battery, popup: "Battery status")
@@ -173,7 +181,7 @@ struct ItemStyleModifierTests {
   }
 
   @Test(
-    "content aligns inside the reserved width with padding and a full background",
+    "body(content:): content aligns inside the reserved width with padding and a full background",
     arguments: ItemAlignment.allCases,
     [false, true]
   )
@@ -210,7 +218,7 @@ struct ItemStyleModifierTests {
     #expect(image.colorAt(x: 79, y: 5)?.usingColorSpace(.deviceRGB)?.blueComponent == 1)
   }
 
-  @Test("fixed widths clip oversized content before it reaches neighbouring items")
+  @Test("body(content:): fixed widths clip oversized content before it reaches neighbouring items")
   func clipping() throws {
     let image = try render(
       Rectangle().fill(Color(red: 1, green: 0, blue: 0))

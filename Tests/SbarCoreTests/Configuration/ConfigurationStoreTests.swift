@@ -107,7 +107,9 @@ struct ConfigurationStoreTests {
     #expect(store.configuration.bar.height == 48)
   }
 
-  @Test("observation loads immediately, stops updates, and reloads after restarting")
+  @Test(
+    "startObserving: observation loads immediately, stops updates, and reloads after restarting"
+  )
   func observationLifecycle() async throws {
     let directory = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: directory) }
@@ -135,7 +137,7 @@ struct ConfigurationStoreTests {
   }
 
   @Test(
-    "JSONC loads, validates, and retains the last valid configuration",
+    "load: JSONC loads, validates, and retains the last valid configuration",
     arguments: ["json", "jsonc"]
   )
   func loadsJSONC(extension suffix: String) throws {

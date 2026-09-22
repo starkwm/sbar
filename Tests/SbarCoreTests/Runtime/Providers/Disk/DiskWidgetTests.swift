@@ -4,9 +4,9 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Disk widget")
+@Suite("DiskState")
 struct DiskWidgetTests {
-  @Test("capacity modes and rounding preserve valid boundary readings")
+  @Test("DiskState.value: capacity modes and rounding preserve valid boundary readings")
   func calculation() {
     let state = DiskState(freeBytes: 200_000_000, totalBytes: 1_000_000_000)
 
@@ -38,7 +38,9 @@ struct DiskWidgetTests {
     }
   }
 
-  @Test("low-space thresholds use unrounded free percentage and appearance retains accessibility")
+  @Test(
+    "presentation(for:): low-space thresholds use unrounded free percentage and appearance retains accessibility"
+  )
   func appearance() {
     var item = Item(
       id: "disk",
@@ -86,7 +88,9 @@ struct DiskWidgetTests {
     }
   }
 
-  @Test("paths on the same volume share a read; missing paths stay unavailable and recover")
+  @Test(
+    "DiskProvider.sample: paths on the same volume share a read; missing paths stay unavailable and recover"
+  )
   func sharedVolumes() {
     var provider = DiskProvider()
     var reads = 0
@@ -126,7 +130,9 @@ struct DiskWidgetTests {
     #expect(reads == 2)
   }
 
-  @Test("failed reads and a mount change during sampling cannot publish a stale volume")
+  @Test(
+    "DiskProvider.sample: failed reads and a mount change during sampling cannot publish a stale volume"
+  )
   func readFailure() {
     var provider = DiskProvider()
     let volume = DiskVolume(identity: "external", mountPath: "/drive", path: "/drive")
@@ -153,7 +159,9 @@ struct DiskWidgetTests {
     #expect(result["/drive"]?.available == false)
   }
 
-  @Test("native sampling rejects absent paths and shares existing directories on a volume")
+  @Test(
+    "DiskProvider.volume: native sampling rejects absent paths and shares existing directories on a volume"
+  )
   func nativePaths() throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -170,7 +178,9 @@ struct DiskWidgetTests {
     #expect(DiskProvider.read(first).available)
   }
 
-  @Test("configuration validates paths and thresholds and round trips glyphs")
+  @Test(
+    "DiskConfiguration.validate: configuration validates paths and thresholds and round trips glyphs"
+  )
   func configuration() throws {
     let item = try JSONDecoder().decode(
       Item.self,
@@ -204,7 +214,9 @@ struct DiskWidgetTests {
     #expect(throws: ConfigurationError.self) { try invalid.validate() }
   }
 
-  @Test("multiple disk items keep independent refresh state and discard old paths on reload")
+  @Test(
+    "ProviderRuntime.presentation(for:): multiple disk items keep independent refresh state and discard old paths on reload"
+  )
   @MainActor
   func refresh() throws {
     var configuration = try JSONDecoder().decode(

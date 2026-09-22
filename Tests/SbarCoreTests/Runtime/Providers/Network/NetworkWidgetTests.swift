@@ -4,10 +4,10 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Network symbols")
+@Suite("WidgetState")
 struct NetworkWidgetTests {
   @MainActor
-  @Test("empty text preserves accessible connection status")
+  @Test("presentation(for:): empty text preserves accessible connection status")
   func hiddenLabel() throws {
     let item = Item(id: "net", type: .network, text: "")
     let runtime = ProviderRuntime()
@@ -22,7 +22,7 @@ struct NetworkWidgetTests {
     }
   }
 
-  @Test("interface filters report other active connections as disconnected")
+  @Test("presentation(for:): interface filters report other active connections as disconnected")
   func interfaceFilters() {
     for interface in NetworkConnection.allCases where interface != .offline {
       let item = Item(
@@ -47,7 +47,9 @@ struct NetworkWidgetTests {
     }
   }
 
-  @Test("unfiltered network appearance follows every state and respects overrides")
+  @Test(
+    "presentation(for:): unfiltered network appearance follows every state and respects overrides"
+  )
   func appearance() {
     for connection in NetworkConnection.allCases {
       var item = Item(
@@ -74,7 +76,9 @@ struct NetworkWidgetTests {
     }
   }
 
-  @Test("network configuration rejects invalid filters, state keys, and old Wi-Fi type")
+  @Test(
+    "NetworkConfiguration.validate: network configuration rejects invalid filters, state keys, and old Wi-Fi type"
+  )
   func invalidConfiguration() {
     for json in [
       #"{"interface":"offline"}"#, #"{"interface":"invalid"}"#,
@@ -92,7 +96,9 @@ struct NetworkWidgetTests {
     }
   }
 
-  @Test("manual and event refresh keep filtered presentation state together")
+  @Test(
+    "ProviderRuntime.presentation(for:): manual and event refresh keep filtered presentation state together"
+  )
   @MainActor
   func filteredRefresh() throws {
     for mode in ["manual", "event"] {
@@ -129,7 +135,9 @@ struct NetworkWidgetTests {
     }
   }
 
-  @Test("network classification handles offline and multiple interface types")
+  @Test(
+    "NetworkConnection.classify: network classification handles offline and multiple interface types"
+  )
   func classification() {
     #expect(
       NetworkConnection.classify(connected: false, wifi: true, ethernet: true, cellular: true)
@@ -153,7 +161,9 @@ struct NetworkWidgetTests {
     )
   }
 
-  @Test("maps round trip, support glyphs, and use defaults for omitted states")
+  @Test(
+    "NetworkConfiguration.init(from:): maps round trip, support glyphs, and use defaults for omitted states"
+  )
   func symbols() throws {
     let item = try JSONDecoder().decode(
       Item.self,
@@ -193,7 +203,9 @@ struct NetworkWidgetTests {
     }
   }
 
-  @Test("invalid keys, nested maps, and incomplete glyphs are rejected")
+  @Test(
+    "NetworkConfiguration.validate: invalid keys, nested maps, and incomplete glyphs are rejected"
+  )
   func invalidMaps() {
     for json in [
       #"{"wfi":"wifi"}"#,
@@ -221,7 +233,9 @@ struct NetworkWidgetTests {
     #expect(throws: ConfigurationError.self) { try configuration.validate() }
   }
 
-  @Test("refresh captures interface changes even when connection text is unchanged")
+  @Test(
+    "ProviderRuntime.presentation(for:): refresh captures interface changes even when connection text is unchanged"
+  )
   @MainActor
   func refresh() throws {
     for mode in ["event", "manual"] {

@@ -3,7 +3,7 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Weather provider")
+@Suite("WeatherProvider")
 @MainActor
 struct WeatherProviderTests {
   private static let location = WeatherLocation(latitude: 51.5074, longitude: -0.1278)
@@ -20,7 +20,9 @@ struct WeatherProviderTests {
     )
   }
 
-  @Test("request uses current conditions with explicit canonical units and a timeout")
+  @Test(
+    "OpenMeteoReader.request: request uses current conditions with explicit canonical units and a timeout"
+  )
   func request() throws {
     let request = try OpenMeteoReader.request(for: Self.location)
     let url = try #require(request.url)
@@ -45,7 +47,7 @@ struct WeatherProviderTests {
     }
   }
 
-  @Test("decoding rejects HTTP errors and missing required measurements")
+  @Test("OpenMeteoReader.decode: decoding rejects HTTP errors and missing required measurements")
   func decoding() throws {
     let url = try #require(try OpenMeteoReader.request(for: Self.location).url)
     func response(_ status: Int) -> HTTPURLResponse {
@@ -82,7 +84,9 @@ struct WeatherProviderTests {
     }
   }
 
-  @Test("configuration round trips and validates coordinates, intervals, and item type")
+  @Test(
+    "WeatherConfiguration.validate: configuration round trips and validates coordinates, intervals, and item type"
+  )
   func configuration() throws {
     let data = Data(
       #"{"id":"weather","type":"weather","weather":{"latitude":51.5074,"longitude":-0.1278,"temperatureUnit":"fahrenheit","windSpeedUnit":"mph"}}"#
@@ -119,7 +123,9 @@ struct WeatherProviderTests {
     }
   }
 
-  @Test("presentation converts units before rounding and maps day, night, and unknown codes")
+  @Test(
+    "WeatherState.presentation(for:): presentation converts units before rounding and maps day, night, and unknown codes"
+  )
   func presentation() throws {
     var item = Item(
       id: "weather",
@@ -174,7 +180,7 @@ struct WeatherProviderTests {
     #expect(WeatherState().presentation(for: item).text == "Weather unavailable")
   }
 
-  @Test("polling retains readings on failure and recovers")
+  @Test("WeatherProvider.configure: polling retains readings on failure and recovers")
   func polling() async throws {
     var reads = 0
     var states: [WeatherState] = []
@@ -208,7 +214,7 @@ struct WeatherProviderTests {
     #expect(reads == stopped)
   }
 
-  @Test("a cancelled request cannot publish into a restarted location")
+  @Test("WeatherProvider.configure: a cancelled request cannot publish into a restarted location")
   func cancellation() async throws {
     var reads = 0
     var temperatures: [Double] = []
@@ -235,7 +241,9 @@ struct WeatherProviderTests {
     #expect(temperatures == [2])
   }
 
-  @Test("runtime shares requests, preserves snapshots, and clears changed locations")
+  @Test(
+    "ProviderRuntime.configure: runtime shares requests, preserves snapshots, and clears changed locations"
+  )
   func runtime() async throws {
     var reads = 0
     let provider = WeatherProvider { location in
@@ -313,7 +321,9 @@ struct WeatherProviderTests {
     #expect(provider.intervals.isEmpty)
     #expect(runtime.weatherStates.isEmpty)
   }
-  @Test("manual and event snapshots behave independently of shared polling")
+  @Test(
+    "ProviderRuntime.presentation(for:): manual and event snapshots behave independently of shared polling"
+  )
   func snapshots() async throws {
     var reads = 0
     let provider = WeatherProvider { _ in
@@ -361,7 +371,9 @@ struct WeatherProviderTests {
     #expect(runtime.presentation(for: manual)?.text == snapshot)
   }
 
-  @Test("weather symbols inherit glyph settings and preserve precedence and defaults")
+  @Test(
+    "WeatherState.presentation(for:): weather symbols inherit glyph settings and preserve precedence and defaults"
+  )
   func customSymbols() throws {
     let json =
       #"{"latitude":0,"longitude":0,"symbols":{"font":"Symbols Nerd Font Mono","size":16,"clearDay":"sun.max","clearNight":{"glyph":"☾"},"rain":{"glyph":"R","font":"Other Font","size":20},"unavailable":"wifi.slash","unknown":"questionmark.circle"}}"#
@@ -410,7 +422,9 @@ struct WeatherProviderTests {
     #expect(state.presentation(for: item).symbol == nil)
   }
 
-  @Test("weather symbol validation rejects unknown keys and incomplete glyph settings")
+  @Test(
+    "WeatherSymbols.validate: weather symbol validation rejects unknown keys and incomplete glyph settings"
+  )
   func invalidSymbols() throws {
     for symbols in [
       #"{"rani":"cloud.rain"}"#,
@@ -426,7 +440,7 @@ struct WeatherProviderTests {
     }
   }
 
-  @Test("every weather code selects the documented symbol key")
+  @Test("WeatherReading.symbolCondition: every weather code selects the documented symbol key")
   func symbolConditions() {
     let groups: [(WeatherSymbolCondition, [Int])] = [
       (.clearDay, [0, 1]), (.partlyCloudyDay, [2]), (.overcastDay, [3]),
@@ -456,7 +470,9 @@ struct WeatherProviderTests {
     }
   }
 
-  @Test("overcast day and night symbols override the shared fallback")
+  @Test(
+    "WeatherState.presentation(for:): overcast day and night symbols override the shared fallback"
+  )
   func overcastSymbols() throws {
     let json =
       #"{"font":"Example Font","overcast":"cloud","overcastDay":"cloud.sun","overcastNight":{"glyph":"N"}}"#

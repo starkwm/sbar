@@ -3,7 +3,7 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Yabai")
+@Suite("YabaiProvider")
 @MainActor
 struct YabaiProviderTests {
   private var state: YabaiState {
@@ -42,7 +42,9 @@ struct YabaiProviderTests {
     )
   }
 
-  @Test("display mapping, native labels and fullscreen filtering retain Mission Control indexes")
+  @Test(
+    "YabaiState.presentation(for:): display mapping, native labels and fullscreen filtering retain Mission Control indexes"
+  )
   func presentation() {
     var item = Item(
       id: "yabai",
@@ -92,7 +94,9 @@ struct YabaiProviderTests {
     #expect(state.presentation(for: item, displayUUID: "A").symbol == nil)
   }
 
-  @Test("JSON validates identifiers, focus, display joins and whitespace label fallback")
+  @Test(
+    "YabaiState.parse: JSON validates identifiers, focus, display joins and whitespace label fallback"
+  )
   func parsing() throws {
     let row =
       #"{"id":10,"index":3,"label":" ","has-focus":true,"is-visible":true,"display":2,"is-native-fullscreen":false}"#
@@ -122,7 +126,7 @@ struct YabaiProviderTests {
     )
   }
 
-  @Test("configuration validates and roundtrips")
+  @Test("YabaiConfiguration.validate: configuration validates and roundtrips")
   func configuration() throws {
     let item = Item(
       id: "yabai",
@@ -152,7 +156,9 @@ struct YabaiProviderTests {
     }
   }
 
-  @Test("bursts coalesce, transient reads retry and persistent failures replace the snapshot")
+  @Test(
+    "YabaiProvider.start: bursts coalesce, transient reads retry and persistent failures replace the snapshot"
+  )
   func retries() async throws {
     let valid = state
     let queryState = TestYabaiQueryState()
@@ -189,7 +195,7 @@ struct YabaiProviderTests {
     #expect(queryState.reads == 5)
   }
 
-  @Test("superseded in-flight reads cannot publish, and providers restart")
+  @Test("YabaiProvider.start: superseded in-flight reads cannot publish, and providers restart")
   func cancellation() async throws {
     let valid = state
     var reads = 0
@@ -233,7 +239,7 @@ struct YabaiProviderTests {
     #expect(updates == 2)
   }
 
-  @Test("manual and event triggers query fresh state before capture")
+  @Test("ProviderRuntime.trigger: manual and event triggers query fresh state before capture")
   func triggers() async throws {
     var current = state
     let runtime = ProviderRuntime(yabai: YabaiProvider(read: { current }))

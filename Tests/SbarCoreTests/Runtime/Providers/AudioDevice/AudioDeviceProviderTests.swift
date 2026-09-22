@@ -3,10 +3,10 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Audio device provider")
+@Suite("AudioDeviceProvider")
 @MainActor
 struct AudioDeviceProviderTests {
-  @Test("default device changes and renames replace only obsolete device listeners")
+  @Test("start: default device changes and renames replace only obsolete device listeners")
   func changes() async throws {
     let access = TestAudioDeviceAccess()
     let provider = AudioDeviceProvider(access: access)
@@ -38,7 +38,7 @@ struct AudioDeviceProviderTests {
     #expect(states.count == 3)
   }
 
-  @Test("a shared input and output device uses one set of listeners")
+  @Test("start: a shared input and output device uses one set of listeners")
   func sharedDevice() {
     let access = TestAudioDeviceAccess()
     access.values[.init(selector: kAudioHardwarePropertyDefaultInputDevice)] = 11
@@ -50,7 +50,9 @@ struct AudioDeviceProviderTests {
     #expect(access.installations.values.allSatisfy { $0 == 1 })
   }
 
-  @Test("missing or dead devices differ from failed reads and do not suppress the other direction")
+  @Test(
+    "start: missing or dead devices differ from failed reads and do not suppress the other direction"
+  )
   func missingDevices() async throws {
     let access = TestAudioDeviceAccess()
     let input = AudioDeviceProperty(selector: kAudioHardwarePropertyDefaultInputDevice)
@@ -86,7 +88,7 @@ struct AudioDeviceProviderTests {
   }
 
   @Test(
-    "failed subscriptions and name reads recover without another hardware event",
+    "start: failed subscriptions and name reads recover without another hardware event",
     arguments: [0, 1, 2]
   )
   func recovery(failure: Int) async throws {
@@ -116,7 +118,9 @@ struct AudioDeviceProviderTests {
     #expect(access.observers.count == 8)
   }
 
-  @Test("bursts coalesce, stop cancels pending refreshes, and callbacks cannot cross sessions")
+  @Test(
+    "start: bursts coalesce, stop cancels pending refreshes, and callbacks cannot cross sessions"
+  )
   func lifecycle() async throws {
     let access = TestAudioDeviceAccess()
     let property = AudioDeviceProperty(selector: kAudioHardwarePropertyDevices)
@@ -151,7 +155,9 @@ struct AudioDeviceProviderTests {
     #expect(updates == 3)
   }
 
-  @Test("Core Audio restarts reestablish all listeners and discard callbacks from before the reset")
+  @Test(
+    "start: Core Audio restarts reestablish all listeners and discard callbacks from before the reset"
+  )
   func serviceRestart() async throws {
     let access = TestAudioDeviceAccess()
     let property = AudioDeviceProperty(selector: kAudioHardwarePropertyDevices)
@@ -175,7 +181,9 @@ struct AudioDeviceProviderTests {
     #expect(updates == 2)
   }
 
-  @Test("runtime shares monitoring and captures input changes even when output text stays the same")
+  @Test(
+    "ProviderRuntime.configure: runtime shares monitoring and captures input changes even when output text stays the same"
+  )
   func runtime() async throws {
     let access = TestAudioDeviceAccess()
     let runtime = ProviderRuntime(audioDevice: AudioDeviceProvider(access: access))

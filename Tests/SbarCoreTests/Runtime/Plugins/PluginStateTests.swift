@@ -3,10 +3,12 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Plugin state")
+@Suite("PluginState")
 @MainActor
 struct PluginStateTests {
-  @Test("line boundaries apply per message, including a full line followed by another message")
+  @Test(
+    "PluginOutputFramer.append: line boundaries apply per message, including a full line followed by another message"
+  )
   func framing() throws {
     let line = "{\"text\":\"" + String(repeating: "a", count: 65_525) + "\"}"
 
@@ -37,7 +39,9 @@ struct PluginStateTests {
     #expect(throws: PluginProtocolError.invalidMessage) { try invalid.append(Data([255, 10])) }
   }
 
-  @Test("structured appearance and errors preserve text-only compatibility")
+  @Test(
+    "PluginState.presentation: structured appearance and errors preserve text-only compatibility"
+  )
   func appearance() throws {
     var framer = PluginOutputFramer()
     let decoded = try framer.append(
@@ -76,7 +80,7 @@ struct PluginStateTests {
     #expect(failed.presentation(for: item).hidden)
   }
 
-  @Test("mailbox retains its first start event under saturation")
+  @Test("PluginMailbox.send: mailbox retains its first start event under saturation")
   func mailbox() throws {
     let box = PluginMailbox()
     box.send(PluginInput(event: "start", value: nil))
@@ -94,7 +98,9 @@ struct PluginStateTests {
     #expect(remaining == 31)
   }
 
-  @Test("execution changes restart only the affected plugin and appearance changes retain state")
+  @Test(
+    "ProviderRuntime.configure: execution changes restart only the affected plugin and appearance changes retain state"
+  )
   func reconciliation() async throws {
     let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: file) }
@@ -136,7 +142,9 @@ struct PluginStateTests {
     #expect(runtime.itemValues["first"] == nil)
   }
 
-  @Test("restart receives start first and late success cannot overwrite exit failure")
+  @Test(
+    "ProviderRuntime.configure: restart receives start first and late success cannot overwrite exit failure"
+  )
   func restart() async throws {
     let item = Item(
       id: "plugin",
@@ -179,14 +187,14 @@ struct PluginStateTests {
     #expect(runtime.itemValues[item.id] == "Process exited with status 7.")
   }
 
-  @Test("only sustained runs with valid output reset backoff")
+  @Test("PluginState.restartDelay: only sustained runs with valid output reset backoff")
   func backoff() {
     #expect(PluginState.restartDelay(30, uptime: .seconds(30), receivedOutput: true) == 1)
     #expect(PluginState.restartDelay(30, uptime: .seconds(29), receivedOutput: true) == 30)
     #expect(PluginState.restartDelay(30, uptime: .seconds(60), receivedOutput: false) == 30)
   }
 
-  @Test("plugin configuration rejects blank executables and mismatched item types")
+  @Test("Plugin.validate: plugin configuration rejects blank executables and mismatched item types")
   func validation() throws {
     #expect(throws: ConfigurationError.self) {
       try Plugin(executable: " \n").validate(path: "plugin")

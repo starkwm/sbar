@@ -3,10 +3,12 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Shell command provider")
+@Suite("CommandState and ProviderRuntime")
 @MainActor
 struct CommandProviderTests {
-  @Test("JSON supports symbols, glyphs, tint and visibility and rejects malformed output")
+  @Test(
+    "CommandState.decode: JSON supports symbols, glyphs, tint and visibility and rejects malformed output"
+  )
   func json() throws {
     let settings = ShellCommand(script: "test", format: .json)
     let value = try CommandState.decode(
@@ -46,7 +48,9 @@ struct CommandProviderTests {
     }
   }
 
-  @Test("presentation normalizes lines, limits characters and applies failure policies")
+  @Test(
+    "CommandState.presentation(for:): normalizes lines, limits characters and applies failure policies"
+  )
   func presentation() {
     var item = Item(
       id: "cmd",
@@ -72,7 +76,9 @@ struct CommandProviderTests {
     #expect(CommandState.displayText("abc", limit: 1) == "…")
   }
 
-  @Test("configuration rejects blank scripts, invalid limits and incompatible options")
+  @Test(
+    "ShellCommand.validate: configuration rejects blank scripts, invalid limits and incompatible options"
+  )
   func configuration() throws {
     for command in [
       ShellCommand(script: " \n"), ShellCommand(script: "x", maxLength: 0),
@@ -100,7 +106,9 @@ struct CommandProviderTests {
     )
   }
 
-  @Test("execution handles stderr, nonzero exits, empty output and invalid JSON")
+  @Test(
+    "ProviderRuntime.configure: execution handles stderr, nonzero exits, empty output and invalid JSON"
+  )
   func execution() async throws {
     let items = [
       Item(
@@ -145,7 +153,9 @@ struct CommandProviderTests {
     #expect(runtime.commandStates["invalid"]?.status == .failure)
   }
 
-  @Test("triggers coalesce and failed reruns retain success without cosmetic reexecution")
+  @Test(
+    "ProviderRuntime.trigger: triggers coalesce and failed reruns retain success without cosmetic reexecution"
+  )
   func retention() async throws {
     let file = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: file) }
@@ -191,7 +201,9 @@ struct CommandProviderTests {
     #expect(runtime.commandStates.isEmpty)
   }
 
-  @Test("timeouts recover on replacement and removed commands cannot publish")
+  @Test(
+    "ProviderRuntime.configure: timeouts recover on replacement and removed commands cannot publish"
+  )
   func cancellation() async throws {
     var item = Item(
       id: "cmd",

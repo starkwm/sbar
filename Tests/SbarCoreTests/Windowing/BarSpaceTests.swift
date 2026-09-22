@@ -6,7 +6,7 @@ import Testing
 @Suite("BarSpace")
 @MainActor
 struct BarSpaceTests {
-  @Test("shares one Space across panels and reattaches after AppKit updates")
+  @Test("addWindow: shares one Space across panels and reattaches after AppKit updates")
   func sharedSpace() {
     let system = TestBarSpaceAccess()
     let space = BarSpace(access: system.access)
@@ -25,7 +25,7 @@ struct BarSpaceTests {
     #expect(system.destroyed == [42])
   }
 
-  @Test("missing APIs and invalid window numbers leave AppKit in control")
+  @Test("addWindow: missing APIs and invalid window numbers leave AppKit in control")
   func unavailable() {
     let unavailable = BarSpace(access: nil)
 
@@ -44,7 +44,7 @@ struct BarSpaceTests {
     #expect(system.windows.isEmpty)
   }
 
-  @Test("creation failures can recover on the next panel update")
+  @Test("addWindow: creation failures can recover on the next panel update")
   func creationFailure() {
     let system = TestBarSpaceAccess()
     system.createdSpace = nil
@@ -63,7 +63,7 @@ struct BarSpaceTests {
     #expect(system.destroyed == [43])
   }
 
-  @Test("starting again after stop creates a fresh Space")
+  @Test("stop: starting again after stop creates a fresh Space")
   func restart() {
     let system = TestBarSpaceAccess()
     let space = BarSpace(access: system.access)

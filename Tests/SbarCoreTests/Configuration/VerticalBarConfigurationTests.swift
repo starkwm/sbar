@@ -3,10 +3,10 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("VerticalBarConfiguration")
+@Suite("BarSettings")
 struct VerticalBarConfigurationTests {
   @Test(
-    "all edges round trip and missing or null dimensions retain their defaults",
+    "init(from:): all edges round trip and missing or null dimensions retain their defaults",
     arguments: [BarPosition.top, .bottom, .left, .right]
   )
   func decoding(position: BarPosition) throws {
@@ -27,7 +27,7 @@ struct VerticalBarConfigurationTests {
     }
   }
 
-  @Test("vertical width bounds match the schema and validate on every edge")
+  @Test("Configuration.validate: vertical width bounds match the schema and validate on every edge")
   func widthValidation() throws {
     let schema = try #require(
       JSONSerialization.jsonObject(with: ConfigurationSchema.data()) as? [String: Any]

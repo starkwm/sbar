@@ -2,10 +2,10 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Filtered separators")
+@Suite("TextTemplate")
 struct FilteredSeparatorTests {
   @Test(
-    "separators follow rendered entries and retain source identities",
+    "renderRuns: separators follow rendered entries and retain source identities",
     arguments: [
       [false, true, false, true, false], [true, false, false, false, false],
       [false, false, false, false, true], [false, false, false, false, false],
@@ -26,7 +26,7 @@ struct FilteredSeparatorTests {
     #expect(runs.filter { !$0.separator }.compactMap(\.entry) == selected)
   }
 
-  @Test("independent loops and symbol-only entries keep their separators")
+  @Test("renderRuns: independent loops and symbol-only entries keep their separators")
   func loops() throws {
     let template = try TextTemplate(
       "{{#transfers}}{{symbol}}{{#separator}}|{{/separator}}{{/transfers}}/{{#transfers}}{{#direction=upload}}U{{/direction}}{{#separator}}|{{/separator}}{{/transfers}}",

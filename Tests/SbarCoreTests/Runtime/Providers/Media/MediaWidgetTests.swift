@@ -4,10 +4,12 @@ import Testing
 
 @testable import SbarCore
 
-@Suite("Media widget")
+@Suite("MediaState")
 @MainActor
 struct MediaWidgetTests {
-  @Test("automatic selection prefers playing sources and uses recency to break ties")
+  @Test(
+    "selected(source:): automatic selection prefers playing sources and uses recency to break ties"
+  )
   func selection() {
     let playback = NotificationCenter()
     let provider = MediaProvider(playbackCenter: playback, workspaceCenter: NotificationCenter())
@@ -54,7 +56,9 @@ struct MediaWidgetTests {
     #expect(state.selected(source: .music)?.title == "Music track")
   }
 
-  @Test("parsing preserves paused metadata, clears stopped tracks, and handles malformed fields")
+  @Test(
+    "MediaPlayerState.parse: preserves paused metadata, clears stopped tracks, and handles malformed fields"
+  )
   func parsing() {
     let playing = MediaPlayerState.parse(
       ["Player State": " Playing ", "Name": " Title ", "Artist": " Artist "],
@@ -127,7 +131,9 @@ struct MediaWidgetTests {
     #expect(result.text == "Playback unavailable")
   }
 
-  @Test("title, artist, separator, state symbols, and hidden states retain accessible metadata")
+  @Test(
+    "presentation(for:): title, artist, separator, state symbols, and hidden states retain accessible metadata"
+  )
   func appearance() {
     var state = MediaState(players: [
       .music: MediaPlayerState(source: .music, status: .playing, title: "Title", artist: "Artist")
@@ -191,7 +197,9 @@ struct MediaWidgetTests {
     }
   }
 
-  @Test("hideWhenNotPlaying follows playback notifications and the selected source")
+  @Test(
+    "ProviderRuntime.presentation(for:): hideWhenNotPlaying follows playback notifications and the selected source"
+  )
   func playbackVisibility() {
     let playback = NotificationCenter()
     let provider = MediaProvider(playbackCenter: playback, workspaceCenter: NotificationCenter())
@@ -239,7 +247,7 @@ struct MediaWidgetTests {
     #expect(state.presentation(for: item).text == "Music track")
   }
 
-  @Test("termination clears a player's track and restores the other source")
+  @Test("MediaProvider.start: termination clears a player's track and restores the other source")
   func termination() {
     let playback = NotificationCenter()
     let workspace = NotificationCenter()
@@ -281,7 +289,9 @@ struct MediaWidgetTests {
     #expect(state == previous)
   }
 
-  @Test("repeated start replaces observers, stop detaches both centers, and restart resets state")
+  @Test(
+    "MediaProvider.start: repeated start replaces observers, stop detaches both centers, and restart resets state"
+  )
   func lifecycle() {
     let playback = NotificationCenter()
     let workspace = NotificationCenter()
@@ -332,7 +342,9 @@ struct MediaWidgetTests {
     provider.stop()
   }
 
-  @Test("configuration round trips and validates source and glyph settings")
+  @Test(
+    "MediaConfiguration.validate: configuration round trips and validates source and glyph settings"
+  )
   func configuration() throws {
     let item = try JSONDecoder().decode(
       Item.self,
@@ -372,7 +384,9 @@ struct MediaWidgetTests {
     }
   }
 
-  @Test("refresh captures source and playback changes even when track text stays unchanged")
+  @Test(
+    "ProviderRuntime.presentation(for:): refresh captures source and playback changes even when track text stays unchanged"
+  )
   func refresh() throws {
     for mode in ["manual", "event"] {
       let configuration = try JSONDecoder().decode(
