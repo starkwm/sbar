@@ -1,0 +1,83 @@
+{
+  "$schema": "../../Sources/SbarCore/Resources/config.schema.json",
+  "schemaVersion": 1,
+  "bar": {
+    "position": "top",
+    "height": 36,
+    "displays": "main",
+    "margin": { "top": 6, "left": 6, "right": 6 },
+    "mousePassThrough": true
+  },
+  "theme": {
+    "background": "#1A1B26F5",
+    "horizontalPadding": 10,
+    "verticalPadding": 3,
+    "cornerRadius": 10,
+    "itemSpacing": 8,
+    "itemStyle": {
+      "tint": "#C0CAF5",
+      "fontSize": 12,
+      "fontWeight": "medium",
+      "horizontalPadding": 8
+    }
+  },
+  "items": {
+    "left": [
+      {
+        "id": "front-app",
+        "type": "frontApplication",
+        "frontApplication": { "showIcon": true }
+      }
+    ],
+    "center": [
+      {
+        "id": "next-event",
+        "type": "calendar",
+        "text": "{{#status=upcoming}}{{startTime}} · {{title}}{{/status}}{{#status=ongoing}}Now · {{title}}{{/status}}{{^available}}{{value}}{{/available}}",
+        "priority": 100,
+        "style": {
+          "background": "#292E42",
+          "cornerRadius": 7
+        },
+        "calendar": {
+          "lookaheadDays": 7,
+          "includeAllDay": false,
+          "timeFormat": "HH:mm",
+          "hideWhenEmpty": true,
+          "symbols": {
+            "upcoming": "calendar",
+            "ongoing": "calendar.badge.clock"
+          },
+          "tints": {
+            "upcoming": "#7AA2F7",
+            "ongoing": "#9ECE6A",
+            "unauthorized": "#F7768E",
+            "unavailable": "#F7768E"
+          }
+        },
+        "popup": "Next event",
+        "children": [
+          {
+            "id": "event-details",
+            "type": "calendar",
+            "text": "{{#status=upcoming}}{{title}} · {{calendar}} · {{startTime}}–{{endTime}}{{/status}}{{#status=ongoing}}{{title}} · {{calendar}} · until {{endTime}}{{/status}}{{^available}}{{value}}{{/available}}",
+            "calendar": {
+              "lookaheadDays": 7,
+              "includeAllDay": false,
+              "timeFormat": "HH:mm",
+              "showSymbol": false
+            }
+          }
+        ]
+      }
+    ],
+    "right": [
+      {
+        "id": "clock",
+        "type": "datetime",
+        "format": "EEE d MMM  HH:mm",
+        "priority": 100
+      }
+    ]
+  }
+}

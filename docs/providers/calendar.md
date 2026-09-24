@@ -2,6 +2,8 @@
 
 [Documentation index](../index.md#providers)
 
+The [Calendar bar example](../../examples/calendar/README.md) has a complete configuration you can run.
+
 A `calendar` item shows the current or next event from the calendars macOS makes available through EventKit:
 
 ```json
