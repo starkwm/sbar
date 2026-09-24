@@ -108,56 +108,7 @@ struct Configuration: Codable, Equatable, Sendable {
 
       try item.command?.validate(path: "\(location).command")
 
-      try item.yabai?.validate(path: "\(location).yabai")
-      try item.aerospace?.validate(path: "\(location).aerospace")
-      try item.spaces?.validate(path: "\(location).spaces")
-      try item.media?.validate(path: "\(location).media")
-      try item.throughput?.validate(path: "\(location).throughput")
-      try item.disk?.validate(path: "\(location).disk")
-      try item.memory?.validate(path: "\(location).memory")
-      try item.cpu?.validate(path: "\(location).cpu")
-      try item.network?.validate(path: "\(location).network")
-
-      if item.type == .weather && item.weather == nil {
-        throw ConfigurationError.invalidValue(
-          path: "\(location).weather",
-          reason: "Weather coordinates are required."
-        )
-      }
-
-      try item.weather?.validate(path: "\(location).weather")
-      try item.mail?.validate(path: "\(location).mail")
-      try item.vpn?.validate(path: "\(location).vpn")
-      try item.bluetooth?.validate(path: "\(location).bluetooth")
-      try item.audioDevice?.validate(path: "\(location).audioDevice")
-      try item.battery?.validate(path: "\(location).battery")
-      try item.volume?.validate(path: "\(location).volume")
-
-      if (item.plugin != nil && item.type != .plugin)
-        || (item.command != nil && item.type != .command)
-        || (item.battery != nil && item.type != .battery)
-        || (item.yabai != nil && item.type != .yabai)
-        || (item.aerospace != nil && item.type != .aerospace)
-        || (item.spaces != nil && item.type != .spaces)
-        || (item.media != nil && item.type != .media)
-        || (item.throughput != nil && item.type != .throughput)
-        || (item.disk != nil && item.type != .disk)
-        || (item.memory != nil && item.type != .memory)
-        || (item.cpu != nil && item.type != .cpu)
-        || (item.network != nil && item.type != .network)
-        || (item.weather != nil && item.type != .weather)
-        || (item.mail != nil && item.type != .mail)
-        || (item.vpn != nil && item.type != .vpn)
-        || (item.bluetooth != nil && item.type != .bluetooth)
-        || (item.audioDevice != nil && item.type != .audioDevice)
-        || (item.volume != nil && item.type != .volume)
-        || (item.frontApplication != nil && item.type != .frontApplication)
-      {
-        throw ConfigurationError.invalidValue(
-          path: location,
-          reason: "Widget settings must match the item type."
-        )
-      }
+      try item.validateProviderSettings(path: location)
       if item.itemSpacing != nil && item.type != .group {
         throw ConfigurationError.invalidValue(
           path: "\(location).itemSpacing",
@@ -335,7 +286,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
       throughput,
       volume,
       network,
-      mail, vpn, weather,
+      mail, vpn, weather, calendar,
       bluetooth,
       audioDevice,
       frontApplication
@@ -376,6 +327,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var bluetooth: BluetoothConfiguration?
   var audioDevice: AudioDeviceConfiguration?
   var weather: WeatherConfiguration?
+  var calendar: CalendarConfiguration?
   var mail: MailConfiguration?
   var vpn: VPNConfiguration?
   var network: NetworkConfiguration?
@@ -419,6 +371,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     bluetooth: BluetoothConfiguration? = nil,
     audioDevice: AudioDeviceConfiguration? = nil,
     weather: WeatherConfiguration? = nil,
+    calendar: CalendarConfiguration? = nil,
     mail: MailConfiguration? = nil,
     vpn: VPNConfiguration? = nil,
     network: NetworkConfiguration? = nil,
@@ -460,6 +413,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.bluetooth = bluetooth
     self.audioDevice = audioDevice
     self.weather = weather
+    self.calendar = calendar
     self.mail = mail
     self.vpn = vpn
     self.network = network
@@ -511,11 +465,83 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     bluetooth = try container.decodeIfPresent(BluetoothConfiguration.self, forKey: .bluetooth)
     audioDevice = try container.decodeIfPresent(AudioDeviceConfiguration.self, forKey: .audioDevice)
     weather = try container.decodeIfPresent(WeatherConfiguration.self, forKey: .weather)
+    calendar = try container.decodeIfPresent(CalendarConfiguration.self, forKey: .calendar)
     mail = try container.decodeIfPresent(MailConfiguration.self, forKey: .mail)
     vpn = try container.decodeIfPresent(VPNConfiguration.self, forKey: .vpn)
     network = try container.decodeIfPresent(NetworkConfiguration.self, forKey: .network)
     volume = try container.decodeIfPresent(VolumeConfiguration.self, forKey: .volume)
     refresh = try container.decodeIfPresent(RefreshPolicy.self, forKey: .refresh)
+  }
+}
+
+extension Item {
+  func validateProviderSettings(path: String) throws {
+    try validateWorkspaceSettings(path: path)
+    try validateMetricSettings(path: path)
+    try validateConnectionSettings(path: path)
+
+    if hasMismatchedProviderSettings {
+      throw ConfigurationError.invalidValue(
+        path: path,
+        reason: "Widget settings must match the item type."
+      )
+    }
+  }
+
+  private var hasMismatchedProviderSettings: Bool {
+    (plugin != nil && type != .plugin)
+      || (command != nil && type != .command)
+      || (battery != nil && type != .battery)
+      || (yabai != nil && type != .yabai)
+      || (aerospace != nil && type != .aerospace)
+      || (spaces != nil && type != .spaces)
+      || (media != nil && type != .media)
+      || (throughput != nil && type != .throughput)
+      || (disk != nil && type != .disk)
+      || (memory != nil && type != .memory)
+      || (cpu != nil && type != .cpu)
+      || (network != nil && type != .network)
+      || (weather != nil && type != .weather)
+      || (calendar != nil && type != .calendar)
+      || (mail != nil && type != .mail)
+      || (vpn != nil && type != .vpn)
+      || (bluetooth != nil && type != .bluetooth)
+      || (audioDevice != nil && type != .audioDevice)
+      || (volume != nil && type != .volume)
+      || (frontApplication != nil && type != .frontApplication)
+  }
+
+  private func validateWorkspaceSettings(path: String) throws {
+    try yabai?.validate(path: "\(path).yabai")
+    try aerospace?.validate(path: "\(path).aerospace")
+    try spaces?.validate(path: "\(path).spaces")
+    try media?.validate(path: "\(path).media")
+  }
+
+  private func validateMetricSettings(path: String) throws {
+    try throughput?.validate(path: "\(path).throughput")
+    try disk?.validate(path: "\(path).disk")
+    try memory?.validate(path: "\(path).memory")
+    try cpu?.validate(path: "\(path).cpu")
+    try network?.validate(path: "\(path).network")
+  }
+
+  private func validateConnectionSettings(path: String) throws {
+    if type == .weather && weather == nil {
+      throw ConfigurationError.invalidValue(
+        path: "\(path).weather",
+        reason: "Weather coordinates are required."
+      )
+    }
+
+    try weather?.validate(path: "\(path).weather")
+    try calendar?.validate(path: "\(path).calendar")
+    try mail?.validate(path: "\(path).mail")
+    try vpn?.validate(path: "\(path).vpn")
+    try bluetooth?.validate(path: "\(path).bluetooth")
+    try audioDevice?.validate(path: "\(path).audioDevice")
+    try battery?.validate(path: "\(path).battery")
+    try volume?.validate(path: "\(path).volume")
   }
 }
 
@@ -538,7 +564,8 @@ enum BarWindowLevel: String, Codable, CaseIterable, Sendable {
 enum ItemSymbolPosition: String, Codable, CaseIterable, Sendable { case left, right }
 
 enum ItemType: String, CaseIterable, Codable, Sendable {
-  case weather, mail, datetime, divider, frontApplication, spacer, text, battery, volume, network,
+  case weather, calendar, mail, datetime, divider, frontApplication, spacer, text, battery, volume,
+    network,
     vpn,
     bluetooth,
     audioDevice,

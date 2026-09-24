@@ -41,6 +41,11 @@ struct TextTemplate {
         "condition", "weatherCode", "isDay", "updatedAt", "available", "stale", "status",
       ]
     case .mail: fields = ["unreadCount", "status", "available"]
+    case .calendar:
+      fields = [
+        "title", "calendar", "startTime", "endTime", "minutesUntil", "allDay", "status",
+        "available",
+      ]
     case .throughput:
       fields = [
         "download", "upload", "download.value", "download.unit", "upload.value", "upload.unit",
@@ -80,6 +85,7 @@ struct TextTemplate {
     case .media: statuses = ["playing", "paused", "stopped", "unknown"]
     case .weather: statuses = ["available", "stale", "unavailable"]
     case .mail: statuses = ["available", "closed", "unauthorized", "unavailable"]
+    case .calendar: statuses = Set(CalendarStatus.allCases.map(\.rawValue))
     case .command, .plugin: statuses = ["running", "success", "failure"]
     default: statuses = []
     }
@@ -90,6 +96,7 @@ struct TextTemplate {
     for name in fields(for: type).intersection([
       "available", "charging", "pluggedIn", "muted", "playing", "connected",
       "active", "focused", "visible", "fullscreen", "first", "last", "stale", "isDay",
+      "allDay",
     ]) {
       values[name] = ["true", "false"]
     }
