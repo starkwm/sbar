@@ -11,8 +11,8 @@ let package = Package(
   ],
   dependencies: [
     .package(url: "https://github.com/apple/swift-argument-parser", from: "1.7.1"),
-    .package(url: "https://github.com/starkwm/stark-configuration", from: "0.0.1"),
-    .package(url: "https://github.com/starkwm/stark-ipc", from: "0.0.1"),
+    .package(url: "https://github.com/starkwm/stark-configuration", from: "0.0.3"),
+    .package(url: "https://github.com/starkwm/stark-ipc", from: "0.0.5"),
   ],
   targets: [
     .executableTarget(

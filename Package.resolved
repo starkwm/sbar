@@ -1,13 +1,13 @@
 {
-  "originHash" : "b258decdb10840f4f9f3c90c993488d70516a731390bea23db968ec84e217afb",
+  "originHash" : "0daf12a5aa21201d9a2969721394af1950b625a79970f6b7efb8590c37d66b1b",
   "pins" : [
     {
       "identity" : "stark-configuration",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/starkwm/stark-configuration",
       "state" : {
-        "revision" : "c034e29e15bc32c5d854efb2febd5d84d2dd05b9",
-        "version" : "0.0.1"
+        "revision" : "3c32aa9ac837a08857f8261b48f0625b608535f6",
+        "version" : "0.0.3"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/starkwm/stark-ipc",
       "state" : {
-        "revision" : "a3a11185a6ff5a5225509ac8467193a8475eda37",
-        "version" : "0.0.1"
+        "revision" : "cd2a30196dd647483907be5574baef704df79665",
+        "version" : "0.0.5"
       }
     },
     {
