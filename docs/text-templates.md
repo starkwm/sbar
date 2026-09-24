@@ -77,6 +77,7 @@ Allowed status values are validated for each provider. For example,
 | `media` | `playing`, `paused`, `stopped`, `unknown` |
 | `weather` | `available`, `stale`, `unavailable` |
 | `mail` | `available`, `closed`, `unauthorized`, `unavailable` |
+| `calendar` | `loading`, `upcoming`, `ongoing`, `empty`, `unauthorized`, `unavailable` |
 | `command`, `plugin` | `running`, `success`, `failure` |
 
 Battery `noBattery` means no percentage reading, matching the existing `AC power`
@@ -211,6 +212,7 @@ Every item with text supports `id`, `value`, and `symbol`. `value` is the provid
 | `disk` | `used`, `free`, `total`, `percentage`, `freeBytes`, `totalBytes`, `available` |
 | `media` | `title`, `artist`, `source`, `status`, `playing`, `available` |
 | `mail` | `unreadCount`, `status`, `available` |
+| `calendar` | `title`, `calendar`, `startTime`, `endTime`, `minutesUntil`, `allDay`, `status`, `available` |
 | `throughput` | `download`, `upload`, `download.value`, `download.unit`, `upload.value`, `upload.unit`, `available`, `transfers`, `direction`, `number`, `unit`, `symbol`, `index`, `total`, `first`, `last`, `separator` |
 | `network` | `status`, `connected` |
 | `vpn` | `status`, `names`, `connected`, `available`, plus [service fields](#vpn-services-and-bluetooth-devices) |

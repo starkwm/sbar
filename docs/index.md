@@ -21,7 +21,7 @@ Each page covers the provider's configuration, defaults, refresh behavior, and l
 
 | Category | Providers |
 | --- | --- |
-| Desktop | [Date and time](providers/datetime.md), [frontmost application](providers/front-application.md) |
+| Desktop | [Date and time](providers/datetime.md), [Calendar](providers/calendar.md), [frontmost application](providers/front-application.md) |
 | Power and audio | [Battery](providers/battery.md), [volume](providers/volume.md), [audio devices](providers/audio-device.md) |
 | Connectivity | [Mail](providers/mail.md), [Network](providers/network.md), [VPN](providers/vpn.md), [Bluetooth](providers/bluetooth.md) |
 | System metrics | [CPU](providers/cpu.md), [memory](providers/memory.md), [disk](providers/disk.md), [throughput](providers/throughput.md) |

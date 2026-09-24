@@ -57,6 +57,7 @@ final class ProviderRuntime {
   @ObservationIgnored private let volume = VolumeProvider()
   @ObservationIgnored private let network = NetworkProvider()
   @ObservationIgnored private let mail: MailProvider
+  @ObservationIgnored private let calendar: CalendarProvider
   @ObservationIgnored private let vpn: VPNProvider
   @ObservationIgnored private let bluetooth: BluetoothProvider
   @ObservationIgnored private let audioDevice: AudioDeviceProvider
@@ -85,6 +86,7 @@ final class ProviderRuntime {
     aerospace: AerospaceProvider = AerospaceProvider(),
     yabai: YabaiProvider = YabaiProvider(),
     mail: MailProvider = MailProvider(),
+    calendar: CalendarProvider = CalendarProvider(),
     weather: WeatherProvider = WeatherProvider(),
     vpn: VPNProvider = VPNProvider(),
     bluetooth: BluetoothProvider = BluetoothProvider(),
@@ -96,6 +98,7 @@ final class ProviderRuntime {
     self.aerospace = aerospace
     self.yabai = yabai
     self.mail = mail
+    self.calendar = calendar
     self.weather = weather
     self.vpn = vpn
     self.bluetooth = bluetooth
@@ -125,6 +128,11 @@ final class ProviderRuntime {
       .filter { $0.type == .mail }
       .map { ($0.mail ?? MailConfiguration()).resolvedPollInterval }
       .min()
+    let calendarLookahead =
+      items
+      .filter { $0.type == .calendar }
+      .map { ($0.calendar ?? CalendarConfiguration()).resolvedLookaheadDays }
+      .max()
 
     if let mailInterval {
       let interval = Duration.seconds(mailInterval)
@@ -133,6 +141,14 @@ final class ProviderRuntime {
         mail.start(interval: interval) { [weak self] in
           self?.updateWidgetState(.mail($0), for: .mail)
         }
+      }
+    }
+
+    if let calendarLookahead,
+      !activeTypes.contains(.calendar) || calendar.lookaheadDays != calendarLookahead
+    {
+      calendar.start(lookaheadDays: calendarLookahead) { [weak self] in
+        self?.updateWidgetState(.calendar($0), for: .calendar)
       }
     }
 
@@ -282,6 +298,11 @@ final class ProviderRuntime {
           item.refresh == nil
           ? .disk(diskStates[(item.disk ?? DiskConfiguration()).resolvedPath] ?? DiskState())
           : widgetSnapshots[item.id] ?? .disk(DiskState())
+      } else if item.type == .calendar {
+        state =
+          item.refresh == nil
+          ? widgetStates[.calendar] ?? .calendar(CalendarState())
+          : widgetSnapshots[item.id] ?? .calendar(CalendarState())
       } else {
         state = item.refresh == nil ? widgetStates[item.type] : widgetSnapshots[item.id]
       }
@@ -461,6 +482,7 @@ final class ProviderRuntime {
     frontApplication = nil
     sharedValues = [:]
     weather.stop()
+    calendar.stop()
     weatherStates = [:]
     weatherItems = []
     diskStates = [:]
@@ -801,6 +823,7 @@ final class ProviderRuntime {
     if types.contains(.volume) { volume.stop() }
     if types.contains(.network) { network.stop() }
     if types.contains(.mail) { mail.stop() }
+    if types.contains(.calendar) { calendar.stop() }
     if types.contains(.vpn) { vpn.stop() }
     if types.contains(.bluetooth) { bluetooth.stop() }
     if types.contains(.audioDevice) { audioDevice.stop() }
