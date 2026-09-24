@@ -93,6 +93,8 @@ extension WidgetState {
       ]
     case .weather(let state):
       return state.textValues(settings: item.weather)
+    case .calendar(let state):
+      return state.textValues(settings: item.calendar)
     case .mail(let state):
       return [
         "unreadCount": state.status == .available ? state.unreadCount.map(String.init) ?? "" : "",

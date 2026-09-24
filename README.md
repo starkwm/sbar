@@ -33,3 +33,4 @@ The [documentation index](docs/index.md) links to all guides and provider refere
 - [Everyday bar](examples/everyday/README.md) with app shortcuts, system status popovers, and volume controls.
 - [Vertical bar](examples/vertical/README.md) with upright items on either side of the display.
 - [Floating bar](examples/floating/README.md) with inset edges and rounded corners.
+- [Calendar bar](examples/calendar/README.md) with upcoming events and state colours.
