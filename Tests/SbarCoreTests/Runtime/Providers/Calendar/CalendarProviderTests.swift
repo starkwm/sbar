@@ -211,4 +211,88 @@ struct CalendarProviderTests {
     #expect(updates == 2)
     #expect(provider.lookaheadDays == 3)
   }
+
+  @Test("start: queued Calendar changes from a previous activation do not start a read")
+  func queuedChangeAfterRestart() async throws {
+    let reads = Mutex<[Int]>([])
+    let provider = CalendarProvider { days, now in
+      reads.withLock { $0.append(days) }
+      return CalendarState(access: .empty, now: now)
+    }
+    defer { provider.stop() }
+    var updates = 0
+
+    provider.start(lookaheadDays: 1) { _ in updates += 1 }
+    try await waitUntil { updates == 1 }
+
+    NotificationCenter.default.post(name: .EKEventStoreChanged, object: nil)
+    provider.start(lookaheadDays: 30) { _ in updates += 1 }
+    try await waitUntil { updates == 2 }
+    try await Task.sleep(for: .milliseconds(30))
+
+    #expect(reads.withLock { $0 } == [1, 30])
+    #expect(updates == 2)
+  }
+
+  @Test("stop: queued Calendar changes do not start a read after stopping")
+  func queuedChangeAfterStop() async throws {
+    let reads = Mutex(0)
+    let provider = CalendarProvider { _, now in
+      reads.withLock { $0 += 1 }
+      return CalendarState(access: .empty, now: now)
+    }
+    defer { provider.stop() }
+    var updates = 0
+
+    provider.start(lookaheadDays: 7) { _ in updates += 1 }
+    try await waitUntil { updates == 1 }
+
+    NotificationCenter.default.post(name: .EKEventStoreChanged, object: nil)
+    provider.stop()
+    try await Task.sleep(for: .milliseconds(30))
+
+    #expect(reads.withLock { $0 } == 1)
+    #expect(updates == 1)
+  }
+}
+
+@Suite("SystemCalendarStore")
+struct SystemCalendarStoreTests {
+  @Test(
+    "event(_:status:now:end:): canceled events are excluded and other statuses are retained",
+    arguments: [EKEventStatus.canceled, .none, .confirmed, .tentative]
+  )
+  func eventStatus(_ status: EKEventStatus) {
+    let now = Date(timeIntervalSince1970: 1_700_000_000)
+    let store = EKEventStore()
+    let calendar = EKCalendar(for: .event, eventStore: store)
+    calendar.title = "Work"
+    let event = EKEvent(eventStore: store)
+    event.title = "Meeting"
+    event.calendar = calendar
+    event.startDate = now.addingTimeInterval(300)
+    event.endDate = now.addingTimeInterval(1800)
+
+    let result = SystemCalendarStore.event(
+      event,
+      status: status,
+      now: now,
+      end: now.addingTimeInterval(86400)
+    )
+
+    if status == .canceled {
+      #expect(result == nil)
+    } else {
+      #expect(
+        result
+          == CalendarEvent(
+            title: "Meeting",
+            calendar: "Work",
+            start: event.startDate,
+            end: event.endDate,
+            allDay: false
+          )
+      )
+    }
+  }
 }
