@@ -50,6 +50,8 @@ final class CalendarProvider: NSObject {
   }
 
   func reload() async {
+    guard update != nil, !Task.isCancelled else { return }
+
     refreshGeneration += 1
     let refreshGeneration = refreshGeneration
     let generation = generation
@@ -63,11 +65,31 @@ final class CalendarProvider: NSObject {
   }
 
   @objc private func calendarDidChange(_ notification: Notification) {
-    Task { [weak self] in await self?.reload() }
+    let generation = generation
+    Task { [weak self] in
+      guard let self, self.generation == generation else { return }
+
+      await self.reload()
+    }
   }
 }
 
 actor SystemCalendarStore {
+  static func event(_ event: EKEvent, status: EKEventStatus, now: Date, end: Date) -> CalendarEvent?
+  {
+    guard status != .canceled,
+      let start = event.startDate, let finish = event.endDate, finish > now, start < end
+    else { return nil }
+
+    return CalendarEvent(
+      title: event.title ?? "",
+      calendar: event.calendar?.title ?? "",
+      start: start,
+      end: finish,
+      allDay: event.isAllDay
+    )
+  }
+
   private let store = EKEventStore()
 
   func read(lookaheadDays: Int, now: Date) async -> CalendarState {
@@ -94,17 +116,8 @@ actor SystemCalendarStore {
       end: end,
       calendars: nil
     )
-    let events = store.events(matching: predicate).compactMap { event -> CalendarEvent? in
-      guard let start = event.startDate, let finish = event.endDate, finish > now, start < end
-      else { return nil }
-
-      return CalendarEvent(
-        title: event.title ?? "",
-        calendar: event.calendar?.title ?? "",
-        start: start,
-        end: finish,
-        allDay: event.isAllDay
-      )
+    let events = store.events(matching: predicate).compactMap {
+      Self.event($0, status: $0.status, now: now, end: end)
     }
 
     return CalendarState(access: .empty, events: events, now: now)
