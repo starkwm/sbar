@@ -545,10 +545,6 @@ extension Item {
   }
 }
 
-struct FrontApplicationConfiguration: Codable, Equatable, Sendable {
-  var showIcon: Bool?
-}
-
 enum BarPosition: String, Codable, Sendable {
   case top, bottom, left, right
 

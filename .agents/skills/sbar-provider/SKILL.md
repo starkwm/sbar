@@ -17,7 +17,7 @@ Choose the closest provider by how it collects and shares data:
 - `Runtime/Providers/VPN/` uses native notifications and exposes multiple entries with aggregate status and per-entry template values.
 - `Runtime/Providers/Disk/` and `Runtime/Providers/Weather/` show data keyed by path or location. Sampled metrics also use `SystemMetricsSampler.swift`.
 
-These directories are under `Sources/SbarCore/`. Read the matching configuration, provider docs, and tests as well. Follow the selected provider's shape without copying unrelated states, settings, polling intervals, or abstractions.
+These directories are under `Sources/SbarCore/`. Provider configuration and supporting types live beside collection and state; provider tests mirror these folders under `Tests/SbarCoreTests/`. Read the matching configuration, provider docs, and tests as well. Follow the selected provider's shape without copying unrelated states, settings, polling intervals, or abstractions.
 
 ## Wire the provider into sbar
 
@@ -26,7 +26,7 @@ For a new provider, trace these integration points. For an existing provider, re
 | Area | Files and responsibilities |
 | --- | --- |
 | Item configuration | `Sources/SbarCore/Configuration/Configuration.swift`: ItemType, Item properties, coding keys, initializer, decoding, and validation. Reject provider settings on the wrong item type. |
-| Provider settings | `Sources/SbarCore/Configuration/<Name>Configuration.swift`: defaults, data selection, bounds, symbols, tints, and visibility rules. Keep provider-specific validation here. |
+| Provider settings | `Sources/SbarCore/Runtime/Providers/<Name>/<Name>Configuration.swift`: defaults, data selection, bounds, symbols, tints, and visibility rules. Keep provider-specific validation here. Aerospace and Yabai settings live in their `Integrations/<Name>/` folders; command settings live in `Command/ShellCommand.swift`, and plugin settings in `Runtime/Plugins/Plugin.swift`. Shared styles, symbols, and refresh policies remain in `Configuration/`. |
 | JSON schema | `Sources/SbarCore/Resources/config.schema.json`: item type, settings property, and definitions matching decoding and validation. |
 | Collection and state | `Sources/SbarCore/Runtime/Providers/<Name>/`: system access, collection lifecycle, state, and presentation. Keep substantial types in separate files. |
 | State dispatch | `Sources/SbarCore/Runtime/Providers/WidgetState.swift`: state case, default text, and WidgetPresentation dispatch. |
