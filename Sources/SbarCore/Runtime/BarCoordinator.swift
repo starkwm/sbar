@@ -94,6 +94,11 @@ final class BarCoordinator: NSObject {
       self?.events.emit(RuntimeEvent(kind: .configuration, name: "configuration", value: nil))
     }
 
+    actions.pomodoroAction = { [weak providers] operation in
+      guard let providers else { throw MessageError.message("No active pomodoro item.") }
+      try providers.controlPomodoro(operation)
+    }
+
     providers.onValueChange = { [weak self] name, value in
       self?.events.emit(RuntimeEvent(kind: .provider, name: name, value: .string(value)))
     }

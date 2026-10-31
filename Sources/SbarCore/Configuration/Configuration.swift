@@ -58,6 +58,7 @@ struct Configuration: Codable, Equatable, Sendable {
     }
 
     try theme?.validate()
+    _ = try PomodoroConfiguration.resolve(items.active)
 
     var identifiers = Set<String>()
 
@@ -109,6 +110,8 @@ struct Configuration: Codable, Equatable, Sendable {
       try item.command?.validate(path: "\(location).command")
 
       try item.validateProviderSettings(path: location)
+      try item.primaryAction?.validate(path: "\(location).primaryAction")
+      try item.secondaryAction?.validate(path: "\(location).secondaryAction")
       if item.itemSpacing != nil && item.type != .group {
         throw ConfigurationError.invalidValue(
           path: "\(location).itemSpacing",
@@ -286,7 +289,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
       throughput,
       volume,
       network,
-      mail, vpn, weather, calendar, reminders,
+      mail, vpn, weather, calendar, reminders, pomodoro,
       bluetooth,
       audioDevice,
       frontApplication
@@ -329,6 +332,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var weather: WeatherConfiguration?
   var reminders: RemindersConfiguration?
   var calendar: CalendarConfiguration?
+  var pomodoro: PomodoroConfiguration?
   var mail: MailConfiguration?
   var vpn: VPNConfiguration?
   var network: NetworkConfiguration?
@@ -374,6 +378,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     weather: WeatherConfiguration? = nil,
     reminders: RemindersConfiguration? = nil,
     calendar: CalendarConfiguration? = nil,
+    pomodoro: PomodoroConfiguration? = nil,
     mail: MailConfiguration? = nil,
     vpn: VPNConfiguration? = nil,
     network: NetworkConfiguration? = nil,
@@ -417,6 +422,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.weather = weather
     self.reminders = reminders
     self.calendar = calendar
+    self.pomodoro = pomodoro
     self.mail = mail
     self.vpn = vpn
     self.network = network
@@ -470,6 +476,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     weather = try container.decodeIfPresent(WeatherConfiguration.self, forKey: .weather)
     reminders = try container.decodeIfPresent(RemindersConfiguration.self, forKey: .reminders)
     calendar = try container.decodeIfPresent(CalendarConfiguration.self, forKey: .calendar)
+    pomodoro = try container.decodeIfPresent(PomodoroConfiguration.self, forKey: .pomodoro)
     mail = try container.decodeIfPresent(MailConfiguration.self, forKey: .mail)
     vpn = try container.decodeIfPresent(VPNConfiguration.self, forKey: .vpn)
     network = try container.decodeIfPresent(NetworkConfiguration.self, forKey: .network)
@@ -508,6 +515,7 @@ extension Item {
     if type != .network, network != nil { return true }
     if type != .weather, weather != nil { return true }
     if type != .calendar, calendar != nil { return true }
+    if type != .pomodoro, pomodoro != nil { return true }
     if type != .reminders, reminders != nil { return true }
     if type != .mail, mail != nil { return true }
     if type != .vpn, vpn != nil { return true }
@@ -545,6 +553,7 @@ extension Item {
     try weather?.validate(path: "\(path).weather")
     try reminders?.validate(path: "\(path).reminders")
     try calendar?.validate(path: "\(path).calendar")
+    try pomodoro?.validate(path: "\(path).pomodoro")
     try mail?.validate(path: "\(path).mail")
     try vpn?.validate(path: "\(path).vpn")
     try bluetooth?.validate(path: "\(path).bluetooth")
@@ -569,7 +578,8 @@ enum BarWindowLevel: String, Codable, CaseIterable, Sendable {
 enum ItemSymbolPosition: String, Codable, CaseIterable, Sendable { case left, right }
 
 enum ItemType: String, CaseIterable, Codable, Sendable {
-  case weather, calendar, reminders, mail, datetime, divider, frontApplication, spacer, text,
+  case weather, calendar, reminders, pomodoro, mail, datetime, divider, frontApplication, spacer,
+    text,
     battery, volume,
     network,
     vpn,

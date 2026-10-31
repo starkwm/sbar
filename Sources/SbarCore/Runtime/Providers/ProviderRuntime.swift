@@ -45,6 +45,12 @@ final class ProviderRuntime {
   private(set) var applicationSnapshots: [String: FrontApplicationState] = [:]
   private(set) var itemDates: [String: Date] = [:]
 
+  var pomodoroSoundError: String? { pomodoro.soundError }
+  var pomodoroState: PomodoroState? {
+    guard case .pomodoro(let state) = widgetStates[.pomodoro] else { return nil }
+    return state
+  }
+
   @ObservationIgnored private var weatherItems: [Item] = []
   @ObservationIgnored private let weather: WeatherProvider
   @ObservationIgnored private var diskItems: [String: String] = [:]
@@ -60,6 +66,8 @@ final class ProviderRuntime {
   @ObservationIgnored private let reminders: RemindersProvider
   @ObservationIgnored private var reminderItems: [Item] = []
   @ObservationIgnored private let calendar: CalendarProvider
+  @ObservationIgnored private let pomodoro: PomodoroProvider
+
   @ObservationIgnored private let vpn: VPNProvider
   @ObservationIgnored private let bluetooth: BluetoothProvider
   @ObservationIgnored private let audioDevice: AudioDeviceProvider
@@ -90,6 +98,7 @@ final class ProviderRuntime {
     mail: MailProvider = MailProvider(),
     calendar: CalendarProvider = CalendarProvider(),
     reminders: RemindersProvider = RemindersProvider(),
+    pomodoro: PomodoroProvider = PomodoroProvider(),
     weather: WeatherProvider = WeatherProvider(),
     vpn: VPNProvider = VPNProvider(),
     bluetooth: BluetoothProvider = BluetoothProvider(),
@@ -103,6 +112,7 @@ final class ProviderRuntime {
     self.mail = mail
     self.calendar = calendar
     self.reminders = reminders
+    self.pomodoro = pomodoro
     self.weather = weather
     self.vpn = vpn
     self.bluetooth = bluetooth
@@ -121,6 +131,13 @@ final class ProviderRuntime {
     diskStates = diskStates.filter { disks.values.contains($0.key) }
     configureWeather(items.filter { $0.type == .weather })
     configureRefresh(items)
+    if items.contains(where: { $0.type == .pomodoro }),
+      let settings = try? PomodoroConfiguration.resolve(items)
+    {
+      pomodoro.configure(settings) { [weak self] in
+        self?.updateWidgetState(.pomodoro($0), for: .pomodoro)
+      }
+    }
     configureReminders(items.filter { $0.type == .reminders })
     configurePlugins(items.filter { $0.type == .plugin })
     configureCommands(items.filter { $0.type == .command })
@@ -498,6 +515,11 @@ final class ProviderRuntime {
     }
   }
 
+  @discardableResult
+  func controlPomodoro(_ operation: PomodoroOperation) throws -> PomodoroState {
+    try pomodoro.perform(operation)
+  }
+
   func stop() {
     refreshTask?.cancel()
     refreshTask = nil
@@ -509,6 +531,7 @@ final class ProviderRuntime {
     calendar.stop()
     reminders.stop()
     reminderItems = []
+    pomodoro.stop()
     weatherStates = [:]
     weatherItems = []
     diskStates = [:]
@@ -885,6 +908,11 @@ final class ProviderRuntime {
     if types.contains(.network) { network.stop() }
     if types.contains(.mail) { mail.stop() }
     if types.contains(.calendar) { calendar.stop() }
+    if types.contains(.pomodoro) {
+      pomodoro.stop()
+      widgetStates[.pomodoro] = nil
+      sharedValues[.pomodoro] = nil
+    }
     if types.contains(.reminders) {
       reminders.stop()
       widgetStates[.reminders] = nil

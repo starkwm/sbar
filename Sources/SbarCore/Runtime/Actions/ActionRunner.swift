@@ -26,11 +26,22 @@ final class ActionRunner {
   }
 
   private(set) var errorMessage: String?
+  @ObservationIgnored var pomodoroAction: ((PomodoroOperation) throws -> Void)?
 
   @ObservationIgnored private var tasks: [UUID: Task<Void, Never>] = [:]
 
   func run(_ action: ItemAction) {
     switch action.kind {
+    case .pomodoro:
+      do {
+        try action.validate(path: "action")
+        guard let operation = PomodoroOperation(rawValue: action.value), let pomodoroAction else {
+          throw MessageError.message("No active pomodoro item.")
+        }
+        try pomodoroAction(operation)
+        errorMessage = nil
+      } catch { errorMessage = error.localizedDescription }
+
     case .url:
       guard let url = URL(string: Self.expand(action.value)),
         ["https", "http", "mailto"].contains(url.scheme?.lowercased() ?? "")

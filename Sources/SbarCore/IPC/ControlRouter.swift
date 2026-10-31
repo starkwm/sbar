@@ -23,6 +23,12 @@ final class ControlRouter {
   func handle(_ request: ControlRequest) -> ControlResponse {
     do {
       switch request.command {
+      case "pomodoro":
+        guard request.arguments.count == 1,
+          let operation = PomodoroOperation(rawValue: request.arguments[0]), request.value == nil
+        else { throw MessageError.message("Expected a pomodoro operation.") }
+        return ControlResponse(value: try providers.controlPomodoro(operation).jsonValue())
+
       case "stop":
         return ControlResponse()
 
@@ -33,6 +39,7 @@ final class ControlRouter {
               "configurationPath": .string(store.configurationURL.path),
               "configurationError": store.errorMessage.map(JSONValue.string) ?? .null,
               "actionError": actions.errorMessage.map(JSONValue.string) ?? .null,
+              "pomodoroSoundError": providers.pomodoroSoundError.map(JSONValue.string) ?? .null,
               "events": try JSONDecoder().decode(
                 JSONValue.self,
                 from: JSONEncoder().encode(events.recent)
