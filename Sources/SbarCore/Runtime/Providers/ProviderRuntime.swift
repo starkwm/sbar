@@ -57,6 +57,8 @@ final class ProviderRuntime {
   @ObservationIgnored private let volume = VolumeProvider()
   @ObservationIgnored private let network = NetworkProvider()
   @ObservationIgnored private let mail: MailProvider
+  @ObservationIgnored private let reminders: RemindersProvider
+  @ObservationIgnored private var reminderItems: [Item] = []
   @ObservationIgnored private let calendar: CalendarProvider
   @ObservationIgnored private let vpn: VPNProvider
   @ObservationIgnored private let bluetooth: BluetoothProvider
@@ -87,6 +89,7 @@ final class ProviderRuntime {
     yabai: YabaiProvider = YabaiProvider(),
     mail: MailProvider = MailProvider(),
     calendar: CalendarProvider = CalendarProvider(),
+    reminders: RemindersProvider = RemindersProvider(),
     weather: WeatherProvider = WeatherProvider(),
     vpn: VPNProvider = VPNProvider(),
     bluetooth: BluetoothProvider = BluetoothProvider(),
@@ -99,6 +102,7 @@ final class ProviderRuntime {
     self.yabai = yabai
     self.mail = mail
     self.calendar = calendar
+    self.reminders = reminders
     self.weather = weather
     self.vpn = vpn
     self.bluetooth = bluetooth
@@ -117,6 +121,7 @@ final class ProviderRuntime {
     diskStates = diskStates.filter { disks.values.contains($0.key) }
     configureWeather(items.filter { $0.type == .weather })
     configureRefresh(items)
+    configureReminders(items.filter { $0.type == .reminders })
     configurePlugins(items.filter { $0.type == .plugin })
     configureCommands(items.filter { $0.type == .command })
 
@@ -298,6 +303,11 @@ final class ProviderRuntime {
           item.refresh == nil
           ? .disk(diskStates[(item.disk ?? DiskConfiguration()).resolvedPath] ?? DiskState())
           : widgetSnapshots[item.id] ?? .disk(DiskState())
+      } else if item.type == .reminders {
+        state =
+          item.refresh == nil
+          ? widgetStates[.reminders] ?? .reminders(RemindersState())
+          : widgetSnapshots[item.id] ?? .reminders(RemindersState())
       } else if item.type == .calendar {
         state =
           item.refresh == nil
@@ -410,6 +420,20 @@ final class ProviderRuntime {
     }
   }
 
+  func updateReminders(_ state: RemindersState) {
+    widgetStates[.reminders] = .reminders(state)
+    for item in reminderItems {
+      // Errors must not leave a manually captured task looking current.
+      if item.refresh == nil {
+        updateItemValue(state.textValues(settings: item.reminders)["value"]!, for: item.id)
+      } else if item.refresh?.mode == .event || widgetSnapshots[item.id] == nil
+        || (state.access != .loading && !state.selection(settings: item.reminders).status.available)
+      {
+        capture(item)
+      }
+    }
+  }
+
   func updateWidgetState(_ state: WidgetState, for type: ItemType) {
     guard widgetStates[type] != state else { return }
 
@@ -483,6 +507,8 @@ final class ProviderRuntime {
     sharedValues = [:]
     weather.stop()
     calendar.stop()
+    reminders.stop()
+    reminderItems = []
     weatherStates = [:]
     weatherItems = []
     diskStates = [:]
@@ -556,6 +582,7 @@ final class ProviderRuntime {
         return old.type == item.type && old.refresh == item.refresh
           && old.disk?.path == item.disk?.path
           && old.weather?.location == item.weather?.location
+          && old.reminders == item.reminders
       }.map(\.id)
     )
 
@@ -605,6 +632,15 @@ final class ProviderRuntime {
   }
 
   private func capture(_ item: Item) {
+    if item.type == .reminders {
+      let state = widgetStates[.reminders] ?? .reminders(RemindersState())
+      widgetSnapshots[item.id] = state
+      let value = state.textValues(for: item)["value"] ?? "Loading reminders"
+      itemSnapshots[item.id] = value
+      updateItemValue(value, for: item.id)
+      lastRefresh[item.id] = Date()
+      return
+    }
     if item.type == .weather {
       let state = item.weather.flatMap { weatherStates[$0.location] } ?? WeatherState()
       widgetSnapshots[item.id] = .weather(state)
@@ -734,6 +770,31 @@ final class ProviderRuntime {
     publishPlugin(PluginState(status: .success, lastSuccess: value), item: item)
   }
 
+  private func configureReminders(_ items: [Item]) {
+    let old = reminderItems
+    let ids = Set(items.map(\.id))
+    for removed in old where !ids.contains(removed.id) { itemValues[removed.id] = nil }
+    reminderItems = items
+    guard !items.isEmpty else {
+      reminders.stop()
+      widgetStates[.reminders] = nil
+      return
+    }
+    let selected: Set<String>? =
+      items.contains { $0.reminders?.listIds == nil }
+      ? nil : Set(items.flatMap { $0.reminders?.listIds ?? [] })
+    if old.isEmpty || reminders.listIds != selected {
+      // Drop snapshots from the old selection before publishing a loading state.
+      for item in items {
+        widgetSnapshots[item.id] = nil
+        itemSnapshots[item.id] = nil
+      }
+      reminders.start(listIds: selected) { [weak self] state in self?.updateReminders(state) }
+    } else if case .reminders(let state) = widgetStates[.reminders] {
+      updateReminders(state)
+    }
+  }
+
   private func configureCommands(_ items: [Item]) {
     let previous = Dictionary(uniqueKeysWithValues: commandItems.map { ($0.id, $0) })
     let ids = Set(items.map(\.id))
@@ -744,7 +805,7 @@ final class ProviderRuntime {
 
     commandItems = items
     commandStates = commandStates.filter { ids.contains($0.key) }
-    let valueIDs = ids.union(pluginItems.map(\.id))
+    let valueIDs = ids.union(pluginItems.map(\.id)).union(reminderItems.map(\.id))
     itemValues = itemValues.filter { valueIDs.contains($0.key) }
 
     for item in items
@@ -824,6 +885,10 @@ final class ProviderRuntime {
     if types.contains(.network) { network.stop() }
     if types.contains(.mail) { mail.stop() }
     if types.contains(.calendar) { calendar.stop() }
+    if types.contains(.reminders) {
+      reminders.stop()
+      widgetStates[.reminders] = nil
+    }
     if types.contains(.vpn) { vpn.stop() }
     if types.contains(.bluetooth) { bluetooth.stop() }
     if types.contains(.audioDevice) { audioDevice.stop() }
