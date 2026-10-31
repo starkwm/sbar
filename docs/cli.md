@@ -95,3 +95,7 @@ sbar stop [--socket <path>]
 ```
 
 `stop` acknowledges the request, then shuts down the bar, stops providers and child processes, closes panels, and removes the control socket. Use `--socket` to target an instance started with a custom configuration directory.
+
+## Reminders list discovery
+
+`sbar reminders lists` requests full Reminders permission if necessary and prints list IDs, titles and account metadata as JSON. It runs without a bar or control socket and does not read task contents. See [Reminders](providers/reminders.md#lists-and-permission) for selection and permission details.
