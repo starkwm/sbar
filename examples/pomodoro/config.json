@@ -1,0 +1,35 @@
+{
+  "$schema": "../../Sources/SbarCore/Resources/config.schema.json",
+  "schemaVersion": 1,
+  "bar": {"position": "top", "height": 36, "displays": "main"},
+  "items": {
+    "center": [
+      {
+        "id": "pomodoro",
+        "type": "pomodoro",
+        "pomodoro": {
+          "focusMinutes": 25,
+          "shortBreakMinutes": 5,
+          "longBreakMinutes": 15,
+          "cyclesBeforeLongBreak": 4,
+          "autoStart": false,
+          "sound": false,
+          "tints": {"focus": "#EBCB8B", "shortBreak": "#A3BE8C", "longBreak": "#81A1C1", "paused": "#D08770"}
+        }
+      },
+      {
+        "id": "timer-controls",
+        "type": "popup",
+        "text": "Controls",
+        "children": [
+          {"id": "timer-progress", "type": "pomodoro", "text": "{{value}} · {{progress}}% · {{completedSessions}}/{{cyclesBeforeLongBreak}}", "pomodoro": {"showSymbol": false}},
+          {"id": "start", "type": "text", "text": "Start", "primaryAction": {"kind": "pomodoro", "value": "start"}},
+          {"id": "pause", "type": "text", "text": "Pause", "primaryAction": {"kind": "pomodoro", "value": "pause"}},
+          {"id": "resume", "type": "text", "text": "Resume", "primaryAction": {"kind": "pomodoro", "value": "resume"}},
+          {"id": "skip", "type": "text", "text": "Skip phase", "primaryAction": {"kind": "pomodoro", "value": "skip"}},
+          {"id": "reset", "type": "text", "text": "Reset cycle", "primaryAction": {"kind": "pomodoro", "value": "reset"}}
+        ]
+      }
+    ]
+  }
+}

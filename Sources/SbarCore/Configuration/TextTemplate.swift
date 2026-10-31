@@ -47,6 +47,11 @@ struct TextTemplate {
         "undatedCount", "hasNext", "title", "list", "listId", "dueDate", "dueTime", "due",
         "allDay", "hasNext", "hasDueDate", "hasDueDate", "nextStatus", "error",
       ]
+    case .pomodoro:
+      fields = [
+        "phase", "phaseLabel", "status", "remaining", "remainingSeconds", "durationSeconds",
+        "progress", "completedSessions", "cyclesBeforeLongBreak",
+      ]
     case .calendar:
       fields = [
         "title", "calendar", "startTime", "endTime", "minutesUntil", "allDay", "status",
@@ -92,6 +97,7 @@ struct TextTemplate {
     case .weather: statuses = ["available", "stale", "unavailable"]
     case .mail: statuses = ["available", "closed", "unauthorized", "unavailable"]
     case .reminders: statuses = Set(RemindersStatus.allCases.map(\.rawValue))
+    case .pomodoro: statuses = Set(PomodoroStatus.allCases.map(\.rawValue))
     case .calendar: statuses = Set(CalendarStatus.allCases.map(\.rawValue))
     case .command, .plugin: statuses = ["running", "success", "failure"]
     default: statuses = []
@@ -109,6 +115,7 @@ struct TextTemplate {
     }
     if type == .throughput { values["direction"] = ["download", "upload"] }
     if type == .reminders { values["nextStatus"] = ["overdue", "dueToday", "upcoming", "undated"] }
+    if type == .pomodoro { values["phase"] = Set(PomodoroPhase.allCases.map(\.rawValue)) }
     if type == .media { values["source"] = ["Music", "Spotify"] }
 
     return values

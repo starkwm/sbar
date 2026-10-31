@@ -95,6 +95,8 @@ extension WidgetState {
       return state.textValues(settings: item.weather)
     case .reminders(let state):
       return state.textValues(settings: item.reminders)
+    case .pomodoro(let state):
+      return state.textValues
     case .calendar(let state):
       return state.textValues(settings: item.calendar)
     case .mail(let state):

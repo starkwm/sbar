@@ -96,6 +96,18 @@ sbar stop [--socket <path>]
 
 `stop` acknowledges the request, then shuts down the bar, stops providers and child processes, closes panels, and removes the control socket. Use `--socket` to target an instance started with a custom configuration directory.
 
+## Pomodoro timer
+
+```fish
+sbar pomodoro <status|start|pause|resume|toggle|reset|skip> [--socket <path>]
+```
+
+Inspect or control the shared timer. Every successful operation returns a snapshot in the usual response `value`: `phase`, `status`, `remainingSeconds`, `durationSeconds`, `progress`, `completedSessions`, `activeTiming`, `configuredTiming`, `resetRequired`, `autoStart`, and `sound`. Timing objects contain the three durations in minutes and `cyclesBeforeLongBreak`. `resetRequired` means a reload changed timing rules that will apply on Reset.
+
+Commands require an active pomodoro item. Start only affects ready phases; Pause only affects running phases; Resume only affects paused phases. Repeating them otherwise succeeds without changing state. Toggle chooses the appropriate operation. Skip advances without crediting focus and leaves the next phase ready. Reset restarts the cycle in ready focus. See [Pomodoro](providers/pomodoro.md) for sleep and automatic transitions.
+
+`query --diagnostics` also includes `pomodoroSoundError`, which is null unless a completion sound failed.
+
 ## Reminders list discovery
 
 `sbar reminders lists` requests full Reminders permission if necessary and prints list IDs, titles and account metadata as JSON. It runs without a bar or control socket and does not read task contents. See [Reminders](providers/reminders.md#lists-and-permission) for selection and permission details.

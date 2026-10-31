@@ -55,9 +55,15 @@ struct InteractiveItemView: View {
             )
           }
         }
-      } else if item.primaryAction != nil || item.popup != nil || item.type == .popup {
+      } else if item.primaryAction != nil || item.popup != nil || item.type == .popup
+        || item.type == .pomodoro
+      {
         Button {
-          if let action = item.primaryAction { actions.run(action) }
+          if let action = item.primaryAction {
+            actions.run(action)
+          } else if item.type == .pomodoro && item.popup == nil {
+            actions.run(ItemAction(kind: .pomodoro, value: "toggle"))
+          }
           if item.popup != nil || item.type == .popup { showingPopup.toggle() }
         } label: {
           itemView
@@ -72,6 +78,17 @@ struct InteractiveItemView: View {
     .contentShape(Rectangle())
     .onHover { hovering = $0 }
     .contextMenu {
+      if item.type == .pomodoro {
+        Button("Start") { runPomodoro(.start) }.disabled(providers.pomodoroState?.status != .ready)
+        Button("Pause") { runPomodoro(.pause) }.disabled(
+          providers.pomodoroState?.status != .running
+        )
+        Button("Resume") { runPomodoro(.resume) }.disabled(
+          providers.pomodoroState?.status != .paused
+        )
+        Button("Skip phase") { runPomodoro(.skip) }
+        Button("Reset cycle") { runPomodoro(.reset) }
+      }
       if let action = item.secondaryAction {
         Button("Run secondary action") { actions.run(action) }
       }
@@ -108,7 +125,11 @@ struct InteractiveItemView: View {
 
   private var interactive: Bool {
     item.primaryAction != nil || item.secondaryAction != nil || item.popup != nil
-      || item.type == .popup
+      || item.type == .popup || item.type == .pomodoro
+  }
+
+  private func runPomodoro(_ operation: PomodoroOperation) {
+    actions.run(ItemAction(kind: .pomodoro, value: operation.rawValue))
   }
 }
 

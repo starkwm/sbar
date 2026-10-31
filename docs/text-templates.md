@@ -77,6 +77,7 @@ Allowed status values are validated for each provider. For example,
 | `media` | `playing`, `paused`, `stopped`, `unknown` |
 | `weather` | `available`, `stale`, `unavailable` |
 | `mail` | `available`, `closed`, `unauthorized`, `unavailable` |
+| `pomodoro` | `ready`, `running`, `paused` |
 | `calendar` | `loading`, `upcoming`, `ongoing`, `empty`, `unauthorized`, `unavailable` |
 | `command`, `plugin` | `running`, `success`, `failure` |
 
@@ -212,6 +213,7 @@ Every item with text supports `id`, `value`, and `symbol`. `value` is the provid
 | `disk` | `used`, `free`, `total`, `percentage`, `freeBytes`, `totalBytes`, `available` |
 | `media` | `title`, `artist`, `source`, `status`, `playing`, `available` |
 | `mail` | `unreadCount`, `status`, `available` |
+| `pomodoro` | `phase`, `phaseLabel`, `status`, `remaining`, `remainingSeconds`, `durationSeconds`, `progress`, `completedSessions`, `cyclesBeforeLongBreak` |
 | `calendar` | `title`, `calendar`, `startTime`, `endTime`, `minutesUntil`, `allDay`, `status`, `available` |
 | `throughput` | `download`, `upload`, `download.value`, `download.unit`, `upload.value`, `upload.unit`, `available`, `transfers`, `direction`, `number`, `unit`, `symbol`, `index`, `total`, `first`, `last`, `separator` |
 | `network` | `status`, `connected` |
@@ -334,3 +336,5 @@ Throughput supports symbol-aware `transfers` loops. See [throughput](providers/t
 ## Reminders
 
 Reminders exposes per-item counts and selected-task fields through the shared template syntax. See the [Reminders field reference](providers/reminders.md#templates-and-appearance). For example, `{{value}}{{#hasNext}} · {{title}}{{/hasNext}}` keeps explicit loading/error labels and adds a title when available. Reminders has no collection loop.
+
+Pomodoro also supports `phase` comparisons with `focus`, `shortBreak`, and `longBreak`. Progress is elapsed percent; `remaining` is a countdown. See [Pomodoro](providers/pomodoro.md) for refresh snapshots and shared timer behavior.

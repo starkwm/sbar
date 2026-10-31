@@ -267,7 +267,8 @@
             "aerospace",
             "yabai",
             "spaces",
-            "weather"
+            "weather",
+            "pomodoro"
           ]
         },
         "enabled": {
@@ -623,6 +624,9 @@
         "childStyle": {
           "$ref": "#/$defs/itemStyle",
           "description": "Default style for group children, overriding the theme. Each child can override these values with its own style."
+        },
+        "pomodoro": {
+          "$ref": "#/$defs/pomodoro"
         }
       },
       "allOf": [
@@ -672,6 +676,25 @@
           "else": {
             "properties": {
               "weather": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "pomodoro"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "else": {
+            "properties": {
+              "pomodoro": {
                 "type": "null"
               }
             }
@@ -815,13 +838,42 @@
           "enum": [
             "command",
             "url",
-            "application"
+            "application",
+            "pomodoro"
           ]
         },
         "value": {
           "type": "string"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "pomodoro"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "enum": [
+                  "start",
+                  "pause",
+                  "resume",
+                  "toggle",
+                  "reset",
+                  "skip"
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
     "frontApplication": {
       "type": "object",
@@ -3372,6 +3424,168 @@
                 "$ref": "#/$defs/symbol"
               },
               "overcastNight": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "pomodoro": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "focusMinutes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 180,
+          "default": 25
+        },
+        "shortBreakMinutes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 180,
+          "default": 5
+        },
+        "longBreakMinutes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 180,
+          "default": 15
+        },
+        "cyclesBeforeLongBreak": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 12,
+          "default": 4
+        },
+        "autoStart": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
+        },
+        "sound": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "symbols": {
+          "$ref": "#/$defs/pomodoroSymbols"
+        },
+        "tints": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "focus": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "shortBreak": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "longBreak": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "paused": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            }
+          }
+        }
+      }
+    },
+    "pomodoroSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "focus": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "shortBreak": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "longBreak": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "paused": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "focus": {
+                "$ref": "#/$defs/symbol"
+              },
+              "shortBreak": {
+                "$ref": "#/$defs/symbol"
+              },
+              "longBreak": {
+                "$ref": "#/$defs/symbol"
+              },
+              "paused": {
                 "$ref": "#/$defs/symbol"
               }
             }

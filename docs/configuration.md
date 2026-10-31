@@ -142,6 +142,7 @@ See the [vertical example](../examples/vertical/README.md) for app shortcuts, st
 | --- | --- |
 | `text` | Static text from `text` |
 | [`datetime`](providers/datetime.md) | Current date and/or time; custom `format` or localized `dateStyle` and `timeStyle` |
+| [`pomodoro`](providers/pomodoro.md) | Shared focus and break timer with native controls |
 | [`calendar`](providers/calendar.md) | Next current or upcoming Calendar event |
 | [`reminders`](providers/reminders.md) | Incomplete task counts and next-task details |
 | [`frontApplication`](providers/front-application.md) | Application owning the menu bar, or a fixed `text` |
