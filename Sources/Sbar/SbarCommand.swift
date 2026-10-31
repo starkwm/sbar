@@ -10,6 +10,7 @@ struct SbarCommand: ParsableCommand {
     subcommands: [
       StartCommand.self, QueryCommand.self, ReloadCommand.self, SubscribeCommand.self,
       TriggerCommand.self, SetCommand.self, StopCommand.self, ValidateCommand.self,
+      RemindersCommand.self,
     ],
     defaultSubcommand: StartCommand.self
   )

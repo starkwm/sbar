@@ -26,6 +26,7 @@ struct SbarCommandTests {
 
   @Test("parseAsRoot: parses client commands and validates their options")
   func parseAsRootParsesClientCommands() throws {
+    #expect(try SbarCommand.parseAsRoot(["reminders", "lists"]) is RemindersListsCommand)
     #expect(try SbarCommand.parseAsRoot(["stop"]) is StopCommand)
     #expect(try SbarCommand.parseAsRoot(["validate"]) is ValidateCommand)
 
