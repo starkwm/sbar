@@ -1,0 +1,50 @@
+{
+  "$schema": "../../Sources/SbarCore/Resources/config.schema.json",
+  "schemaVersion": 1,
+  "bar": {
+    "position": "top",
+    "height": 36,
+    "displays": "main"
+  },
+  "items": {
+    "right": [
+      {
+        "id": "tasks",
+        "type": "reminders",
+        "popup": "Reminders",
+        "reminders": {
+          "lookaheadDays": 7,
+          "includeUndated": false,
+          "tints": {
+            "overdue": "#F7768E",
+            "unauthorized": "#F7768E",
+            "unavailable": "#F7768E"
+          }
+        },
+        "children": [
+          {
+            "id": "task-counts",
+            "type": "reminders",
+            "text": "{{#available}}{{dueTodayCount}} due today · {{overdueCount}} overdue · {{upcomingCount}} upcoming{{/available}}{{^available}}{{value}}{{/available}}",
+            "reminders": {
+              "showSymbol": false
+            }
+          },
+          {
+            "id": "next-task",
+            "type": "reminders",
+            "text": "{{#hasNext}}{{title}} · {{list}} · {{due}}{{/hasNext}}{{^hasNext}}{{value}}{{/hasNext}}",
+            "reminders": {
+              "showSymbol": false
+            }
+          }
+        ]
+      },
+      {
+        "id": "clock",
+        "type": "datetime",
+        "format": "EEE d MMM HH:mm"
+      }
+    ]
+  }
+}

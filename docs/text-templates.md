@@ -330,3 +330,7 @@ Removed text settings now fail configuration loading with the full field path an
 Wrap readings in an `available` section when you need an unavailable fallback. Network and audio-device `labels` maps have been removed; use equality sections instead. Bluetooth and VPN `labels` maps have also been removed; use device/service loops with state conditions. Workspace formats and label maps have been replaced by workspace fields and loops. Clock formatting and command output format remain supported. Provider symbols, tints, hide rules, and data-selection settings are unchanged.
 
 Throughput supports symbol-aware `transfers` loops. See [throughput](providers/throughput.md) for number/unit fields and replacements for the removed `showDownload`, `showUpload`, `showValue`, and `showUnits` settings.
+
+## Reminders
+
+Reminders exposes per-item counts and selected-task fields through the shared template syntax. See the [Reminders field reference](providers/reminders.md#templates-and-appearance). For example, `{{value}}{{#hasNext}} · {{title}}{{/hasNext}}` keeps explicit loading/error labels and adds a title when available. Reminders has no collection loop.
