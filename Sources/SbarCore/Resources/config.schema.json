@@ -250,6 +250,7 @@
             "volume",
             "network",
             "calendar",
+            "reminders",
             "mail",
             "vpn",
             "bluetooth",
@@ -606,6 +607,9 @@
         },
         "mail": {
           "$ref": "#/$defs/mail"
+        },
+        "reminders": {
+          "$ref": "#/$defs/reminders"
         },
         "calendar": {
           "$ref": "#/$defs/calendar"
@@ -2770,6 +2774,193 @@
           "description": "Seconds between Mail queries. Enabled Mail items share the shortest interval."
         }
       }
+    },
+    "reminders": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "lookaheadDays": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 30,
+          "default": 7
+        },
+        "timeFormat": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "symbols": {
+          "$ref": "#/$defs/remindersSymbols"
+        },
+        "tints": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "loading": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "overdue": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "dueToday": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "upcoming": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "undated": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "empty": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "unauthorized": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "unavailable": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            }
+          }
+        },
+        "showSymbol": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": true
+        },
+        "hideWhenEmpty": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": false
+        },
+        "includeUndated": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "listIds": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "\\S"
+          }
+        }
+      }
+    },
+    "remindersSymbols": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "font": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "\\S"
+        },
+        "size": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 8,
+          "maximum": 72
+        },
+        "loading": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "overdue": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "dueToday": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "upcoming": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "undated": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "empty": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unauthorized": {
+          "$ref": "#/$defs/widgetSymbol"
+        },
+        "unavailable": {
+          "$ref": "#/$defs/widgetSymbol"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "font"
+              ],
+              "properties": {
+                "font": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "loading": {
+                "$ref": "#/$defs/symbol"
+              },
+              "upcoming": {
+                "$ref": "#/$defs/symbol"
+              },
+              "ongoing": {
+                "$ref": "#/$defs/symbol"
+              },
+              "empty": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unauthorized": {
+                "$ref": "#/$defs/symbol"
+              },
+              "unavailable": {
+                "$ref": "#/$defs/symbol"
+              }
+            }
+          }
+        }
+      ]
     },
     "calendar": {
       "type": ["object", "null"],

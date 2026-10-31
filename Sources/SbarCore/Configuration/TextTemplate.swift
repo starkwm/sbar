@@ -41,6 +41,12 @@ struct TextTemplate {
         "condition", "weatherCode", "isDay", "updatedAt", "available", "stale", "status",
       ]
     case .mail: fields = ["unreadCount", "status", "available"]
+    case .reminders:
+      fields = [
+        "status", "available", "total", "dueTodayCount", "overdueCount", "upcomingCount",
+        "undatedCount", "hasNext", "title", "list", "listId", "dueDate", "dueTime", "due",
+        "allDay", "hasNext", "hasDueDate", "hasDueDate", "nextStatus", "error",
+      ]
     case .calendar:
       fields = [
         "title", "calendar", "startTime", "endTime", "minutesUntil", "allDay", "status",
@@ -85,6 +91,7 @@ struct TextTemplate {
     case .media: statuses = ["playing", "paused", "stopped", "unknown"]
     case .weather: statuses = ["available", "stale", "unavailable"]
     case .mail: statuses = ["available", "closed", "unauthorized", "unavailable"]
+    case .reminders: statuses = Set(RemindersStatus.allCases.map(\.rawValue))
     case .calendar: statuses = Set(CalendarStatus.allCases.map(\.rawValue))
     case .command, .plugin: statuses = ["running", "success", "failure"]
     default: statuses = []
@@ -96,11 +103,12 @@ struct TextTemplate {
     for name in fields(for: type).intersection([
       "available", "charging", "pluggedIn", "muted", "playing", "connected",
       "active", "focused", "visible", "fullscreen", "first", "last", "stale", "isDay",
-      "allDay",
+      "allDay", "hasNext", "hasDueDate",
     ]) {
       values[name] = ["true", "false"]
     }
     if type == .throughput { values["direction"] = ["download", "upload"] }
+    if type == .reminders { values["nextStatus"] = ["overdue", "dueToday", "upcoming", "undated"] }
     if type == .media { values["source"] = ["Music", "Spotify"] }
 
     return values

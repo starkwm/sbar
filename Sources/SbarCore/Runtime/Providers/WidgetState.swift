@@ -10,6 +10,7 @@ enum WidgetState: Equatable, Sendable {
   case bluetooth(BluetoothState)
   case audioDevice(AudioDeviceState)
   case weather(WeatherState)
+  case reminders(RemindersState)
   case calendar(CalendarState)
   case mail(MailState)
   case vpn(VPNState)
@@ -40,6 +41,8 @@ enum WidgetState: Equatable, Sendable {
     case .audioDevice(let state):
       state.text
     case .weather(let state):
+      state.text
+    case .reminders(let state):
       state.text
     case .calendar(let state):
       state.text
@@ -80,6 +83,8 @@ enum WidgetState: Equatable, Sendable {
     case .audioDevice(let state):
       return state.presentation(for: item)
     case .weather(let state):
+      return state.presentation(for: item)
+    case .reminders(let state):
       return state.presentation(for: item)
     case .calendar(let state):
       return state.presentation(for: item)

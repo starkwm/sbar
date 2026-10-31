@@ -286,7 +286,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
       throughput,
       volume,
       network,
-      mail, vpn, weather, calendar,
+      mail, vpn, weather, calendar, reminders,
       bluetooth,
       audioDevice,
       frontApplication
@@ -327,6 +327,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var bluetooth: BluetoothConfiguration?
   var audioDevice: AudioDeviceConfiguration?
   var weather: WeatherConfiguration?
+  var reminders: RemindersConfiguration?
   var calendar: CalendarConfiguration?
   var mail: MailConfiguration?
   var vpn: VPNConfiguration?
@@ -371,6 +372,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     bluetooth: BluetoothConfiguration? = nil,
     audioDevice: AudioDeviceConfiguration? = nil,
     weather: WeatherConfiguration? = nil,
+    reminders: RemindersConfiguration? = nil,
     calendar: CalendarConfiguration? = nil,
     mail: MailConfiguration? = nil,
     vpn: VPNConfiguration? = nil,
@@ -413,6 +415,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.bluetooth = bluetooth
     self.audioDevice = audioDevice
     self.weather = weather
+    self.reminders = reminders
     self.calendar = calendar
     self.mail = mail
     self.vpn = vpn
@@ -465,6 +468,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     bluetooth = try container.decodeIfPresent(BluetoothConfiguration.self, forKey: .bluetooth)
     audioDevice = try container.decodeIfPresent(AudioDeviceConfiguration.self, forKey: .audioDevice)
     weather = try container.decodeIfPresent(WeatherConfiguration.self, forKey: .weather)
+    reminders = try container.decodeIfPresent(RemindersConfiguration.self, forKey: .reminders)
     calendar = try container.decodeIfPresent(CalendarConfiguration.self, forKey: .calendar)
     mail = try container.decodeIfPresent(MailConfiguration.self, forKey: .mail)
     vpn = try container.decodeIfPresent(VPNConfiguration.self, forKey: .vpn)
@@ -489,26 +493,30 @@ extension Item {
   }
 
   private var hasMismatchedProviderSettings: Bool {
-    (plugin != nil && type != .plugin)
-      || (command != nil && type != .command)
-      || (battery != nil && type != .battery)
-      || (yabai != nil && type != .yabai)
-      || (aerospace != nil && type != .aerospace)
-      || (spaces != nil && type != .spaces)
-      || (media != nil && type != .media)
-      || (throughput != nil && type != .throughput)
-      || (disk != nil && type != .disk)
-      || (memory != nil && type != .memory)
-      || (cpu != nil && type != .cpu)
-      || (network != nil && type != .network)
-      || (weather != nil && type != .weather)
-      || (calendar != nil && type != .calendar)
-      || (mail != nil && type != .mail)
-      || (vpn != nil && type != .vpn)
-      || (bluetooth != nil && type != .bluetooth)
-      || (audioDevice != nil && type != .audioDevice)
-      || (volume != nil && type != .volume)
-      || (frontApplication != nil && type != .frontApplication)
+    // Avoid a long short-circuit expression capturing this large value in debug builds.
+    if type != .plugin, plugin != nil { return true }
+    if type != .command, command != nil { return true }
+    if type != .battery, battery != nil { return true }
+    if type != .yabai, yabai != nil { return true }
+    if type != .aerospace, aerospace != nil { return true }
+    if type != .spaces, spaces != nil { return true }
+    if type != .media, media != nil { return true }
+    if type != .throughput, throughput != nil { return true }
+    if type != .disk, disk != nil { return true }
+    if type != .memory, memory != nil { return true }
+    if type != .cpu, cpu != nil { return true }
+    if type != .network, network != nil { return true }
+    if type != .weather, weather != nil { return true }
+    if type != .calendar, calendar != nil { return true }
+    if type != .reminders, reminders != nil { return true }
+    if type != .mail, mail != nil { return true }
+    if type != .vpn, vpn != nil { return true }
+    if type != .bluetooth, bluetooth != nil { return true }
+    if type != .audioDevice, audioDevice != nil { return true }
+    if type != .volume, volume != nil { return true }
+    if type != .frontApplication, frontApplication != nil { return true }
+
+    return false
   }
 
   private func validateWorkspaceSettings(path: String) throws {
@@ -535,6 +543,7 @@ extension Item {
     }
 
     try weather?.validate(path: "\(path).weather")
+    try reminders?.validate(path: "\(path).reminders")
     try calendar?.validate(path: "\(path).calendar")
     try mail?.validate(path: "\(path).mail")
     try vpn?.validate(path: "\(path).vpn")
@@ -560,7 +569,8 @@ enum BarWindowLevel: String, Codable, CaseIterable, Sendable {
 enum ItemSymbolPosition: String, Codable, CaseIterable, Sendable { case left, right }
 
 enum ItemType: String, CaseIterable, Codable, Sendable {
-  case weather, calendar, mail, datetime, divider, frontApplication, spacer, text, battery, volume,
+  case weather, calendar, reminders, mail, datetime, divider, frontApplication, spacer, text,
+    battery, volume,
     network,
     vpn,
     bluetooth,
