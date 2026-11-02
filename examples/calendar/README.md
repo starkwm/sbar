@@ -10,7 +10,7 @@ make build
 .build/debug/sbar start --config "$PWD/examples/calendar/config.json"
 ```
 
-The first run asks for Calendar access. sbar needs full access to read events, but this example does not edit them. Stop another sbar instance first if it would overlap. This example uses its own configuration and control socket. Stop it with:
+The first run launches the packaged Sbar EventKit background helper and asks for Calendar access under that helper's name. sbar needs full access to read events, but this example does not edit them. Stop another sbar instance first if it would overlap. This example uses its own configuration and control socket. Stop it with:
 
 ```sh
 .build/debug/sbar stop --socket "$PWD/examples/calendar/control.sock"
