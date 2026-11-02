@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key><string>dev.starkwm.sbar.eventkit</string>
+  <key>CFBundleName</key><string>Sbar EventKit</string>
+  <key>CFBundleDisplayName</key><string>Sbar EventKit</string>
+  <key>CFBundleExecutable</key><string>sbar-eventkit</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleVersion</key><string>1</string>
+  <key>LSUIElement</key><true/>
+  <key>LSMinimumSystemVersion</key><string>26.0</string>
+  <key>NSCalendarsFullAccessUsageDescription</key>
+  <string>sbar reads your upcoming calendar events to display them in your bar. It never edits events.</string>
+  <key>NSRemindersFullAccessUsageDescription</key>
+  <string>sbar reads your reminders to display due counts and task details. It never edits reminders.</string>
+</dict>
+</plist>

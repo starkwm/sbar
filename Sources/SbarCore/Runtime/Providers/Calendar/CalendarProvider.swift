@@ -12,8 +12,15 @@ final class CalendarProvider: NSObject {
   private var refreshGeneration = 0
 
   init(read: (@Sendable (Int, Date) async -> CalendarState)? = nil) {
-    let store = SystemCalendarStore()
-    self.read = read ?? { days, now in await store.read(lookaheadDays: days, now: now) }
+    self.read =
+      read ?? { days, now in
+        do {
+          let response = try await EventKitClient.shared.request(.calendar, lookaheadDays: days)
+          return response.calendar ?? CalendarState(access: .unavailable, now: now)
+        } catch {
+          return CalendarState(access: .unavailable, now: now)
+        }
+      }
     super.init()
   }
 

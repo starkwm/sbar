@@ -7,7 +7,8 @@ let package = Package(
     .macOS(.v26)
   ],
   products: [
-    .executable(name: "sbar", targets: ["Sbar"])
+    .executable(name: "sbar", targets: ["Sbar"]),
+    .executable(name: "sbar-eventkit", targets: ["SbarEventKit"]),
   ],
   dependencies: [
     .package(url: "https://github.com/apple/swift-argument-parser", from: "1.7.1"),
@@ -15,6 +16,7 @@ let package = Package(
     .package(url: "https://github.com/starkwm/stark-ipc", from: "0.0.5"),
   ],
   targets: [
+    .executableTarget(name: "SbarEventKit", dependencies: ["SbarCore"], exclude: ["Info.plist"]),
     .executableTarget(
       name: "Sbar",
       dependencies: [
