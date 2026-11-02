@@ -98,4 +98,4 @@ sbar stop [--socket <path>]
 
 ## Reminders list discovery
 
-`sbar reminders lists` requests full Reminders permission if necessary and prints list IDs, titles and account metadata as JSON. It runs without a bar or control socket and does not read task contents. See [Reminders](providers/reminders.md#lists-and-permission) for selection and permission details.
+`sbar reminders lists` launches the packaged Sbar EventKit helper and requests full Reminders permission for that helper if necessary and prints list IDs, titles and account metadata as JSON. It runs without a bar or control socket and does not read task contents. See [Reminders](providers/reminders.md#lists-and-permission) for selection and permission details.

@@ -14,7 +14,7 @@ Discover the local list IDs before selecting lists:
 
 This standalone command requests Reminders permission if needed and prints JSON records with `id`, `title`, `sourceId` and `sourceTitle`, sorted by account title, list title and ID. It fetches list metadata, not task contents, and does not start the bar. An empty successful result is `[]`; denied access or a read failure exits nonzero.
 
-The first enabled Reminders item also requests permission. Apple requires **full read/write Reminders access even for read-only display**. Calendar permission does not grant Reminders access. Validation never requests access. Denied or restricted permission stays visible; grant access in System Settings to recover. sbar keeps reminder data in memory and does not send it to a server.
+The first enabled Reminders item also requests permission through the **Sbar EventKit** background helper. `make build` packages that helper beside the binary; keep it there when installing. The helper is launched as a macOS app so permission does not depend on the terminal. Apple requires **full read/write Reminders access even for read-only display**. Calendar permission does not grant Reminders access. Validation never requests access. Denied or restricted permission stays visible; grant Sbar EventKit access in System Settings to recover. sbar keeps reminder data in memory and does not send it to a server.
 
 ```json
 {
@@ -93,7 +93,7 @@ Collection runs initially, on EventKit changes and every minute. Simultaneous ch
 
 Standard refresh policies apply. Without a policy, or with event refresh, items follow collected state. Interval and manual items capture the latest shared snapshot; a manual trigger does not force an EventKit query. Text, accessibility and subscription values use the same selected snapshot. Filter changes invalidate snapshots, and permission, selection or read failures clear captured task details even for manual items.
 
-An ordinary refresh retains the previous successful display until the result arrives. Read failures replace live results with unavailable state. Removing the final item stops collection and discards cached state. Pending fetches are cancelled and stale callbacks cannot publish into a later activation.
+An ordinary refresh retains the previous successful display until the result arrives. Read failures replace live results with unavailable state. Removing the final item stops bar-side collection and discards cached state. The shared EventKit helper exits after roughly two idle minutes when no requests remain. Pending fetches are cancelled and stale callbacks cannot publish into a later activation.
 
 ## Apple references
 
