@@ -1,6 +1,6 @@
 import Foundation
 
-enum CalendarStatus: String, CaseIterable, Sendable {
+enum CalendarStatus: String, Codable, CaseIterable, Sendable {
   case loading, upcoming, ongoing, empty, unauthorized, unavailable
 
   var defaultSymbol: ItemSymbol {
@@ -15,7 +15,7 @@ enum CalendarStatus: String, CaseIterable, Sendable {
   }
 }
 
-struct CalendarEvent: Equatable, Sendable {
+struct CalendarEvent: Codable, Equatable, Sendable {
   var title: String
   var calendar: String
   var start: Date
@@ -23,7 +23,7 @@ struct CalendarEvent: Equatable, Sendable {
   var allDay: Bool
 }
 
-struct CalendarState: Equatable, Sendable {
+struct CalendarState: Codable, Equatable, Sendable {
   var access: CalendarStatus = .loading
   var events: [CalendarEvent] = []
   var now = Date()
