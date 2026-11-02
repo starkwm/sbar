@@ -23,7 +23,7 @@ The development binary is written to `.build/debug/sbar`. Run it to start the ba
 .build/debug/sbar
 ```
 
-Use `make release` for an optimized build in `.build/release`. The bar remains a standalone executable. Calendar and Reminders additionally use the background `Sbar EventKit.app` helper, which `make build` and `make release` package beside it. Keep the executable and helper together when installing; a symlink to the executable on your `PATH` is supported. Other providers do not require this helper. See [EventKit helper packaging](development.md#eventkit-helper) for the directory layout and signing.
+Use `make release` for an optimized build in `.build/release`. The `sbar` executable is self-contained; copy it to a directory on your `PATH` to use the [CLI commands](cli.md).
 
 A source build is not installed as a background service automatically. To run at login, create a Launch Agent that starts the executable using its absolute path.
 

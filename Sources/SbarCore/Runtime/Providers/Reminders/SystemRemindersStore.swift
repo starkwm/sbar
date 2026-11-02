@@ -93,8 +93,7 @@ enum RemindersReadError: Error, LocalizedError {
 
   var errorDescription: String? {
     switch self {
-    case .unauthorized:
-      "Reminders permission denied for Sbar EventKit. Allow access in System Settings > Privacy & Security > Reminders."
+    case .unauthorized: "Reminders permission denied."
     case .unavailable: "Reminders unavailable."
     }
   }

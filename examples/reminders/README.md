@@ -11,7 +11,9 @@ make build
 .build/debug/sbar start --config "$PWD/examples/reminders/config.json"
 ```
 
-`make build` also packages `Sbar EventKit.app` beside the executable. Discovery or the first enabled item launches that background helper and requests full Reminders permission under the name **Sbar EventKit**. Run the same commands from Terminal or Rex; no terminal-specific permission setup should be needed. Apple requires read/write authorization for reading, but sbar never edits reminders. Discovery prints list metadata only; starting the example reads tasks. Stop another bar first if it would overlap. This example uses its own configuration-relative control socket.
+Discovery or the first enabled item requests full Reminders permission. Apple requires read/write authorization for reading, but sbar never edits reminders. Discovery prints list metadata only; starting the example reads tasks. Stop another bar first if it would overlap. This example uses its own configuration-relative control socket.
+
+sbar is a single executable. Permission can depend on the launching terminal. If discovery is denied without a prompt, try Terminal.app and check System Settings > Privacy & Security > Reminders. A Terminal.app grant may not apply to other terminals.
 
 ```fish
 .build/debug/sbar stop --socket "$PWD/examples/reminders/control.sock"
@@ -29,7 +31,7 @@ See the [provider reference](../../docs/providers/reminders.md) for semantics, l
 
 Use disposable tasks in a chosen test list:
 
-- From both Terminal and Rex, grant or deny the first prompt and verify it names Sbar EventKit. Later revoke and regrant that helper's access in System Settings.
+- Test from your intended terminal, noting which app macOS names. Grant or deny the first prompt and verify an explicit state. Later revoke and regrant access in System Settings.
 - Compare a timed task before and after its deadline, a date-only task across midnight, an undated task with the option off/on, and a completed task.
 - Complete a repeating task in Reminders itself and check the next fetched record. sbar supplies no write controls.
 - Rename a list, remove a selected list, and rediscover IDs. Verify that a missing selection never silently becomes all lists.

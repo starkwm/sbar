@@ -10,5 +10,9 @@
   <string>sbar reads the unread inbox count from Mail to display it in your bar.</string>
   <key>NSBluetoothAlwaysUsageDescription</key>
   <string>sbar shows Bluetooth power status and the names of connected devices in your bar.</string>
+  <key>NSCalendarsFullAccessUsageDescription</key>
+  <string>sbar reads your upcoming calendar events to display them in your bar.</string>
+  <key>NSRemindersFullAccessUsageDescription</key>
+  <string>sbar reads your reminders to display due counts and task details. It never edits your reminders.</string>
 </dict>
 </plist>

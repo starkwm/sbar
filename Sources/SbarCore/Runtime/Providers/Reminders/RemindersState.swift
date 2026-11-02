@@ -1,6 +1,6 @@
 import Foundation
 
-struct RemindersState: Codable, Equatable, Sendable {
+struct RemindersState: Equatable, Sendable {
   private static func date(_ components: DateComponents, allDay: Bool, timeZone: TimeZone) -> Date?
   {
     guard let year = components.year, let month = components.month, let day = components.day else {
@@ -174,7 +174,7 @@ struct RemindersState: Codable, Equatable, Sendable {
 
 }
 
-enum RemindersStatus: String, Codable, CaseIterable, Sendable {
+enum RemindersStatus: String, CaseIterable, Sendable {
   case loading, overdue, dueToday, upcoming, undated, empty, unauthorized, unavailable
 
   var available: Bool { [.overdue, .dueToday, .upcoming, .undated, .empty].contains(self) }
@@ -188,7 +188,7 @@ enum RemindersStatus: String, Codable, CaseIterable, Sendable {
   }
 }
 
-struct ReminderRecord: Codable, Equatable, Sendable {
+struct ReminderRecord: Equatable, Sendable {
   var id: String
   var listId: String
   var title: String
