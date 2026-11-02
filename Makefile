@@ -3,11 +3,9 @@ VERSION_FILE=Sources/Sbar/Version.swift
 
 build:
 	@swift build
-	@sh scripts/package-eventkit-helper.sh "$$(swift build --show-bin-path)"
 
 release:
 	@swift build --configuration release --disable-sandbox
-	@sh scripts/package-eventkit-helper.sh "$$(swift build --configuration release --show-bin-path)"
 
 format:
 	@swift format format -r -i Sources Tests Package.swift

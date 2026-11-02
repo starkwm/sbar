@@ -21,15 +21,8 @@ final class RemindersProvider {
     read: (@MainActor (Set<String>?, Date) async -> RemindersState)? = nil,
     clock: @escaping @MainActor () -> Date = { Date() }
   ) {
-    self.read =
-      read ?? { ids, now in
-        do {
-          let response = try await EventKitClient.shared.request(.reminders, listIds: ids)
-          return response.reminders ?? RemindersState(access: .unavailable, now: now)
-        } catch {
-          return RemindersState(access: .unavailable, now: now, error: error.localizedDescription)
-        }
-      }
+    let store = SystemRemindersStore()
+    self.read = read ?? { ids, now in await store.read(listIds: ids, now: now) }
     self.clock = clock
   }
 
