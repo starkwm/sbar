@@ -3,6 +3,26 @@ import Foundation
 
 @MainActor
 final class SystemRemindersStore {
+  // EventKit invokes this callback on its own queue. Only immutable records cross
+  // into ReminderFetch, which resumes its continuation on the main actor.
+  nonisolated static func fetchCompletion(
+    _ completion: @escaping @Sendable ([ReminderRecord]?) -> Void
+  ) -> @Sendable ([EKReminder]?) -> Void {
+    { reminders in
+      completion(
+        reminders?.map {
+          ReminderRecord(
+            id: $0.calendarItemIdentifier,
+            listId: $0.calendar.calendarIdentifier,
+            title: $0.title ?? "",
+            due: $0.dueDateComponents,
+            completed: $0.isCompleted
+          )
+        }
+      )
+    }
+  }
+
   private lazy var store = EKEventStore()
   private lazy var authorization: RemindersAuthorization = {
     let store = store
@@ -34,18 +54,10 @@ final class SystemRemindersStore {
       )
       let fetch = ReminderFetch<[ReminderRecord]>()
       let records = try await fetch.run { completion in
-        let token = self.store.fetchReminders(matching: predicate) { reminders in
-          let records = reminders?.map {
-            ReminderRecord(
-              id: $0.calendarItemIdentifier,
-              listId: $0.calendar.calendarIdentifier,
-              title: $0.title ?? "",
-              due: $0.dueDateComponents,
-              completed: $0.isCompleted
-            )
-          }
-          completion(records)
-        }
+        let token = self.store.fetchReminders(
+          matching: predicate,
+          completion: Self.fetchCompletion(completion)
+        )
         return { self.store.cancelFetchRequest(token) }
       }
       try Task.checkCancellation()
