@@ -1,7 +1,7 @@
 {
   "$schema": "../../Sources/SbarCore/Resources/config.schema.json",
   "schemaVersion": 1,
-  "bar": {"position": "top", "height": 36, "displays": "main", "margin": {"top": 44}},
+  "bar": {"position": "top", "height": 36, "displays": "main"},
   "items": {
     "center": [
       {
