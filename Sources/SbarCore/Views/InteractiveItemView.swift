@@ -55,16 +55,14 @@ struct InteractiveItemView: View {
             )
           }
         }
-      } else if item.primaryAction != nil || item.popup != nil || item.type == .popup
-        || item.type == .pomodoro
-      {
+      } else if item.primaryAction != nil || hasPopup || item.type == .pomodoro {
         Button {
           if let action = item.primaryAction {
             actions.run(action)
           } else if item.type == .pomodoro && item.popup == nil {
             actions.run(ItemAction(kind: .pomodoro, value: "toggle"))
           }
-          if item.popup != nil || item.type == .popup { showingPopup.toggle() }
+          if hasPopup { showingPopup.toggle() }
         } label: {
           itemView
         }
@@ -95,6 +93,7 @@ struct InteractiveItemView: View {
     }
     .popover(isPresented: $showingPopup, arrowEdge: barPosition.popoverEdge) {
       VStack(alignment: .leading, spacing: 8) {
+        if item.type == .agentActivity { AgentActivityPopup(item: item) }
         if let popup = item.popup { Text(popup).textSelection(.enabled) }
 
         ForEach(visibleChildren) { child in
@@ -124,8 +123,11 @@ struct InteractiveItemView: View {
   }
 
   private var interactive: Bool {
-    item.primaryAction != nil || item.secondaryAction != nil || item.popup != nil
-      || item.type == .popup || item.type == .pomodoro
+    item.primaryAction != nil || item.secondaryAction != nil || hasPopup || item.type == .pomodoro
+  }
+
+  private var hasPopup: Bool {
+    item.popup != nil || item.type == .popup || item.type == .agentActivity
   }
 
   private func runPomodoro(_ operation: PomodoroOperation) {

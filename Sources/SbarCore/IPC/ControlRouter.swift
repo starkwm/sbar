@@ -29,6 +29,36 @@ final class ControlRouter {
         else { throw MessageError.message("Expected a pomodoro operation.") }
         return ControlResponse(value: try providers.controlPomodoro(operation).jsonValue())
 
+      case "agents":
+        guard providers.widgetStates[.agentActivity] != nil else {
+          throw MessageError.message("No active agentActivity item.")
+        }
+        switch request.arguments.first {
+        case "report":
+          guard request.arguments.count == 1, let value = request.value else {
+            throw MessageError.message("Expected versioned report JSON.")
+          }
+          let report = try JSONDecoder().decode(
+            AgentActivityReport.self,
+            from: JSONEncoder().encode(value)
+          )
+          try providers.agents.report(report)
+        case "dismiss":
+          guard request.arguments.count == 3 else {
+            throw MessageError.message("Expected source and session.")
+          }
+          providers.agents.dismiss(source: request.arguments[1], session: request.arguments[2])
+        case "list": break
+        default: throw MessageError.message("Unknown agents command.")
+        }
+        providers.publishAgents()
+        return ControlResponse(
+          value: try JSONDecoder().decode(
+            JSONValue.self,
+            from: JSONEncoder().encode(providers.agents.entries.values.sorted { $0.id < $1.id })
+          )
+        )
+
       case "stop":
         return ControlResponse()
 

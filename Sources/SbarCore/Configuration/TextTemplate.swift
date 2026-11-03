@@ -15,7 +15,9 @@ struct TextTemplate {
     var field: String?
   }
 
-  private static let collections: Set<String> = ["workspaces", "services", "devices", "transfers"]
+  private static let collections: Set<String> = [
+    "sessions", "workspaces", "services", "devices", "transfers",
+  ]
 
   static func fields(for type: ItemType) -> Set<String> {
     let common: Set<String> = ["value", "id", "symbol"]
@@ -64,6 +66,13 @@ struct TextTemplate {
         "last", "index", "total",
       ]
     case .network: fields = ["status", "connected"]
+    case .agentActivity:
+      fields = [
+        "sessions", "total", "status", "working", "needsInput", "idle", "finished", "failed",
+        "interrupted",
+        "unknown", "source", "session", "run", "agent", "host", "title", "project", "elapsed",
+        "lastReported", "separator", "first", "last", "index",
+      ]
     case .vpn:
       fields = [
         "status", "names", "connected", "available", "services", "name", "serviceId", "index",
@@ -90,6 +99,7 @@ struct TextTemplate {
     case .battery: statuses = ["charging", "pluggedIn", "onBattery", "noBattery"]
     case .volume: statuses = ["available", "muted", "fixed", "unavailable"]
     case .network: statuses = Set(NetworkConnection.allCases.map(\.rawValue))
+    case .agentActivity: statuses = Set(AgentActivityStatus.allCases.map(\.rawValue))
     case .vpn: statuses = Set(VPNStatus.allCases.map(\.rawValue))
     case .bluetooth: statuses = Set(BluetoothStatus.allCases.map(\.rawValue))
     case .audioDevice: statuses = Set(AudioDeviceStatus.allCases.map(\.rawValue))

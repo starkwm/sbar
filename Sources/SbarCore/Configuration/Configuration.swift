@@ -289,7 +289,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
       throughput,
       volume,
       network,
-      mail, vpn, weather, calendar, reminders, pomodoro,
+      mail, vpn, agentActivity, weather, calendar, reminders, pomodoro,
       bluetooth,
       audioDevice,
       frontApplication
@@ -334,6 +334,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
   var calendar: CalendarConfiguration?
   var pomodoro: PomodoroConfiguration?
   var mail: MailConfiguration?
+  var agentActivity: AgentActivityConfiguration?
   var vpn: VPNConfiguration?
   var network: NetworkConfiguration?
   var volume: VolumeConfiguration?
@@ -380,6 +381,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     calendar: CalendarConfiguration? = nil,
     pomodoro: PomodoroConfiguration? = nil,
     mail: MailConfiguration? = nil,
+    agentActivity: AgentActivityConfiguration? = nil,
     vpn: VPNConfiguration? = nil,
     network: NetworkConfiguration? = nil,
     volume: VolumeConfiguration? = nil,
@@ -424,6 +426,7 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     self.calendar = calendar
     self.pomodoro = pomodoro
     self.mail = mail
+    self.agentActivity = agentActivity
     self.vpn = vpn
     self.network = network
     self.volume = volume
@@ -478,6 +481,10 @@ struct Item: Codable, Equatable, Identifiable, Sendable {
     calendar = try container.decodeIfPresent(CalendarConfiguration.self, forKey: .calendar)
     pomodoro = try container.decodeIfPresent(PomodoroConfiguration.self, forKey: .pomodoro)
     mail = try container.decodeIfPresent(MailConfiguration.self, forKey: .mail)
+    agentActivity = try container.decodeIfPresent(
+      AgentActivityConfiguration.self,
+      forKey: .agentActivity
+    )
     vpn = try container.decodeIfPresent(VPNConfiguration.self, forKey: .vpn)
     network = try container.decodeIfPresent(NetworkConfiguration.self, forKey: .network)
     volume = try container.decodeIfPresent(VolumeConfiguration.self, forKey: .volume)
@@ -518,6 +525,7 @@ extension Item {
     if type != .pomodoro, pomodoro != nil { return true }
     if type != .reminders, reminders != nil { return true }
     if type != .mail, mail != nil { return true }
+    if type != .agentActivity, agentActivity != nil { return true }
     if type != .vpn, vpn != nil { return true }
     if type != .bluetooth, bluetooth != nil { return true }
     if type != .audioDevice, audioDevice != nil { return true }
@@ -555,6 +563,7 @@ extension Item {
     try calendar?.validate(path: "\(path).calendar")
     try pomodoro?.validate(path: "\(path).pomodoro")
     try mail?.validate(path: "\(path).mail")
+    try agentActivity?.validate(path: "\(path).agentActivity")
     try vpn?.validate(path: "\(path).vpn")
     try bluetooth?.validate(path: "\(path).bluetooth")
     try audioDevice?.validate(path: "\(path).audioDevice")
@@ -582,7 +591,7 @@ enum ItemType: String, CaseIterable, Codable, Sendable {
     text,
     battery, volume,
     network,
-    vpn,
+    vpn, agentActivity,
     bluetooth,
     audioDevice,
     cpu,
