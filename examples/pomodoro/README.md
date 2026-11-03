@@ -1,6 +1,6 @@
 # Pomodoro bar
 
-A shared focus timer with a countdown, phase tints, and a controls popup. The popup's timer mirrors the main item without duplicating timing configuration. No external setup or permissions are needed.
+A shared focus timer with a countdown, phase tints, and a controls popup. The popup's timer mirrors the main item without duplicating timing configuration. No external setup or permissions are needed. The example sits 44 points below the top edge so the macOS menu bar can reveal without covering the timer controls.
 
 From the repository root, in fish:
 
