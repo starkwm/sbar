@@ -38,3 +38,5 @@ Each page covers the provider's configuration, defaults, refresh behavior, and l
 - [Reminders bar](../examples/reminders/README.md)
 - [Pomodoro bar](../examples/pomodoro/README.md)
 - [Configuration JSON Schema](../Sources/SbarCore/Resources/config.schema.json)
+
+- [Agent activity](providers/agent-activity.md)
