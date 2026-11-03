@@ -68,6 +68,9 @@ final class ProviderRuntime {
   @ObservationIgnored private let calendar: CalendarProvider
   @ObservationIgnored private let pomodoro: PomodoroProvider
 
+  @ObservationIgnored private var agentSettings: [AgentActivityConfiguration] = []
+  @ObservationIgnored let agents = AgentActivityStore()
+  @ObservationIgnored private var agentTask: Task<Void, Never>?
   @ObservationIgnored private let vpn: VPNProvider
   @ObservationIgnored private let bluetooth: BluetoothProvider
   @ObservationIgnored private let audioDevice: AudioDeviceProvider
@@ -129,6 +132,9 @@ final class ProviderRuntime {
     )
     diskItems = disks
     diskStates = diskStates.filter { disks.values.contains($0.key) }
+    let agentItems = items.filter { $0.type == .agentActivity }
+    agentSettings = agentItems.map { $0.agentActivity ?? AgentActivityConfiguration() }
+    configureAgents(!agentItems.isEmpty)
     configureWeather(items.filter { $0.type == .weather })
     configureRefresh(items)
     if items.contains(where: { $0.type == .pomodoro }),
@@ -339,7 +345,12 @@ final class ProviderRuntime {
 
       if item.text != nil {
         values = state?.textValues(for: item) ?? [:]
-        entries = state?.textEntries ?? []
+        if case .agentActivity(let activity) = state {
+          entries =
+            activity.selected(item.agentActivity ?? AgentActivityConfiguration()).textEntries
+        } else {
+          entries = state?.textEntries ?? []
+        }
 
         if item.type == .vpn || item.type == .bluetooth { values["total"] = String(entries.count) }
       }
@@ -520,7 +531,43 @@ final class ProviderRuntime {
     try pomodoro.perform(operation)
   }
 
+  func publishAgents() { updateWidgetState(.agentActivity(agentSnapshot()), for: .agentActivity) }
+
+  // Only entries some item selects reach the shared value, so it matches what the bar shows.
+  private func agentSnapshot() -> AgentActivityState {
+    agents.snapshot().selected(anyOf: agentSettings)
+  }
+
+  private func configureAgents(_ active: Bool) {
+    if !active {
+      agentTask?.cancel()
+      agentTask = nil
+      agents.clear()
+      widgetStates[.agentActivity] = nil
+      sharedValues[.agentActivity] = nil
+      return
+    }
+    publishAgents()
+    guard agentTask == nil else { return }
+    agentTask = Task { [weak self] in
+      while !Task.isCancelled {
+        do { try await Task.sleep(for: .seconds(1)) } catch { return }
+        guard !Task.isCancelled, let self else { return }
+        // Publish only when expiry or an item's retention changes what is shown, not for every new `now`.
+        let next = self.agentSnapshot()
+        if case .agentActivity(let current) = self.widgetStates[.agentActivity],
+          current.entries == next.entries,
+          self.agentSettings.allSatisfy({ current.selected($0) == next.selected($0) })
+        {
+          continue
+        }
+        self.updateWidgetState(.agentActivity(next), for: .agentActivity)
+      }
+    }
+  }
+
   func stop() {
+    configureAgents(false)
     refreshTask?.cancel()
     refreshTask = nil
     refreshItems = []

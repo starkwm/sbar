@@ -39,6 +39,8 @@ extension WidgetState {
 
   func textValues(for item: Item) -> [String: String] {
     switch self {
+    case .agentActivity(let state):
+      return state.selected(item.agentActivity ?? AgentActivityConfiguration()).values()
     case .cpu(let state):
       let percentage = state.percentage(smoothingSamples: item.cpu?.smoothingSamples ?? 1)
 
