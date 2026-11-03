@@ -338,3 +338,5 @@ Throughput supports symbol-aware `transfers` loops. See [throughput](providers/t
 Reminders exposes per-item counts and selected-task fields through the shared template syntax. See the [Reminders field reference](providers/reminders.md#templates-and-appearance). For example, `{{value}}{{#hasNext}} · {{title}}{{/hasNext}}` keeps explicit loading/error labels and adds a title when available. Reminders has no collection loop.
 
 Pomodoro also supports `phase` comparisons with `focus`, `shortBreak`, and `longBreak`. Progress is elapsed percent; `remaining` is a countdown. See [Pomodoro](providers/pomodoro.md) for refresh snapshots and shared timer behavior.
+
+Agent activity supports counts and a `sessions` loop. See [agent activity](providers/agent-activity.md#configuration-and-templates).

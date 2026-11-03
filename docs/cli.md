@@ -111,3 +111,7 @@ Commands require an active pomodoro item. Start only affects ready phases; Pause
 ## Reminders list discovery
 
 `sbar reminders lists` requests full Reminders permission if necessary and prints list IDs, titles and account metadata as JSON. It runs without a bar or control socket and does not read task contents. See [Reminders](providers/reminders.md#lists-and-permission) for selection and permission details.
+
+## Agent activity
+
+`agents report`, `agents list` and `agents dismiss` send requests through the control socket and wait for sbar's response. `agents setup` installs hooks or extensions into the config directory you choose. `agents doctor` finds the agent executable and checks the connection to sbar. See [agent activity](providers/agent-activity.md) for flags, JSON reports, ordering rules and hook trust.

@@ -23,3 +23,5 @@ Items accept `primaryAction` and `secondaryAction` objects with `kind` (`command
 See [shell command items](providers/command.md) to display command output, and [groups and popups](layout.md) to build menus.
 
 `pomodoro` actions directly control the shared native timer. Values are `start`, `pause`, `resume`, `toggle`, `reset`, and `skip`. They work on ordinary items and popup children; no shell process is started. See [Pomodoro](providers/pomodoro.md).
+
+You can dismiss sessions from the agent activity popup. Rows do not run shell commands or open conversations.

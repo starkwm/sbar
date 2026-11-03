@@ -69,3 +69,5 @@ A nonempty center section gets one third of the bar's length. Beside a notch, th
 A `divider` draws a line across the bar. A `spacer` adds flexible empty space along it. Both require an `id` and `type`, like other items.
 
 See [bar settings](configuration.md#bar-settings) for placement and [common item settings](configuration.md#items) for sections, IDs, and priority.
+
+Click an agent activity item to see its sessions in a live popup. You can dismiss rows there. See [agent activity](providers/agent-activity.md).

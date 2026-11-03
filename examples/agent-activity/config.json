@@ -1,0 +1,23 @@
+{
+  "$schema": "../../Sources/SbarCore/Resources/config.schema.json",
+  "schemaVersion": 1,
+  "bar": {
+    "position": "top",
+    "height": 32,
+    "displays": "main"
+  },
+  "items": {
+    "left": [],
+    "center": [
+      {
+        "id": "agents",
+        "type": "agentActivity",
+        "text": "{{working}} working · {{needsInput}} needs input · {{idle}} idle",
+        "agentActivity": {
+          "finishedRetention": 30
+        }
+      }
+    ],
+    "right": []
+  }
+}
