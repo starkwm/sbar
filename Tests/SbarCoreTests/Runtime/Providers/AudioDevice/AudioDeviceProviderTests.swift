@@ -132,7 +132,7 @@ struct AudioDeviceProviderTests {
 
     for _ in 0..<5 { access.emit(property) }
 
-    try await Task.sleep(for: .milliseconds(150))
+    try await waitUntil { updates >= 2 }
 
     #expect(updates == 2)
 
