@@ -4,6 +4,10 @@ import Foundation
 /// One worker waits; cancellation and mailbox producers may wake it from any thread.
 /// The descriptor remains open until all users release this object.
 final class ProcessEvents: Sendable {
+  enum Event {
+    case ready, processExited
+  }
+
   private let descriptor: Int32
 
   init() throws {
@@ -48,7 +52,7 @@ final class ProcessEvents: Sendable {
     _ = kevent64(descriptor, &event, 1, nil, 0, 0, nil)
   }
 
-  func wait(read: Int32?, write: Int32? = nil, timeout: Duration? = nil) throws {
+  func wait(read: Int32?, write: Int32? = nil, timeout: Duration? = nil) throws -> Event {
     if let read {
       try register(identifier: UInt64(read), filter: EVFILT_READ, flags: EV_ADD | EV_ONESHOT)
     }
@@ -73,6 +77,14 @@ final class ProcessEvents: Sendable {
     if result > 0 && event.flags & UInt16(EV_ERROR) != 0 {
       throw ProcessError.launch(Int32(event.data))
     }
+
+    // NOTE_EXIT can arrive before waitpid(WNOHANG) can reap the child.
+    // Preserve this notification so the worker can finish waiting for its exit.
+    if result > 0 && event.filter == Int16(EVFILT_PROC) && event.fflags & NOTE_EXIT != 0 {
+      return .processExited
+    }
+
+    return .ready
   }
 
   private func register(identifier: UInt64, filter: Int32, flags: Int32, notes: UInt32 = 0) throws {

@@ -100,6 +100,7 @@ struct ProcessRunner {
 
     try events.watch(process: pid)
     var outputClosed = false
+    var exitObserved = false
 
     while true {
       if Task.isCancelled { throw ProcessError.cancelled }
@@ -118,10 +119,13 @@ struct ProcessRunner {
       }
 
       if !finished {
-        let waited = waitpid(pid, &status, WNOHANG)
+        var waited: pid_t
+        repeat {
+          waited = waitpid(pid, &status, exitObserved ? 0 : WNOHANG)
+        } while waited < 0 && errno == EINTR
         finished = waited == pid
 
-        if waited < 0 && errno != EINTR { throw ProcessError.launch(errno) }
+        if waited < 0 { throw ProcessError.launch(errno) }
       }
 
       if finished {
@@ -137,10 +141,11 @@ struct ProcessRunner {
 
       if Task.isCancelled { throw ProcessError.cancelled }
 
-      try events.wait(
+      let event = try events.wait(
         read: outputClosed ? nil : descriptors[0],
         timeout: ContinuousClock.now.duration(to: deadline)
       )
+      if event == .processExited { exitObserved = true }
     }
   }
 }

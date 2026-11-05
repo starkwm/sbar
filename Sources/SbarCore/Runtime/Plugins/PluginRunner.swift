@@ -106,6 +106,7 @@ struct PluginRunner {
     var buffer = [UInt8](repeating: 0, count: 4096)
     var outputClosed = false
     var inputClosed = false
+    var exitObserved = false
     var framer = PluginOutputFramer()
 
     while !Task.isCancelled {
@@ -132,7 +133,10 @@ struct PluginRunner {
         if let latest = try framer.append(Data(buffer.prefix(count))) { output(latest) }
       }
 
-      let result = waitpid(pid, &status, WNOHANG)
+      var result: pid_t
+      repeat {
+        result = waitpid(pid, &status, exitObserved && !exited ? 0 : WNOHANG)
+      } while result < 0 && errno == EINTR
 
       if result == pid { exited = true }
       if exited && count <= 0 {
@@ -152,10 +156,11 @@ struct PluginRunner {
       if count > 0 || wroteInput { continue }
       if Task.isCancelled { break }
 
-      try events.wait(
+      let event = try events.wait(
         read: outputClosed ? nil : stdout[0],
         write: !pendingInput.isEmpty && !inputClosed ? input[1] : nil
       )
+      if event == .processExited { exitObserved = true }
     }
 
     throw ProcessError.cancelled
