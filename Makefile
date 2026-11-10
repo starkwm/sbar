@@ -1,6 +1,3 @@
-VERSION_TMPL=Sources/Sbar/Version.swift.tmpl
-VERSION_FILE=Sources/Sbar/Version.swift
-
 build:
 	@swift build
 
@@ -19,8 +16,5 @@ test:
 clean:
 	@swift package clean
 
-bump_version:
-	@sed 's/__VERSION__/$(NEW_VERSION)/g' $(VERSION_TMPL) > $(VERSION_FILE)
-
 .DEFAULT_GOAL := build
-.PHONY: build release format lint test clean bump_version
+.PHONY: build release format lint test clean

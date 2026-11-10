@@ -20,7 +20,7 @@ let package = Package(
       dependencies: [
         "SbarCore", .product(name: "ArgumentParser", package: "swift-argument-parser"),
       ],
-      exclude: ["Info.plist", "Version.swift.tmpl"],
+      exclude: ["Info.plist"],
       linkerSettings: [
         .unsafeFlags([
           "-Xlinker", "-sectcreate", "-Xlinker", "__TEXT", "-Xlinker", "__info_plist",

@@ -41,11 +41,7 @@ denial and regrant. Validation and CLI help do not request EventKit access.
 
 ## Update the version
 
-```sh
-make bump_version NEW_VERSION=v0.0.1
-```
-
-This generates `Sources/Sbar/Version.swift` from `Sources/Sbar/Version.swift.tmpl`. Commit the generated file with the release changes, then rebuild to update `sbar --version`.
+Edit the version string in `Sources/Sbar/Version.swift`, commit it with the release changes, then rebuild to update `sbar --version`.
 
 ## Spaces transitions
 
