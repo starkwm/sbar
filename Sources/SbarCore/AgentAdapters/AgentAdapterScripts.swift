@@ -80,9 +80,13 @@ enum AgentAdapterScripts {
         --arg session "$session" --arg run "$run" --arg state "$state" \
         --arg project "$(jq -r '.cwd | strings' <<<"$payload")" '
         ($current.value // [] | map(select(.report.source == $source and .report.session == $session))
-          | first | .report.run) as $previous
+          | first | .report) as $accepted
+        | $accepted.run as $previous
+        # A hook killed after sbar accepted its report leaves the cache behind sbar.
+        | ([$old.sequence // -1, if $previous == $run then $accepted.sequence else -1 end] | max)
+          as $last
         | {version: 1, source: $source, session: $session, run: $run,
-           sequence: (($old.sequence // -1) + 1), state: $state,
+           sequence: ($last + 1), state: $state,
            agent: $source, identity: "\($source):\($session)"}
         + (if $project != "" then {project: $project} else {} end)
         + (if $previous and $previous != $run then {replaces: $previous} else {} end)')
