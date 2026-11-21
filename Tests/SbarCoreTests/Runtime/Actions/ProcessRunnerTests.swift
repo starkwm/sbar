@@ -64,4 +64,16 @@ struct ProcessRunnerTests {
     #expect(result.exitCode == 3)
   }
 
+  @Test("ProcessRunner.run: keeps output written just before exit", .timeLimit(.minutes(1)))
+  func runKeepsOutputWrittenBeforeExit() async throws {
+    let result = try await ProcessRunner.run(
+      executable: "/bin/sh",
+      arguments: ["-c", "kill -STOP $$; printf sentinel"],
+      beforeExitCheck: releaseStoppedChildBeforeExitCheck()
+    )
+
+    #expect(result.output == "sentinel")
+    #expect(result.exitCode == 0)
+  }
+
 }

@@ -6,7 +6,8 @@ struct ProcessRunner {
     executable: String,
     arguments: [String],
     timeout: Double = 5,
-    mergeStandardError: Bool = true
+    mergeStandardError: Bool = true,
+    beforeExitCheck: (@Sendable (pid_t) -> Void)? = nil
   ) async throws
     -> ProcessResult
   {
@@ -17,7 +18,8 @@ struct ProcessRunner {
         arguments: arguments,
         timeout: timeout,
         events: events,
-        mergeStandardError: mergeStandardError
+        mergeStandardError: mergeStandardError,
+        beforeExitCheck: beforeExitCheck
       )
     }
 
@@ -34,7 +36,8 @@ struct ProcessRunner {
     arguments: [String],
     timeout: Double,
     events: ProcessEvents,
-    mergeStandardError: Bool
+    mergeStandardError: Bool,
+    beforeExitCheck: ((pid_t) -> Void)?
   ) throws
     -> ProcessResult
   {
@@ -118,6 +121,8 @@ struct ProcessRunner {
         continue
       }
 
+      beforeExitCheck?(pid)
+
       if !finished {
         var waited: pid_t
         repeat {
@@ -129,6 +134,23 @@ struct ProcessRunner {
       }
 
       if finished {
+        // The child can write and exit between the empty read above and waitpid.
+        // Collect what it left buffered, stopping at EAGAIN rather than waiting for
+        // EOF, because descendants may still hold the pipe writer open.
+        while !outputClosed {
+          let count = read(descriptors[0], &buffer, buffer.count)
+
+          if count > 0 {
+            output.append(contentsOf: buffer.prefix(count))
+
+            if output.count > 65_536 { throw ProcessError.outputLimit }
+          } else if count == 0 || errno == EAGAIN {
+            break
+          } else if errno != EINTR {
+            throw ProcessError.launch(errno)
+          }
+        }
+
         let exitStatus = status & 0x7f == 0 ? (status >> 8) & 0xff : 128 + (status & 0x7f)
 
         return ProcessResult(

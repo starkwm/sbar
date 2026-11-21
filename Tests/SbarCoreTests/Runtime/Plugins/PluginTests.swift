@@ -114,4 +114,20 @@ struct PluginTests {
     ) { _ in }
   }
 
+  @Test("PluginRunner.run: keeps a message written just before exit", .timeLimit(.minutes(1)))
+  func runKeepsMessageWrittenBeforeExit() async throws {
+    let messages = OSAllocatedUnfairLock(initialState: [String]())
+
+    try await PluginRunner.run(
+      configuration: .init(
+        executable: "/bin/sh",
+        arguments: ["-c", #"kill -STOP $$; printf '{"text":"final"}\n'"#],
+        restart: false
+      ),
+      mailbox: PluginMailbox(),
+      beforeExitCheck: releaseStoppedChildBeforeExitCheck()
+    ) { value in messages.withLock { $0.append(value.text) } }
+
+    #expect(messages.withLock { $0 } == ["final"])
+  }
 }

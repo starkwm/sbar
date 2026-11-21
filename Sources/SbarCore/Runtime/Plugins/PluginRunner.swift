@@ -5,6 +5,7 @@ struct PluginRunner {
   static func run(
     configuration: Plugin,
     mailbox: PluginMailbox,
+    beforeExitCheck: (@Sendable (pid_t) -> Void)? = nil,
     output: @escaping @Sendable (PluginOutput) async -> Void
   ) async throws {
     let events = try ProcessEvents()
@@ -13,7 +14,12 @@ struct PluginRunner {
     )
     let task = Task.detached {
       do {
-        try execute(configuration: configuration, mailbox: mailbox, events: events) {
+        try execute(
+          configuration: configuration,
+          mailbox: mailbox,
+          events: events,
+          beforeExitCheck: beforeExitCheck
+        ) {
           continuation.yield($0)
         }
         continuation.finish()
@@ -42,6 +48,7 @@ struct PluginRunner {
     configuration: Plugin,
     mailbox: PluginMailbox,
     events: ProcessEvents,
+    beforeExitCheck: ((pid_t) -> Void)?,
     output: @escaping @Sendable (PluginOutput) -> Void
   ) throws {
     var input: [Int32] = [0, 0]
@@ -133,6 +140,8 @@ struct PluginRunner {
         if let latest = try framer.append(Data(buffer.prefix(count))) { output(latest) }
       }
 
+      if count <= 0 { beforeExitCheck?(pid) }
+
       var result: pid_t
       repeat {
         result = waitpid(pid, &status, exitObserved && !exited ? 0 : WNOHANG)
@@ -140,6 +149,25 @@ struct PluginRunner {
 
       if result == pid { exited = true }
       if exited && count <= 0 {
+        // The plugin can write and exit between the empty read above and waitpid.
+        // Collect what it left buffered, stopping at EAGAIN rather than waiting for
+        // EOF, because descendants may still hold the pipe writer open. The exited
+        // plugin cannot have left more than one pipe buffer, so a descendant that
+        // keeps writing cannot extend the drain indefinitely.
+        var drained = 0
+        while !outputClosed && drained < 65_536 {
+          let count = read(stdout[0], &buffer, buffer.count)
+
+          if count > 0 {
+            drained += count
+            if let latest = try framer.append(Data(buffer.prefix(count))) { output(latest) }
+          } else if count == 0 || errno == EAGAIN {
+            break
+          } else if errno != EINTR {
+            throw ProcessError.launch(errno)
+          }
+        }
+
         try framer.finish()
 
         if status != 0 {
