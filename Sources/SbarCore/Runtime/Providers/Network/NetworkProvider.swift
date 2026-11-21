@@ -1,32 +1,66 @@
+import Foundation
 import Network
 
 @MainActor
 final class NetworkProvider {
-  private var monitor: NWPathMonitor?
+  private let makeMonitor: @MainActor () -> any NetworkPathMonitoring
+  private var monitor: (any NetworkPathMonitoring)?
+  private var generation = UUID()
+
+  init(
+    makeMonitor: @escaping @MainActor () -> any NetworkPathMonitoring = {
+      SystemNetworkPathMonitor()
+    }
+  ) {
+    self.makeMonitor = makeMonitor
+  }
 
   func start(update: @escaping @MainActor (WidgetState) -> Void) {
     stop()
 
-    let monitor = NWPathMonitor()
-    monitor.pathUpdateHandler = { path in
-      let connected = path.status == .satisfied
-      let wifi = path.usesInterfaceType(.wifi)
-      let connection = NetworkConnection.classify(
-        connected: connected,
-        wifi: wifi,
-        ethernet: path.usesInterfaceType(.wiredEthernet),
-        cellular: path.usesInterfaceType(.cellular)
-      )
-      let network = WidgetState.network(connection)
+    let generation = generation
+    let monitor = makeMonitor()
+    monitor.start { [weak self] connection in
+      Task { @MainActor in
+        // A stop or restart may run before this queued update.
+        guard let self, self.generation == generation else { return }
 
-      Task { @MainActor in update(network) }
+        update(.network(connection))
+      }
     }
-    monitor.start(queue: DispatchQueue(label: "sbar.network"))
     self.monitor = monitor
   }
 
   func stop() {
+    generation = UUID()
     monitor?.cancel()
     monitor = nil
   }
+}
+
+@MainActor
+protocol NetworkPathMonitoring {
+  func start(changed: @escaping @Sendable (NetworkConnection) -> Void)
+  func cancel()
+}
+
+@MainActor
+final class SystemNetworkPathMonitor: NetworkPathMonitoring {
+  private let monitor = NWPathMonitor()
+
+  func start(changed: @escaping @Sendable (NetworkConnection) -> Void) {
+    monitor.pathUpdateHandler = { path in
+      changed(
+        NetworkConnection.classify(
+          connected: path.status == .satisfied,
+          wifi: path.usesInterfaceType(.wifi),
+          ethernet: path.usesInterfaceType(.wiredEthernet),
+          cellular: path.usesInterfaceType(.cellular)
+        )
+      )
+    }
+    monitor.start(queue: DispatchQueue(label: "sbar.network"))
+  }
+
+  func cancel() { monitor.cancel() }
 }
