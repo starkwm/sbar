@@ -50,6 +50,36 @@ struct ProviderRuntimeTests {
     #expect(runtime.widgetSnapshots[manual.id] == nil)
   }
 
+  @Test("configure: re-added items capture fresh data, not the stopped provider's last state")
+  func reactivatedItemsCaptureFreshState() async throws {
+    var unread = 1
+    let mail = MailProvider(interval: .seconds(60)) {
+      MailState(status: .available, unreadCount: unread)
+    }
+    let runtime = ProviderRuntime(mail: mail)
+    defer { runtime.stop() }
+    let manual = Item(id: "manual", type: .mail, refresh: .init(mode: .manual))
+    let interval = Item(id: "interval", type: .mail, refresh: .init(mode: .interval, seconds: 60))
+    let configuration = Configuration(bar: .init(), items: .init(right: [manual, interval]))
+    runtime.configure(configuration)
+    try await waitUntil { runtime.presentation(for: manual)?.text == "1 unread" }
+
+    runtime.configure(Configuration(bar: .init(), items: .init()))
+    unread = 9
+    runtime.configure(configuration)
+
+    #expect(runtime.presentation(for: manual)?.text != "1 unread")
+
+    try await waitUntil { runtime.sharedValues[.mail] == "9 unread" }
+
+    let fresh = WidgetState.mail(MailState(status: .available, unreadCount: 9))
+
+    for item in [manual, interval] {
+      #expect(runtime.presentation(for: item)?.text == "9 unread")
+      #expect(runtime.widgetSnapshots[item.id] == fresh)
+    }
+  }
+
   @Test("configure: disk path edits only replace the affected disk snapshot")
   func independentDiskPaths() {
     let first = Item(

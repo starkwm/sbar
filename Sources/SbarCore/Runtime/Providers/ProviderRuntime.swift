@@ -955,15 +955,8 @@ final class ProviderRuntime {
     if types.contains(.network) { network.stop() }
     if types.contains(.mail) { mail.stop() }
     if types.contains(.calendar) { calendar.stop() }
-    if types.contains(.pomodoro) {
-      pomodoro.stop()
-      widgetStates[.pomodoro] = nil
-      sharedValues[.pomodoro] = nil
-    }
-    if types.contains(.reminders) {
-      reminders.stop()
-      widgetStates[.reminders] = nil
-    }
+    if types.contains(.pomodoro) { pomodoro.stop() }
+    if types.contains(.reminders) { reminders.stop() }
     if types.contains(.vpn) { vpn.stop() }
     if types.contains(.bluetooth) { bluetooth.stop() }
     if types.contains(.audioDevice) { audioDevice.stop() }
@@ -977,5 +970,14 @@ final class ProviderRuntime {
       aerospace.stop()
       aerospaceCaptures.removeAll()
     }
+
+    // A later activation must capture fresh data, not the stopped provider's last values.
+    if !types.isDisjoint(with: widgetStates.keys) {
+      widgetStates = widgetStates.filter { !types.contains($0.key) }
+    }
+    if !types.isDisjoint(with: sharedValues.keys) {
+      sharedValues = sharedValues.filter { !types.contains($0.key) }
+    }
+    if types.contains(.frontApplication) { frontApplication = nil }
   }
 }
