@@ -37,6 +37,8 @@ final class SpacesProvider {
   private let query: @MainActor () -> SpacesState
   private let workspace: NotificationCenter
   private let application: NotificationCenter
+  private let spaceDefaults: UserDefaults?
+  private var layoutObservation: NSKeyValueObservation?
   private var observers: [(NotificationCenter, NSObjectProtocol)] = []
   private var refreshTask: Task<Void, Never>?
   private var update: (@MainActor (SpacesState) -> Void)?
@@ -46,23 +48,29 @@ final class SpacesProvider {
     query: @escaping @MainActor () -> SpacesState = SpacesProvider.currentState,
     workspace: NotificationCenter = NSWorkspace.shared.notificationCenter,
     application: NotificationCenter = .default,
+    spaceDefaults: UserDefaults? = UserDefaults(suiteName: "com.apple.spaces"),
     retryInterval: Duration = .milliseconds(100)
   ) {
     self.retryInterval = retryInterval
     self.query = query
     self.workspace = workspace
     self.application = application
+    self.spaceDefaults = spaceDefaults
   }
 
   func start(update: @escaping @MainActor (SpacesState) -> Void) {
     stop()
     self.update = update
-    let initial = query()
-    update(initial)
-
-    if !initial.complete { scheduleRefresh() }
-
     let generation = generation
+
+    // Mission Control can edit the desktop list without switching the active Space.
+    layoutObservation = spaceDefaults?.observe(\.spacesDisplayConfiguration, options: []) {
+      [weak self] _, _ in
+      Task { @MainActor in
+        guard let self, self.generation == generation else { return }
+        self.scheduleRefresh()
+      }
+    }
 
     for (center, name) in [
       (workspace, NSWorkspace.activeSpaceDidChangeNotification),
@@ -78,10 +86,16 @@ final class SpacesProvider {
       }
       observers.append((center, observer))
     }
+
+    let initial = query()
+    update(initial)
+    if !initial.complete, self.generation == generation { scheduleRefresh() }
   }
 
   func stop() {
     generation = UUID()
+    layoutObservation?.invalidate()
+    layoutObservation = nil
     refreshTask?.cancel()
     refreshTask = nil
 
@@ -108,5 +122,13 @@ final class SpacesProvider {
         do { try await Task.sleep(for: self.retryInterval) } catch { return }
       }
     }
+  }
+}
+
+extension UserDefaults {
+  @objc(SpacesDisplayConfiguration) fileprivate dynamic var spacesDisplayConfiguration:
+    [String: Any]?
+  {
+    dictionary(forKey: "SpacesDisplayConfiguration")
   }
 }

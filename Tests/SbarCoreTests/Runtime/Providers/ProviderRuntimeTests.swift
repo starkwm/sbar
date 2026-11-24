@@ -75,6 +75,56 @@ struct ProviderRuntimeTests {
     #expect(reads == 3)
   }
 
+  @Test(
+    "startObservingSpaces: deleting an inactive desktop updates the widget with focus unchanged"
+  )
+  func deleteInactiveDesktop() async throws {
+    let suite = "sbar.tests.\(UUID().uuidString)"
+    let defaults = try #require(UserDefaults(suiteName: suite))
+    defer { defaults.removePersistentDomain(forName: suite) }
+    var state = SpacesState(
+      displays: [
+        SpaceDisplay(
+          identifier: "main",
+          spaces: [SpaceEntry(id: 1), SpaceEntry(id: 2)],
+          activeID: 1
+        )
+      ],
+      focusedID: 1
+    )
+    let runtime = ProviderRuntime(
+      spaces: SpacesProvider(
+        query: { state },
+        workspace: NotificationCenter(),
+        application: NotificationCenter(),
+        spaceDefaults: defaults
+      )
+    )
+    defer { runtime.stop() }
+    let item = Item(
+      id: "spaces",
+      type: .spaces,
+      text: "{{index}} of {{total}}",
+      spaces: .init(scope: .display)
+    )
+    runtime.startObservingSpaces {}
+    runtime.configure(Configuration(bar: .init(), items: .init(right: [item])))
+    #expect(runtime.presentation(for: item)?.text == "1 of 2")
+    #expect(runtime.presentation(for: item)?.accessibilityLabel == "Space 1, 1 of 2")
+
+    state.displays[0].spaces.removeLast()
+    let writer = try Process.run(
+      URL(fileURLWithPath: "/usr/bin/defaults"),
+      arguments: ["write", suite, "SpacesDisplayConfiguration", "-dict", "revision", "1"]
+    )
+    writer.waitUntilExit()
+    try #require(writer.terminationStatus == 0)
+    try await waitUntil { runtime.spacesState == state }
+
+    #expect(runtime.presentation(for: item)?.text == "1 of 1")
+    #expect(runtime.presentation(for: item)?.accessibilityLabel == "Space 1, 1 of 1")
+  }
+
   @Test("startObservingSpaces: restart publishes the initial snapshot and retries incomplete data")
   func restartSpaceObservation() async throws {
     let workspace = NotificationCenter()
