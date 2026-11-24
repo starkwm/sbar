@@ -8,43 +8,21 @@ import Testing
 @MainActor
 struct SpacesWidgetTests {
   private var snapshot: SpacesState {
-    SpacesState.parse(
+    SpacesState(
       displays: [
-        [
-          "Display Identifier": "DISPLAY-A", "Current Space": ["ManagedSpaceID": 20],
-          "Spaces": [["ManagedSpaceID": 10, "type": 0], ["ManagedSpaceID": 20, "type": 4]],
-        ],
-        [
-          "Display Identifier": "DISPLAY-B", "Current Space": ["ManagedSpaceID": 40],
-          "Spaces": [["ManagedSpaceID": 30, "type": 0], ["ManagedSpaceID": 40, "type": 0]],
-        ],
+        SpaceDisplay(
+          identifier: "display-a",
+          spaces: [SpaceEntry(id: 10), SpaceEntry(id: 20, fullscreen: true)],
+          activeID: 20
+        ),
+        SpaceDisplay(
+          identifier: "display-b",
+          spaces: [SpaceEntry(id: 30), SpaceEntry(id: 40)],
+          activeID: 40
+        ),
       ],
-      activeSpaceID: 20
+      focusedID: 20
     )
-  }
-
-  @Test("SpacesState.parse: parser rejects booleans, negative, fractional, string, and zero IDs")
-  func malformedIDs() {
-    for value: Any in [true, false, -1, 1.5, "10", 0, Double.nan, Double.infinity] {
-      #expect(SpacesState.identifier(value) == nil)
-    }
-
-    #expect(SpacesState.identifier(NSNumber(value: UInt64.max)) == UInt64.max)
-
-    let state = SpacesState.parse(
-      displays: [
-        [
-          "Display Identifier": "A", "Current Space": ["ManagedSpaceID": 999],
-          "Spaces": [["ManagedSpaceID": 10], ["ManagedSpaceID": 10], ["ManagedSpaceID": -1]],
-        ],
-        ["Display Identifier": "B", "Spaces": [["ManagedSpaceID": 10], ["ManagedSpaceID": 20]]],
-      ],
-      activeSpaceID: 20
-    )
-
-    #expect(state.displays[0].spaces.count == 1)
-    #expect(state.text == "2")
-    #expect(!state.complete)
   }
 
   @Test("presentation(for:): scope preserves global order and each display's current Space")
@@ -67,11 +45,15 @@ struct SpacesWidgetTests {
     #expect(snapshot.presentation(for: local, displayUUID: "DISPLAY-B").text == "2 / 2")
     #expect(snapshot.presentation(for: local, displayUUID: "missing").text == "Spaces unavailable")
 
-    let shared = SpacesState.parse(
+    let shared = SpacesState(
       displays: [
-        ["Display Identifier": "Main", "Spaces": [["ManagedSpaceID": 50], ["ManagedSpaceID": 60]]]
+        SpaceDisplay(
+          identifier: "main",
+          spaces: [SpaceEntry(id: 50), SpaceEntry(id: 60)],
+          activeID: 60
+        )
       ],
-      activeSpaceID: 60
+      focusedID: 60
     )
 
     #expect(shared.presentation(for: local, displayUUID: "any").text == "2 / 2")

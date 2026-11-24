@@ -1,40 +1,6 @@
 import Foundation
 
 struct SpacesState: Equatable, Sendable {
-  static func identifier(_ value: Any?) -> UInt64? {
-    guard let number = value as? NSNumber,
-      CFGetTypeID(number) != CFBooleanGetTypeID(),
-      let id = UInt64(number.stringValue), id > 0
-    else { return nil }
-
-    return id
-  }
-
-  static func parse(displays: [[String: Any]], activeSpaceID: UInt64) -> Self {
-    let parsed = displays.enumerated().map { index, display in
-      var seen = Set<UInt64>()
-      let spaces = (display["Spaces"] as? [[String: Any]] ?? []).compactMap {
-        value -> SpaceEntry? in
-        guard let id = identifier(value["ManagedSpaceID"]), seen.insert(id).inserted else {
-          return nil
-        }
-
-        return SpaceEntry(id: id, fullscreen: (value["type"] as? NSNumber)?.intValue == 4)
-      }
-      let current = display["Current Space"] as? [String: Any]
-
-      return SpaceDisplay(
-        identifier: (display["Display Identifier"] as? String)?.lowercased() ?? "unknown-\(index)",
-        spaces: spaces,
-        activeID: identifier(current?["ManagedSpaceID"])
-          ?? ((display["Display Identifier"] as? String)?.lowercased() == "main"
-            && activeSpaceID > 0 ? activeSpaceID : nil)
-      )
-    }
-
-    return Self(displays: parsed, focusedID: activeSpaceID)
-  }
-
   var displays: [SpaceDisplay] = []
   var focusedID: UInt64 = 0
 
