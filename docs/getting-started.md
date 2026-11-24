@@ -5,7 +5,7 @@
 ## Requirements
 
 - macOS 26 or later
-- Xcode 26 or later when building from source, with Swift 6.2
+- Swift 6.4 or later and the macOS SDK when building from source
 
 ## Installation
 

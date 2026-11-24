@@ -6,7 +6,7 @@ sbar for macOS.
 
 ## Quick start
 
-Requires macOS 26 or later. Building from source requires Xcode 26 or later with Swift 6.2.
+Requires macOS 26 or later. Building from source requires Swift 6.4 or later and the macOS SDK.
 
 ```sh
 git clone https://github.com/starkwm/bar.git
