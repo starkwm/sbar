@@ -118,7 +118,7 @@ struct AgentsCommand: ParsableCommand {
   static func adapter(_ arguments: [String]) throws {
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/bin/bash")
-    process.arguments = try [ControlClient.agentAdapterURL().path] + arguments
+    process.arguments = try [AgentAdapterInstaller.install().path] + arguments
     try process.run()
     process.waitUntilExit()
     guard process.terminationStatus == 0 else { throw ExitCode(process.terminationStatus) }
