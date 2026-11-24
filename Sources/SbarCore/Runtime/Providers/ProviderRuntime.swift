@@ -77,7 +77,8 @@ final class ProviderRuntime {
   @ObservationIgnored private let media = MediaProvider()
   @ObservationIgnored private let aerospace: AerospaceProvider
   @ObservationIgnored private var aerospaceCaptures = Set<String>()
-  @ObservationIgnored private let spaces = SpacesProvider()
+  @ObservationIgnored private let spaces: SpacesProvider
+  @ObservationIgnored private(set) var spacesState: SpacesState?
   @ObservationIgnored private var samplingTask: Task<Void, Never>?
 
   @ObservationIgnored private var commandTasks: [String: Task<Void, Never>] = [:]
@@ -98,6 +99,7 @@ final class ProviderRuntime {
   init(
     aerospace: AerospaceProvider = AerospaceProvider(),
     yabai: YabaiProvider = YabaiProvider(),
+    spaces: SpacesProvider = SpacesProvider(),
     mail: MailProvider = MailProvider(),
     calendar: CalendarProvider = CalendarProvider(),
     reminders: RemindersProvider = RemindersProvider(),
@@ -112,6 +114,7 @@ final class ProviderRuntime {
   ) {
     self.aerospace = aerospace
     self.yabai = yabai
+    self.spaces = spaces
     self.mail = mail
     self.calendar = calendar
     self.reminders = reminders
@@ -121,6 +124,20 @@ final class ProviderRuntime {
     self.bluetooth = bluetooth
     self.audioDevice = audioDevice
     self.pluginRestartSleep = pluginRestartSleep
+  }
+
+  func startObservingSpaces(onChange: @escaping () -> Void) {
+    guard spacesState == nil else { return }
+
+    spaces.start { [weak self] state in
+      guard let self, self.spacesState != state else { return }
+
+      self.spacesState = state
+      if self.activeTypes.contains(.spaces) {
+        self.updateWidgetState(.spaces(state), for: .spaces)
+      }
+      onChange()
+    }
   }
 
   func configure(_ configuration: Configuration) {
@@ -223,8 +240,8 @@ final class ProviderRuntime {
       media.start { [weak self] in self?.updateWidgetState(.media($0), for: .media) }
     }
 
-    if added.contains(.spaces) {
-      spaces.start { [weak self] in self?.updateWidgetState(.spaces($0), for: .spaces) }
+    if added.contains(.spaces), let spacesState {
+      updateWidgetState(.spaces(spacesState), for: .spaces)
     }
 
     if added.contains(.aerospace) {
@@ -567,6 +584,8 @@ final class ProviderRuntime {
   }
 
   func stop() {
+    spaces.stop()
+    spacesState = nil
     configureAgents(false)
     refreshTask?.cancel()
     refreshTask = nil
@@ -961,7 +980,6 @@ final class ProviderRuntime {
     if types.contains(.bluetooth) { bluetooth.stop() }
     if types.contains(.audioDevice) { audioDevice.stop() }
     if types.contains(.media) { media.stop() }
-    if types.contains(.spaces) { spaces.stop() }
     if types.contains(.yabai) {
       yabai.stop()
       yabaiCaptures.removeAll()
