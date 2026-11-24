@@ -13,8 +13,6 @@ final class BarCoordinator: NSObject {
 
   private let store: ConfigurationStore
   private let barSpace = BarSpace()
-  private let spacesProvider = SpacesProvider()
-  private var spacesState = SpacesState()
   private var panels: [CGDirectDisplayID: BarPanel] = [:]
   private var isStarted = false
   private var sleeping = false
@@ -40,6 +38,7 @@ final class BarCoordinator: NSObject {
     guard !isStarted else { return }
 
     isStarted = true
+    sleeping = false
 
     NotificationCenter.default.addObserver(
       self,
@@ -59,12 +58,6 @@ final class BarCoordinator: NSObject {
       self,
       selector: #selector(didWake),
       name: NSWorkspace.didWakeNotification,
-      object: nil
-    )
-    workspace.addObserver(
-      self,
-      selector: #selector(screenParametersDidChange),
-      name: NSWorkspace.activeSpaceDidChangeNotification,
       object: nil
     )
 
@@ -127,13 +120,7 @@ final class BarCoordinator: NSObject {
       )
     }
 
-    spacesProvider.start { [weak self] state in
-      guard let self, self.spacesState != state else { return }
-
-      self.spacesState = state
-      self.updatePanels()
-    }
-    updatePanels()
+    providers.startObservingSpaces { [weak self] in self?.updatePanels() }
   }
 
   func stop() {
@@ -153,7 +140,6 @@ final class BarCoordinator: NSObject {
     actions.stop()
     providers.onValueChange = nil
     providers.stop()
-    spacesProvider.stop()
 
     store.stopObserving()
     store.configurationDidChange = nil
@@ -177,11 +163,11 @@ final class BarCoordinator: NSObject {
 
   @objc private func didWake() {
     sleeping = false
-    updatePanels()
+    providers.startObservingSpaces { [weak self] in self?.updatePanels() }
   }
 
   private func updatePanels() {
-    guard isStarted, !sleeping else { return }
+    guard isStarted, !sleeping, let spacesState = providers.spacesState else { return }
 
     let configuration = store.configuration
     providers.configure(configuration)

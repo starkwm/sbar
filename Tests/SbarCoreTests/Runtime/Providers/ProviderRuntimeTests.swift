@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import Observation
 import Synchronization
 import Testing
@@ -8,6 +8,130 @@ import Testing
 @Suite("ProviderRuntime")
 @MainActor
 struct ProviderRuntimeTests {
+  @Test("startObservingSpaces: panel and widget share updates across widget removal and addition")
+  func sharedSpaces() async throws {
+    let workspace = NotificationCenter()
+    var current = SpacesState(
+      displays: [
+        SpaceDisplay(identifier: "a", spaces: [SpaceEntry(id: 1)], activeID: 1),
+        SpaceDisplay(
+          identifier: "b",
+          spaces: [SpaceEntry(id: 2), SpaceEntry(id: 3, fullscreen: true)],
+          activeID: 2
+        ),
+      ],
+      focusedID: 1
+    )
+    var reads = 0
+    let runtime = ProviderRuntime(
+      spaces: SpacesProvider(
+        query: {
+          reads += 1
+          return current
+        },
+        workspace: workspace,
+        application: NotificationCenter()
+      )
+    )
+    defer { runtime.stop() }
+    let item = Item(id: "spaces", type: .spaces, spaces: .init(scope: .display))
+    let withWidget = Configuration(bar: .init(), items: .init(right: [item]))
+    let withoutWidget = Configuration(bar: .init(), items: .init())
+    var panelStates: [SpacesState?] = []
+    runtime.startObservingSpaces { panelStates.append(runtime.spacesState) }
+    runtime.configure(withoutWidget)
+
+    #expect(panelStates == [current])
+    #expect(runtime.sharedValues[.spaces] == nil)
+
+    runtime.configure(withWidget)
+
+    #expect(runtime.widgetStates[.spaces] == .spaces(current))
+    #expect(runtime.presentation(for: item, displayUUID: "B")?.text == "1")
+    #expect(reads == 1)
+
+    current.displays[1].activeID = 3
+    workspace.post(name: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
+    try await waitUntil { panelStates.count == 2 }
+
+    #expect(runtime.spacesState?.isFullscreen(displayUUID: "B") == true)
+    #expect(runtime.spacesState?.isFullscreen(displayUUID: "A") == false)
+    #expect(panelStates.last == current)
+    #expect(runtime.widgetStates[.spaces] == .spaces(current))
+    #expect(runtime.presentation(for: item, displayUUID: "B")?.text == "2")
+
+    runtime.configure(withoutWidget)
+    current.displays[1].activeID = 2
+    workspace.post(name: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
+    try await waitUntil { panelStates.count == 3 }
+
+    #expect(panelStates.last == current)
+    #expect(runtime.widgetStates[.spaces] == nil)
+    #expect(runtime.sharedValues[.spaces] == nil)
+
+    runtime.configure(withWidget)
+
+    #expect(runtime.widgetStates[.spaces] == .spaces(current))
+    #expect(reads == 3)
+  }
+
+  @Test("startObservingSpaces: restart publishes the initial snapshot and retries incomplete data")
+  func restartSpaceObservation() async throws {
+    let workspace = NotificationCenter()
+    let complete = SpacesState(
+      displays: [SpaceDisplay(identifier: "main", spaces: [SpaceEntry(id: 1)], activeID: 1)],
+      focusedID: 1
+    )
+    var current = complete
+    var reads = 0
+    let runtime = ProviderRuntime(
+      spaces: SpacesProvider(
+        query: {
+          reads += 1
+          return current
+        },
+        workspace: workspace,
+        application: NotificationCenter()
+      )
+    )
+    defer { runtime.stop() }
+    let item = Item(id: "spaces", type: .spaces)
+    let configuration = Configuration(bar: .init(), items: .init(right: [item]))
+    var firstUpdates = 0
+    runtime.startObservingSpaces {
+      firstUpdates += 1
+      runtime.configure(configuration)
+    }
+    runtime.startObservingSpaces { Issue.record("Repeated start replaced the panel callback") }
+
+    #expect(runtime.widgetStates[.spaces] == .spaces(complete))
+    workspace.post(name: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
+    runtime.stop()
+    workspace.post(name: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
+
+    #expect(runtime.spacesState == nil)
+    #expect(runtime.widgetStates[.spaces] == nil)
+
+    current = SpacesState()
+    var updates = 0
+    runtime.startObservingSpaces {
+      updates += 1
+      runtime.configure(configuration)
+    }
+
+    #expect(updates == 1)
+    #expect(runtime.spacesState == current)
+    #expect(runtime.presentation(for: item)?.text == "Spaces unavailable")
+
+    current = complete
+    try await waitUntil { updates == 2 }
+
+    #expect(runtime.spacesState == complete)
+    #expect(runtime.widgetStates[.spaces] == .spaces(complete))
+    #expect(firstUpdates == 1)
+    #expect(reads == 3)
+  }
+
   @Test("configure: refresh edits preserve other items and discard removed snapshots")
   func independentRefreshSnapshots() {
     let manual = Item(id: "manual", type: .cpu, refresh: .init(mode: .manual))
