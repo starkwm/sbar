@@ -1,4 +1,5 @@
 import AppKit
+import StarkSkyLight
 import Testing
 
 @testable import SbarCore
@@ -6,55 +7,46 @@ import Testing
 @Suite("SpacesProvider")
 @MainActor
 struct SpacesProviderTests {
-  @Test("SpacesState.parse: numbers Spaces across displays including fullscreen Spaces")
-  func spaceNumbers() {
-    let displays: [[String: Any]] = [
-      ["Spaces": [["ManagedSpaceID": 10, "type": 0], ["ManagedSpaceID": 20, "type": 4]]],
-      ["Spaces": [["ManagedSpaceID": 30, "type": 0]]],
-    ]
+  @Test("currentState: uses each display's current query, then its snapshot, then focus on Main")
+  func displaySpaces() {
+    let spaces = Query()
+    let state = SpacesProvider.currentState(using: spaces)
 
-    #expect(SpacesState.parse(displays: displays, activeSpaceID: 10).text == "1")
-    #expect(SpacesState.parse(displays: displays, activeSpaceID: 20).text == "2")
-    #expect(SpacesState.parse(displays: displays, activeSpaceID: 30).text == "3")
+    #expect(state.complete)
+    #expect(state.displays.map(\.identifier) == ["display-a", "display-b", "main"])
+    #expect(state.displays.map(\.activeID) == [20, 30, 40])
+    #expect(state.isFullscreen(displayUUID: "DISPLAY-A"))
+    // Space 70 is shared across displays and counts once in the global index.
+    #expect(state.text == "4")
   }
 
-  @Test("SpacesState.parse: follows reordered Spaces without treating IDs as indexes")
-  func reorderedSpaces() {
-    let displays: [[String: Any]] = [
-      ["Spaces": [["ManagedSpaceID": 70], ["ManagedSpaceID": 10]]]
-    ]
+  @Test("currentState: missing focus leaves usable display data and triggers retries")
+  func missingFocus() {
+    var spaces = Query()
+    spaces.focused = nil
+    let state = SpacesProvider.currentState(using: spaces)
 
-    #expect(SpacesState.parse(displays: displays, activeSpaceID: 10).text == "2")
+    #expect(!state.complete)
+    #expect(state.text == "Spaces unavailable")
+    #expect(state.isFullscreen(displayUUID: "DISPLAY-A"))
+    #expect(state.displays.last?.activeID == nil)
   }
 
-  @Test("SpacesState.parse: ignores duplicate IDs and malformed entries")
-  func invalidEntries() {
-    let displays: [[String: Any]] = [
-      [:],
-      ["Spaces": [["ManagedSpaceID": 0], [:], ["ManagedSpaceID": 10]]],
-      ["Spaces": [["ManagedSpaceID": 10], ["ManagedSpaceID": 20]]],
-    ]
+  @Test("currentState: a malformed snapshot yields the unavailable state")
+  func malformedSnapshot() {
+    var spaces = Query()
+    spaces.malformed = true
+    let state = SpacesProvider.currentState(using: spaces)
 
-    #expect(SpacesState.parse(displays: displays, activeSpaceID: 20).text == "2")
-  }
-
-  @Test("SpacesState.parse: reports unavailable for missing active Spaces")
-  func missingSpace() {
-    #expect(SpacesState.parse(displays: [], activeSpaceID: 0).text == "Spaces unavailable")
-    #expect(
-      SpacesState.parse(displays: [["Spaces": [["ManagedSpaceID": 10]]]], activeSpaceID: 20).text
-        == "Spaces unavailable"
-    )
+    #expect(state.text == "Spaces unavailable")
+    #expect(!state.complete)
   }
 
   @Test("start: replaces observers and stops delivering updates after stop")
   func observers() async throws {
     let workspace = NotificationCenter()
     let application = NotificationCenter()
-    let state = SpacesState.parse(
-      displays: [["Display Identifier": "Main", "Spaces": [["ManagedSpaceID": 10]]]],
-      activeSpaceID: 10
-    )
+    let state = SpacesProvider.currentState(using: Query())
     let provider = SpacesProvider(query: { state }, workspace: workspace, application: application)
     defer { provider.stop() }
     var previousUpdates = 0
@@ -82,4 +74,47 @@ struct SpacesProviderTests {
 
     #expect(updates == 2)
   }
+}
+
+private struct Query: SpaceQuerying {
+  var focused: SpaceID? = SpaceID(rawValue: 40)
+  var malformed = false
+
+  func snapshot() throws -> SpaceSnapshot {
+    if malformed { throw SkyLightError.malformedResponse("displays") }
+    let shared = Space(id: SpaceID(rawValue: 70), type: .desktop)
+    let twenty = Space(id: SpaceID(rawValue: 20), type: .fullscreen)
+    let thirty = Space(id: SpaceID(rawValue: 30), type: .desktop)
+    let forty = Space(id: SpaceID(rawValue: 40), type: .unknown(7))
+    return SpaceSnapshot(
+      displays: [
+        DisplaySpaces(
+          id: DisplayID(rawValue: "DISPLAY-A"),
+          spaces: [shared, twenty],
+          currentSpaceID: shared.id
+        ),
+        DisplaySpaces(
+          id: DisplayID(rawValue: "DISPLAY-B"),
+          spaces: [shared, thirty],
+          currentSpaceID: thirty.id
+        ),
+        DisplaySpaces(id: DisplayID(rawValue: "Main"), spaces: [forty], currentSpaceID: nil),
+      ],
+      activeSpaceID: focused
+    )
+  }
+
+  func currentSpace(for displayID: DisplayID) throws -> SpaceID? {
+    switch displayID.rawValue {
+    case "DISPLAY-A": SpaceID(rawValue: 20)
+    case "DISPLAY-B": throw SkyLightError.queryFailed("currentSpace")
+    default: nil
+    }
+  }
+
+  func activeSpace() throws -> SpaceID? { focused }
+  func spaceType(for spaceID: SpaceID) throws -> SpaceType {
+    throw SkyLightError.invalidArgument("spaceID")
+  }
+  func spaceIDs(containing windowID: CGWindowID) throws -> [SpaceID] { [] }
 }

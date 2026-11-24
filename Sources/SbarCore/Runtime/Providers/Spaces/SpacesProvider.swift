@@ -1,64 +1,36 @@
 import AppKit
+import StarkSkyLight
 
 @MainActor
 final class SpacesProvider {
-  private struct API {
-    let connection: @convention(c) () -> Int32
-    let activeSpace: @convention(c) (Int32) -> UInt64
-    let currentSpace: (@convention(c) (Int32, CFString) -> UInt64)?
-    let displaySpaces: @convention(c) (Int32) -> Unmanaged<CFArray>?
-  }
-
-  // Keep SkyLight loaded for the lifetime of these function pointers.
-  private static let api: API? = {
-    guard
-      let handle = dlopen(
-        "/System/Library/PrivateFrameworks/SkyLight.framework/SkyLight",
-        RTLD_LAZY | RTLD_LOCAL
-      )
-    else { return nil }
-
-    guard let connection = dlsym(handle, "SLSMainConnectionID"),
-      let activeSpace = dlsym(handle, "SLSGetActiveSpace"),
-      let displaySpaces = dlsym(handle, "SLSCopyManagedDisplaySpaces")
-    else {
-      dlclose(handle)
-
-      return nil
-    }
-
-    return API(
-      connection: unsafeBitCast(connection, to: (@convention(c) () -> Int32).self),
-      activeSpace: unsafeBitCast(activeSpace, to: (@convention(c) (Int32) -> UInt64).self),
-      currentSpace: dlsym(handle, "SLSManagedDisplayGetCurrentSpace").map {
-        unsafeBitCast($0, to: (@convention(c) (Int32, CFString) -> UInt64).self)
-      },
-      displaySpaces: unsafeBitCast(
-        displaySpaces,
-        to: (@convention(c) (Int32) -> Unmanaged<CFArray>?).self
-      )
-    )
-  }()
+  private static var client: SpaceClient?
 
   static func currentState() -> SpacesState {
-    guard let api else { return SpacesState() }
+    if client == nil { client = try? SpaceClient() }
+    guard let client else { return SpacesState() }
 
-    let connection = api.connection()
-    guard let data = api.displaySpaces(connection)?.takeRetainedValue(),
-      var displays = data as? [[String: Any]]
-    else { return SpacesState() }
+    return currentState(using: client)
+  }
 
-    if let currentSpace = api.currentSpace {
-      for index in displays.indices {
-        if let identifier = displays[index]["Display Identifier"] as? String {
-          let current = currentSpace(connection, identifier as CFString)
+  static func currentState(using client: any SpaceQuerying) -> SpacesState {
+    guard let snapshot = try? client.snapshot() else { return SpacesState() }
 
-          if current != 0 { displays[index]["Current Space"] = ["ManagedSpaceID": current] }
-        }
-      }
+    let displays = snapshot.displays.map { display in
+      let identifier = display.id.rawValue.lowercased()
+      let current =
+        (try? client.currentSpace(for: display.id)) ?? display.currentSpaceID
+        ?? (identifier == "main" ? snapshot.activeSpaceID : nil)
+
+      return SpaceDisplay(
+        identifier: identifier,
+        spaces: display.spaces.map {
+          SpaceEntry(id: $0.id.rawValue, fullscreen: $0.type == .fullscreen)
+        },
+        activeID: current?.rawValue
+      )
     }
 
-    return SpacesState.parse(displays: displays, activeSpaceID: api.activeSpace(connection))
+    return SpacesState(displays: displays, focusedID: snapshot.activeSpaceID?.rawValue ?? 0)
   }
 
   private let retryInterval: Duration
