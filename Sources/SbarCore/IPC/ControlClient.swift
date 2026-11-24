@@ -1,4 +1,3 @@
-import Darwin
 import Foundation
 import StarkIPC
 
@@ -22,19 +21,19 @@ public enum ControlClient {
     return adapter
   }
 
-  public static func run(_ request: ControlRequest, socketPath: String) throws {
+  public static func run(
+    _ request: ControlRequest,
+    socketPath: String,
+    onResponse: (ControlResponse, Data) throws -> Void
+  ) throws {
     let streaming = request.command == "subscribe"
     let client = try SocketClient(path: socketPath, serviceName: "sbar", streaming: streaming)
     try client.send(request)
 
-    while true {
+    repeat {
       let line = try client.receiveLine()
       let response = try JSONDecoder().decode(ControlResponse.self, from: line)
-      print(String(decoding: line, as: UTF8.self))
-      fflush(stdout)
-
-      if !response.ok { exit(1) }
-      if !streaming { return }
-    }
+      try onResponse(response, line)
+    } while streaming
   }
 }
