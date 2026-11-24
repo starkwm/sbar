@@ -84,6 +84,6 @@ The provider icon appears beside the label by default. `spaces.showSymbol:false`
 
 ## Refresh behavior
 
-The provider refreshes on Space switches, application activation, and display changes. Notification bursts coalesce, and incomplete transition snapshots receive bounded retries while retaining the previous snapshot. It uses private SkyLight APIs and shows `Spaces unavailable` when the requested Space or display cannot be read. Manual and event refresh modes capture the full snapshot, so each bar can render its own display from the same captured state.
+The provider refreshes when Mission Control changes the desktop list, when the active Space or application changes, and when displays change. Notification bursts coalesce, and incomplete transition snapshots receive bounded retries while retaining the previous snapshot. It uses private SkyLight APIs and shows `Spaces unavailable` when the requested Space or display cannot be read. Manual and event refresh modes capture the full snapshot, so each bar can render its own display from the same captured state.
 
 See [common item settings](../configuration.md#items), [refresh policies](../configuration.md#refresh-policies), [styling](../styling.md), and [symbols](../symbols.md) for shared options.
