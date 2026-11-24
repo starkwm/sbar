@@ -13,6 +13,8 @@ make lint     # Check Swift formatting
 make clean    # Remove build products
 ```
 
+To run one suite, use `make test TEST_ARGS='--filter BarRegionLayoutTests'`.
+
 See [getting started](getting-started.md) for build requirements, output locations, and running the bar.
 
 ## Permissions in a standalone executable
